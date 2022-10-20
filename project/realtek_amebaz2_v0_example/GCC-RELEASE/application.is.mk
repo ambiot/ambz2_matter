@@ -661,7 +661,13 @@ endif
 	$(ELF2BIN) convert amebaz2_bootloader.json BOOTLOADER secure_bit=0
 	$(ELF2BIN) convert amebaz2_bootloader.json PARTITIONTABLE secure_bit=0
 	$(ELF2BIN) convert amebaz2_firmware_is.json FIRMWARE secure_bit=0
+#ifeq ($(findstring Linux, $(OS)), Linux)
+#	chmod 777 $(AMEBAZ2_GCCTOOLDIR)/LZMA_GenCompressedFW_linux
+#endif
+#	$(LZMA_PY) $(BIN_DIR)/firmware_is.bin
+
 	$(CHKSUM) $(BIN_DIR)/firmware_is.bin
+#	$(CHKSUM) $(BIN_DIR)/firmware_is_lzma.bin
 	$(ELF2BIN) combine $(BIN_DIR)/flash_is.bin PTAB=partition.bin,BOOT=$(BOOT_BIN_DIR)/bootloader.bin,FW1=$(BIN_DIR)/firmware_is.bin
 
 # Generate build info

@@ -11,6 +11,7 @@
 #include "app_msg.h"
 #include "gap_le.h"
 #include "gap_msg.h"
+#include "gap_customer.h"
 
 #if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT) && CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT
 #include "bt_ota_central_client_app_flags.h"
@@ -208,7 +209,6 @@ void bt_at_cmd_send_msg(uint16_t subtype, void *arg)
 		}
 	}
 #endif
-
 #if defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL
 	if (evt_queue_handle != NULL && io_queue_handle != NULL) {
 		if (os_msg_send(io_queue_handle, &io_msg, 0) == false) {
@@ -1443,6 +1443,7 @@ exit:
 }
 #endif
 
+#if ((defined(CONFIG_BT_OTA_CENTRAL_CLIENT) && CONFIG_BT_OTA_CENTRAL_CLIENT))
 #if defined(CONFIG_BT_OTA_CENTRAL_CLIENT) && CONFIG_BT_OTA_CENTRAL_CLIENT
 extern bool bt_ota_central_client_set_image(uint8_t *image);
 extern bool bt_ota_central_client_set_key(uint8_t *key);
@@ -1451,6 +1452,44 @@ extern void bt_ota_central_client_app_deinit(void);
 
 extern unsigned char rtl8762c_image[];
 extern unsigned char rtl8762c_aes256_key[];
+
+void fATBo(void *arg)
+{
+	int argc = 0;
+	int param = 0;
+	char *argv[MAX_ARGC] = {0};
+
+	if (arg) {
+		argc = parse_param(arg, argv);
+	} else {
+		goto exit;
+	}
+
+	if (argc != 2) {
+		AT_PRINTK("[AT_PRINTK] ERROR: input parameter error!\n\r");
+		goto exit;
+	}
+
+	param = atoi(argv[1]);
+	if (param == 1) {
+		AT_PRINTK("[ATBo]:_AT_BT_OTA_CENTRAL_CLIENT_[ON]\n\r");
+		bt_ota_central_client_set_image(rtl8762c_image);
+		bt_ota_central_client_set_key(rtl8762c_aes256_key);
+		bt_ota_central_client_app_init();
+	} else if (param == 0) {
+		AT_PRINTK("[ATBo]:_AT_BT_OTA_CENTRAL_CLIENT_[OFF]\n\r");
+		bt_ota_central_client_app_deinit();
+	} else {
+		goto exit;
+	}
+
+	return;
+
+exit:
+	AT_PRINTK("[ATBo] Start BT OTA Central Client: ATBo=1");
+	AT_PRINTK("[ATBo] Stop	BT OTA Central Client: ATBo=0");
+}
+#endif
 
 #if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT) && CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT
 void fATBs(void *arg)
@@ -1513,7 +1552,8 @@ exit:
 	AT_PRINTK("[ATBl] P=public, R=random");
 	AT_PRINTK("[ATBl] eg:ATBC=P,001122334455");
 }
-
+#endif
+#if ((defined(CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT) && CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT))
 void fATBq(void *arg)
 {
 	int argc = 0;
@@ -1542,8 +1582,9 @@ exit:
 #endif
 
 #if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_W_REQ_CONFLICT) && CONFIG_BT_OTA_CENTRAL_CLIENT_W_REQ_CONFLICT
-extern void *bt_ota_central_client_evt_queue_handle;
-extern void *bt_ota_central_client_io_queue_handle;
+#include <insert_write.h>
+
+T_OTA_WRITE_MSG ota_write_msg;
 
 static u8 ctoi(char c)
 {
@@ -1599,10 +1640,17 @@ void fATBh(void *arg)
 		uint8_t event = EVENT_IO_TO_APP;
 		T_IO_MSG io_msg;
 
-		io_msg.type = IO_MSG_TYPE_QDECODE;
-		io_msg.subtype = atoi(argv[2]);
-		io_msg.u.param = hex_str_to_int(strlen(argv[3]), (s8 *)argv[3]);
+		memset(&ota_write_msg, 0, sizeof(T_OTA_WRITE_MSG));
+		ota_write_msg.conn_id = atoi(argv[2]);
+		ota_write_msg.handle = hex_str_to_int(strlen(argv[3]), (s8 *)argv[3]);
 
+		io_msg.type = IO_MSG_TYPE_QDECODE;
+		io_msg.subtype = 4;
+		io_msg.u.buf = &ota_write_msg;
+
+#if defined(CONFIG_BT_OTA_CENTRAL_CLIENT) && CONFIG_BT_OTA_CENTRAL_CLIENT
+extern void *bt_ota_central_client_evt_queue_handle;
+extern void *bt_ota_central_client_io_queue_handle;
 		if (bt_ota_central_client_evt_queue_handle != NULL && bt_ota_central_client_io_queue_handle != NULL) {
 			if (os_msg_send(bt_ota_central_client_io_queue_handle, &io_msg, 0) == false) {
 				AT_PRINTK("bt at cmd send msg fail: subtype 0x%x", io_msg.subtype);	
@@ -1612,6 +1660,18 @@ void fATBh(void *arg)
 		} else {
 			goto exit;
 		}
+#endif
+#if defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
+		if (bt_mesh_provisioner_ota_client_evt_queue_handle != NULL && bt_mesh_provisioner_ota_client_io_queue_handle != NULL) {
+			if (os_msg_send(bt_mesh_provisioner_ota_client_io_queue_handle, &io_msg, 0) == false) {
+				AT_PRINTK("bt at cmd send msg fail: subtype 0x%x", io_msg.subtype);
+			} else if (os_msg_send(bt_mesh_provisioner_ota_client_evt_queue_handle, &event, 0) == false) {
+				AT_PRINTK("bt at cmd send event fail: subtype 0x%x", io_msg.subtype);
+			}
+		} else {
+			goto exit;
+		}
+#endif
 	}
 
 	return;
@@ -1621,43 +1681,6 @@ exit:
 	AT_PRINTK("[ATBh] e.g. ATBh=1,0,0x13");
 }
 #endif
-
-void fATBo(void *arg)
-{
-	int argc = 0;
-	int param = 0;
-	char *argv[MAX_ARGC] = {0};
-
-	if (arg) {
-		argc = parse_param(arg, argv);
-	} else {
-		goto exit;
-	}
-
-	if (argc != 2) {
-		AT_PRINTK("[AT_PRINTK] ERROR: input parameter error!\n\r");
-		goto exit;
-	}
-
-	param = atoi(argv[1]);
-	if (param == 1) {
-		AT_PRINTK("[ATBo]:_AT_BT_OTA_CENTRAL_CLIENT_[ON]\n\r");
-		bt_ota_central_client_set_image(rtl8762c_image);
-		bt_ota_central_client_set_key(rtl8762c_aes256_key);
-		bt_ota_central_client_app_init();
-	} else if (param == 0) {
-		AT_PRINTK("[ATBo]:_AT_BT_OTA_CENTRAL_CLIENT_[OFF]\n\r");
-		bt_ota_central_client_app_deinit();
-	} else {
-		goto exit;
-	}
-
-	return;
-
-exit:
-	AT_PRINTK("[ATBo] Start BT OTA Central Client: ATBo=1");
-	AT_PRINTK("[ATBo] Stop	BT OTA Central Client: ATBo=0");
-}
 #endif
 
 #if defined(CONFIG_BT_DATATRANS) && CONFIG_BT_DATATRANS
@@ -1991,8 +2014,8 @@ exit:
 	AT_PRINTK("[ATBm] Stop  BT Mesh Mulitple Profile: ATBm=0");
 #endif
 #else
-	AT_PRINTK("[ATBm] Start BT Mesh Mulitple Profile: ATBm=1");
-	AT_PRINTK("[ATBm] Stop  BT Mesh Mulitple Profile: ATBm=0");
+	AT_PRINTK("[ATBm] Start BT Mesh: ATBm=1");
+	AT_PRINTK("[ATBm] Stop  BT Mesh: ATBm=0");
 #endif
 }
 
@@ -2074,8 +2097,7 @@ void fATBV(void *arg)
 log_item_t at_bt_items[ ] = {
 #if ((defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL) || \
 	(defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL) || \
-	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET) || \
-	(defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER))
+	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
 #if defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL
 	{"ATBc", fATBc, {NULL, NULL}}, // Start/stop BLE central
 #endif
@@ -2091,9 +2113,7 @@ log_item_t at_bt_items[ ] = {
 	{"ATBg", fATBg, {NULL, NULL}}, // Set PHY 2M
 #endif
 #if ((defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL) || \
-	(defined(CONFIG_BT_MESH_PERIPHERAL) && CONFIG_BT_MESH_PERIPHERAL) || \
-	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET) || \
-	(defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER))
+	(defined(CONFIG_BT_MESH_PERIPHERAL) && CONFIG_BT_MESH_PERIPHERAL))
 #if defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL
 	{"ATBp", fATBp, {NULL, NULL}}, // Start/stop BLE peripheral
 	{"ATBP", fATBP, {NULL, NULL}}, // Legacy ADV concurrent test
@@ -2101,14 +2121,11 @@ log_item_t at_bt_items[ ] = {
 	{"ATBA", fATBA, {NULL, NULL}}, // Modify adv interval
 	{"ATBe", fATBe, {NULL, NULL}}, // BLE send indiaction/notification
 #endif
-
-
 #if ((defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL) || \
 	(defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL) || \
 	(defined(CONFIG_BT_MESH_CENTRAL) && CONFIG_BT_MESH_CENTRAL) || \
 	(defined(CONFIG_BT_MESH_PERIPHERAL) && CONFIG_BT_MESH_PERIPHERAL) || \
-	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET) || \
-	(defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER))
+	(defined(CONFIG_BT_MESH_SCATTERNET) && CONFIG_BT_MESH_SCATTERNET))
 	{"ATBK", fATBK, {NULL, NULL}}, // Reply GAP passkey
 	{"ATBY", fATBY, {NULL, NULL}}, // Reply GAP user confirm
 	{"ATBU", fATBU, {NULL, NULL}}, // Update connection request
@@ -2134,14 +2151,18 @@ log_item_t at_bt_items[ ] = {
 	{"ATBt", fATBt, {NULL, NULL}}, // Set test configuration
 	{"ATBr", fATBr, {NULL, NULL}}, // rembd
 #endif
+#if ((defined(CONFIG_BT_OTA_CENTRAL_CLIENT) && CONFIG_BT_OTA_CENTRAL_CLIENT))
 #if defined(CONFIG_BT_OTA_CENTRAL_CLIENT) && CONFIG_BT_OTA_CENTRAL_CLIENT
 	{"ATBo", fATBo, {NULL, NULL}}, // Start/Stop BT OTA Central Client
+#endif
 #if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_W_REQ_CONFLICT) && CONFIG_BT_OTA_CENTRAL_CLIENT_W_REQ_CONFLICT
 	{"ATBh", fATBh, {NULL, NULL}}, // Send user write request example
 #endif
 #if defined(CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT) && CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT
 	{"ATBs", fATBs, {NULL, NULL}}, // Scan start/stop BT OTA Central Client
 	{"ATBl", fATBl, {NULL, NULL}}, // Connection start/stop BT OTA Central Client
+#endif
+#if ((defined(CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT) && CONFIG_BT_OTA_CENTRAL_CLIENT_SPLIT))
 	{"ATBq", fATBq, {NULL, NULL}}, // OTA start/stop BT OTA Central Client
 #endif
 #endif

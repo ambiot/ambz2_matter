@@ -3010,6 +3010,9 @@
             <name>$PROJ_DIR$\..\..\..\component\common\utilities\http_client.c</name>
         </file>
         <file>
+            <name>$PROJ_DIR$\..\..\..\component\common\utilities\uart_ymodem.c</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\..\..\..\component\common\utilities\xml.c</name>
         </file>
     </group>

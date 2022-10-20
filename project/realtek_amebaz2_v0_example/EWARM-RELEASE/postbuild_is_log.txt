@@ -1,0 +1,352 @@
+key pair 1:
+private key:	000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e5f 
+public key:	8f40c5adb68f25624ae5b214ea767a6ec94d829d3d7b5e1ad1ba6f3e2138285f 
+key pair 1:
+private key:	000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e5f 
+public key:	8f40c5adb68f25624ae5b214ea767a6ec94d829d3d7b5e1ad1ba6f3e2138285f 
+key pair 1:
+private key:	64a7433fcf027d19dda4d446eef8e78a22a8c33cb2c337c07366c040612ee0f2 
+public key:	8f40c5adb68f25624ae5b214ea767a6ec94d829d3d7b5e1ad1ba6f3e2138285f 
+key pair 1:
+private key:	000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e5f 
+public key:	8f40c5adb68f25624ae5b214ea767a6ec94d829d3d7b5e1ad1ba6f3e2138285f 
+Load ENC Key 	8F40C5ADB68F25624AE5B214EA767A6EC94D829D3D7B5E1AD1BA6F3E2138285F 
+ and HASH Key	8F40C5ADB68F25624AE5B214EA767A6EC94D829D3D7B5E1AD1BA6F3E2138285F
+secure_bit ==> 0
+MSG LEVEL: 3
+[INFO]checksum 0
+[INFO]signature 0
+[INFO]pattern 0
+[INFO]hash 1
+[INFO]filename Debug/Exe/bootloader.bin
+[INFO]privkey enc A0D6DAE7E062CA94CBB294BF896B9F68CF8438774256AC7403CA4FD9A1C9564F
+[INFO]privkey hash 882AA16C8C44A7760AA8C9AB22E3568C6FA16C2AFA4F0CEA29A10ABCDF60E44F
+[INFO]pubkey enc efuse (null)
+[INFO]pubkey hash efuse (null)
+[INFO]hash key (null)
+[INFO]--flash offset 0
+[INFO]--source file Debug/Exe/bootloader.out
+[INFO]---header-next (null)
+[INFO]---header-type BOOT
+[INFO]---header-encrypt 0
+[INFO]---header-serial 0
+[INFO]---header-user_key1 AA0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
+[INFO]---header-user_key2 (null)
+[INFO]----shdr type SRAM
+[INFO]----shdr enc 0
+[INFO]----option (null)
+[INFO]----ram addr 0
+[INFO]----start RAM_FUNTAB$$Base
+[INFO]----end RAM_RODATA$$Limit
+[INFO]----entrytab gRamStartFun
+[INFO]----file (null)
+[INFO]--
+[INFO]
+[INFO]checksum 0
+[INFO]signature 0
+[INFO]pubkey efuse (null)
+[INFO]efuse enc pubkey: 8f 40 c5 ad b6 8f 25 62 4a e5 b2 14 ea 76 7a 6e c9 4d 82 9d 3d 7b 5e 1a d1 ba 6f 3e 21 38 28 5f 
+[INFO]efuse hash pubkey: 8f 40 c5 ad b6 8f 25 62 4a e5 b2 14 ea 76 7a 6e c9 4d 82 9d 3d 7b 5e 1a d1 ba 6f 3e 21 38 28 5f 
+[INFO]efuse enc privkey: 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 5f 
+[INFO]Source name Debug/Exe/bootloader.out
+[INFO]--flash offset 0
+[INFO]enc privkey: a0 d6 da e7 e0 62 ca 94 cb b2 94 bf 89 6b 9f 68 cf 84 38 77 42 56 ac 74 03 ca 4f d9 a1 c9 56 4f 
+[INFO]enc pubkey: 68 51 3e f8 3e 39 6b 12 ba 05 9a 90 0f 36 b6 d3 1d 11 fe 1c 5d 25 eb 8a a7 c5 50 30 7f 9c 24 05 
+[INFO]hash privkey: 88 2a a1 6c 8c 44 a7 76 0a a8 c9 ab 22 e3 56 8c 6f a1 6c 2a fa 4f 0c ea 29 a1 0a bc df 60 e4 4f 
+[INFO]hash pubkey: 48 ad 23 dd bd ac 9e 65 71 9d b7 d3 94 d4 4d 62 82 0d 19 e5 0d 68 37 67 74 23 7e 98 d2 30 5e 6a 
+[INFO]AES key: 51 80 a8 8b ac 99 b5 f3 70 c0 c4 80 0e 71 9e 76 d2 9a 20 4a f8 5d 45 6c db a6 39 78 09 6c 7e 3c 
+[INFO]Use Default Hash key: 47 e5 66 13 35 a4 c5 e0 a9 4d 69 f3 c7 37 d5 4f 23 83 79 13 32 93 97 53 ef 24 27 96 08 f6 d7 2b 
+[INFO]filename Debug/Exe/bootloader.bin
+[INFO]----ram addr 0
+[INFO]----start symbol  RAM_FUNTAB$$Base, addr 10038100
+[INFO]----end   symbol  RAM_RODATA$$Limit, addr 1003e250
+[INFO] NO SECTION !!!!!
+[INFO]----offset addr 0
+[INFO]----file (null)
+[INFO]c04dd0 42a0e0 10038100
+[INFO]----phdr c03b04 seg len 6160 offset in file 34
+[INFO]-------- acquire by range
+[INFO]---- base 10038100 length 6160
+[INFO]-------- found section A1 
+[INFO]-------- found section A2 
+[INFO]-------- found section P1-P2 
+[INFO]--------
+[INFO]--
+[INFO]HASH start 0, end 6220
+[INFO]Hash key: 47 e5 66 13 35 a4 c5 e0 a9 4d 69 f3 c7 37 d5 4f 23 83 79 13 32 93 97 53 ef 24 27 96 08 f6 d7 2b 
+[INFO]SHA256HMAC: 16ca2aae40ed8cb580e49a5ed6da0649bb7983304469c5e19ddb82dec47094b3
+[INFO]
+Load ENC Key 	8F40C5ADB68F25624AE5B214EA767A6EC94D829D3D7B5E1AD1BA6F3E2138285F 
+ and HASH Key	8F40C5ADB68F25624AE5B214EA767A6EC94D829D3D7B5E1AD1BA6F3E2138285F
+secure_bit ==> 0
+MSG LEVEL: 3
+[INFO]checksum 0
+[INFO]signature 0
+[INFO]pattern 1
+[INFO]hash 1
+[INFO]filename Debug/Exe/partition.bin
+[INFO]privkey enc A0D6DAE7E062CA94CBB294BF896B9F68CF8438774256AC7403CA4FD9A1C9564F
+[INFO]privkey hash 882AA16C8C44A7760AA8C9AB22E3568C6FA16C2AFA4F0CEA29A10ABCDF60E44F
+[INFO]pubkey enc efuse (null)
+[INFO]pubkey hash efuse (null)
+[INFO]hash key (null)
+[INFO]--flash offset 20
+[INFO]--source file (null)
+[INFO]---header-next (null)
+[INFO]---header-type PARTAB
+[INFO]---header-encrypt 0
+[INFO]---header-serial 0
+[INFO]---header-user_key1 (null)
+[INFO]---header-user_key2 (null)
+[INFO]--Partition Table
+[INFO]----num 2
+[INFO]----fw1_idx 1
+[INFO]----fw2_idx 2
+[INFO]----user_len 256
+[INFO]----user_bin user.bin
+[INFO]----ota_trap 0
+[INFO]----mp_trap 0
+[INFO]------start 4000
+[INFO]------length 8000
+[INFO]------type BOOT
+[INFO]------dbg skip 0
+[INFO]------hash key FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+[INFO]------start c000
+[INFO]------length f8000
+[INFO]------type FW1
+[INFO]------dbg skip 0
+[INFO]------hash key 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E5F
+[INFO]------start 104000
+[INFO]------length f8000
+[INFO]------type FW2
+[INFO]------dbg skip 0
+[INFO]------hash key 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E5F
+[INFO]--
+[INFO]
+[INFO]checksum 0
+[INFO]signature 0
+[INFO]pubkey efuse (null)
+[INFO]efuse enc pubkey: 8f 40 c5 ad b6 8f 25 62 4a e5 b2 14 ea 76 7a 6e c9 4d 82 9d 3d 7b 5e 1a d1 ba 6f 3e 21 38 28 5f 
+[INFO]efuse hash pubkey: 8f 40 c5 ad b6 8f 25 62 4a e5 b2 14 ea 76 7a 6e c9 4d 82 9d 3d 7b 5e 1a d1 ba 6f 3e 21 38 28 5f 
+[INFO]efuse enc privkey: 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 5f 
+[INFO]Source name (null)
+[INFO]--flash offset 20
+padding 0xff size 16
+[INFO]enc privkey: a0 d6 da e7 e0 62 ca 94 cb b2 94 bf 89 6b 9f 68 cf 84 38 77 42 56 ac 74 03 ca 4f d9 a1 c9 56 4f 
+[INFO]enc pubkey: 68 51 3e f8 3e 39 6b 12 ba 05 9a 90 0f 36 b6 d3 1d 11 fe 1c 5d 25 eb 8a a7 c5 50 30 7f 9c 24 05 
+[INFO]hash privkey: 88 2a a1 6c 8c 44 a7 76 0a a8 c9 ab 22 e3 56 8c 6f a1 6c 2a fa 4f 0c ea 29 a1 0a bc df 60 e4 4f 
+[INFO]hash pubkey: 48 ad 23 dd bd ac 9e 65 71 9d b7 d3 94 d4 4d 62 82 0d 19 e5 0d 68 37 67 74 23 7e 98 d2 30 5e 6a 
+[INFO]AES key: 51 80 a8 8b ac 99 b5 f3 70 c0 c4 80 0e 71 9e 76 d2 9a 20 4a f8 5d 45 6c db a6 39 78 09 6c 7e 3c 
+[INFO]Use Default Hash key: 47 e5 66 13 35 a4 c5 e0 a9 4d 69 f3 c7 37 d5 4f 23 83 79 13 32 93 97 53 ef 24 27 96 08 f6 d7 2b 
+[INFO]filename Debug/Exe/partition.bin
+[ERR]user binary user.bin not exist
+[INFO]--
+[INFO]HASH start 20, end 2a0
+[INFO]Hash key: 47 e5 66 13 35 a4 c5 e0 a9 4d 69 f3 c7 37 d5 4f 23 83 79 13 32 93 97 53 ef 24 27 96 08 f6 d7 2b 
+[INFO]SHA256HMAC: 52ed5551ad40981d2a45b595a4086ec4678cbfda9af76274a0d98ee9b4fac2b6
+[INFO]
+Load ENC Key 	8F40C5ADB68F25624AE5B214EA767A6EC94D829D3D7B5E1AD1BA6F3E2138285F 
+ and HASH Key	8F40C5ADB68F25624AE5B214EA767A6EC94D829D3D7B5E1AD1BA6F3E2138285F
+secure_bit ==> 0
+MSG LEVEL: 3
+[INFO]checksum 0
+[INFO]signature 0
+[INFO]pattern 0
+[INFO]hash 0
+[INFO]filename Debug/Exe/firmware_is.bin
+[INFO]privkey enc A0D6DAE7E062CA94CBB294BF896B9F68CF8438774256AC7403CA4FD9A1C9564F
+[INFO]privkey hash (null)
+[INFO]pubkey enc efuse (null)
+[INFO]pubkey hash efuse (null)
+[INFO]hash key (null)
+[INFO]--flash offset 0
+[INFO]--source file Debug/Exe/application_is.out
+[INFO]---header-next (null)
+[INFO]---header-type FWHS_S
+[INFO]---header-encrypt 0
+[INFO]---header-serial 100
+[INFO]---header-user_key1 (null)
+[INFO]---header-user_key2 BB0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
+[INFO]---fst-enc algo 1
+[INFO]---fst-hash algo 1
+[INFO]---fst-part size 0
+[INFO]---fst-cipher key (null)
+[INFO]---fst-cipher iv (null)
+[INFO]---fst-validpat 0001020304050607
+[INFO]---fst-hash en 1
+[INFO]---fst-enc en 0
+[INFO]----shdr type SRAM
+[INFO]----shdr enc 0
+[INFO]----option (null)
+[INFO]----ram addr 0
+[INFO]----start (null)
+[INFO]----end (null)
+[INFO]----entrytab gRamStartFun
+[INFO]----file (null)
+[INFO]------ FIRMWARE_FUNTAB*
+[INFO]------ FIRMWARE_SIGN*
+[INFO]------ FIRMWARE_SRAM_RO*
+[INFO]------ FIRMWARE_SRAM_RW*
+[INFO]----shdr type PSRAM
+[INFO]----shdr enc 0
+[INFO]----option (null)
+[INFO]----ram addr 0
+[INFO]----start (null)
+[INFO]----end (null)
+[INFO]----entrytab (null)
+[INFO]----file (null)
+[INFO]------ FIRMWARE_ERAM_RO*
+[INFO]------ FIRMWARE_ERAM_RW*
+[INFO]--
+[INFO]--flash offset 0
+[INFO]--source file Debug/Exe/application_is.out
+[INFO]---header-next (null)
+[INFO]---header-type XIP
+[INFO]---header-encrypt 0
+[INFO]---header-serial 0
+[INFO]---header-user_key1 (null)
+[INFO]---header-user_key2 (null)
+[INFO]---fst-enc algo 1
+[INFO]---fst-hash algo 1
+[INFO]---fst-part size 0
+[INFO]---fst-cipher key (null)
+[INFO]---fst-cipher iv (null)
+[INFO]---fst-validpat 0001020304050607
+[INFO]---fst-hash en 1
+[INFO]---fst-enc en 0
+[INFO]----shdr type XIP
+[INFO]----shdr enc 0
+[INFO]----option (null)
+[INFO]----ram addr 0
+[INFO]----start (null)
+[INFO]----end (null)
+[INFO]----entrytab (null)
+[INFO]----file (null)
+[INFO]------ FIRMWARE_XIP_C*
+[INFO]--
+[INFO]--flash offset 0
+[INFO]--source file Debug/Exe/application_is.out
+[INFO]---header-next (null)
+[INFO]---header-type XIP
+[INFO]---header-encrypt 0
+[INFO]---header-serial 0
+[INFO]---header-user_key1 (null)
+[INFO]---header-user_key2 (null)
+[INFO]---fst-enc algo 1
+[INFO]---fst-hash algo 1
+[INFO]---fst-part size 0
+[INFO]---fst-cipher key (null)
+[INFO]---fst-cipher iv (null)
+[INFO]---fst-validpat 0001020304050607
+[INFO]---fst-hash en 1
+[INFO]---fst-enc en 0
+[INFO]----shdr type XIP
+[INFO]----shdr enc 0
+[INFO]----option (null)
+[INFO]----ram addr 0
+[INFO]----start (null)
+[INFO]----end (null)
+[INFO]----entrytab (null)
+[INFO]----file (null)
+[INFO]------ FIRMWARE_XIP_P*
+[INFO]--
+[INFO]
+[INFO]efuse enc pubkey: 8f 40 c5 ad b6 8f 25 62 4a e5 b2 14 ea 76 7a 6e c9 4d 82 9d 3d 7b 5e 1a d1 ba 6f 3e 21 38 28 5f 
+[INFO]efuse enc privkey: 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 5f 
+[INFO]Hash key from Partition table
+[INFO]hash key: 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 5f 
+[INFO]enc privkey: a0 d6 da e7 e0 62 ca 94 cb b2 94 bf 89 6b 9f 68 cf 84 38 77 42 56 ac 74 03 ca 4f d9 a1 c9 56 4f 
+[INFO]enc pubkey: 68 51 3e f8 3e 39 6b 12 ba 05 9a 90 0f 36 b6 d3 1d 11 fe 1c 5d 25 eb 8a a7 c5 50 30 7f 9c 24 05 
+[INFO]AES key: 51 80 a8 8b ac 99 b5 f3 70 c0 c4 80 0e 71 9e 76 d2 9a 20 4a f8 5d 45 6c db a6 39 78 09 6c 7e 3c 
+[INFO]Source name Debug/Exe/application_is.out
+[INFO]Current pos 1a0 Prev SHDR pos 0
+[INFO]--------
+[INFO]---- FIRMWARE_FUNTAB*
+[INFO]---- 10000480
+[INFO]---- a27c
+[INFO]---- 70
+[INFO]--------
+[INFO]--------
+[INFO]---- FIRMWARE_SIGN*
+[INFO]---- 100004f0
+[INFO]---- a2ec
+[INFO]---- c
+[INFO]--------
+[INFO]--------
+[INFO]---- FIRMWARE_SRAM_RO*
+[INFO]---- 10000e00
+[INFO]---- abf0
+[INFO]---- 24f8
+[INFO]--------
+[INFO]--------
+[INFO]---- FIRMWARE_SRAM_RW*
+[INFO]---- 10000500
+[INFO]---- a2f8
+[INFO]---- 8f8
+[INFO]--------
+[INFO]-------- acquire by sections
+[INFO]---- base 10000480 length 2e80
+[INFO]--------
+[INFO]---- target offset 0 elf offset a27c size 70
+[INFO]---- target offset 70 elf offset a2ec size c
+[INFO]---- target offset 980 elf offset abf0 size 24f8
+[INFO]---- target offset 80 elf offset a2f8 size 8f8
+[INFO] SECTION SET !!!!!
+[INFO]0 42a0e0 10000480
+[INFO]Current pos 30a0 Prev SHDR pos 1a0
+[INFO]--------
+[INFO]---- FIRMWARE_ERAM_RO*
+[INFO]---- 60000000
+[INFO]---- d0e8
+[INFO]---- 0
+[INFO]--------
+[INFO]--------
+[INFO]---- FIRMWARE_ERAM_RW*
+[INFO]----        0
+[INFO]---- 0
+[INFO]---- 0
+[INFO]--------
+[INFO]-------- acquire by sections
+[INFO]---- base 60000000 length 0
+[INFO]--------
+[INFO]NEXT align to 16K
+[INFO]HASH: signature
+[INFO]Hash result: d7 d7 ec d7 83 14 fb f0 60 f8 e7 6f 7e 0b df fc f0 27 47 12 17 7b 0e 79 4a 01 89 d1 a7 1b c3 c2 
+[INFO]PADDING to 16K
+[INFO]Source name Debug/Exe/application_is.out
+[INFO]Current pos c0 Prev SHDR pos 0
+[INFO]--------
+[INFO]---- FIRMWARE_XIP_C*
+[INFO]---- 9b000140
+[INFO]---- d0e8
+[INFO]---- 4da08
+[INFO]--------
+[INFO]-------- acquire by sections
+[INFO]---- base 9b000140 length 4da20
+[INFO]--------
+[INFO]---- target offset 0 elf offset d0e8 size 4da08
+[INFO] SECTION SET !!!!!
+[INFO]d0c478 42a0e0 ffffffff
+[INFO]NEXT align to 16K
+[INFO]Hash result: a5 37 b3 4c 45 ce 4f 80 95 8c c1 15 5f fe 70 3a 0a 15 c6 ba 83 69 9d a3 de c8 b6 5d 49 a5 6b 65 
+[INFO]PADDING to 16K
+[INFO]Source name Debug/Exe/application_is.out
+[INFO]Current pos c0 Prev SHDR pos 0
+[INFO]--------
+[INFO]---- FIRMWARE_XIP_P*
+[INFO]---- 9b800140
+[INFO]---- 5aaf0
+[INFO]---- 1ec96
+[INFO]--------
+[INFO]-------- acquire by sections
+[INFO]---- base 9b800140 length 1eca0
+[INFO]--------
+[INFO]---- target offset 0 elf offset 5aaf0 size 1ec96
+[INFO] SECTION SET !!!!!
+[INFO]d11488 42a0e0 ffffffff
+[INFO]Hash result: 80 7b da 0f af 66 0f 8d 3b 30 22 13 f1 2e 5f 08 1a 23 36 45 dd 8b 16 f7 13 3a 03 95 1d 0c 30 c6 
+[INFO]PADDING to 64B
+[INFO]
+PTAB ==> Debug\Exe\partition.bin
+BOOT ==> Debug\Exe\bootloader.bin
+FW1 ==> Debug\Exe\firmware_is.bin
