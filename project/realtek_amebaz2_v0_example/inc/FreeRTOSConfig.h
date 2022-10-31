@@ -90,7 +90,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_RECURSIVE_MUTEXES				1
 #define configUSE_QUEUE_SETS                    			1
 #define configUSE_TASK_NOTIFICATIONS				1
-#define configUSE_TRACE_FACILITY						0
+#define configUSE_TRACE_FACILITY						1
 
 /* Constants that define which hook (callback) functions should be used. */
 #define configUSE_IDLE_HOOK                     				0
@@ -99,12 +99,13 @@ extern uint32_t SystemCoreClock;
 #define secureconfigUSE_MALLOC_FAILED_HOOK		1
 
 /* Constants provided for debugging and optimisation assistance. */
-#define configCHECK_FOR_STACK_OVERFLOW			2
+#define configCHECK_FOR_STACK_OVERFLOW			        2
+#define configRECORD_STACK_HIGH_ADDRESS                 1
 
 /* Software timer definitions. */
 #define configUSE_TIMERS							1
 #define configTIMER_TASK_PRIORITY					( configMAX_PRIORITIES - 1 )
-#define configTIMER_QUEUE_LENGTH					( 10 + 64)
+#define configTIMER_QUEUE_LENGTH					( 10 + 32)
 #define configTIMER_TASK_STACK_DEPTH				( 512 )
 
 /* Set the following definitions to 1 to include the API function, or zero
@@ -119,6 +120,8 @@ extern uint32_t SystemCoreClock;
 #define INCLUDE_vTaskDelay						1
 #define INCLUDE_pcTaskGetTaskName       1
 #define INCLUDE_uxTaskGetStackHighWaterMark	0
+#define INCLUDE_uxTaskGetStackSize      				1
+#define INCLUDE_uxTaskGetFreeStackSize    				1
 #define INCLUDE_xTaskGetIdleTaskHandle			0
 #define INCLUDE_eTaskGetState					1
 #define INCLUDE_xTaskResumeFromISR			0
@@ -274,7 +277,6 @@ In wlan usage, this value is suggested to use value less than 80 milliseconds */
 
 #undef configMINIMAL_STACK_SIZE
 #define configMINIMAL_STACK_SIZE		( ( unsigned short ) 192 )
-#undef configASSERT
 #endif //#if defined(configUSE_CUSTOMIZED_TICKLESS_IDLE) && configUSE_CUSTOMIZED_TICKLESS_IDLE
 #endif // #if !defined(CONFIG_BUILD_SECURE) || (CONFIG_BUILD_SECURE == 0)
 #endif // #if !defined(__IASMARM__) || (__IASMARM__ != 1)

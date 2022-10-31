@@ -39,6 +39,9 @@ extern void at_isp_init(void);
 	(defined(CONFIG_RSC) && CONFIG_RSC))
 extern void at_cloud_init(void);
 #endif
+#ifdef CHIP_PROJECT
+extern void at_matter_init(void);
+#endif
 void at_log_init(void);
 
 char log_buf[LOG_SERVICE_BUFLEN];
@@ -109,7 +112,11 @@ log_init_t log_init_table[] = {
 	CONFIG_AIRKISS_CLOUD) || CONFIG_ALINK || (defined(CONFIG_HILINK) && CONFIG_HILINK) || \
 	(defined(CONFIG_MIIO) && CONFIG_MIIO) || (defined(CONFIG_RSC) && CONFIG_RSC))
 	at_cloud_init,
-#endif	
+#endif
+
+#ifdef CHIP_PROJECT
+	at_matter_init,
+#endif
 };
 #else
 #error "not implement, add to linker script"

@@ -493,7 +493,31 @@ size_t xPortGetMinimumEverFreeHeapSize( void )
 	return xMinimumEverFreeBytesRemaining;
 }
 /*-----------------------------------------------------------*/
+#ifdef CHIP_PROJECT
+size_t xPortGetTotalHeapSize( void )
+{
+	if(hal_get_flash_port_cfg() != FLASH_PORTB){ // not a flash MCM package, so PSRAM on B port is possible
+		if(hal_lpcram_is_valid() == HAL_OK){
+			return configTOTAL_HEAP0_SIZE + configTOTAL_HEAP1_SIZE;
+		}
+	}
+	else
+	{
+		return configTOTAL_HEAP0_SIZE;
+	}
+}
+/*-----------------------------------------------------------*/
 
+void xPortResetHeapMinimumEverFreeHeapSize(void)
+{
+    taskENTER_CRITICAL();
+    {
+        xMinimumEverFreeBytesRemaining = xFreeBytesRemaining;
+    }
+    taskEXIT_CRITICAL();
+}
+/*-----------------------------------------------------------*/
+#endif
 static void prvInsertBlockIntoFreeList( BlockLink_t *pxBlockToInsert )
 {
 BlockLink_t *pxIterator;

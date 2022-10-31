@@ -358,6 +358,10 @@
 #include <mbedtls_ecdhe/example_mbedtls_ecdhe.h>
 #endif
 
+#ifdef CHIP_PROJECT
+#include <example_matter.h>
+#endif
+
 /*
 	Preprocessor of example
 */
@@ -831,6 +835,10 @@ example_hilink();
 #if defined(CONFIG_LINKKIT_AWSS) && (CONFIG_LINKKIT_AWSS == 1)
 	extern void example_ali_awss();
 	example_ali_awss();
+#endif
+
+#ifdef CHIP_PROJECT
+	example_matter_task();
 #endif
 
 #if defined(API_TEST_MODE)

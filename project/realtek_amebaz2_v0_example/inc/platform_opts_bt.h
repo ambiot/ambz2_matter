@@ -1,7 +1,11 @@
 #ifndef __PLATFORM_OPTS_BT_H__
 #define __PLATFORM_OPTS_BT_H__
 
-#define CONFIG_BT			0
+#ifdef CHIP_PROJECT
+#define CONFIG_BT		1
+#else
+#define CONFIG_BT		0
+#endif
 
 #if CONFIG_BT
 #define CONFIG_FTL_ENABLED
@@ -31,6 +35,11 @@
 #define CONFIG_BT_ONLY_WITHOUT_WLAN					0
 /* For Google seamless setup FreeRTOS SDK example */
 #define CONFIG_BT_GOOGLE_SEAMLESS     0
+#ifdef CHIP_PROJECT
+#undef CONFIG_BT_PERIPHERAL
+#define CONFIG_BT_PERIPHERAL		1
+#define CONFIG_BT_MATTER_ADAPTER	1
+#endif
 #endif // CONFIG_BT
 
 #if defined CONFIG_BT_SCATTERNET && CONFIG_BT_SCATTERNET
