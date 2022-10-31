@@ -138,7 +138,13 @@ void sau_setup(ns_region_t *ns_region)
         TZ_SAU_Setup();
 }
 #endif
-
+#ifdef CHIP_PROJECT
+#if defined (__GNUC__)
+/* Add This for C++ support to avoid compile error */
+void _init(void) {}
+void _fini(void) {}
+#endif
+#endif
 void app_start (void)
 {    
     dbg_printf ("Build @ %s, %s\r\n", __TIME__, __DATE__);
@@ -157,6 +163,13 @@ void app_start (void)
 	//__iar_cstart_call_ctors(NULL);
 #endif
 	
+#ifdef CHIP_PROJECT
+#if defined (__GNUC__)
+	extern void __libc_init_array(void);
+	/* Add This for C++ support */
+	__libc_init_array();
+#endif
+#endif
     shell_cmd_init ();
     main();
 #if defined ( __ICCARM__ )

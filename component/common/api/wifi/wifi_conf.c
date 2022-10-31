@@ -190,6 +190,12 @@ extern int rltk_set_mode_posthandle(rtw_mode_t curr_mode, rtw_mode_t next_mode, 
 extern int wifi_set_pmk_cache_enable(unsigned char value);
 #endif
 
+#ifdef CHIP_PROJECT
+#ifndef IN
+#define IN
+#endif
+#endif
+
 //----------------------------------------------------------------------------//
 static int wifi_connect_local(rtw_network_info_t *pWifi)
 {
@@ -3689,6 +3695,12 @@ u32 wifi_set_pmf(unsigned char pmf_mode){
 	ret = rltk_set_pmf(pmf_mode);
 	return ret;
 }
+#endif
+#endif
+
+#ifdef CHIP_PROJECT
+#ifdef IN
+#undef IN
 #endif
 #endif
 

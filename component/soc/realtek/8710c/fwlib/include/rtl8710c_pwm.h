@@ -35,6 +35,11 @@ extern "C"
 {
 #endif
 
+#ifdef CHIP_PROJECT
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
+
 #include "rtl8710c_timer.h"
 #include "rtl8710c_pwm_comm_type.h"
 #include "rtl8710c_pwm_type.h"
@@ -543,6 +548,10 @@ hal_status_t hal_pwm_auto_duty_ns_dec_rtl8710c (hal_pwm_adapter_t *ppwm_adp, u32
 /** @} */ /* End of group hs_hal_pwm_rom_func */
 
 /// @endcond /* End of condition DOXYGEN_ROM_HAL_API */
+
+#ifdef CHIP_PROJECT
+#pragma GCC diagnostic pop
+#endif
 
 #ifdef  __cplusplus
 }

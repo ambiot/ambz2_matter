@@ -210,7 +210,39 @@ void sntp_set_lasttime(long sec, long usec, unsigned int tick)
 	sntp_update_usec = usec;
 	sntp_update_tick = tick;
 }
+#if (__GNUC__ >= 9)
+#undef localtime
+#define localtime(a) __wrap_localtime(a)
+struct tm sntp_gen_system_time(int timezone)
+{
+	struct tm *current_tm;
+	unsigned int update_tick = 0;
+	long update_sec = 0, update_usec = 0;
+	time_t current_sec = 0;
+	unsigned int current_tick = xTaskGetTickCount();
 
+	sntp_get_lasttime(&update_sec, &update_usec, &update_tick);
+
+	if(update_tick) {
+		long tick_diff_sec, tick_diff_ms;
+
+		tick_diff_sec = (current_tick - update_tick) / configTICK_RATE_HZ;
+		tick_diff_ms = (current_tick - update_tick) % configTICK_RATE_HZ / portTICK_RATE_MS;
+		update_sec += tick_diff_sec;
+		update_usec += (tick_diff_ms * 1000);
+		current_sec = update_sec + update_usec / 1000000 + timezone * 3600;
+	}
+	else {
+		current_sec = current_tick / configTICK_RATE_HZ;
+	}
+
+	current_tm = (localtime(&current_sec));
+	current_tm->tm_year += 1900;
+	current_tm->tm_mon += 1;
+
+	return *current_tm;
+}
+#else
 struct tm sntp_gen_system_time(int timezone)
 {
 	struct tm current_tm;
@@ -239,6 +271,7 @@ struct tm sntp_gen_system_time(int timezone)
 
 	return current_tm;
 }
+#endif
 #endif
 
 /**

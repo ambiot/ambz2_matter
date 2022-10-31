@@ -7,6 +7,10 @@
 #include <flash_api.h>
 #include <lwip/sockets.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /************************Related setting****************************/
 #define HTTP_OTA_UPDATE
 
@@ -77,4 +81,7 @@ int update_ota_http_connect_server(int server_socket, char *host, int port);
 int http_update_ota(char *host, int port, char *resource);
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif
