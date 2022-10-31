@@ -6,6 +6,22 @@
 
 extern void console_init(void);
 
+#ifdef CHIP_PROJECT
+static void* app_mbedtls_calloc_func(size_t nelements, size_t elementSize)
+{
+	size_t size;
+	void *ptr = NULL;
+
+	size = nelements * elementSize;
+	ptr = pvPortMalloc(size);
+
+	if(ptr)
+		memset(ptr, 0, size);
+
+	return ptr;
+}
+#endif
+
 /**
   * @brief  Main program.
   * @param  None
@@ -15,6 +31,10 @@ int main(void)
 {
 	/* Initialize log uart and at command service */
 	console_init();
+
+#ifdef CHIP_PROJECT
+	mbedtls_platform_set_calloc_free(app_mbedtls_calloc_func, vPortFree);
+#endif
 
 	/* pre-processor of application example */
 	pre_example_entry();

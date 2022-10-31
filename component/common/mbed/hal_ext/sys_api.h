@@ -118,6 +118,10 @@ void sys_cpu_reset(void);
 
 /*\@}*/
 
+#if (defined(CONFIG_PLATFORM_8710C) && (CONFIG_PLATFORM_8710C == 1))
+uint32_t sys_update_ota_prepare_addr(void);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

@@ -160,6 +160,10 @@ enum {
     RTW_SECURITY_WPA3_AES_PSK 	           = ( WPA3_SECURITY | AES_ENABLED ),                                                    /**< WPA3-SAE with AES security                                  */
     RTW_SECURITY_WPA2_WPA3_MIXED           = ( WPA2_SECURITY | WPA3_SECURITY | AES_ENABLED ),                                    /**< WPA3-SAE/WPA2 with AES security                             */
 
+#ifdef CHIP_PROJECT
+    RTW_SECURITY_WPA_WPA2_MIXED            = ( WPA_SECURITY | WPA2_SECURITY | TKIP_ENABLED | AES_ENABLED ),                      /**< WPA/WPA2 Security                                           */
+#endif
+
     RTW_SECURITY_UNKNOWN                   = ( -1 ),                                                                             /**< May be returned by scan function if security is unknown. Do not pass this to the join function! */
 
     RTW_SECURITY_FORCE_32_BIT              = ( 0x7fffffff )                                                                      /**< Exists only to force rtw_security_t type to 32 bits        */

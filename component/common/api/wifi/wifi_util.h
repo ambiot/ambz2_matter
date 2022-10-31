@@ -40,6 +40,7 @@ int wext_set_pmk_cache_enable(const char *ifname, __u8 value);
 #endif
 int wext_set_key_ext(const char *ifname, __u16 alg, const __u8 *addr, int key_idx, int set_tx, const __u8 *seq, __u16 seq_len, __u8 *key, __u16 key_len);
 int wext_get_enc_ext(const char *ifname, __u16 *alg, __u8 *key_idx, __u8 *passphrase);
+int wext_get_auth_type(const char *ifname, __u32 *auth_type);
 int wext_set_passphrase(const char *ifname, const __u8 *passphrase, __u16 passphrase_len);
 int wext_get_passphrase(const char *ifname, __u8 *passphrase);
 int wext_set_mode(const char *ifname, int mode);

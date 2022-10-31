@@ -261,7 +261,10 @@ __STATIC_INLINE size_t strlen(char const *s)
   \return   Return "count" if there is no null terminating ('\0') among the
             first "count" characters pointed to by s.
 */
-__STATIC_INLINE size_t strnlen(char const *s, size_t count)
+#ifndef CHIP_PROJECT
+__STATIC_INLINE 
+#endif
+size_t strnlen(char const *s, size_t count)
 {
     return strproc_stubs.strnlen(s, count);
 }
