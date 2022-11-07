@@ -45,7 +45,7 @@ Make sure ambz2_sdk and connectedhomeip are on the same directory level
 
     source ToolPath.sh
 	
-    make lib_all
+    make all_cluster
 
 ### lighting-app
 
@@ -87,7 +87,7 @@ Make sure ambz2_sdk and connectedhomeip are on the same directory level
 
     cd ambz2_sdk/project/realtek_amebaz2_v0_example/GCC-RELEASE
 
-    make is
+    make is_matter
 
 ## Flash Image
 
