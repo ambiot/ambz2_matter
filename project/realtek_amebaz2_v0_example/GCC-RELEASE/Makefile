@@ -33,9 +33,21 @@ endif
 endif
 	@echo Toolchain unzip done!
 
+.PHONY: is
+is: toolchain
+	cp partition_default.json partition.json
+	@$(MAKE) -f application.is.mk
 
-.PHONY: lib_all
-lib_all: toolchain
+.PHONY: mp
+mp: toolchain
+	@$(MAKE) -f application.is.mk mp
+
+.PHONY: clean
+clean:
+	@$(MAKE) -f application.is.mk clean
+
+.PHONY: all_cluster
+all_cluster: toolchain
 	python3 ameba_zap_cluster_list.py --zap_file ../../../third_party/connectedhomeip/examples/all-clusters-app/all-clusters-common/all-clusters-app.zap
 	@$(MAKE) -f lib_chip.mk all
 	@$(MAKE) -f lib_chip_main.mk all
@@ -64,16 +76,13 @@ chef: toolchain
 	@$(MAKE) -f lib_chip_chef_core.mk all
 	@$(MAKE) -f lib_chip_chef_main.mk all
 
-.PHONY: is
-is: toolchain
-	@$(MAKE) -f application.is.mk
-
-.PHONY: mp
-mp: toolchain
-	@$(MAKE) -f application.is.mk mp
-
-.PHONY: clean
-clean:
+.PHONY: is_matter
+is_matter: toolchain
+	cp partition_matter.json partition.json
+	@$(MAKE) -f application.is.matter.mk
+	
+.PHONY: clean_matter
+clean_matter:
 	@$(MAKE) -f lib_chip.mk clean
 	@$(MAKE) -f lib_chip_main.mk clean
 	@$(MAKE) -f lib_chip_light_core.mk clean
@@ -84,7 +93,7 @@ clean:
 	@$(MAKE) -f lib_chip_otar_main.mk clean
 	@$(MAKE) -f lib_chip_chef_core.mk clean
 	@$(MAKE) -f lib_chip_chef_main.mk clean
-	@$(MAKE) -f application.is.mk clean
+	@$(MAKE) -f application.is.matter.mk clean
 
 debug: toolchain
 	@$(MAKE) -f application.is.mk debug

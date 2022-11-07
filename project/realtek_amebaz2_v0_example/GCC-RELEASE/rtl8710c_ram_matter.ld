@@ -127,27 +127,6 @@ SECTIONS
 		*(.sram.data*)
 		*(.data*)
 
-		. = ALIGN(4);
-		/* preinit data */
-		PROVIDE_HIDDEN (__preinit_array_start = .);
-		KEEP(*(.preinit_array))
-		PROVIDE_HIDDEN (__preinit_array_end = .);
-
-		. = ALIGN(4);
-		/* init data */
-		PROVIDE_HIDDEN (__init_array_start = .);
-		KEEP(*(SORT(.init_array.*)))
-		KEEP(*(.init_array))
-		PROVIDE_HIDDEN (__init_array_end = .);
-
-
-		. = ALIGN(4);
-		/* finit data */
-		PROVIDE_HIDDEN (__fini_array_start = .);
-		KEEP(*(SORT(.fini_array.*)))
-		KEEP(*(.fini_array))
-		PROVIDE_HIDDEN (__fini_array_end = .);
-
 		KEEP(*(.jcr*))
 		. = ALIGN(4);
 		/* All data end */
@@ -192,19 +171,6 @@ SECTIONS
 		__psram_code_rodata_end__ = .;
 	} > PSRAM
 
-	.psram.bss :
-	{
-		. = ALIGN(16);
-		__psram_bss_start__ = .;
-
-		*(.psram.bss*)
-
-		__psram_bss_end__ = .;
-
-		. = ALIGN(32);
-		__eram_bss_end__ = .;
-	} > PSRAM
-	
 	.ram.code_text :
 	{
 		. = ALIGN(32);
@@ -291,9 +257,41 @@ SECTIONS
 		*(.rodata*)
 		*(.rodata.str1*)
 		
+		/* Add This for C++ support */
+		. = ALIGN(4);
+		__preinit_array_start = .;
+		KEEP(*(.preinit_array))
+		__preinit_array_end = .;
+		. = ALIGN(4);
+		__init_array_start = .;
+		KEEP(*(SORT(.init_array.*)))
+		KEEP(*(.init_array))
+		__init_array_end = .;
+		. = ALIGN(4);
+		__fini_array_start = .;
+		KEEP(*(SORT(.fini_array.*)))
+		KEEP(*(.fini_array))
+		__fini_array_end = .;
+		/*-----------------*/
+
 		. = ALIGN(4);
 		__xip_code_rodata_end__ = .;
 	} > XIP_FLASH_P
+
+	/* Add This for C++ support */
+	.ARM.extab  :
+	{
+		*(.ARM.extab* .gnu.linkonce.armextab.*)
+
+	} > XIP_FLASH_P
+
+	.ARM.exidx :
+	{
+		__exidx_start = .;
+		*(.ARM.exidx* .gnu.linkonce.armexidx.*)
+		__exidx_end = .;
+	} > XIP_FLASH_P
+	/*-----------------*/
 
 	.system_restore_data :
 	{
@@ -303,7 +301,22 @@ SECTIONS
 		*(.sys_restore.bss*)
 		*(.ram.bss.noinit*)
 	} > DTCM_RAM
-	
+
+	/* .psram.bss must be after .psram.data and .psram.text, because the region after .psram.bss will be used as heap */
+	.psram.bss :
+	{
+		. = ALIGN(16);
+		__psram_bss_start__ = .;
+
+		*(.psram.bss*)
+
+		__psram_bss_end__ = .;
+
+		. = ALIGN(32);
+		__eram_bss_end__ = .;
+	} > PSRAM
+
+	/* .bss must be after .data and .text, because the region after .bss will be used as heap */
 	.bss :
 	{
 		. = ALIGN(16);
