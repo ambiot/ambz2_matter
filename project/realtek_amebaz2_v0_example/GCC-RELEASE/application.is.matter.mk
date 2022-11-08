@@ -60,7 +60,7 @@ ROMIMG =
 # Decide if 64 bit time wrapper is to be included
 # -------------------------------------------------------------------
 #SYSTEM_TIME64_MAKE_OPTION = 1
-
+#BT_MATTER_MESH_ADAPTER = 1
 # Include folder list
 # -------------------------------------------------------------------
 
@@ -180,7 +180,11 @@ INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/ffs_demo/c
 INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/ffs_demo/realtek/configs
 
 #matter
+ifdef BT_MATTER_MESH_ADAPTER
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter
+else
 INCLUDES += -I../../../component/common/application/matter/common/bluetooth/bt_matter_adapter
+endif
 INCLUDES += -I../../../component/common/application/matter/application
 INCLUDES += -I../../../component/common/application/matter/mbedtls
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/src/app/hrp/gap
@@ -245,12 +249,66 @@ SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_co
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_config_service.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_config_wifi.c
 
+ifdef BT_MATTER_MESH_ADAPTER
+#bluetooth - example - bt_mesh_device_matter
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/cmd/mesh_data_uart.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/cmd/mesh_user_cmd_parse.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/profile/datatrans_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/profile/datatrans_service.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/light_ctl_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/light_ctl_setup_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/light_ctl_temperature_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/light_hsl_hue_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/light_hsl_saturation_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/light_hsl_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/light_hsl_setup_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/light_lightness_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/light_lightness_setup_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/light_xyl_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/light_xyl_setup_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/time_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/time_setup_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/generic_on_off_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/delay_execution.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/generic_transition_time.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/realtek/ping_control.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/realtek/datatrans_model.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/realtek/tp_control.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/health_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/scene_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/scene_setup_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/scheduler_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/scheduler_setup_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/delay_msg_rsp.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/common/datatrans_app.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/common/customer_dfu_service.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/common/dfudep_service.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/common/dfu_updater_app.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/common/ping_app.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/common/light_server_app.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/common/time_server_app.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/common/scene_server_app.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/common/scheduler_server_app.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/cmd/mesh_cmd.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/cmd/test_cmd.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/api/device/bt_mesh_device_api.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/api/device/device_idle_check.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/api/bt_mesh_user_api.c
+
+#bluetooth - example - bt_matter_mesh_adapter
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter/bt_mesh_device_matter_adapter_service.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter/bt_mesh_device_matter_app.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter/bt_mesh_device_matter_app_main.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter/bt_mesh_device_matter_app_task.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter/bt_mesh_device_matter_cmd.c
+else
 #bluetooth - example - bt_matter_adapter
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_app_main.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_app_task.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_peripheral_app.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_service.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_wifi.c
+endif
 
 #bluetooth - example
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/bt_example_entry.c
@@ -700,8 +758,10 @@ LIBFLAGS =
 LIBFLAGS += -L$(AMEBAZ2_ROMSYMDIR)
 LIBFLAGS += -Wl,--start-group ../../../component/soc/realtek/8710c/fwlib/lib/lib/hal_pmc.a -Wl,--end-group
 LIBFLAGS += -Wl,--start-group ../../../component/common/bluetooth/realtek/sdk/board/amebaz2/lib/btgap.a -Wl,--end-group
-#LIBFLAGS += -Wl,--start-group ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/lib/amebaz2/btmesh_prov.a -Wl,--end-group
-#LIBFLAGS += -Wl,--start-group ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/lib/amebaz2/btmesh_dev.a -Wl,--end-group
+ifdef BT_MATTER_MESH_ADAPTER
+LIBFLAGS += -Wl,--start-group ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/lib/amebaz2/btmesh_prov.a -Wl,--end-group
+LIBFLAGS += -Wl,--start-group ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/lib/amebaz2/btmesh_dev.a -Wl,--end-group
+endif
 all: LIBFLAGS += -Wl,--start-group -L../../../component/soc/realtek/8710c/misc/bsp/lib/common/GCC -l_soc_is -l_wlan -Wl,--end-group
 mp: LIBFLAGS += -Wl,--start-group -L../../../component/soc/realtek/8710c/misc/bsp/lib/common/GCC -l_soc_is -l_wlan_mp -Wl,--end-group
 LIBFLAGS += -L../../../component/soc/realtek/8710c/misc/bsp/lib/common/GCC -l_http -l_dct -l_eap -l_p2p -l_websocket -l_wps -l_mdns

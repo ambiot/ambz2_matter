@@ -54,6 +54,12 @@ void bt_matter_adapter_task_init(void);
 
 void bt_matter_adapter_task_deinit(void);
 
+void bt_matter_adapter_app_le_gap_init_chip(void);
+
+int bt_matter_adapter_init(void);
+
+uint16_t ble_att_mtu_z2(uint16_t conn_id);
+#if CONFIG_BT_MATTER_ADAPTER
 uint8_t get_bt_matter_adapter_state(void);
 
 void set_bt_matter_adapter_state(uint8_t state);
@@ -64,14 +70,34 @@ void bt_matter_adapter_app_deinit(void);
 
 void bt_matter_adapter_app_le_gap_init(void);
 
-void bt_matter_adapter_app_le_gap_init_chip(void);
-
-int bt_matter_adapter_init(void);
-
 int bt_matter_adapter_adv(void);
+#elif CONFIG_BT_MESH_DEVICE_MATTER
 
-uint16_t ble_att_mtu_z2(uint16_t conn_id);
+typedef struct
+{
+    uint8_t conn_id;
+    uint8_t service_id;
+    uint16_t attrib_index;
+    uint8_t *p_data;
+    uint16_t data_len;
+    uint8_t type;
+} BT_MATTER_SERVER_SEND_DATA;
 
+bool ble_matter_netmgr_adapter_init_handler(void);
+
+bool ble_matter_netmgr_adv_param_handler(uint16_t adv_int_min, uint16_t adv_int_max, void *advData, uint8_t advData_len);
+
+bool ble_matter_netmgr_adv_start_handler(void);
+
+bool ble_matter_netmgr_adv_stop_handler(void);
+
+bool ble_matter_netmgr_start_adv(void);
+
+bool ble_matter_netmgr_stop_adv(void);
+
+bool ble_matter_netmgr_server_send_data(uint8_t conn_id, T_SERVER_ID service_id, uint16_t attrib_index,
+                      uint8_t *p_data, uint16_t data_len, T_GATT_PDU_TYPE type);
+#endif
 #ifdef __cplusplus
 }
 #endif

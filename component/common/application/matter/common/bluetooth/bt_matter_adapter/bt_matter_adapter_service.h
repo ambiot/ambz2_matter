@@ -22,8 +22,9 @@ extern "C"  {
 /* Add Includes here */
 #include <profile_server.h>
 #include "bt_matter_adapter_config.h"
+#if CONFIG_BT_MATTER_ADAPTER
 #include "simple_ble_service.h"
-
+#endif
 /** @defgroup SIMP_Service Simple Ble Service
   * @brief Simple BLE service
   * @{
@@ -53,7 +54,12 @@ typedef enum
   * @brief  Upstream message used to inform application.
   * @{
   */
-
+#if CONFIG_BT_MESH_DEVICE_MATTER
+#define SIMP_NOTIFY_INDICATE_V3_ENABLE     1
+#define SIMP_NOTIFY_INDICATE_V3_DISABLE    2
+#define SIMP_NOTIFY_INDICATE_V4_ENABLE     3
+#define SIMP_NOTIFY_INDICATE_V4_DISABLE    4
+#endif
 /** @defgroup SIMP_Service_Read_Info SIMP Service Read Info
   * @brief  Parameter for reading characteristic value.
   * @{
@@ -94,7 +100,11 @@ typedef struct
     T_WRITE_TYPE write_type;
     uint16_t len;
     uint8_t *p_value;
+#if CONFIG_BT_MESH_DEVICE_MATTER
+} TSIMP_WRITE_MSG;
+#else
 } TBTCONFIG_WRITE_MSG;
+#endif
 /** @} End of TSIMP_WRITE_MSG */
 
 
@@ -102,24 +112,43 @@ typedef struct
   * @brief Simple BLE service callback message content.
   * @{
   */
+#if CONFIG_BT_MESH_DEVICE_MATTER
+typedef union
+{
+    uint8_t notification_indification_index; //!< ref: @ref SIMP_Service_Notify_Indicate_Info
+    uint8_t read_value_index; //!< ref: @ref SIMP_Service_Read_Info
+    TSIMP_WRITE_MSG write;
+    uint16_t read_offset;
+} TSIMP_UPSTREAM_MSG_DATA;
+#else
 typedef union
 {
     uint8_t read_value_index; //!< ref: @ref SIMP_Service_Read_Info
     TBTCONFIG_WRITE_MSG write;
 	uint16_t read_offset;
 } TBTCONFIG_MSG_DATA;
+#endif
 /** @} End of TSIMP_UPSTREAM_MSG_DATA */
 
 /** @defgroup TSIMP_CALLBACK_DATA TSIMP_CALLBACK_DATA
   * @brief Simple BLE service data to inform application.
   * @{
   */
+#if CONFIG_BT_MESH_DEVICE_MATTER
+typedef struct
+{
+    uint8_t                 conn_id;
+    T_SERVICE_CALLBACK_TYPE msg_type;
+    TSIMP_UPSTREAM_MSG_DATA msg_data;
+} TSIMP_CALLBACK_DATA;
+#else
 typedef struct
 {
     uint8_t                 conn_id;
     T_SERVICE_CALLBACK_TYPE msg_type;
     TBTCONFIG_MSG_DATA msg_data;
 } TBTCONFIG_CALLBACK_DATA;
+#endif
 /** @} End of TSIMP_CALLBACK_DATA */
 
 /** @defgroup TSIMP_WRITE_MSG TSIMP_WRITE_MSG
@@ -127,6 +156,7 @@ typedef struct
   * @{
   */
 /*
+#if CONFIG_BT_MATTER_ADAPTER
 typedef struct
 {
     uint8_t opcode; //!< ref:  @ref SIMP_Service_Write_Info
@@ -163,6 +193,7 @@ typedef struct
     T_SERVICE_CALLBACK_TYPE msg_type;
     TSIMP_UPSTREAM_MSG_DATA msg_data;
 } TSIMP_CALLBACK_DATA;
+#endif
 */
 /** @} End of TSIMP_CALLBACK_DATA */
 

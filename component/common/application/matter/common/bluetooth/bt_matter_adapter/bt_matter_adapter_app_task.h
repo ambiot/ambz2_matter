@@ -23,7 +23,11 @@ extern "C" {
  * @brief  Initialize App task
  * @return void
  */
+#if CONFIG_BT_MESH_DEVICE_MATTER
+bool bt_matter_adapter_send_msg(uint16_t sub_type, void *arg);
+#else
 void bt_matter_adapter_send_msg(uint16_t sub_type);
+#endif
 void bt_matter_adapter_app_task_init(void);
 void bt_matter_adapter_app_task_deinit(void);
 

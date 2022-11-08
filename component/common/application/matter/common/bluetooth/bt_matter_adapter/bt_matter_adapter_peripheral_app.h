@@ -58,6 +58,9 @@ typedef struct
  * @param[in] io_msg  IO message data
  * @return   void
  */
+#if CONFIG_BT_MESH_DEVICE_MATTER
+void bt_matter_adapter_app_handle_gap_msg(T_IO_MSG  *p_gap_msg);
+#endif
 void bt_matter_adapter_app_handle_io_msg(T_IO_MSG  io_msg);
 
 /**
@@ -81,11 +84,42 @@ T_APP_RESULT bt_matter_adapter_app_gap_callback(uint8_t cb_type, void *p_cb_data
 
 void bt_matter_adapter_app_set_adv_data(void);
 #include "bt_matter_adapter_service.h"
+#if CONFIG_BT_MESH_DEVICE_MATTER
+typedef struct
+{
+    uint8_t                 conn_id;
+    uint8_t	             new_state;
+    uint16_t                disc_cause;
+} BT_MATTER_CONN_EVENT;
+
+typedef enum
+{
+    BT_MATTER_MSG_START_ADV = 12,
+    BT_MATTER_MSG_STOP_ADV,
+    BT_MATTER_MSG_SEND_DATA,
+} BT_MATTER_SERVER_MSG_TYPE;
+
+typedef enum
+{
+    BT_MATTER_SEND_CB_MSG_DISCONNECTED = 1,
+    BT_MATTER_SEND_CB_MSG_CONNECTED,
+    BT_MATTER_SEND_CB_MSG_ALL_GAP_MSG,
+    BT_MATTER_SEND_CB_MSG_SEND_DATA_COMPLETE,
+    BT_MATTER_SEND_CB_MSG_IND_NTF_ENABLE,
+    BT_MATTER_SEND_CB_MSG_IND_NTF_DISABLE,
+    BT_MATTER_SEND_CB_MSG_READ_WRITE_CHAR,
+} BT_MATTER_SEND_MSG_TYPE;
+#endif
+
 typedef enum
 {
     CB_PROFILE_CALLBACK = 0x01,  /**< bt_matter_adapter_app_profile_callback */
     CB_GAP_CALLBACK = 0x02, /**< bt_matter_adapter_app_gap_callback */
+#if CONFIG_BT_MESH_DEVICE_MATTER
+    CB_GAP_MSG_CONN_EVENT = 0x3, /**< bt_matter_adapter_app_handle_gap_msg */
+#else
     CB_GAP_MSG_CALLBACK = 0x3, /**< bt_matter_adapter_app_handle_gap_msg */
+#endif
 } T_CHIP_BLEMGR_CALLBACK_TYPE;
 typedef int (*chip_blemgr_callback)(void *param, void *cb_data, int type, T_CHIP_BLEMGR_CALLBACK_TYPE callback_type);
 void chip_blemgr_set_callback_func(chip_blemgr_callback p, void *data);

@@ -20,6 +20,7 @@
 #if (defined(CONFIG_BT_MATTER_ADAPTER) && CONFIG_BT_MATTER_ADAPTER)
 #include <os_msg.h>
 #include <os_task.h>
+#include <os_mem.h>
 #include <gap.h>
 #include <gap_le.h>
 #include <gap_msg.h>
@@ -70,8 +71,9 @@ void chip_blemgr_set_callback_func(chip_blemgr_callback p, void *data)
 /*============================================================================*
  *                              Functions
  *============================================================================*/
+#if CONFIG_BT_MATTER_ADAPTER
 void bt_matter_adapter_app_handle_gap_msg(T_IO_MSG  *p_gap_msg);
-
+#endif
 /**
  * @brief    All the application messages are pre-handled in this function
  * @note     All the IO MSGs are sent to this function, then the event handling
@@ -79,6 +81,35 @@ void bt_matter_adapter_app_handle_gap_msg(T_IO_MSG  *p_gap_msg);
  * @param[in] io_msg  IO message data
  * @return   void
  */
+#if CONFIG_BT_MESH_DEVICE_MATTER
+int bt_matter_app_handle_upstream_msg(uint16_t subtype, void *pdata)
+{
+    int ret = 0;
+    switch (subtype)
+    {
+        case BT_MATTER_MSG_START_ADV:
+            ret = le_adv_start();
+            break;
+        case BT_MATTER_MSG_STOP_ADV:
+            ret = le_adv_stop();
+            break;
+        case BT_MATTER_MSG_SEND_DATA:
+        {
+                BT_MATTER_SERVER_SEND_DATA *param = (BT_MATTER_SERVER_SEND_DATA *)pdata;
+                if(param)
+                {
+                        server_send_data(param->conn_id, param->service_id, param->attrib_index, param->p_data, param->data_len, param->type);
+                        os_mem_free(param->p_data);
+                        os_mem_free(param);
+                }
+                break;
+        }
+        default:
+            break;
+    }
+    return ret;
+}
+#endif
 void bt_matter_adapter_app_handle_io_msg(T_IO_MSG  io_msg)
 {
     uint16_t msg_type = io_msg.type;
@@ -92,11 +123,17 @@ void bt_matter_adapter_app_handle_io_msg(T_IO_MSG  io_msg)
         break;
     case IO_MSG_TYPE_QDECODE:
         {
+#if CONFIG_BT_MESH_DEVICE_MATTER
+            uint16_t subtype = io_msg.subtype;
+            void *arg = io_msg.u.buf;
+            bt_matter_app_handle_upstream_msg(subtype, arg);
+#else
             if (io_msg.subtype == 1) {
                 le_adv_start();
             } else if (io_msg.subtype == 0) {
                 le_adv_stop();
             }
+#endif
         }
         break;
     default:
@@ -104,6 +141,52 @@ void bt_matter_adapter_app_handle_io_msg(T_IO_MSG  io_msg)
     }
 }
 
+#if CONFIG_BT_MESH_DEVICE_MATTER
+void bt_matter_handle_callback_msg(T_IO_MSG callback_msg)//receive
+{
+    uint16_t msg_type = callback_msg.type;
+
+    switch (msg_type)
+    {
+    case BT_MATTER_SEND_CB_MSG_DISCONNECTED:
+    case BT_MATTER_SEND_CB_MSG_CONNECTED:
+    {
+        chip_blemgr_callback_func(chip_blemgr_callback_data, callback_msg.u.buf, 0, CB_GAP_MSG_CONN_EVENT);
+        os_mem_free(callback_msg.u.buf);
+        callback_msg.u.buf = NULL;
+    }
+        break;
+    case BT_MATTER_SEND_CB_MSG_ALL_GAP_MSG:
+        break;
+    case BT_MATTER_SEND_CB_MSG_SEND_DATA_COMPLETE:
+    {
+        uint8_t service_id = callback_msg.subtype;
+        chip_blemgr_callback_func(chip_blemgr_callback_data, callback_msg.u.buf, service_id, CB_PROFILE_CALLBACK);
+        os_mem_free(callback_msg.u.buf);
+        callback_msg.u.buf = NULL;
+    }
+        break;
+    case BT_MATTER_SEND_CB_MSG_IND_NTF_DISABLE:
+    case BT_MATTER_SEND_CB_MSG_IND_NTF_ENABLE:
+    case BT_MATTER_SEND_CB_MSG_READ_WRITE_CHAR:
+    {
+        uint8_t service_id = callback_msg.subtype;
+        chip_blemgr_callback_func(chip_blemgr_callback_data, callback_msg.u.buf, service_id, CB_PROFILE_CALLBACK);
+        TSIMP_CALLBACK_DATA * pp_param = (TSIMP_CALLBACK_DATA *) callback_msg.u.buf;
+        if (pp_param->msg_data.write.len !=0)
+        {
+            os_mem_free(pp_param->msg_data.write.p_value);
+            pp_param->msg_data.write.p_value = NULL;
+        }
+        os_mem_free(callback_msg.u.buf);
+        callback_msg.u.buf = NULL;
+    }
+        break;
+    default:
+        break;
+    }
+}
+#else
 /** @defgroup  PERIPH_DEMO_MAIN Peripheral Main
     * @brief Main file to initialize hardware and BT stack and start task scheduling
     * @{
@@ -140,21 +223,21 @@ static uint8_t adv_data[] =
   */
 void bt_matter_adapter_app_set_adv_data(void)
 {
-	//printf("I AM CALLED HERE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-	/* Modify Device name according to BD addr*/
-	uint8_t  device_name[GAP_DEVICE_NAME_LEN] = "Ameba_xxyyzz";
-	uint8_t bt_addr[6];
-	gap_get_param(GAP_PARAM_BD_ADDR, bt_addr);
-	
-	sprintf((char *)device_name,"Ameba_%02X%02X%02X",bt_addr[2],bt_addr[1],bt_addr[0]);
-	memcpy(adv_data+9,device_name,strlen((char const*)device_name));
-	//printf("Device name: \"%s\" (BD Address %02X:%02X:%02X:%02X:%02X:%02X) \n\r",
-	//		device_name,bt_addr[5],bt_addr[4],bt_addr[3],bt_addr[2],bt_addr[1],bt_addr[0]);
+    //printf("I AM CALLED HERE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+    /* Modify Device name according to BD addr*/
+    uint8_t  device_name[GAP_DEVICE_NAME_LEN] = "Ameba_xxyyzz";
+    uint8_t bt_addr[6];
+    gap_get_param(GAP_PARAM_BD_ADDR, bt_addr);
 
-	le_set_gap_param(GAP_PARAM_DEVICE_NAME, GAP_DEVICE_NAME_LEN, device_name);
-	le_adv_set_param(GAP_PARAM_ADV_DATA, sizeof(adv_data), (void *)adv_data);
+    sprintf((char *)device_name,"Ameba_%02X%02X%02X",bt_addr[2],bt_addr[1],bt_addr[0]);
+    memcpy(adv_data+9,device_name,strlen((char const*)device_name));
+    //printf("Device name: \"%s\" (BD Address %02X:%02X:%02X:%02X:%02X:%02X) \n\r",
+    //      device_name,bt_addr[5],bt_addr[4],bt_addr[3],bt_addr[2],bt_addr[1],bt_addr[0]);
+
+    le_set_gap_param(GAP_PARAM_DEVICE_NAME, GAP_DEVICE_NAME_LEN, device_name);
+    le_adv_set_param(GAP_PARAM_ADV_DATA, sizeof(adv_data), (void *)adv_data);
 }
-
+#endif
 /**
  * @brief    Handle msg GAP_MSG_LE_DEV_STATE_CHANGE
  * @note     All the gap device state events are pre-handled in this function.
@@ -163,8 +246,10 @@ void bt_matter_adapter_app_set_adv_data(void)
  * @param[in] cause GAP device state change cause
  * @return   void
  */
+#if CONFIG_BT_MATTER_ADAPTER
 extern void wifi_btcoex_set_bt_on(void);
 extern void set_bt_matter_adapter_state(uint8_t state);
+#endif
 void bt_matter_adapter_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t cause)
 {
     APP_PRINT_INFO3("bt_matter_adapter_app_handle_dev_state_evt: init state %d, adv state %d, cause 0x%x",
@@ -174,13 +259,14 @@ void bt_matter_adapter_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint1
         if (new_state.gap_init_state == GAP_INIT_STATE_STACK_READY)
         {
             APP_PRINT_INFO0("GAP stack ready");
-			
+#if CONFIG_BT_MATTER_ADAPTER
             /*stack ready*/
-			wifi_btcoex_set_bt_on();
-			//bt_matter_adapter_app_set_adv_data();
+            wifi_btcoex_set_bt_on();
+            //bt_matter_adapter_app_set_adv_data();
             //le_adv_start();
-			set_bt_matter_adapter_state(BC_DEV_IDLE); // BT Config Ready
-			BC_printf("BT Config Wifi ready\n\r");
+            set_bt_matter_adapter_state(BC_DEV_IDLE); // BT Config Ready
+#endif
+            BC_printf("BT Config Wifi ready\n\r");
         }
     }
 
@@ -195,13 +281,13 @@ void bt_matter_adapter_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint1
             else
             {
                 APP_PRINT_INFO0("GAP adv stopped");
-				BC_printf("ADV stopped\n\r");
+                BC_printf("ADV stopped\n\r");
             }
         }
         else if (new_state.gap_adv_state == GAP_ADV_STATE_ADVERTISING)
         {
             APP_PRINT_INFO0("GAP adv start");
-			BC_printf("ADV started\n\r");
+            BC_printf("ADV started\n\r");
         }
     }
 
@@ -230,13 +316,32 @@ void bt_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STA
             {
                 APP_PRINT_ERROR1("bt_matter_adapter_app_handle_conn_state_evt: connection lost cause 0x%x", disc_cause);
             }
-			bt_matter_adapter_conn_id = 0;
-			BC_printf("Bluetooth Connection Disconnected\n\r");
-			if (wifi_is_ready_to_transceive(RTW_STA_INTERFACE) != RTW_SUCCESS) {		
-				//bt_matter_adapter_app_set_adv_data();
-				le_adv_start();
-				set_bt_matter_adapter_state(BC_DEV_IDLE); // BT Config Ready
-			}
+#if CONFIG_BT_MESH_DEVICE_MATTER
+            printf("Bluetooth Connection Disconnected\n\r");
+
+            //send data to matter
+            BT_MATTER_CONN_EVENT *disconnected = os_mem_alloc(0, sizeof(BT_MATTER_CONN_EVENT));
+            if(disconnected)
+            {
+                disconnected->conn_id = conn_id;
+                disconnected->new_state = new_state;
+                disconnected->disc_cause = disc_cause;
+                if(bt_matter_adapter_send_callback_msg(BT_MATTER_SEND_CB_MSG_DISCONNECTED, NULL, disconnected)==false)
+                {
+                    os_mem_free(disconnected);
+                }
+            }
+            else
+                printf("Malloc failed\r\n");
+#else
+            bt_matter_adapter_conn_id = 0;
+            BC_printf("Bluetooth Connection Disconnected\n\r");
+            if (wifi_is_ready_to_transceive(RTW_STA_INTERFACE) != RTW_SUCCESS) {
+                //bt_matter_adapter_app_set_adv_data();
+                le_adv_start();
+                set_bt_matter_adapter_state(BC_DEV_IDLE); // BT Config Ready
+            }
+#endif
         }
         break;
 
@@ -260,7 +365,7 @@ void bt_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STA
             le_get_conn_param(GAP_PARAM_CONN_LATENCY, &conn_latency, conn_id);
             le_get_conn_param(GAP_PARAM_CONN_TIMEOUT, &conn_supervision_timeout, conn_id);
             le_get_conn_addr(conn_id, remote_bd,  (void *)&remote_bd_type);
-			
+
             conn_latency = 0;
             cause = le_update_conn_param(conn_id, 
                                     conn_interval_min, 
@@ -274,13 +379,33 @@ void bt_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STA
                 BC_printf("No Bluetooth Connection\n\r");
                 break;
             }
-			//update_connection_time
+            //update_connection_time
+#if CONFIG_BT_MESH_DEVICE_MATTER
+            APP_PRINT_INFO5("GAP_CONN_STATE_CONNECTED:remote_bd %s, remote_addr_type %d, conn_interval 0x%x, conn_latency 0x%x, conn_supervision_timeout 0x%x",TRACE_BDADDR(remote_bd), remote_bd_type,conn_interval, conn_latency, conn_supervision_timeout);
+            printf("Bluetooth Connection Established\n\r");
+
+            //send data to matter
+            BT_MATTER_CONN_EVENT *connected = os_mem_alloc(0, sizeof(BT_MATTER_CONN_EVENT));
+            if(connected)
+            {
+                connected->conn_id = conn_id;
+                connected->new_state = new_state;
+                connected->disc_cause = disc_cause;
+                if(bt_matter_adapter_send_callback_msg(BT_MATTER_SEND_CB_MSG_CONNECTED, NULL, connected)==false)
+                {
+                    os_mem_free(connected);
+                }
+            }
+            else
+                printf("Malloc failed\r\n");
+#else
             APP_PRINT_INFO5("GAP_CONN_STATE_CONNECTED:remote_bd %s, remote_addr_type %d, conn_interval 0x%x, conn_latency 0x%x, conn_supervision_timeout 0x%x",
                             TRACE_BDADDR(remote_bd), remote_bd_type,
                             conn_interval, conn_latency, conn_supervision_timeout);
-			BC_printf("Bluetooth Connection Established\n\r");
-			bt_matter_adapter_conn_id = conn_id;
-			set_bt_matter_adapter_state(BC_DEV_BT_CONNECTED); // BT Config Bluetooth Connected
+            BC_printf("Bluetooth Connection Established\n\r");
+            bt_matter_adapter_conn_id = conn_id;
+            set_bt_matter_adapter_state(BC_DEV_BT_CONNECTED); // BT Config Bluetooth Connected
+#endif
         }
         break;
 
@@ -398,7 +523,7 @@ void bt_matter_adapter_app_handle_gap_msg(T_IO_MSG *p_gap_msg)
 {
     T_LE_GAP_MSG gap_msg;
     uint8_t conn_id;
-#if 1
+#if CONFIG_BT_MATTER_ADAPTER
     //printf("%s %d==========\n", __func__, __LINE__);
     // call blemanagerimpl function
     if (chip_blemgr_callback_func && chip_blemgr_callback_data)
@@ -408,7 +533,7 @@ void bt_matter_adapter_app_handle_gap_msg(T_IO_MSG *p_gap_msg)
     return;
 #else
     memcpy(&gap_msg, &p_gap_msg->u.param, sizeof(p_gap_msg->u.param));
-	//printf("bt_matter_adapter_app_handle_gap_msg: subtype %d\n\r", p_gap_msg->subtype);
+    //printf("bt_matter_adapter_app_handle_gap_msg: subtype %d\n\r", p_gap_msg->subtype);
 
     APP_PRINT_TRACE1("bt_matter_adapter_app_handle_gap_msg: subtype %d", p_gap_msg->subtype);
     switch (p_gap_msg->subtype)
@@ -510,7 +635,7 @@ T_APP_RESULT bt_matter_adapter_app_gap_callback(uint8_t cb_type, void *p_cb_data
 {
     T_APP_RESULT result = APP_RESULT_SUCCESS;
     T_LE_CB_DATA *p_data = (T_LE_CB_DATA *)p_cb_data;
-#if 1
+#if CONFIG_BT_MATTER_ADAPTER
     //printf("%s %d==========\n", __func__, __LINE__);
     // call blemanagerimpl function
     if (chip_blemgr_callback_func && chip_blemgr_callback_data)
@@ -523,7 +648,7 @@ T_APP_RESULT bt_matter_adapter_app_gap_callback(uint8_t cb_type, void *p_cb_data
     {
 #if defined(CONFIG_PLATFORM_8721D)
     case GAP_MSG_LE_DATA_LEN_CHANGE_INFO:
-	//printf("GAP_MSG_LE_DATA_LEN_CHANGE_INFO: conn_id %d, tx octets 0x%x, max_tx_time 0x%x", p_data->p_le_data_len_change_info->conn_id, p_data->p_le_data_len_change_info->max_tx_octets,  p_data->p_le_data_len_change_info->max_tx_time);
+    //printf("GAP_MSG_LE_DATA_LEN_CHANGE_INFO: conn_id %d, tx octets 0x%x, max_tx_time 0x%x", p_data->p_le_data_len_change_info->conn_id, p_data->p_le_data_len_change_info->max_tx_octets,  p_data->p_le_data_len_change_info->max_tx_time);
         APP_PRINT_INFO3("GAP_MSG_LE_DATA_LEN_CHANGE_INFO: conn_id %d, tx octets 0x%x, max_tx_time 0x%x",
                         p_data->p_le_data_len_change_info->conn_id,
                         p_data->p_le_data_len_change_info->max_tx_octets,
@@ -562,7 +687,7 @@ T_APP_RESULT bt_matter_adapter_app_gap_callback(uint8_t cb_type, void *p_cb_data
 T_APP_RESULT bt_matter_adapter_app_profile_callback(T_SERVER_ID service_id, void *p_data)
 {
     T_APP_RESULT app_result = APP_RESULT_SUCCESS;
-#if 1
+#if CONFIG_BT_MATTER_ADAPTER
     //printf("%s %d==========\n", __func__, __LINE__);
     // call blemanagerimpl function
     if (chip_blemgr_callback_func && chip_blemgr_callback_data)
@@ -580,27 +705,147 @@ T_APP_RESULT bt_matter_adapter_app_profile_callback(T_SERVER_ID service_id, void
             APP_PRINT_INFO1("PROFILE_EVT_SRV_REG_COMPLETE: result %d",
                             p_param->event_data.service_reg_result);
             break;
+#if CONFIG_BT_MESH_DEVICE_MATTER
+        case PROFILE_EVT_SEND_DATA_COMPLETE:
+            APP_PRINT_INFO5("PROFILE_EVT_SEND_DATA_COMPLETE: conn_id %d, cause 0x%x, service_id %d, attrib_idx 0x%x, credits %d",
+                            p_param->event_data.send_data_result.conn_id,
+                            p_param->event_data.send_data_result.cause,
+                            p_param->event_data.send_data_result.service_id,
+                            p_param->event_data.send_data_result.attrib_idx,
+                            p_param->event_data.send_data_result.credits);
+            if (p_param->event_data.send_data_result.cause == GAP_SUCCESS)
+            {
+                APP_PRINT_INFO0("PROFILE_EVT_SEND_DATA_COMPLETE success");
+                //printf("PROFILE_EVT_SEND_DATA_COMPLETE success\r\n");
+
+                //send msg to matter
+                if (p_param->event_data.send_data_result.service_id == bt_matter_adapter_srv_id)
+                {
+                    T_SERVER_APP_CB_DATA *send_data_complete = os_mem_alloc(0, sizeof(T_SERVER_APP_CB_DATA));
+                    if(send_data_complete)
+                    {
+                        memcpy(send_data_complete, p_param, sizeof(T_SERVER_APP_CB_DATA));
+                        if(bt_matter_adapter_send_callback_msg(BT_MATTER_SEND_CB_MSG_SEND_DATA_COMPLETE, service_id, send_data_complete)==false)
+                        {
+                            os_mem_free(send_data_complete);
+                        }
+                    }
+                    else
+                        printf("Malloc failed\r\n");
+                }
+            }
+            else
+            {
+                APP_PRINT_ERROR0("PROFILE_EVT_SEND_DATA_COMPLETE failed");
+                //printf("PROFILE_EVT_SEND_DATA_COMPLETE failed\r\n");
+            }
+            break;
+#endif
         default:
             break;
         }
     }
     else  if (service_id == bt_matter_adapter_srv_id)
     {
+#if CONFIG_BT_MESH_DEVICE_MATTER
+        TSIMP_CALLBACK_DATA *p_simp_cb_data = (TSIMP_CALLBACK_DATA *)p_data;
+#else
         TBTCONFIG_CALLBACK_DATA *p_simp_cb_data = (TBTCONFIG_CALLBACK_DATA *)p_data;
+#endif
         switch (p_simp_cb_data->msg_type)
         {
         case SERVICE_CALLBACK_TYPE_READ_CHAR_VALUE:
             {
-				uint8_t *read_buf = NULL;
-				uint32_t read_buf_len = 0;
-				// Customized command:
-				// Handle your own Read Request here
-				// Prepare your own read_buf & read_buf_len
-				// Otherwise, use BC_handle_read_request to get read response from BT Config
-				BC_handle_read_request(&read_buf, &read_buf_len, p_simp_cb_data->msg_data.read_offset);
-				if(read_buf != NULL) {
-					bt_matter_adapter_service_set_parameter(BTCONFIG_SERVICE_PARAM_V1_READ_CHAR_VAL, read_buf_len, read_buf);
-				}
+#if CONFIG_BT_MESH_DEVICE_MATTER
+                switch (p_simp_cb_data->msg_data.notification_indification_index)
+                {
+                case SIMP_NOTIFY_INDICATE_V3_ENABLE:
+                    {
+                        APP_PRINT_INFO0("SIMP_NOTIFY_INDICATE_V3_ENABLE");
+                        //printf("\n\rSIMP_NOTIFY_INDICATE_V3_ENABLE\r\n");
+                        //send msg to matter
+                        TSIMP_CALLBACK_DATA *indication_notification_enable = os_mem_alloc(0, sizeof(TSIMP_CALLBACK_DATA));
+
+                        if(indication_notification_enable)
+                        {
+                            memcpy(indication_notification_enable, p_simp_cb_data, sizeof(TSIMP_CALLBACK_DATA));
+                            if (indication_notification_enable->msg_data.write.len !=0)
+                            {
+                                indication_notification_enable->msg_data.write.p_value = os_mem_alloc(0, indication_notification_enable->msg_data.write.len);
+                                memcpy(indication_notification_enable->msg_data.write.p_value, p_simp_cb_data->msg_data.write.p_value, p_simp_cb_data->msg_data.write.len);
+                            }
+                            if(bt_matter_adapter_send_callback_msg(BT_MATTER_SEND_CB_MSG_IND_NTF_ENABLE, service_id, indication_notification_enable)==false)
+                            {
+                                if (indication_notification_enable->msg_data.write.len !=0)
+                                {
+                                    os_mem_free(indication_notification_enable->msg_data.write.p_value);
+                                    indication_notification_enable->msg_data.write.p_value = NULL;
+                                }
+                                os_mem_free(indication_notification_enable);
+                                indication_notification_enable = NULL;
+                            }
+                        }
+                        else
+                            printf("Malloc failed\r\n");
+                    }
+                    break;
+
+                case SIMP_NOTIFY_INDICATE_V3_DISABLE:
+                    {
+                        APP_PRINT_INFO0("SIMP_NOTIFY_INDICATE_V3_DISABLE");
+                        //printf("\n\rSIMP_NOTIFY_INDICATE_V3_DISABLE\r\n");
+
+                        //send msg to matter
+                        TSIMP_CALLBACK_DATA *indication_notification_disable = os_mem_alloc(0, sizeof(TSIMP_CALLBACK_DATA));
+                        if(indication_notification_disable)
+                        {
+                            memcpy(indication_notification_disable, p_simp_cb_data, sizeof(TSIMP_CALLBACK_DATA));
+                            if (indication_notification_disable->msg_data.write.len !=0)
+                            {
+                                indication_notification_disable->msg_data.write.p_value = os_mem_alloc(0, indication_notification_disable->msg_data.write.len);
+                                memcpy(indication_notification_disable->msg_data.write.p_value, p_simp_cb_data->msg_data.write.p_value, p_simp_cb_data->msg_data.write.len);
+                            }
+
+                            if(bt_matter_adapter_send_callback_msg(BT_MATTER_SEND_CB_MSG_IND_NTF_DISABLE, service_id, indication_notification_disable)==false)
+                            {
+                                if (indication_notification_disable->msg_data.write.len !=0)
+                                {
+                                    os_mem_free(indication_notification_disable->msg_data.write.p_value);
+                                    indication_notification_disable->msg_data.write.p_value = NULL;
+                                }
+                                os_mem_free(indication_notification_disable);
+                                indication_notification_disable = NULL;
+                            }
+                        }
+                        else
+                            printf("Malloc failed\r\n");
+                    }
+                    break;
+                case SIMP_NOTIFY_INDICATE_V4_ENABLE:
+                    {
+                        APP_PRINT_INFO0("SIMP_NOTIFY_INDICATE_V4_ENABLE");
+                        //printf("\n\rSIMP_NOTIFY_INDICATE_V4_ENABLE\r\n");
+                    }
+                    break;
+                case SIMP_NOTIFY_INDICATE_V4_DISABLE:
+                    {
+                        APP_PRINT_INFO0("SIMP_NOTIFY_INDICATE_V4_DISABLE");
+                        //printf("\n\rSIMP_NOTIFY_INDICATE_V4_DISABLE\r\n");
+                    }
+                    break;
+                default:
+                    break;
+#else
+                uint8_t *read_buf = NULL;
+                uint32_t read_buf_len = 0;
+                // Customized command:
+                // Handle your own Read Request here
+                // Prepare your own read_buf & read_buf_len
+                // Otherwise, use BC_handle_read_request to get read response from BT Config
+                BC_handle_read_request(&read_buf, &read_buf_len, p_simp_cb_data->msg_data.read_offset);
+                if(read_buf != NULL) {
+                    bt_matter_adapter_service_set_parameter(BTCONFIG_SERVICE_PARAM_V1_READ_CHAR_VAL, read_buf_len, read_buf);
+                }
             }
             break;
         case SERVICE_CALLBACK_TYPE_WRITE_CHAR_VALUE:
@@ -609,26 +854,49 @@ T_APP_RESULT bt_matter_adapter_app_profile_callback(T_SERVER_ID service_id, void
                 {
                 case BTCONFIG_WRITE_V1:
                     {
-						// Customized command:
-						// Parse data first. (p_simp_cb_data->msg_data.write.p_value, p_simp_cb_data->msg_data.write.len)
-						// If it's a customized command, handle it here (call customized function to do specific actions)
-						// Otherwise, use BC_send_cmd to send data (BT Config command) to BT Config
-						// BC_send_cmd( p_simp_cb_data->msg_data.write.p_value,  p_simp_cb_data->msg_data.write.len);
-						printf("Calling BLEManager here==========\n");
-						// call blemanagerimpl function
+                        // Customized command:
+                        // Parse data first. (p_simp_cb_data->msg_data.write.p_value, p_simp_cb_data->msg_data.write.len)
+                        // If it's a customized command, handle it here (call customized function to do specific actions)
+                        // Otherwise, use BC_send_cmd to send data (BT Config command) to BT Config
+                        // BC_send_cmd( p_simp_cb_data->msg_data.write.p_value,  p_simp_cb_data->msg_data.write.len);
+                        printf("Calling BLEManager here==========\n");
+                        // call blemanagerimpl function
                         if (chip_blemgr_callback_func && chip_blemgr_callback_data)
                             chip_blemgr_callback_func(chip_blemgr_callback_data, p_simp_cb_data);
                         else
                             printf("chip_blemgr_callback_func is NULL\r\n");
-						
                     }
                     break;
                 default:
                     break;
+#endif
                 }
             }
             break;
-
+#if CONFIG_BT_MESH_DEVICE_MATTER
+        case SERVICE_CALLBACK_TYPE_READ_CHAR_VALUE:
+        case SERVICE_CALLBACK_TYPE_WRITE_CHAR_VALUE:
+            {
+                //send msg to matter
+                TSIMP_CALLBACK_DATA *read_write_char_val = os_mem_alloc(0, sizeof(TSIMP_CALLBACK_DATA));
+                if(read_write_char_val)
+                {
+                    memcpy(read_write_char_val, p_simp_cb_data, sizeof(TSIMP_CALLBACK_DATA));
+                    if (read_write_char_val->msg_data.write.len !=0)
+                    {
+                        read_write_char_val->msg_data.write.p_value = os_mem_alloc(0, read_write_char_val->msg_data.write.len);
+                        memcpy(read_write_char_val->msg_data.write.p_value, p_simp_cb_data->msg_data.write.p_value, p_simp_cb_data->msg_data.write.len);
+                    }
+                    if(bt_matter_adapter_send_callback_msg(BT_MATTER_SEND_CB_MSG_READ_WRITE_CHAR, service_id, read_write_char_val)==false)
+                    {
+                        os_mem_free(read_write_char_val);
+                    }
+                }
+                else
+                    printf("Malloc failed\r\n");
+            }
+            break;
+#endif
         default:
             break;
         }

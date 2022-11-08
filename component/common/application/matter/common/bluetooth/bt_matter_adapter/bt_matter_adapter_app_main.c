@@ -33,11 +33,13 @@
 #include "wifi_conf.h"
 #include "lwip_netconf.h"
 #include "os_sched.h"
-
+#if CONFIG_BT_MATTER_ADAPTER
 extern bool bt_trace_uninit(void);
 extern void wifi_btcoex_set_bt_on(void);
 extern uint8_t airsync_specific;
-
+#else
+#include <os_mem.h>
+#endif
 /** @defgroup  PERIPH_DEMO_MAIN Peripheral Main
     * @brief Main file to initialize hardware and BT stack and start task scheduling
     * @{
@@ -51,7 +53,7 @@ extern uint8_t airsync_specific;
 /** @brief  Default Maximum advertising interval */
 #define DEFAULT_ADVERTISING_INTERVAL_MAX            400
 
-
+#if CONFIG_BT_MATTER_ADAPTER
 /*============================================================================*
  *                              Variables
  *============================================================================*/
@@ -82,7 +84,7 @@ static const uint8_t adv_data[] =
     GAP_ADTYPE_LOCAL_NAME_COMPLETE,
     'A', 'm', 'e', 'b', 'a', '_', 'x', 'x', 'y', 'y', 'z', 'z',
 };
-
+#endif
 /*============================================================================*
  *                              Functions
  *============================================================================*/
@@ -99,6 +101,7 @@ void bt_matter_adapter_stack_config_init(void)
     gap_config_max_le_paired_device(APP_MAX_LINKS);
     gap_config_hci_task_secure_context (280);
 }
+#if CONFIG_BT_MATTER_ADAPTER
 /**
   * @brief  Initialize peripheral and gap bond manager related parameters
   * @return void
@@ -164,7 +167,7 @@ void bt_matter_adapter_app_le_gap_init(void)
     /* register gap message callback */
     le_register_app_cb(bt_matter_adapter_app_gap_callback);
 }
-
+#endif
 /**
  * @brief  Add GATT services and register callbacks
  * @return void
@@ -193,6 +196,10 @@ void bt_matter_adapter_task_deinit(void)
 
 extern T_GAP_DEV_STATE bt_matter_adapter_gap_dev_state;
 extern T_GAP_CONN_STATE bt_matter_adapter_gap_conn_state;
+#if CONFIG_BT_MESH_DEVICE_MATTER
+uint8_t bt_matter_adapter_conn_id;
+#endif
+#if CONFIG_BT_MATTER_ADAPTER
 extern uint8_t bt_matter_adapter_conn_id;
 extern void bt_coex_init(void);
 extern void bt_matter_adapter_app_set_adv_data(void);
@@ -296,7 +303,7 @@ void bt_matter_adapter_app_deinit(void)
 #endif
 	set_bt_matter_adapter_state(BC_DEV_DISABLED); // BT Config off
 }
-
+#endif
 /*************************************** CHIP API *************************************************/
 
 /** @brief  GAP - scan response data (max size = 31 bytes) */
@@ -449,7 +456,9 @@ int bt_matter_adapter_init(void)
 	else
 		return 0;
 
+#if CONFIG_BT_MATTER_ADAPTER
 	set_bt_matter_adapter_state(BC_DEV_INIT); // BT Config on
+#endif
 
 #if CONFIG_AUTO_RECONNECT
 	/* disable auto reconnect */
@@ -488,9 +497,10 @@ int bt_matter_adapter_init(void)
 		le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
 	} while (new_state.gap_init_state != GAP_INIT_STATE_STACK_READY);
 
+#if CONFIG_BT_MATTER_ADAPTER
 	//Start BT WIFI coexistence
 	wifi_btcoex_set_bt_on();
-
+#endif
 	return 0;
 }
 
@@ -519,4 +529,116 @@ uint16_t ble_att_mtu_z2(uint16_t conn_id)
 	else
 		return 0;
 }
+#if CONFIG_BT_MESH_DEVICE_MATTER
+bool ble_matter_netmgr_adapter_init_handler(void)
+{
+	return bt_matter_adapter_init();
+}
+
+bool ble_matter_netmgr_adv_param_handler(uint16_t adv_int_min, uint16_t adv_int_max, void *advData, uint8_t advData_len)
+{
+	int ret = 0;
+	le_adv_set_param(GAP_PARAM_ADV_INTERVAL_MIN, sizeof(adv_int_min), &adv_int_min);
+	le_adv_set_param(GAP_PARAM_ADV_INTERVAL_MAX, sizeof(adv_int_max), &adv_int_max);
+	le_adv_set_param(GAP_PARAM_ADV_DATA, advData_len, advData); // set advData
+	return ret;
+}
+
+bool ble_matter_netmgr_adv_start_handler(void)
+{
+	//Stop adv before start
+	ble_matter_netmgr_stop_adv();
+	ble_matter_netmgr_start_adv();
+	return 0;
+}
+
+bool ble_matter_netmgr_adv_stop_handler(void)
+{
+	ble_matter_netmgr_stop_adv();
+	return 0;
+}
+bool ble_matter_netmgr_start_adv(void)
+{
+	T_GAP_DEV_STATE new_state;
+	//check BLE stack state
+	le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
+	if(new_state.gap_init_state != GAP_INIT_STATE_STACK_READY)
+	{
+		printf("Waiting for ble stack ready...\n");
+		do{
+			os_delay(100);
+			le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
+		}while(new_state.gap_init_state != GAP_INIT_STATE_STACK_READY);
+	}
+
+	//check adv state
+	if(new_state.gap_adv_state != GAP_ADV_STATE_IDLE)
+	{
+		printf("Waiting for adv ready \n");
+		do{
+			os_delay(100);
+			le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
+		}while(new_state.gap_adv_state != GAP_ADV_STATE_IDLE);
+	}
+
+	//send adv cmd
+	if(bt_matter_adapter_send_msg(BT_MATTER_MSG_START_ADV, NULL) == false)
+	{
+		printf("msg send fail \n");
+		return false;
+	}
+
+	//while(new_state.gap_adv_state != GAP_ADV_STATE_ADVERTISING);
+	return true;
+}
+
+bool ble_matter_netmgr_stop_adv(void)
+{
+	T_GAP_DEV_STATE new_state;
+
+	//check adv state
+	le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
+	if(new_state.gap_adv_state != GAP_ADV_STATE_ADVERTISING)
+	{
+		printf("adv not start \n");
+	} else {
+	//send adv cmd
+		if(bt_matter_adapter_send_msg(BT_MATTER_MSG_STOP_ADV, NULL) == false)
+		{
+			printf("msg send fail \n");
+			return false;
+		}
+	}
+	return true;
+}
+
+bool ble_matter_netmgr_server_send_data(uint8_t conn_id, T_SERVER_ID service_id, uint16_t attrib_index,
+					  uint8_t *p_data, uint16_t data_len, T_GATT_PDU_TYPE type)
+{
+		BT_MATTER_SERVER_SEND_DATA *param = os_mem_alloc(0, sizeof(BT_MATTER_SERVER_SEND_DATA));
+		if(param)
+		{
+				param->conn_id = conn_id;
+				param->service_id = service_id;
+				param->attrib_index = attrib_index;
+				param->data_len = data_len;
+				param->type = type;
+				if (param->data_len  !=0)
+				{
+					param->p_data = os_mem_alloc(0, param->data_len);
+					memcpy(param->p_data, p_data, param->data_len);
+				}
+				if(bt_matter_adapter_send_msg(BT_MATTER_MSG_SEND_DATA, param)==false)
+				{
+					printf("os_mem_free\r\n");
+					os_mem_free(param);
+					os_mem_free(param->p_data);
+					return false;
+				}
+		}
+		else
+				printf("Malloc failed\r\n");
+		return true;
+}
+#endif /*CONFIG_BT_MESH_DEVICE_MATTER*/
 #endif
