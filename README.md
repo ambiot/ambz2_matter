@@ -4,9 +4,9 @@ For any questions, please visit our [website](https://www.amebaiot.com/en/) and 
 
 # Getting Started with Matter on AmebaZ2
 
-Building Guide: https://github.com/xshuqun/ambz2_sdk/blob/matter/MATTER.md
+[Building Guide](https://github.com/ambiot/ambz2_matter/blob/main/MATTER.md)
 
-Porting Guide: https://github.com/xshuqun/ambz2_sdk/blob/matter/CHANGELOG.md
+[Porting Guide](https://github.com/ambiot/ambz2_matter/blob/main/CHANGELOG.md)
 
 # Getting Started with the AmebaZ2
 The AmebaZ2 board is able to use the amazon-freertos sdk version 1.4.7. The AmebaZ2 board is designed by Realtek and is a Wi-Fi ready chip.
