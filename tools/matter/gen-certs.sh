@@ -50,8 +50,10 @@ mkdir -p "$dest_dir"
 cert_valid_from="2022-07-10 14:23:43"
 cert_lifetime=4294967295
 
-vid=1316
-pid=1A01
+vid=8888
+pid=9999
+endproduct_vid=5555
+endproduct_pid=6666
 format_version=1
 device_type_id=0x0016
 certificate_id="ZIG20142ZB330003-24"
@@ -59,6 +61,8 @@ security_level=0
 security_info=0
 version_num=0x2694
 certification_type=0
+# dac_origin_vendor_id=1316
+# dac_origin_product_id=1A01
 
 # Generate PAA, PAI and DAC
 {
@@ -67,11 +71,13 @@ certification_type=0
     # paa_cert_file="$chip_dir/credentials/test/attestation/Chip-Test-PAA-NoVID-Cert"
 
     # Self generated PAA
-    paa_key_file="$dest_dir/Chip-Test-PAA-NoVID-Key"
-    paa_cert_file="$dest_dir/Chip-Test-PAA-NoVID-Cert"
+    paa_key_file="$dest_dir/Chip-Test-PAA-$vid-Key"
+    paa_cert_file="$dest_dir/Chip-Test-PAA-$vid-Cert"
+    # paa_key_file="$chip_dir/pankore_paa/Chip-Test-PAA-1316-Key"
+    # paa_cert_file="$chip_dir/pankore_paa/Chip-Test-PAA-1316-Cert"
 
-    # If you are using Matter's test PAA, don't need to generate it, comment below line
-    "$chip_cert_tool" gen-att-cert --type a --subject-cn "Matter Test PAA" --valid-from "$cert_valid_from" --lifetime "$cert_lifetime" --out-key "$paa_key_file".pem --out "$paa_cert_file".pem
+    # If you want to use an existing PAA, don't need to generate it, comment below line
+     "$chip_cert_tool" gen-att-cert --type a --subject-cn "Matter Test PAA" --subject-vid "$vid" --valid-from "$cert_valid_from" --lifetime "$cert_lifetime" --out-key "$paa_key_file".pem --out "$paa_cert_file".pem
 
     pai_key_file="$dest_dir/Chip-Test-PAI-$vid-NoPID-Key"
     pai_cert_file="$dest_dir/Chip-Test-PAI-$vid-NoPID-Cert"
@@ -192,4 +198,8 @@ printf "$namespaces_close" >>"$dest_dir/$output_cstyle_file".h
 cd_signing_key="$chip_dir/credentials/test/certification-declaration/Chip-Test-CD-Signing-Key.pem"
 cd_signing_cert="$chip_dir/credentials/test/certification-declaration/Chip-Test-CD-Signing-Cert.pem"
 
-"$chip_cert_tool" gen-cd --key "$cd_signing_key" --cert "$cd_signing_cert" --out "$dest_dir/Chip-Test-CD-$vid-$pid.der" --format-version "$format_version" --vendor-id "0x$vid" --product-id "0x$pid" --device-type-id "$device_type_id" --certificate-id "$certificate_id" --security-level "$security_level" --security-info "$security_info" --version-number "$version_num" --certification-type "$certification_type"
+# CD without dac_origin_vid, dac_origin_pid
+# "$chip_cert_tool" gen-cd --key "$cd_signing_key" --cert "$cd_signing_cert" --out "$dest_dir/Chip-Test-CD-$vid-$pid.der" --format-version "$format_version" --vendor-id "0x$vid" --product-id "0x$pid" --device-type-id "$device_type_id" --certificate-id "$certificate_id" --security-level "$security_level" --security-info "$security_info" --version-number "$version_num" --certification-type "$certification_type"
+
+# CD with dac_origin_vid, dac_origin_pid
+"$chip_cert_tool" gen-cd --key "$cd_signing_key" --cert "$cd_signing_cert" --out "$dest_dir/Chip-Test-CD-$endproduct_vid-$endproduct_pid-WithDACOrigin.der" --format-version "$format_version" --vendor-id "$endproduct_vid" --product-id "$endproduct_pid" --device-type-id "$device_type_id" --certificate-id "$certificate_id" --security-level "$security_level" --security-info "$security_info" --version-number "$version_num" --certification-type "$certification_type" --dac-origin-vendor-id "$vid" --dac-origin-product-id "$pid"
