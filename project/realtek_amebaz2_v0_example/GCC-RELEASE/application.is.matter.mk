@@ -60,7 +60,10 @@ ROMIMG =
 # Decide if 64 bit time wrapper is to be included
 # -------------------------------------------------------------------
 #SYSTEM_TIME64_MAKE_OPTION = 1
+
+# Uncomment to enable BLE mesh with matter
 #BT_MATTER_MESH_ADAPTER = 1
+
 # Include folder list
 # -------------------------------------------------------------------
 
@@ -708,6 +711,11 @@ CFLAGS += -DCONFIG_SYSTEM_TIME64=1
 CFLAGS += -include time64.h
 else
 CFLAGS += -DCONFIG_SYSTEM_TIME64=0
+endif
+
+# for matter mesh
+ifdef BT_MATTER_MESH_ADAPTER
+CFLAGS += -CONFIG_BT_MESH_WITH_MATTER
 endif
 
 CFLAGS += -DCHIP_PROJECT=0
