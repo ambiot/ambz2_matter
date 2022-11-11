@@ -89,7 +89,7 @@ ATTRIB_FLAG_VALUE_INCL, /* flags */
 { /* type_value */
 LO_WORD(GATT_UUID_CHARACTERISTIC),
 HI_WORD(GATT_UUID_CHARACTERISTIC),
-(GATT_CHAR_PROP_READ | GATT_CHAR_PROP_NOTIFY) /* characteristic properties */
+(GATT_CHAR_PROP_READ | GATT_CHAR_PROP_INDICATE) /* characteristic properties */
 /* characteristic UUID not needed here, is UUID of next attrib. */
 },
 1, /* bValueLen */
@@ -324,9 +324,9 @@ void bt_matter_adapter_service_cccd_update_cb(uint8_t conn_id, T_SERVER_ID servi
     //printf("simp_ble_service_cccd_update_cb: index = %d, cccbits 0x%x\r\n", index, cccbits);
     switch (index)
     {
-    case BT_MATTER_ADAPTER_SERVICE_CHAR_NOTIFY_CCCD_INDEX:
+    case BT_MATTER_ADAPTER_SERVICE_CHAR_INDICATE_CCCD_INDEX:
         {
-            if (cccbits & GATT_CLIENT_CHAR_CONFIG_NOTIFY)
+            if (cccbits & GATT_CLIENT_CHAR_CONFIG_INDICATE)
             {
                 // Enable Notification
                 callback_data.msg_data.notification_indification_index = SIMP_NOTIFY_INDICATE_V3_ENABLE;
