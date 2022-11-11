@@ -233,7 +233,7 @@ bool bt_matter_adapter_service_set_parameter(T_BTCONFIG_PARAM_TYPE param_type, u
 
 /** @} End of SIMP_Service */
 
-#define BT_MATTER_ADAPTER_SERVICE_CHAR_NOTIFY_CCCD_INDEX 0x5
+#define BT_MATTER_ADAPTER_SERVICE_CHAR_INDICATE_CCCD_INDEX 0x5
 extern T_SERVER_ID bt_matter_adapter_service_id;
 
 #ifdef __cplusplus
