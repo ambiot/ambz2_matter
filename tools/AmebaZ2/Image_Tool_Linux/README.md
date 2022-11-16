@@ -94,7 +94,14 @@ close log file
 1. Identify your device USB port
 
 2. Run the flashing script
-    - ./flash.sh /dev/ttyUSB0 /home/dev/ambz2_sdk/project/realtek_amebaz2_v0_example/GCC-RELEASE/application_is/Debug/bin
-    - ./flash.sh deviceUSBPort outputFileDirectory
+ 
+        ./flash.sh /dev/ttyUSB0 /home/dev/ambz2_sdk/project/realtek_amebaz2_v0_example/GCC-RELEASE/application_is/Debug/bin/flash_is.bin
+        ./flash.sh deviceUSBPort outputFileDirectory
 	
-3. Put the board to download mode when prompted, then press enter
+3. Alternatively, you may use the flash script to flash to a specific address
+
+        ./flash.sh /dev/ttyUSB0 image.bin 0x081B7000
+        address field is optional
+ 
+4. Put the board to download mode when prompted, then press enter
+
