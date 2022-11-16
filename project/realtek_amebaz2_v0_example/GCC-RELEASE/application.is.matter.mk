@@ -190,6 +190,8 @@ INCLUDES += -I../../../component/common/application/matter/common/bluetooth/bt_m
 endif
 INCLUDES += -I../../../component/common/application/matter/application
 INCLUDES += -I../../../component/common/application/matter/mbedtls
+INCLUDES += -I../../../component/common/application/matter/protobuf
+INCLUDES += -I../../../component/common/application/matter/protobuf/nanopb
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/src/app/hrp/gap
 
 # Source file list
@@ -368,6 +370,7 @@ SRC_C += ../../../component/common/utilities/xml.c
 #matter - app
 SRC_C += ../../../component/common/application/matter/application/matter_dcts.c
 SRC_C += ../../../component/common/application/matter/application/matter_timers.c
+SRC_C += ../../../component/common/application/matter/application/matter_utils.c
 SRC_C += ../../../component/common/application/matter/application/matter_wifis.c
 SRC_C += ../../../component/common/application/matter/application/example_matter.c
 SRC_C += ../../../component/common/application/matter/common/atcmd_matter.c
@@ -662,6 +665,12 @@ SRC_C += ../../../component/common/example/websocket_client/example_wsclient.c
 SRC_C += ../../../component/common/example/xml/example_xml.c
 SRC_C += ../../../component/common/example/fatfs/example_fatfs.c
 SRC_C += ../../../component/common/example/tickless_wifi_roaming/example_tickless_wifi_roaming.c
+
+# nanopb for Matter FactoryData
+SRC_C += ../../../component/common/application/matter/protobuf/ameba_factory.pb.c
+SRC_C += ../../../component/common/application/matter/protobuf/nanopb/pb_encode.c  # The nanopb encoder
+SRC_C += ../../../component/common/application/matter/protobuf/nanopb/pb_decode.c  # The nanopb decoder
+SRC_C += ../../../component/common/application/matter/protobuf/nanopb/pb_common.c  # The nanopb common parts
 
 #user
 SRC_C += ../src/main.c

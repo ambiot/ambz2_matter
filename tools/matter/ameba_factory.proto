@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+message BytesField {
+    bytes value = 1;
+    int32 length =2 ;
+}
+
+message CommissionableDataProvider {
+    int32 passcode = 1;
+    int32 discriminator = 2;
+    int32 spake2_it =3;
+    BytesField spake2_salt = 4;
+    BytesField spake2_verifier = 5;
+}
+
+message DeviceAttestationCredentialsProvider {
+    BytesField dac_cert = 1;
+    BytesField dac_key = 2;
+    BytesField pai_cert = 3;
+    BytesField cd = 4;
+}
+
+message DeviceInstanceInfoProvider {
+    int32 vendor_id = 1;
+    BytesField vendor_name = 2;
+    int32 product_id = 3;
+    BytesField product_name = 4;
+    int32 hw_ver = 5;
+    BytesField hw_ver_string = 6;
+    BytesField mfg_date = 7;
+    BytesField serial_num =8;
+    BytesField rd_id_uid = 9;
+}
+
+message FactoryDataProvider {
+    CommissionableDataProvider cdata = 1;
+    DeviceAttestationCredentialsProvider dac = 2;
+    DeviceInstanceInfoProvider dii = 3;
+}
