@@ -445,4 +445,5 @@
 #define UART_SETTING_SECTOR		(0x400000 - 0x5000)  // 0x3FB000
 #define DCT_BEGIN_ADDR			(0x400000 - 0x13000) // 0x3ED000 ~ 0x3FB000 : 56K 
 #define DCT_BEGIN_ADDR2 		(0x400000 - 0x1A000) // 0x3E6000 ~ 0x3ED000 : 24K
+#define MATTER_FACTORY_DATA     (0x1B7000)           // Currently imagetool has a bug when flashing to addresses >2MB
 #endif /* defined(CHIP_PROJECT) && CHIP_PROJECT */
