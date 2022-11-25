@@ -29,6 +29,7 @@ then
 else
   # if no address is given, use default address 0x08000000
   echo "Flashing to address 0x08000000"
+  sudo ./Ameba_ImageTool -set address 0x08000000 
 fi
 sudo ./Ameba_ImageTool -set image $IMAGE
 sudo ./Ameba_ImageTool -show
