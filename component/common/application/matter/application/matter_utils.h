@@ -16,9 +16,21 @@ extern "C" {
 
 typedef struct
 {
-    uint8_t value[602];
+    uint8_t value[68];
     size_t len;
 } FactoryDataString;
+
+typedef struct
+{
+    uint8_t value[602];
+    size_t len;
+} CertDataString;
+
+typedef struct
+{
+    uint8_t value[256];
+    size_t len;
+} VerifierDataString;
 
 typedef struct  
 {
@@ -26,15 +38,15 @@ typedef struct
     int discriminator;    
     int spake2_it;
     FactoryDataString spake2_salt;
-    FactoryDataString spake2_verifier;
+    VerifierDataString spake2_verifier;
 } CommissionableData;
 
 typedef struct 
 {
-    FactoryDataString dac_cert;
+    CertDataString dac_cert;
     FactoryDataString dac_key;
-    FactoryDataString pai_cert;
-    FactoryDataString cd;
+    CertDataString pai_cert;
+    CertDataString cd;
 } DeviceAttestationCredentials;
 
 typedef struct 
