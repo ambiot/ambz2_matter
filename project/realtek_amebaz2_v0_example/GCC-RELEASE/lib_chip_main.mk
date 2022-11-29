@@ -68,7 +68,8 @@ INCLUDES += -I$(BASEDIR)/../../../component/common/network/lwip/lwip_v2.1.2/src/
 INCLUDES += -I$(BASEDIR)/../../../component/common/network/lwip/lwip_v2.1.2/src/include/lwip
 INCLUDES += -I$(BASEDIR)/../../../component/common/network/lwip/lwip_v2.1.2/port/realtek
 INCLUDES += -I$(BASEDIR)/../../../component/common/network/lwip/lwip_v2.1.2/port/realtek/freertos
-INCLUDES += -I$(BASEDIR)/../../../component/common/network/ssl/mbedtls-matter
+INCLUDES += -I$(BASEDIR)/../../../component/common/network/ssl/mbedtls-matter/include
+INCLUDES += -I$(BASEDIR)/../../../component/common/network/ssl/mbedtls-matter/include/mbedtls
 #INCLUDES += -I$(BASEDIR)/../../../component/common/network/ssl/ssl_ram_map/rom
 INCLUDES += -I$(BASEDIR)/../../../component/common/drivers/wlan/realtek/include
 INCLUDES += -I$(BASEDIR)/../../../component/common/drivers/wlan/realtek/src/osdep
@@ -201,8 +202,6 @@ SRC_CPP += $(CHIPDIR)/src/app/util/error-mapping.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/privilege-storage.cpp
 
 SRC_CPP += $(CHIPDIR)/src/app/reporting/Engine.cpp
-
-SRC_CPP += $(CHIPDIR)/src/lib/dnssd/minimal_mdns/records/IP.cpp
 
 SRC_CPP += $(shell cat $(BASEDIR)/cluster-file.txt)
 
