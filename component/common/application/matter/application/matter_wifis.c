@@ -4,8 +4,6 @@
 #include "platform_opts.h"
 #include "platform/platform_stdlib.h"
 
-#ifdef CHIP_PROJECT
-
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -158,4 +156,3 @@ void matter_get_scan_results(rtw_scan_result_t *result_buf, uint8_t scanned_num)
 #ifdef __cplusplus
 }
 #endif
-#endif /* CHIP_PROJECT */

@@ -12,8 +12,6 @@
 extern "C" {
 #endif
 
-#ifdef CHIP_PROJECT
-
 typedef struct
 {
     uint8_t value[68];
@@ -72,7 +70,6 @@ typedef struct
 // Functions
 uint32_t ReadFactory(uint8_t *buffer, uint16_t *pfactorydata_len);
 uint32_t DecodeFactory(uint8_t *buffer, FactoryData *fdp, uint16_t data_len);
-#endif /* CHIP_PROJECT */
 
 #ifdef __cplusplus
 }
