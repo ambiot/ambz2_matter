@@ -11,7 +11,6 @@ extern "C" {
 
 #include <wifi_conf.h>
 
-#ifdef CHIP_PROJECT
 void wifi_btcoex_set_bt_on(void);
 extern int CHIP_SetWiFiConfig(rtw_wifi_setting_t *config);
 extern int CHIP_GetWiFiConfig(rtw_wifi_setting_t *config);
@@ -23,7 +22,6 @@ void chip_connmgr_set_callback_func(chip_connmgr_callback p, void *data);
 void matter_scan_networks(void);
 void matter_scan_networks_with_ssid(const unsigned char *ssid, size_t length);
 void matter_get_scan_results(rtw_scan_result_t *result_buf, uint8_t scanned_num);
-#endif /* CHIP_PROJECT */
 
 #ifdef __cplusplus
 }

@@ -11,12 +11,10 @@ extern "C" {
 
 #include <wifi_conf.h>
 
-#ifdef CHIP_PROJECT
 typedef u32 TickType_t;
 int _nanosleep( const struct timespec * rqtp, struct timespec * rmtp );
 int _vTaskDelay( const TickType_t xTicksToDelay );
 time_t _time( time_t * tloc );
-#endif /* CHIP_PROJECT */
 
 #ifdef __cplusplus
 }
