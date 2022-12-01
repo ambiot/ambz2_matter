@@ -4,8 +4,6 @@
 #include "platform_opts.h"
 #include "platform/platform_stdlib.h"
 
-#ifdef CHIP_PROJECT
-
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -885,4 +883,3 @@ exit:
 #ifdef __cplusplus
 }
 #endif
-#endif /* CHIP_PROJECT */

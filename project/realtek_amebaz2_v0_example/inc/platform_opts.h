@@ -55,6 +55,8 @@
 #define BT_FTL_BKUP_ADDR		(0x200000 - 0x4000)
 #define UART_SETTING_SECTOR		(0x200000 - 0x5000)
 #define DCT_BEGIN_ADDR			(0x200000 - 0x29000) /*!< DCT begin address of flash, ex: 0x200000 = 2M, the default size of DCT is 24K; ; if backup enabled, the size is 48k; if wear leveling enabled, the size is 144k*/
+#define DCT_BEGIN_ADDR2			(0x200000 - 0x29000) /* dummy MACRO, will not be used, this will be redefined when CONFIG_EXAMPLE_MATTER is enabled */
+#define MATTER_FACTORY_DATA     (0x1B7000)           /* dummy MACRO, will not be used, this will be redefined when CONFIG_EXAMPLE_MATTER is enabled */
 #define FLASH_APP_BASE			(0x200000 - 0xA9000) /*!< FATFS begin address, default size used is 512KB (can be adjusted based on user requirement)*/
 #define BT_WHITELIST_BASE_1		(0x200000 - 0xA000)
 #define BT_WHITELIST_PAGE_SIZE		(0x1000)
@@ -85,6 +87,9 @@
 #define CONFIG_MIIO		0//on or off for alibaba alink
 #define CONFIG_RIC		0//on or off for RICloud
 #define CONFIG_LINKKIT_AWSS 0//on or off for ali feiyan cloud
+
+/* For Matter */
+#define CONFIG_EXAMPLE_MATTER   1
 
 /* For WPS and P2P */
 #define CONFIG_ENABLE_WPS		0
@@ -170,7 +175,7 @@
 #endif
 
 /* For Azure Examples */
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_EXAMPLE_MATTER) && (CONFIG_EXAMPLE_MATTER == 1)
 #define CONFIG_USE_AZURE_EMBEDDED_C        0
 #else
 #define CONFIG_USE_AZURE_EMBEDDED_C        1
@@ -187,7 +192,7 @@
 #define CONFIG_EXAMPLE_AZURE_IOTHUB_TELEMETRY      0
 /* For Azure iot hub x509 example*/
 #define CONFIG_EXAMPLE_AZURE_IOTHUB_X509     0
-#endif
+#endif // defined(CONFIG_EXAMPLE_MATTER) && (CONFIG_EXAMPLE_MATTER == 1)
 
 /* for CoAP example*/
 #define CONFIG_EXAMPLE_COAP              0
@@ -422,7 +427,7 @@
 #define CONFIG_FAST_DHCP 0
 #endif
 
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_EXAMPLE_MATTER) && (CONFIG_EXAMPLE_MATTER == 1)
 #undef CONFIG_EXAMPLE_WLAN_FAST_CONNECT
 #define CONFIG_EXAMPLE_WLAN_FAST_CONNECT	0
 #undef CONFIG_FAST_DHCP
@@ -431,6 +436,7 @@
 #else
 #define CONFIG_FAST_DHCP 0
 #endif /* CONFIG_EXAMPLE_WLAN_FAST_CONNECT */
+
 // Matter layout
 #undef FAST_RECONNECT_DATA
 #undef BT_FTL_PHY_ADDR0
@@ -438,6 +444,8 @@
 #undef BT_FTL_BKUP_ADDR
 #undef UART_SETTING_SECTOR
 #undef DCT_BEGIN_ADDR
+#undef DCT_BEGIN_ADDR2
+#undef MATTER_FACTORY_DATA
 #define FAST_RECONNECT_DATA		(0x400000 - 0x1000)  // 0x3FF000
 #define BT_FTL_PHY_ADDR0		(0x400000 - 0x2000)  // 0x3FE000
 #define BT_FTL_PHY_ADDR1		(0x400000 - 0x3000)  // 0x3FD000
@@ -446,4 +454,4 @@
 #define DCT_BEGIN_ADDR			(0x400000 - 0x13000) // 0x3ED000 ~ 0x3FB000 : 56K 
 #define DCT_BEGIN_ADDR2 		(0x400000 - 0x1A000) // 0x3E6000 ~ 0x3ED000 : 24K
 #define MATTER_FACTORY_DATA     (0x1B7000)           // Currently imagetool has a bug when flashing to addresses >2MB
-#endif /* defined(CHIP_PROJECT) && CHIP_PROJECT */
+#endif /* defined(CONFIG_EXAMPLE_MATTER) && CONFIG_EXAMPLE_MATTER */

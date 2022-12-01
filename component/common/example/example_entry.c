@@ -358,7 +358,7 @@
 #include <mbedtls_ecdhe/example_mbedtls_ecdhe.h>
 #endif
 
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_EXAMPLE_MATTER) && (CONFIG_EXAMPLE_MATTER == 1)
 #include <example_matter.h>
 #endif
 
@@ -837,7 +837,7 @@ example_hilink();
 	example_ali_awss();
 #endif
 
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_EXAMPLE_MATTER) && (CONFIG_EXAMPLE_MATTER == 1)
 	example_matter_task();
 #endif
 
