@@ -452,7 +452,7 @@ CONFIG_EXAMPLE_COAP_SERVER and CONFIG_EXAMPLE_COAP_CLIENT is defined in platform
 #undef LWIP_ICMP6
 #define LWIP_ICMP6                      1
 #undef  MEMP_NUM_SYS_TIMEOUT
-#define MEMP_NUM_SYS_TIMEOUT            13
+#define MEMP_NUM_SYS_TIMEOUT            14
 #if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #undef LWIP_IPV6_DHCP6
 #define LWIP_IPV6_DHCP6                 1
