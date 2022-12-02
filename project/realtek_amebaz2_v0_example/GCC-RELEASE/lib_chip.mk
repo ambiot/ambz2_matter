@@ -66,7 +66,6 @@ INCLUDES += -I$(BASEDIR)/../../../component/common/network/lwip/lwip_v2.1.2/port
 INCLUDES += -I$(BASEDIR)/../../../component/common/network/lwip/lwip_v2.1.2/port/realtek/freertos
 INCLUDES += -I$(BASEDIR)/../../../component/common/network/ssl/mbedtls-matter/include
 INCLUDES += -I$(BASEDIR)/../../../component/common/network/ssl/mbedtls-matter/include/mbedtls
-INCLUDES += -I$(BASEDIR)/../../../component/common/network/ssl/mbedtls-matter
 #INCLUDES += -I$(BASEDIR)/../../../component/common/network/ssl/ssl_ram_map/rom
 INCLUDES += -I$(BASEDIR)/../../../component/common/drivers/wlan/realtek/include
 INCLUDES += -I$(BASEDIR)/../../../component/common/drivers/wlan/realtek/src/osdep
@@ -146,8 +145,8 @@ INCLUDES += -I$(BASEDIR)/../../../component/os/os_dep/include
 
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/bluetooth
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/bluetooth/bt_matter_adapter
-INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/application
-INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/mbedtls
+INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/mbedtls
+INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/port
 
 # CHIP Include folder list
 # -------------------------------------------------------------------

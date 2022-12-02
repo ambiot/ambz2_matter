@@ -359,7 +359,11 @@
 #endif
 
 #if defined(CONFIG_EXAMPLE_MATTER) && (CONFIG_EXAMPLE_MATTER == 1)
+#if defined(CONFIG_EXAMPLE_MATTER_CHIPTEST) && (CONFIG_EXAMPLE_MATTER_CHIPTEST == 1)
 #include <example_matter.h>
+#elif defined(CONFIG_EXAMPLE_MATTER_LIGHT) && (CONFIG_EXAMPLE_MATTER_LIGHT == 1)
+#include <example_matter_light.h>
+#endif
 #endif
 
 /*
@@ -838,7 +842,12 @@ example_hilink();
 #endif
 
 #if defined(CONFIG_EXAMPLE_MATTER) && (CONFIG_EXAMPLE_MATTER == 1)
+#if defined(CONFIG_EXAMPLE_MATTER_CHIPTEST) && (CONFIG_EXAMPLE_MATTER_CHIPTEST == 1)
 	example_matter_task();
+#elif defined(CONFIG_EXAMPLE_MATTER_LIGHT) && (CONFIG_EXAMPLE_MATTER_LIGHT == 1)
+    extern void example_matter_light();
+    example_matter_light();
+#endif
 #endif
 
 #if defined(API_TEST_MODE)

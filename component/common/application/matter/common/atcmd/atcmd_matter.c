@@ -10,8 +10,10 @@
 extern void ChipTest(void);
 extern u32 deinitPref(void);
 #if CONFIG_ENABLE_OTA_REQUESTOR
+#if CONFIG_EXAMPLE_MATTER_CHIPTEST
 extern void amebaQueryImageCmdHandler();
 extern void amebaApplyUpdateCmdHandler();
+#endif
 #endif
 
 void fATchipapp(void *arg)
@@ -34,18 +36,22 @@ void fATchipapp(void *arg)
 void fATchipapp1(void *arg)
 {
 #if CONFIG_ENABLE_OTA_REQUESTOR
+#if CONFIG_EXAMPLE_MATTER_CHIPTEST
 	printf("Chip Test: amebaQueryImageCmdHandler\r\n");
 	amebaQueryImageCmdHandler();
+#endif
 #endif
 }
 
 void fATchipapp2(void *arg)
 {
 #if CONFIG_ENABLE_OTA_REQUESTOR
+#if CONFIG_EXAMPLE_MATTER_CHIPTEST
 	(void) arg;
 	printf("Chip Test: amebaApplyUpdateCmdHandler\r\n");
 
 	amebaApplyUpdateCmdHandler();
+#endif
 #endif
 }
 

@@ -7,7 +7,7 @@ import glob
 import sys
 import os
 
-def parse_zapfile_clusters(cluster_file):
+def parse_zapfile_clusters(cluster_file, chip_path):
     """Prints all of the source directories to build for a given ZAP file.
     Arguments:
       zap_file_path - Path to the ZAP input file.
@@ -22,7 +22,7 @@ def parse_zapfile_clusters(cluster_file):
 
     # Open file, prepend filepath and append .cpp extension to every cluster in the list, write to file
     f = open(cluster_file, 'w')
-    os.chdir('../../../third_party/connectedhomeip/src/app/clusters/')
+    os.chdir('{}/src/app/clusters/'.format(chip_path))
     chip_cluster_path = os.getcwd()
     for cluster in cluster_list:
         for clusters_cpp in glob.glob(chip_cluster_path + '/' + cluster + "/*.cpp"):
@@ -39,10 +39,14 @@ def main():
                         help='Path to intermediate file containing cluster list',
                         required=True,
                         type=pathlib.Path)
+    parser.add_argument('--chip_path',
+                        help='Path to connectedhomeip sdk',
+                        required=True,
+                        type=pathlib.Path)
 
     args = parser.parse_args()
 
-    parse_zapfile_clusters(args.cluster_file)
+    parse_zapfile_clusters(args.cluster_file, args.chip_path)
 
     sys.exit(0)
 
