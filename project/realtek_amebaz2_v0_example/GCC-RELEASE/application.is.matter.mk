@@ -70,9 +70,9 @@ ROMIMG =
 INCLUDES =
 INCLUDES += -I../inc
 
-INCLUDES += -I$(CHIPDIR)/third_party/mbedtls/repo/include
-INCLUDES += -I$(CHIPDIR)/third_party/mbedtls/repo/include/mbedtls
-INCLUDES += -I$(CHIPDIR)/third_party/mbedtls/repo/library
+INCLUDES += -I../../../component/common/network/ssl/mbedtls-matter/include
+INCLUDES += -I../../../component/common/network/ssl/mbedtls-matter/include/mbedtls
+INCLUDES += -I../../../component/common/network/ssl/mbedtls-matter/library
 INCLUDES += -I../../../component/common/network/ssl/mbedtls-matter
 
 INCLUDES += -I../../../component/common/api
