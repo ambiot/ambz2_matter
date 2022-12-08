@@ -8,6 +8,7 @@ AMEBAZ2_GCCTOOLDIR	= ../../../component/soc/realtek/8710c/misc/gcc_utility
 AMEBAZ2_BSPDIR = ../../../component/soc/realtek/8710c/misc/bsp
 AMEBAZ2_BOOTLOADERDIR = $(AMEBAZ2_BSPDIR)/image
 AMEBAZ2_ROMSYMDIR = $(AMEBAZ2_BSPDIR)/ROM
+AMEBAZ2_MATTER_TOOLDIR = ../../../tools/matter
 
 BASEDIR := $(shell pwd)
 CHIPDIR = $(BASEDIR)/../../../third_party/connectedhomeip
@@ -819,8 +820,8 @@ endif
 	$(ELF2BIN) convert amebaz2_firmware_is.json FIRMWARE secure_bit=0
 	$(CHKSUM) $(BIN_DIR)/firmware_is.bin
 	$(ELF2BIN) combine $(BIN_DIR)/flash_is.bin PTAB=partition.bin,BOOT=$(BOOT_BIN_DIR)/bootloader.bin,FW1=$(BIN_DIR)/firmware_is.bin
-	python3 $(CHIPDIR)/src/app/ota_image_tool.py create -v $(VENDORID) -p $(PRODUCTID) -vn $(VERSION) -vs $(VERSIONSTRING) -da $(DIGESTALGO) $(BIN_DIR)/firmware_is.bin $(BIN_DIR)/MATTER_OTA_FIRMWARE.bin
-	python3 $(CHIPDIR)/src/app/ota_image_tool.py show $(BIN_DIR)/MATTER_OTA_FIRMWARE.bin
+	python3 $(AMEBAZ2_MATTER_TOOLDIR)/ota/ota_image_tool.py create -v $(VENDORID) -p $(PRODUCTID) -vn $(VERSION) -vs $(VERSIONSTRING) -da $(DIGESTALGO) $(BIN_DIR)/firmware_is.bin $(BIN_DIR)/MATTER_OTA_FIRMWARE.bin
+	python3 $(AMEBAZ2_MATTER_TOOLDIR)/ota/ota_image_tool.py show $(BIN_DIR)/MATTER_OTA_FIRMWARE.bin
 
 # Generate build info
 # -------------------------------------------------------------------
