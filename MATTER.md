@@ -43,31 +43,23 @@ Make sure ambz2_matter and connectedhomeip are on the same directory level
 
     cd ambz2_matter/project/realtek_amebaz2_v0_example/GCC-RELEASE
 
-    source ToolPath.sh
-	
     make all_cluster
 
 ### lighting-app
 
     cd ambz2_matter/project/realtek_amebaz2_v0_example/GCC-RELEASE
 
-    source ToolPath.sh
-
     make light
-    
+
 ### switch-app
 
     cd ambz2_matter/project/realtek_amebaz2_v0_example/GCC-RELEASE
 
-    source ToolPath.sh
-
     make switch
-    
+
 ### ota-requestor-app
 
     cd ambz2_matter/project/realtek_amebaz2_v0_example/GCC-RELEASE
-
-    source ToolPath.sh
 
     make otar
 
