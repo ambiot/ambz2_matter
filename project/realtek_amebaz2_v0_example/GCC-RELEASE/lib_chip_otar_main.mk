@@ -7,6 +7,7 @@ BASEDIR := $(shell pwd)
 AMEBAZ2_TOOLDIR	= $(BASEDIR)/../../../component/soc/realtek/8710c/misc/iar_utility
 CHIPDIR = $(BASEDIR)/../../../third_party/connectedhomeip
 OUTPUT_DIR = $(CHIPDIR)/examples/ota-requestor-app/ameba/build/chip
+CODEGENDIR = $(BASEDIR)/../../../tools/matter/codegen_helpers/gen
 
 OS := $(shell uname)
 
@@ -70,7 +71,7 @@ INCLUDES += -I$(BASEDIR)/../../../component/common/network/lwip/lwip_v2.1.2/src/
 INCLUDES += -I$(BASEDIR)/../../../component/common/network/lwip/lwip_v2.1.2/port/realtek
 INCLUDES += -I$(BASEDIR)/../../../component/common/network/lwip/lwip_v2.1.2/port/realtek/freertos
 INCLUDES += -I$(BASEDIR)/../../../component/common/network/ssl/mbedtls-matter/include
-INCLUDES += -I$(BASEDIR)/../../../component/common/network/ssl/mbedtls-matter/mbedtls
+INCLUDES += -I$(BASEDIR)/../../../component/common/network/ssl/mbedtls-matter/include/mbedtls
 #INCLUDES += -I$(BASEDIR)/../../../component/common/network/ssl/ssl_ram_map/rom
 INCLUDES += -I$(BASEDIR)/../../../component/common/drivers/wlan/realtek/include
 INCLUDES += -I$(BASEDIR)/../../../component/common/drivers/wlan/realtek/src/osdep
@@ -173,6 +174,7 @@ INCLUDES += -I$(CHIPDIR)/examples/ota-requestor-app/ameba/main/include
 INCLUDES += -I$(CHIPDIR)/examples/platform/ameba
 INCLUDES += -I$(CHIPDIR)/examples/providers
 INCLUDES += -I$(CHIPDIR)/component/soc/realtek/amebad/fwlib/include
+INCLUDES += -I$(CODEGENDIR)
 
 # Source file list
 # -------------------------------------------------------------------
@@ -195,19 +197,21 @@ SRC_CPP += $(CHIPDIR)/src/app/util/binding-table.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/DataModelHandler.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/ember-compatibility-functions.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/ember-print.cpp
+SRC_CPP += $(CHIPDIR)/src/app/util/generic-callback-stubs.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/message.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/util.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/error-mapping.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/privilege-storage.cpp
 
-SRC_CPP += $(shell cat $(BASEDIR)/cluster-file.txt)
-
 SRC_CPP += $(CHIPDIR)/src/app/reporting/Engine.cpp
+
+SRC_CPP += $(shell cat $(CODEGENDIR)/cluster-file.txt)
+
+SRC_CPP += $(CODEGENDIR)/app/callback-stub.cpp
 
 SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/attributes/Accessors.cpp
 SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/cluster-objects.cpp
 
-SRC_CPP += $(CHIPDIR)/zzz_generated/ota-requestor-app/zap-generated/callback-stub.cpp
 SRC_CPP += $(CHIPDIR)/zzz_generated/ota-requestor-app/zap-generated/IMClusterCommandHandler.cpp
 
 SRC_CPP += $(CHIPDIR)/examples/ota-requestor-app/ameba/main/chipinterface.cpp
