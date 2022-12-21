@@ -43,7 +43,7 @@ Make sure ambz2_matter and connectedhomeip are on the same directory level
 
     cd ambz2_matter/project/realtek_amebaz2_v0_example/GCC-RELEASE
 	
-    make all_cluster
+    make all_clusters
 
 ### lighting-app
 

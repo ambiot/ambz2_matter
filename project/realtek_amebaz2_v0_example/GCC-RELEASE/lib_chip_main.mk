@@ -6,6 +6,7 @@ BASEDIR := $(shell pwd)
 AMEBAZ2_TOOLDIR	= $(BASEDIR)/../../../component/soc/realtek/8710c/misc/iar_utility
 CHIPDIR = $(BASEDIR)/../../../third_party/connectedhomeip
 OUTPUT_DIR = $(CHIPDIR)/examples/all-clusters-app/ameba/build/chip
+CODEGENDIR = $(BASEDIR)/../../../tools/matter/codegen_helpers/gen
 
 OS := $(shell uname)
 
@@ -172,6 +173,7 @@ INCLUDES += -I$(CHIPDIR)/src/app/clusters/bindings
 INCLUDES += -I$(CHIPDIR)/src/controller/data_model
 INCLUDES += -I$(CHIPDIR)/third_party/nlio/repo/include
 INCLUDES += -I$(CHIPDIR)/third_party/nlunit-test/repo/src
+INCLUDES += -I$(CODEGENDIR)
 
 # Source file list
 # -------------------------------------------------------------------
@@ -196,6 +198,7 @@ SRC_CPP += $(CHIPDIR)/src/app/util/binding-table.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/DataModelHandler.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/ember-compatibility-functions.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/ember-print.cpp
+SRC_CPP += $(CHIPDIR)/src/app/util/generic-callback-stubs.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/message.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/util.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/error-mapping.cpp
@@ -203,9 +206,10 @@ SRC_CPP += $(CHIPDIR)/src/app/util/privilege-storage.cpp
 
 SRC_CPP += $(CHIPDIR)/src/app/reporting/Engine.cpp
 
-SRC_CPP += $(shell cat $(BASEDIR)/cluster-file.txt)
+SRC_CPP += $(shell cat $(CODEGENDIR)/cluster-file.txt)
 
-SRC_CPP += $(CHIPDIR)/zzz_generated/all-clusters-app/zap-generated/callback-stub.cpp
+SRC_CPP += $(CODEGENDIR)/app/callback-stub.cpp
+
 SRC_CPP += $(CHIPDIR)/zzz_generated/all-clusters-app/zap-generated/IMClusterCommandHandler.cpp
 
 SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/attributes/Accessors.cpp
@@ -220,7 +224,6 @@ SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/DeviceCallbacks.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/CHIPDeviceManager.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/Globals.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/LEDWidget.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/DsoHack.cpp
 
 SRC_CPP += $(CHIPDIR)/examples/platform/ameba/ota/OTAInitializer.cpp
 SRC_CPP += $(CHIPDIR)/examples/providers/DeviceInfoProviderImpl.cpp
