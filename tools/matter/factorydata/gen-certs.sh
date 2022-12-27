@@ -52,8 +52,8 @@ cert_lifetime=4294967295
 
 vid=8888
 pid=9999
-endproduct_vid=5555
-endproduct_pid=6666
+#endproduct_vid=5555
+#endproduct_pid=6666
 format_version=1
 device_type_id=0x0016
 certificate_id="ZIG20142ZB330003-24"
@@ -199,7 +199,7 @@ cd_signing_key="$chip_dir/credentials/test/certification-declaration/Chip-Test-C
 cd_signing_cert="$chip_dir/credentials/test/certification-declaration/Chip-Test-CD-Signing-Cert.pem"
 
 # CD without dac_origin_vid, dac_origin_pid
-# "$chip_cert_tool" gen-cd --key "$cd_signing_key" --cert "$cd_signing_cert" --out "$dest_dir/Chip-Test-CD-$vid-$pid.der" --format-version "$format_version" --vendor-id "0x$vid" --product-id "0x$pid" --device-type-id "$device_type_id" --certificate-id "$certificate_id" --security-level "$security_level" --security-info "$security_info" --version-number "$version_num" --certification-type "$certification_type"
+"$chip_cert_tool" gen-cd --key "$cd_signing_key" --cert "$cd_signing_cert" --out "$dest_dir/Chip-Test-CD-$vid-$pid.der" --format-version "$format_version" --vendor-id "0x$vid" --product-id "0x$pid" --device-type-id "$device_type_id" --certificate-id "$certificate_id" --security-level "$security_level" --security-info "$security_info" --version-number "$version_num" --certification-type "$certification_type"
 
 # CD with dac_origin_vid, dac_origin_pid
-"$chip_cert_tool" gen-cd --key "$cd_signing_key" --cert "$cd_signing_cert" --out "$dest_dir/Chip-Test-CD-$endproduct_vid-$endproduct_pid-WithDACOrigin.der" --format-version "$format_version" --vendor-id "$endproduct_vid" --product-id "$endproduct_pid" --device-type-id "$device_type_id" --certificate-id "$certificate_id" --security-level "$security_level" --security-info "$security_info" --version-number "$version_num" --certification-type "$certification_type" --dac-origin-vendor-id "$vid" --dac-origin-product-id "$pid"
+#"$chip_cert_tool" gen-cd --key "$cd_signing_key" --cert "$cd_signing_cert" --out "$dest_dir/Chip-Test-CD-$endproduct_vid-$endproduct_pid-WithDACOrigin.der" --format-version "$format_version" --vendor-id "$endproduct_vid" --product-id "$endproduct_pid" --device-type-id "$device_type_id" --certificate-id "$certificate_id" --security-level "$security_level" --security-info "$security_info" --version-number "$version_num" --certification-type "$certification_type" --dac-origin-vendor-id "$vid" --dac-origin-product-id "$pid"
