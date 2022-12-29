@@ -62,9 +62,6 @@ ROMIMG =
 # -------------------------------------------------------------------
 #SYSTEM_TIME64_MAKE_OPTION = 1
 
-# Uncomment to enable BLE mesh with matter
-#BT_MATTER_MESH_ADAPTER = 1
-
 # Include folder list
 # -------------------------------------------------------------------
 
@@ -184,11 +181,8 @@ INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/ffs_demo/c
 INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/ffs_demo/realtek/configs
 
 #matter
-ifdef BT_MATTER_MESH_ADAPTER
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter
-else
 INCLUDES += -I../../../component/common/application/matter/common/bluetooth/bt_matter_adapter
-endif
 INCLUDES += -I../../../component/common/application/matter/application
 INCLUDES += -I../../../component/common/application/matter/mbedtls
 INCLUDES += -I../../../component/common/application/matter/protobuf
@@ -255,7 +249,6 @@ SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_co
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_config_service.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_config_wifi.c
 
-ifdef BT_MATTER_MESH_ADAPTER
 #bluetooth - example - bt_mesh_device_matter
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/cmd/mesh_data_uart.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/cmd/mesh_user_cmd_parse.c
@@ -307,14 +300,13 @@ SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multipl
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter/bt_mesh_device_matter_app_main.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter/bt_mesh_device_matter_app_task.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter/bt_mesh_device_matter_cmd.c
-else
+
 #bluetooth - example - bt_matter_adapter
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_app_main.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_app_task.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_peripheral_app.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_service.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_wifi.c
-endif
 
 #bluetooth - example
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/bt_example_entry.c
@@ -723,11 +715,6 @@ else
 CFLAGS += -DCONFIG_SYSTEM_TIME64=0
 endif
 
-# for matter mesh
-ifdef BT_MATTER_MESH_ADAPTER
-CFLAGS += -CONFIG_BT_MESH_WITH_MATTER
-endif
-
 CFLAGS += -DCHIP_PROJECT=0
 CFLAGS += -DCONFIG_ENABLE_OTA_REQUESTOR=1
 CFLAGS += -DMBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"
@@ -776,10 +763,9 @@ LIBFLAGS =
 LIBFLAGS += -L$(AMEBAZ2_ROMSYMDIR)
 LIBFLAGS += -Wl,--start-group ../../../component/soc/realtek/8710c/fwlib/lib/lib/hal_pmc.a -Wl,--end-group
 LIBFLAGS += -Wl,--start-group ../../../component/common/bluetooth/realtek/sdk/board/amebaz2/lib/btgap.a -Wl,--end-group
-ifdef BT_MATTER_MESH_ADAPTER
 LIBFLAGS += -Wl,--start-group ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/lib/amebaz2/btmesh_prov.a -Wl,--end-group
 LIBFLAGS += -Wl,--start-group ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/lib/amebaz2/btmesh_dev.a -Wl,--end-group
-endif
+
 all: LIBFLAGS += -Wl,--start-group -L../../../component/soc/realtek/8710c/misc/bsp/lib/common/GCC -l_soc_is -l_wlan -Wl,--end-group
 mp: LIBFLAGS += -Wl,--start-group -L../../../component/soc/realtek/8710c/misc/bsp/lib/common/GCC -l_soc_is -l_wlan_mp -Wl,--end-group
 LIBFLAGS += -L../../../component/soc/realtek/8710c/misc/bsp/lib/common/GCC -l_http -l_dct -l_eap -l_p2p -l_websocket -l_wps -l_mdns
