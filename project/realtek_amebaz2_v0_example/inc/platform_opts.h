@@ -56,7 +56,7 @@
 #define UART_SETTING_SECTOR		(0x200000 - 0x5000)
 #define DCT_BEGIN_ADDR			(0x200000 - 0x29000) /*!< DCT begin address of flash, ex: 0x200000 = 2M, the default size of DCT is 24K; ; if backup enabled, the size is 48k; if wear leveling enabled, the size is 144k*/
 #define DCT_BEGIN_ADDR2			(0x200000 - 0x29000) /* dummy MACRO, will not be used, this will be redefined when CONFIG_EXAMPLE_MATTER is enabled */
-#define MATTER_FACTORY_DATA     (0x1B7000)           /* dummy MACRO, will not be used, this will be redefined when CONFIG_EXAMPLE_MATTER is enabled */
+#define MATTER_FACTORY_DATA     (0x3FF000)           /* dummy MACRO, will not be used, this will be redefined when CONFIG_EXAMPLE_MATTER is enabled */
 #define FLASH_APP_BASE			(0x200000 - 0xA9000) /*!< FATFS begin address, default size used is 512KB (can be adjusted based on user requirement)*/
 #define BT_WHITELIST_BASE_1		(0x200000 - 0xA000)
 #define BT_WHITELIST_PAGE_SIZE		(0x1000)
@@ -453,5 +453,5 @@
 #define UART_SETTING_SECTOR		(0x400000 - 0x5000)  // 0x3FB000
 #define DCT_BEGIN_ADDR			(0x400000 - 0x13000) // 0x3ED000 ~ 0x3FB000 : 56K 
 #define DCT_BEGIN_ADDR2 		(0x400000 - 0x1A000) // 0x3E6000 ~ 0x3ED000 : 24K
-#define MATTER_FACTORY_DATA     (0x1B7000)           // Currently imagetool has a bug when flashing to addresses >2MB
+#define MATTER_FACTORY_DATA     (0x3FF000)           // last 4KB of external flash - write protection is supported in this region
 #endif /* defined(CONFIG_EXAMPLE_MATTER) && CONFIG_EXAMPLE_MATTER */
