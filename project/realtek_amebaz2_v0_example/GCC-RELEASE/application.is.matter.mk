@@ -374,6 +374,7 @@ SRC_C += ../../../component/common/application/matter/application/matter_timers.
 SRC_C += ../../../component/common/application/matter/application/matter_utils.c
 SRC_C += ../../../component/common/application/matter/application/matter_wifis.c
 SRC_C += ../../../component/common/application/matter/application/example_matter.c
+SRC_C += ../../../component/common/application/matter/application/example_matter_write_protect.c
 SRC_C += ../../../component/common/application/matter/common/atcmd_matter.c
 SRC_C += ../../../component/common/application/matter/mbedtls/net_sockets.c
 
