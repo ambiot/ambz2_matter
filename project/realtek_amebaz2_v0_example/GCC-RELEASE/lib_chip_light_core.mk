@@ -180,6 +180,7 @@ endif
 # CHIP options
 # -------------------------------------------------------------------
 CFLAGS += -DCHIP_PROJECT=1
+CFLAGS += -DCONFIG_ENABLE_AMEBA_FACTORY_DATA=0
 CFLAGS += -DCHIP_DEVICE_LAYER_TARGET=Ameba
 CFLAGS += -DMBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"
 
@@ -202,6 +203,7 @@ CXXFLAGS += -DFD_SETSIZE=10
 CXXFLAGS += -Wno-sign-compare
 CXXFLAGS += -Wno-unused-function
 CXXFLAGS += -Wno-unused-but-set-variable
+CXXFLAGS += -Wno-unused-label
 CXXFLAGS += -Wno-unused-variable
 CXXFLAGS += -Wno-deprecated-declarations
 CXXFLAGS += -Wno-unused-parameter
@@ -242,6 +244,7 @@ GENERATE_NINJA:
 	echo chip_enable_ota_requestor = "true" >> $(OUTPUT_DIR)/args.gn
 	echo chip_inet_config_enable_ipv4 = "false" >> $(OUTPUT_DIR)/args.gn
 	echo chip_support_enable_storage_api_audit = "false" >> $(OUTPUT_DIR)/args.gn
+	echo chip_use_transitional_commissionable_data_provider = "false" >> $(OUTPUT_DIR)/args.gn
 	sed -i 's/chip_build_tests\ =\ true/chip_build_tests\ =\ false/g' $(CHIPDIR)/config/ameba/args.gni
 	mkdir -p $(CHIPDIR)/config/ameba/components/chip
 	cd $(CHIPDIR)/config/ameba/components/chip && gn gen --check --fail-on-unused-args $(CHIPDIR)/examples/lighting-app/ameba/build/chip

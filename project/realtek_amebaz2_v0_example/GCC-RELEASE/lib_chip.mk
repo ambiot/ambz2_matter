@@ -198,12 +198,14 @@ CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_SOCKETS=0
 CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_NETWORK_FRAMEWORK=0
 
 CFLAGS += -DCHIP_SHELL_MAX_TOKENS=11
+CFLAGS += -DCONFIG_ENABLE_AMEBA_FACTORY_DATA=0
 
 CXXFLAGS += -DFD_SETSIZE=10
 
 CXXFLAGS += -Wno-sign-compare
 CXXFLAGS += -Wno-unused-function
 CXXFLAGS += -Wno-unused-but-set-variable
+CXXFLAGS += -Wno-unused-label
 CXXFLAGS += -Wno-unused-variable
 CXXFLAGS += -Wno-deprecated-declarations
 CXXFLAGS += -Wno-unused-parameter
@@ -245,6 +247,7 @@ GENERATE_NINJA:
 	echo chip_build_libshell = "true" >> $(OUTPUT_DIR)/args.gn
 	echo chip_inet_config_enable_ipv4 = "false" >> $(OUTPUT_DIR)/args.gn
 	echo chip_support_enable_storage_api_audit = "false" >> $(OUTPUT_DIR)/args.gn
+	echo chip_use_transitional_commissionable_data_provider = "false" >> $(OUTPUT_DIR)/args.gn
 	sed -i 's/chip_build_tests\ =\ true/chip_build_tests\ =\ false/g' $(CHIPDIR)/config/ameba/args.gni
 	mkdir -p $(CHIPDIR)/config/ameba/components/chip
 	cd $(CHIPDIR)/config/ameba/components/chip && gn gen --check --fail-on-unused-args $(CHIPDIR)/examples/all-clusters-app/ameba/build/chip
