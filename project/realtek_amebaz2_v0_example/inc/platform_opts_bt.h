@@ -39,12 +39,12 @@
 #ifdef CHIP_PROJECT
 /* For Matter Application */
 #ifdef CONFIG_BT_MESH_WITH_MATTER // this is toggled in application.is.matter.mk
-#undef CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
+#undef CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
 #undef CONFIG_BT_MESH_DEVICE_MATTER
-#define CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE     1
-#define CONFIG_BT_MESH_DEVICE_MATTER                    1
+#define CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE			1
+#define CONFIG_BT_MESH_DEVICE_MATTER					1
 #else
-#define CONFIG_BT_MATTER_ADAPTER	1
+#define CONFIG_BT_MATTER_ADAPTER						1
 #endif
 
 /* For Matter Mesh Application */

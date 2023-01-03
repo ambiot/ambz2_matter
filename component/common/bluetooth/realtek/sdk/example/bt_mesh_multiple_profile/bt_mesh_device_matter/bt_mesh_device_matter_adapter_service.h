@@ -56,6 +56,11 @@ typedef enum
 //#define SIMP_NOTIFY_INDICATE_V4_ENABLE     3
 //#define SIMP_NOTIFY_INDICATE_V4_DISABLE    4
 
+#define BT_MATTER_ADAPTER_SERVICE_CHAR_RX_INDEX                 0x02
+#define BT_MATTER_ADAPTER_SERVICE_CHAR_TX_INDEX                 0x04
+#define BT_MATTER_ADAPTER_SERVICE_CHAR_INDICATE_CCCD_INDEX      (BT_MATTER_ADAPTER_SERVICE_CHAR_TX_INDEX + 1)
+#define BT_MATTER_ADAPTER_SERVICE_C3_INDEX                      0x07
+
 /** @defgroup SIMP_Service_Read_Info SIMP Service Read Info
   * @brief  Parameter for reading characteristic value.
   * @{

@@ -73,6 +73,7 @@
 #include <wifi/wifi_conf.h>
 #include "rtk_coex.h"
 #include <simple_ble_config.h>
+#include "matter_blemgr_common.h"
 /*============================================================================*
  *                              Constants
  *============================================================================*/
@@ -686,13 +687,48 @@ void bt_mesh_device_matter_app_deinit(void)
     bt_mesh_device_matter_gap_dev_state.gap_init_state = GAP_INIT_STATE_INIT;
 }
 
+matter_blemgr_callback matter_blemgr_callback_func = NULL;
+void *matter_blemgr_callback_data = NULL;
 
-uint16_t ble_att_mtu_z2(uint16_t conn_id)
+int matter_blemgr_init(void)
+{
+    return bt_mesh_device_matter_app_init();
+}
+
+void matter_blemgr_set_callback_func(matter_blemgr_callback p, void *data)
+{
+    matter_blemgr_callback_func = p;
+    matter_blemgr_callback_data = data;
+}
+
+int matter_blemgr_start_adv(void)
+{
+    bt_mesh_device_matter_le_adv_start();
+    return 0;
+}
+
+int matter_blemgr_stop_adv(void)
+{
+    bt_mesh_device_matter_config_adv_flag = 0; //matter moudle disable config adv
+    bt_mesh_device_matter_le_adv_stop();
+    return 0;
+}
+
+int matter_blemgr_config_adv(uint16_t adv_int_min, uint16_t adv_int_max, uint8_t *adv_data, uint8_t adv_data_length)
+{
+    bt_mesh_device_matter_config_adv_flag = 1; //matter moudle enable config adv
+    bt_mesh_device_matter_adv_interval = adv_int_min;
+    memcpy(bt_mesh_device_matter_adv_data, adv_data, adv_data_length);
+
+    return 0;
+}
+
+uint16_t matter_blemgr_get_mtu(uint8_t connect_id)
 {
     int ret;
     uint16_t mtu_size;
 
-    ret = le_get_conn_param(GAP_PARAM_CONN_MTU_SIZE, &mtu_size, conn_id);
+    ret = le_get_conn_param(GAP_PARAM_CONN_MTU_SIZE, &mtu_size, connect_id);
     if (ret == 0)
     {
         printf("printing MTU size\r\n");
@@ -702,63 +738,50 @@ uint16_t ble_att_mtu_z2(uint16_t conn_id)
         return 0;
 }
 
-bool ble_matter_netmgr_server_send_data(uint8_t conn_id, T_SERVER_ID service_id, uint16_t attrib_index,
-                    uint8_t *p_data, uint16_t data_len, T_GATT_PDU_TYPE type)
+int matter_blemgr_set_device_name(char *device_name, uint8_t device_name_length)
+{
+    le_set_gap_param(GAP_PARAM_DEVICE_NAME, device_name_length, device_name);
+
+    return 0;
+}
+
+int matter_blemgr_disconnect(uint8_t connect_id)
+{
+    if (bt_mesh_device_matter_adapter_send_msg(5, connect_id) == false)
+    {
+        printf("bt_mesh_device_matter_adapter_send_msg fail\r\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+int matter_blemgr_send_indication(uint8_t connect_id, uint8_t *data, uint16_t data_length)
 {
     BT_MATTER_SERVER_SEND_DATA *param = os_mem_alloc(0, sizeof(BT_MATTER_SERVER_SEND_DATA));
-    if(param)
+    if (param)
     {
-        param->conn_id = conn_id;
-        param->service_id = service_id;
-        param->attrib_index = attrib_index;
-        param->data_len = data_len;
-        param->type = type;
+        param->conn_id = connect_id;
+        param->service_id = bt_mesh_device_matter_adapter_srv_id;
+        param->attrib_index = BT_MATTER_ADAPTER_SERVICE_CHAR_TX_INDEX;
+        param->data_len = data_length;
+        param->type = GATT_PDU_TYPE_INDICATION;
         if (param->data_len != 0)
         {
             param->p_data = os_mem_alloc(0, param->data_len);
-            memcpy(param->p_data, p_data, param->data_len);
+            memcpy(param->p_data, data, param->data_len);
         }
-        if(bt_mesh_device_matter_adapter_send_msg(4, param) == false)
+        if (bt_mesh_device_matter_adapter_send_msg(4, param) == false)
         {
             printf("os_mem_free\r\n");
             os_mem_free(param);
             os_mem_free(param->p_data);
             return false;
         }
-    }
-    else
+    } else
         printf("Malloc failed\r\n");
 
     return true;
-}
-
-bool ble_matter_netmgr_adv_param_handler(uint16_t adv_int_min, uint16_t adv_int_max, 
-                                                            void *advData, uint8_t advData_len)
-{
-    int ret = 0;
-    bt_mesh_device_matter_config_adv_flag = 1; //matter moudle enable config adv
-    bt_mesh_device_matter_adv_interval = adv_int_min;
-    memcpy(bt_mesh_device_matter_adv_data, advData, advData_len);
-
-    return ret;
-}
-
-bool ble_matter_netmgr_adv_start_handler(void)
-{
-    bt_mesh_device_matter_le_adv_start();
-    return 0;
-}
-
-bool ble_matter_netmgr_adv_stop_handler(void)
-{
-    bt_mesh_device_matter_config_adv_flag = 0; //matter moudle disable config adv
-    bt_mesh_device_matter_le_adv_stop();
-    return 0;
-}
-
-bool ble_matter_netmgr_adapter_init_handler(void)
-{
-    return bt_mesh_device_matter_app_init();
 }
 
 #endif
