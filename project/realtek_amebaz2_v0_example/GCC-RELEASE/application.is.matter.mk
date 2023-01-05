@@ -189,6 +189,7 @@ INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_mu
 else
 INCLUDES += -I../../../component/common/application/matter/common/bluetooth/bt_matter_adapter
 endif
+INCLUDES += -I../../../component/common/application/matter/common/bluetooth
 INCLUDES += -I../../../component/common/application/matter/application
 INCLUDES += -I../../../component/common/application/matter/mbedtls
 INCLUDES += -I../../../component/common/application/matter/protobuf
@@ -511,7 +512,7 @@ SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/md5.c
 SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/md.c
 #SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/md_wrap.c
 SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/memory_buffer_alloc.c
-#SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/net_sockets.c.c
+#SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/net_sockets.c
 SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/nist_kw.c
 SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/oid.c
 SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/padlock.c
@@ -725,7 +726,7 @@ endif
 
 # for matter mesh
 ifdef BT_MATTER_MESH_ADAPTER
-CFLAGS += -CONFIG_BT_MESH_WITH_MATTER
+CFLAGS += -DCONFIG_BT_MESH_WITH_MATTER=1
 endif
 
 CFLAGS += -DCHIP_PROJECT=0
@@ -777,7 +778,7 @@ LIBFLAGS += -L$(AMEBAZ2_ROMSYMDIR)
 LIBFLAGS += -Wl,--start-group ../../../component/soc/realtek/8710c/fwlib/lib/lib/hal_pmc.a -Wl,--end-group
 LIBFLAGS += -Wl,--start-group ../../../component/common/bluetooth/realtek/sdk/board/amebaz2/lib/btgap.a -Wl,--end-group
 ifdef BT_MATTER_MESH_ADAPTER
-LIBFLAGS += -Wl,--start-group ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/lib/amebaz2/btmesh_prov.a -Wl,--end-group
+#LIBFLAGS += -Wl,--start-group ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/lib/amebaz2/btmesh_prov.a -Wl,--end-group
 LIBFLAGS += -Wl,--start-group ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/lib/amebaz2/btmesh_dev.a -Wl,--end-group
 endif
 all: LIBFLAGS += -Wl,--start-group -L../../../component/soc/realtek/8710c/misc/bsp/lib/common/GCC -l_soc_is -l_wlan -Wl,--end-group

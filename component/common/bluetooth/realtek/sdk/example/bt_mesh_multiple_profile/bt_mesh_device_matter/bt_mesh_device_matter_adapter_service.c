@@ -19,11 +19,6 @@
 #include <diag.h>
 #include "platform_stdlib.h"
 
-#define BT_MATTER_ADAPTER_SERVICE_CHAR_RX_INDEX                 0x02
-#define BT_MATTER_ADAPTER_SERVICE_CHAR_TX_INDEX                 0x04
-#define BT_MATTER_ADAPTER_SERVICE_CHAR_NOTIFY_CCCD_INDEX        (BT_MATTER_ADAPTER_SERVICE_CHAR_TX_INDEX + 1)
-#define BT_MATTER_ADAPTER_SERVICE_C3_INDEX                      0x07
-
 #define UUID_RX		0x11, 0x9D, 0x9F, 0x42, 0x9C, 0x4F, 0x9F, 0x95, 0x59, 0x45, 0x3D, 0x26, 0xF5, 0x2E, 0xEE, 0x18
 #define UUID_TX		0x12, 0x9D, 0x9F, 0x42, 0x9C, 0x4F, 0x9F, 0x95, 0x59, 0x45, 0x3D, 0x26, 0xF5, 0x2E, 0xEE, 0x18
 #define UUID_C3		0x04, 0x8F, 0x21, 0x83, 0x8A, 0x74, 0x7D, 0xB8, 0xF2, 0x45, 0x72, 0x87, 0x38, 0x02, 0x63, 0x64
@@ -83,7 +78,7 @@ T_ATTRIB_APPL bt_matter_adapter_service_tbl[] =
 		{ /* type_value */
 			LO_WORD(GATT_UUID_CHARACTERISTIC),
 			HI_WORD(GATT_UUID_CHARACTERISTIC),
-			(GATT_CHAR_PROP_READ | GATT_CHAR_PROP_NOTIFY) /* characteristic properties */
+			(GATT_CHAR_PROP_READ | GATT_CHAR_PROP_INDICATE) /* characteristic properties */
 			/* characteristic UUID not needed here, is UUID of next attrib. */
 		},
 		1, /* bValueLen */
@@ -283,9 +278,9 @@ void bt_matter_adapter_service_cccd_update_cb(uint8_t conn_id, T_SERVER_ID servi
     //printf("simp_ble_service_cccd_update_cb: index = %d, cccbits 0x%x\r\n", index, cccbits);
     switch (index)
     {
-    case BT_MATTER_ADAPTER_SERVICE_CHAR_NOTIFY_CCCD_INDEX:
+    case BT_MATTER_ADAPTER_SERVICE_CHAR_INDICATE_CCCD_INDEX:
         {
-            if (cccbits & GATT_CLIENT_CHAR_CONFIG_NOTIFY)
+            if (cccbits & GATT_CLIENT_CHAR_CONFIG_INDICATE)
             {
                 // Enable Notification
                 callback_data.msg_data.notification_indification_index = MATTER_NOTIFY_INDICATE_V3_ENABLE;

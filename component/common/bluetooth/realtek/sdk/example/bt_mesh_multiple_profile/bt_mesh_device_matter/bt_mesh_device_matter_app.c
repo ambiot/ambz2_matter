@@ -52,6 +52,7 @@
 #include <gap_le_types.h>
 #include <simple_ble_service.h>
 #include <gcs_client.h>
+#include "matter_blemgr_common.h"
 
 /*********************************************************************************************************/
 int bt_mesh_device_matter_scan_state = 0;
@@ -72,8 +73,8 @@ bool mesh_initial_state = FALSE;
 
 uint8_t bt_mesh_device_matter_config_adv_flag = 0;
 
-chip_blemgr_callback chip_blemgr_callback_func = NULL;
-void *chip_blemgr_callback_data = NULL;
+extern matter_blemgr_callback matter_blemgr_callback_func;
+extern void *matter_blemgr_callback_data;
 
 extern uint8_t bt_mesh_device_matter_adv_data[31];
 extern uint8_t bt_mesh_device_matter_le_adv_start_enable;
@@ -81,12 +82,6 @@ extern void bt_mesh_device_matter_le_adv_start(void);
 extern void bt_mesh_device_matter_le_adv_stop(void);
 
 /*************************************************************************************************************************/
-void chip_blemgr_set_callback_func(chip_blemgr_callback p, void *data)
-{
-    chip_blemgr_callback_func = p;
-    chip_blemgr_callback_data = data;
-}
-
 int bt_mesh_device_matter_app_handle_upstream_msg(uint16_t subtype, void *pdata)
 {
     int ret = 0;
@@ -108,46 +103,90 @@ void bt_mesh_device_matter_handle_callback_msg(T_IO_MSG callback_msg)//receive
 
     switch (msg_type)
     {
-    case BT_MATTER_SEND_CB_MSG_DISCONNECTED:
     case BT_MATTER_SEND_CB_MSG_CONNECTED:
         {
-            if (chip_blemgr_callback_func) {
-                chip_blemgr_callback_func(chip_blemgr_callback_data, callback_msg.u.buf, 0, CB_GAP_MSG_CONN_EVENT);
+            BT_MATTER_CONN_EVENT *connected = callback_msg.u.buf;
+            T_MATTER_BLEMGR_GAP_CONNECT_CB_ARG gap_connect_cb_arg;
+            gap_connect_cb_arg.conn_id = connected->conn_id;
+            if (matter_blemgr_callback_func) {
+                matter_blemgr_callback_func(matter_blemgr_callback_data, MATTER_BLEMGR_GAP_CONNECT_CB, &gap_connect_cb_arg);
             }
             os_mem_free(callback_msg.u.buf);
             callback_msg.u.buf = NULL;
         }
         break;
-    case BT_MATTER_SEND_CB_MSG_ALL_GAP_MSG:
-        break;
-    case BT_MATTER_SEND_CB_MSG_SEND_DATA_COMPLETE:
+
+    case BT_MATTER_SEND_CB_MSG_DISCONNECTED:
         {
-            uint8_t service_id = callback_msg.subtype;
-            if (chip_blemgr_callback_func) {
-                chip_blemgr_callback_func(chip_blemgr_callback_data, callback_msg.u.buf, service_id, CB_PROFILE_CALLBACK);
+            BT_MATTER_CONN_EVENT *disconnected = callback_msg.u.buf;
+            T_MATTER_BLEMGR_GAP_DISCONNECT_CB_ARG gap_disconnect_cb_arg;
+            gap_disconnect_cb_arg.conn_id = disconnected->conn_id;
+            gap_disconnect_cb_arg.disc_cause = disconnected->disc_cause;
+            if (matter_blemgr_callback_func) {
+                matter_blemgr_callback_func(matter_blemgr_callback_data, MATTER_BLEMGR_GAP_DISCONNECT_CB, &gap_disconnect_cb_arg);
             }
             os_mem_free(callback_msg.u.buf);
             callback_msg.u.buf = NULL;
         }
         break;
-    case BT_MATTER_SEND_CB_MSG_IND_NTF_DISABLE:
-    case BT_MATTER_SEND_CB_MSG_IND_NTF_ENABLE:
+
     case BT_MATTER_SEND_CB_MSG_READ_WRITE_CHAR:
         {
-            uint8_t service_id = callback_msg.subtype;
-            if (chip_blemgr_callback_func) {
-                chip_blemgr_callback_func(chip_blemgr_callback_data, callback_msg.u.buf, service_id, CB_PROFILE_CALLBACK);
+            T_MATTER_CALLBACK_DATA *read_write_char_val = callback_msg.u.buf;
+            T_MATTER_BLEMGR_RX_CHAR_WRITE_CB_ARG rx_char_write_cb_arg;
+            rx_char_write_cb_arg.conn_id = read_write_char_val->conn_id;
+            rx_char_write_cb_arg.p_value = read_write_char_val->msg_data.write.p_value;
+            rx_char_write_cb_arg.len = read_write_char_val->msg_data.write.len;
+            if (matter_blemgr_callback_func) {
+                matter_blemgr_callback_func(matter_blemgr_callback_data, MATTER_BLEMGR_RX_CHAR_WRITE_CB, &rx_char_write_cb_arg);
             }
-            T_MATTER_CALLBACK_DATA *pp_param = (T_MATTER_CALLBACK_DATA *)callback_msg.u.buf;
-            if (pp_param->msg_data.write.len !=0)
+            if (read_write_char_val->msg_data.write.len != 0)
             {
-                os_mem_free(pp_param->msg_data.write.p_value);
-                pp_param->msg_data.write.p_value = NULL;
+                os_mem_free(read_write_char_val->msg_data.write.p_value);
+                read_write_char_val->msg_data.write.p_value = NULL;
             }
             os_mem_free(callback_msg.u.buf);
             callback_msg.u.buf = NULL;
         }
         break;
+
+    case BT_MATTER_SEND_CB_MSG_IND_NTF_ENABLE:
+    case BT_MATTER_SEND_CB_MSG_IND_NTF_DISABLE:
+        {
+            T_MATTER_CALLBACK_DATA *indication_notification_enable = callback_msg.u.buf;
+            T_MATTER_BLEMGR_TX_CHAR_CCCD_WRITE_CB_ARG tx_char_cccd_write_cb_arg;
+            tx_char_cccd_write_cb_arg.conn_id = indication_notification_enable->conn_id;
+            if (msg_type == BT_MATTER_SEND_CB_MSG_IND_NTF_DISABLE)
+                tx_char_cccd_write_cb_arg.indicationsEnabled = 0;
+            else if (msg_type == BT_MATTER_SEND_CB_MSG_IND_NTF_ENABLE)
+                tx_char_cccd_write_cb_arg.indicationsEnabled = 1;
+            tx_char_cccd_write_cb_arg.notificationsEnabled = 0;
+            if (matter_blemgr_callback_func) {
+                matter_blemgr_callback_func(matter_blemgr_callback_data, MATTER_BLEMGR_TX_CHAR_CCCD_WRITE_CB, &tx_char_cccd_write_cb_arg);
+            }
+            if (indication_notification_enable->msg_data.write.len != 0)
+            {
+                os_mem_free(indication_notification_enable->msg_data.write.p_value);
+                indication_notification_enable->msg_data.write.p_value = NULL;
+            }
+            os_mem_free(callback_msg.u.buf);
+            callback_msg.u.buf = NULL;
+        }
+        break;
+
+    case BT_MATTER_SEND_CB_MSG_SEND_DATA_COMPLETE:
+        {
+            T_SERVER_APP_CB_DATA *send_data_complete = callback_msg.u.buf;
+            T_MATTER_BLEMGR_TX_COMPLETE_CB_ARG tx_complete_cb_arg;
+            tx_complete_cb_arg.conn_id = send_data_complete->event_data.send_data_result.conn_id;
+            if (matter_blemgr_callback_func) {
+                matter_blemgr_callback_func(matter_blemgr_callback_data, MATTER_BLEMGR_TX_COMPLETE_CB, &tx_complete_cb_arg);
+            }
+            os_mem_free(callback_msg.u.buf);
+            callback_msg.u.buf = NULL;
+        }
+        break;
+
     default:
         break;
     }
@@ -202,9 +241,11 @@ void bt_mesh_device_matter_app_handle_io_msg(T_IO_MSG io_msg)
                 gap_sched_scan(false);
             } else if (io_msg.subtype == 3) {
                 gap_sched_scan(true);
-            }
-            else if (io_msg.subtype == 4) {
+            } else if (io_msg.subtype == 4) {
                 bt_mesh_device_matter_app_handle_upstream_msg(io_msg.subtype, io_msg.u.buf);
+            } else if (io_msg.subtype == 5) {
+                uint8_t conn_id = io_msg.u.buf;
+                le_disconnect(conn_id);
             }
         }
         break;
