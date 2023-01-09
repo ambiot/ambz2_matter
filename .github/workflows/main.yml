@@ -1,0 +1,51 @@
+name: build ameba matter
+
+on:
+    pull_request:
+    
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        
+        steps:
+            - name: checkout connectedhomeip master branch
+              uses: actions/checkout@v3
+              with:
+                  repository: project-chip/connectedhomeip
+                  ref: master
+                  submodules: recursive
+                  path: connectedhomeip
+                  
+            - name: checkout ambz2_matter main branch
+              uses: actions/checkout@v3
+              with:
+                  ref: ${{ github.event.pull_request.head.sha }}
+                  path: ambz2_matter
+                    
+            - name: Build all-clusters-app
+              run: |
+                    echo "Setting up build environment"
+                    cd connectedhomeip
+                    source scripts/bootstrap.sh
+                    source scripts/activate.sh
+                    cd ../ambz2_matter/project/realtek_amebaz2_v0_example/GCC-RELEASE/
+                    echo "Building matter libraries"
+                    make all_clusters
+                    echo "Building firmware image"
+                    make is_matter
+                    echo "Build all-clusters-app completed"
+                    make clean_matter
+                    
+            - name: Build lighting-app
+              run: |
+                    echo "Setting up build environment"
+                    cd connectedhomeip
+                    source scripts/bootstrap.sh
+                    source scripts/activate.sh
+                    cd ../ambz2_matter/project/realtek_amebaz2_v0_example/GCC-RELEASE/
+                    echo "Building matter libraries"
+                    make light
+                    echo "Building firmware image"
+                    make is_matter
+                    echo "Build lighting-app completed"
+                    make clean_matter
