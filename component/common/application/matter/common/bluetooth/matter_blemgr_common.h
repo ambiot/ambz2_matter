@@ -13,7 +13,8 @@ typedef enum
     MATTER_BLEMGR_GAP_DISCONNECT_CB,
     MATTER_BLEMGR_RX_CHAR_WRITE_CB,
     MATTER_BLEMGR_TX_CHAR_CCCD_WRITE_CB,
-    MATTER_BLEMGR_TX_COMPLETE_CB
+    MATTER_BLEMGR_TX_COMPLETE_CB,
+    MATTER_BLEMGR_C3_CHAR_READ_CB
 } T_MATTER_BLEMGR_CALLBACK_TYPE;
 
 typedef struct
@@ -45,6 +46,12 @@ typedef struct
 {
     uint8_t conn_id;
 } T_MATTER_BLEMGR_TX_COMPLETE_CB_ARG;
+
+typedef struct
+{
+    uint8_t **pp_value;
+    uint16_t *p_len;
+} T_MATTER_BLEMGR_C3_CHAR_READ_CB_ARG;
 
 typedef int (*matter_blemgr_callback)(void *param, T_MATTER_BLEMGR_CALLBACK_TYPE cb_type, void *p_cb_data);
 
