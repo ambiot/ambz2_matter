@@ -24,9 +24,6 @@
 #define UUID_C3		0x04, 0x8F, 0x21, 0x83, 0x8A, 0x74, 0x7D, 0xB8, 0xF2, 0x45, 0x72, 0x87, 0x38, 0x02, 0x63, 0x64
 
 T_SERVER_ID bt_matter_adapter_service_id;
-/**<  Value of bt config characteristic. */
-static uint8_t bt_matter_adapter_char_read_value[BT_MATTER_ADAPTER_READ_V1_MAX_LEN];
-static uint16_t bt_matter_adapter_char_read_len = 1;
 
 /**<  Function pointer used to send event to application from ble config wifi profile. Initiated in bt_matter_adapter_service_add_service. */
 static P_FUN_SERVER_GENERAL_CB pfn_bt_matter_adapter_service_cb = NULL;
@@ -134,43 +131,6 @@ T_ATTRIB_APPL bt_matter_adapter_service_tbl[] =
 	},
 };
 
-
-/**
-  * @brief  Set service related data from application.
-  *
-  * @param[in] param_type            parameter type to set.
-  * @param[in] len                   value length to be set.
-  * @param[in] p_value             value to set.
-  * @return parameter set result.
-  * @retval 0 false
-  * @retval 1 true
-  */
-bool bt_matter_adapter_service_set_parameter(T_BTMATTER_PARAM_TYPE param_type, uint16_t len, void *p_value)
-{
-    bool ret = true;
-
-    switch (param_type) {
-        case BTMATTER_SERVICE_PARAM_V1_READ_CHAR_VAL:
-            if (len <= BT_MATTER_ADAPTER_READ_V1_MAX_LEN) {
-                memcpy(bt_matter_adapter_char_read_value, p_value, len);
-                bt_matter_adapter_char_read_len = len;
-            } else {
-                ret = false;
-            }
-        break;
-
-        default:
-            ret = false;
-        break;
-    }
-
-    if (!ret) {
-        APP_PRINT_ERROR0("bt_matter_adapter_service_set_parameter failed");
-    }
-
-    return ret;
-}
-
 /**
  * @brief read characteristic data from service.
  *
@@ -192,15 +152,13 @@ T_APP_RESULT  bt_matter_adapter_service_attr_read_cb(uint8_t conn_id, T_SERVER_I
         {
             T_MATTER_CALLBACK_DATA callback_data;
             callback_data.msg_type = SERVICE_CALLBACK_TYPE_READ_CHAR_VALUE;
-            callback_data.msg_data.read_value_index = BTCONFIG_READ_V1;
-            callback_data.msg_data.read_offset = offset;
             callback_data.conn_id = conn_id;
             if (pfn_bt_matter_adapter_service_cb)
             {
                 pfn_bt_matter_adapter_service_cb(service_id, (void *)&callback_data);
             }
-            *pp_value = callback_data.msg_data.write.p_value;
-            *p_length = callback_data.msg_data.write.len;
+            *pp_value = callback_data.msg_data.write_read.p_value;
+            *p_length = callback_data.msg_data.write_read.len;
         }
         break;
     default:
@@ -240,10 +198,8 @@ T_APP_RESULT bt_matter_adapter_service_attr_write_cb(uint8_t conn_id, T_SERVER_I
             /* Notify Application. */
             callback_data.msg_type = SERVICE_CALLBACK_TYPE_WRITE_CHAR_VALUE;
             callback_data.conn_id  = conn_id;
-            callback_data.msg_data.write.opcode = BTCONFIG_WRITE_V1;
-            callback_data.msg_data.write.write_type = write_type;
-            callback_data.msg_data.write.len = length;
-            callback_data.msg_data.write.p_value = p_value;
+            callback_data.msg_data.write_read.len = length;
+            callback_data.msg_data.write_read.p_value = p_value;
 
             //handle_bt_matter_adapter_app_data(p_value, length);
             if (pfn_bt_matter_adapter_service_cb) {

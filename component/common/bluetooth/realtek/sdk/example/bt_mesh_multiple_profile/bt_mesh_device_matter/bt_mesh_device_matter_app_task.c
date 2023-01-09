@@ -109,7 +109,7 @@ bool bt_mesh_device_matter_adapter_send_callback_msg(uint16_t msg_type, uint8_t 
 	callback_msg.type = msg_type;
 
 	if( (msg_type==BT_MATTER_SEND_CB_MSG_SEND_DATA_COMPLETE) || (msg_type==BT_MATTER_SEND_CB_MSG_IND_NTF_ENABLE) ||\
-		(msg_type==BT_MATTER_SEND_CB_MSG_IND_NTF_DISABLE) || (msg_type==BT_MATTER_SEND_CB_MSG_READ_WRITE_CHAR) )
+		(msg_type==BT_MATTER_SEND_CB_MSG_IND_NTF_DISABLE) || (msg_type==BT_MATTER_SEND_CB_MSG_WRITE_CHAR) )
 	{
 		callback_msg.subtype = cb_type;
 	}
