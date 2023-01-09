@@ -61,18 +61,6 @@ typedef enum
 #define BT_MATTER_ADAPTER_SERVICE_CHAR_INDICATE_CCCD_INDEX      (BT_MATTER_ADAPTER_SERVICE_CHAR_TX_INDEX + 1)
 #define BT_MATTER_ADAPTER_SERVICE_C3_INDEX                      0x07
 
-/** @defgroup SIMP_Service_Read_Info SIMP Service Read Info
-  * @brief  Parameter for reading characteristic value.
-  * @{
-  */
-#define BTCONFIG_READ_V1                                        1
-/** @} */
-
-/** @defgroup SIMP_Service_Write_Info SIMP Service Write Info
-  * @brief  Parameter for writing characteristic value.
-  * @{
-  */
-#define BTCONFIG_WRITE_V1                                       1
 /** @} */
 
 #define BT_MATTER_ADAPTER_READ_V1_MAX_LEN               300
@@ -94,13 +82,10 @@ typedef enum
   */
 typedef struct
 {
-    uint8_t opcode; //!< ref:  @ref SIMP_Service_Write_Info
-    T_WRITE_TYPE write_type;
     uint16_t len;
     uint8_t *p_value;
-} T_MATTER_WRITE_MSG;
+} T_MATTER_WRITE_READ_MSG;
 /** @} End of TSIMP_WRITE_MSG */
-
 
 /** @defgroup TSIMP_UPSTREAM_MSG_DATA TSIMP_UPSTREAM_MSG_DATA
   * @brief Simple BLE service callback message content.
@@ -109,9 +94,7 @@ typedef struct
 typedef union
 {
     uint8_t notification_indification_index; //!< ref: @ref SIMP_Service_Notify_Indicate_Info
-    uint8_t read_value_index; //!< ref: @ref SIMP_Service_Read_Info
-    T_MATTER_WRITE_MSG write;
-    uint16_t read_offset;
+    T_MATTER_WRITE_READ_MSG write_read;
 } T_MATTER_UPSTREAM_MSG_DATA;
 /** @} End of TSIMP_UPSTREAM_MSG_DATA */
 
@@ -155,18 +138,6 @@ typedef struct
   *
   */
 T_SERVER_ID bt_matter_adapter_service_add_service(void *p_func);
-
-/**
-  * @brief  Set service related data from application.
-  *
-  * @param[in] param_type            parameter type to set.
-  * @param[in] len                   value length to be set.
-  * @param[in] p_value             value to set.
-  * @return parameter set result.
-  * @retval 0 false
-  * @retval 1 true
-  */
-bool bt_matter_adapter_service_set_parameter(T_BTMATTER_PARAM_TYPE param_type, uint16_t len, void *p_value);
 
 /** @} End of SIMP_Service_Exported_Functions */
 

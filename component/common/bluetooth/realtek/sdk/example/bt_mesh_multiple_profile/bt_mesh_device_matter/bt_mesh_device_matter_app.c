@@ -130,20 +130,20 @@ void bt_mesh_device_matter_handle_callback_msg(T_IO_MSG callback_msg)//receive
         }
         break;
 
-    case BT_MATTER_SEND_CB_MSG_READ_WRITE_CHAR:
+    case BT_MATTER_SEND_CB_MSG_WRITE_CHAR:
         {
-            T_MATTER_CALLBACK_DATA *read_write_char_val = callback_msg.u.buf;
+            T_MATTER_CALLBACK_DATA *write_char_val = callback_msg.u.buf;
             T_MATTER_BLEMGR_RX_CHAR_WRITE_CB_ARG rx_char_write_cb_arg;
-            rx_char_write_cb_arg.conn_id = read_write_char_val->conn_id;
-            rx_char_write_cb_arg.p_value = read_write_char_val->msg_data.write.p_value;
-            rx_char_write_cb_arg.len = read_write_char_val->msg_data.write.len;
+            rx_char_write_cb_arg.conn_id = write_char_val->conn_id;
+            rx_char_write_cb_arg.p_value = write_char_val->msg_data.write_read.p_value;
+            rx_char_write_cb_arg.len = write_char_val->msg_data.write_read.len;
             if (matter_blemgr_callback_func) {
                 matter_blemgr_callback_func(matter_blemgr_callback_data, MATTER_BLEMGR_RX_CHAR_WRITE_CB, &rx_char_write_cb_arg);
             }
-            if (read_write_char_val->msg_data.write.len != 0)
+            if (write_char_val->msg_data.write_read.len != 0)
             {
-                os_mem_free(read_write_char_val->msg_data.write.p_value);
-                read_write_char_val->msg_data.write.p_value = NULL;
+                os_mem_free(write_char_val->msg_data.write_read.p_value);
+                write_char_val->msg_data.write_read.p_value = NULL;
             }
             os_mem_free(callback_msg.u.buf);
             callback_msg.u.buf = NULL;
@@ -163,11 +163,6 @@ void bt_mesh_device_matter_handle_callback_msg(T_IO_MSG callback_msg)//receive
             tx_char_cccd_write_cb_arg.notificationsEnabled = 0;
             if (matter_blemgr_callback_func) {
                 matter_blemgr_callback_func(matter_blemgr_callback_data, MATTER_BLEMGR_TX_CHAR_CCCD_WRITE_CB, &tx_char_cccd_write_cb_arg);
-            }
-            if (indication_notification_enable->msg_data.write.len != 0)
-            {
-                os_mem_free(indication_notification_enable->msg_data.write.p_value);
-                indication_notification_enable->msg_data.write.p_value = NULL;
             }
             os_mem_free(callback_msg.u.buf);
             callback_msg.u.buf = NULL;
@@ -1632,18 +1627,8 @@ T_APP_RESULT bt_mesh_device_matter_app_profile_callback(T_SERVER_ID service_id, 
                         if(indication_notification_enable)
                         {
                             memcpy(indication_notification_enable, p_simp_cb_data, sizeof(T_MATTER_CALLBACK_DATA));
-                            if (indication_notification_enable->msg_data.write.len !=0)
-                            {
-                                indication_notification_enable->msg_data.write.p_value = os_mem_alloc(0, indication_notification_enable->msg_data.write.len);
-                                memcpy(indication_notification_enable->msg_data.write.p_value, p_simp_cb_data->msg_data.write.p_value, p_simp_cb_data->msg_data.write.len);
-                            }
                             if(bt_mesh_device_matter_adapter_send_callback_msg(BT_MATTER_SEND_CB_MSG_IND_NTF_ENABLE, service_id, indication_notification_enable)==false)
                             {
-                                if (indication_notification_enable->msg_data.write.len !=0)
-                                {
-                                    os_mem_free(indication_notification_enable->msg_data.write.p_value);
-                                    indication_notification_enable->msg_data.write.p_value = NULL;
-                                }
                                 os_mem_free(indication_notification_enable);
                                 indication_notification_enable = NULL;
                             }
@@ -1663,19 +1648,8 @@ T_APP_RESULT bt_mesh_device_matter_app_profile_callback(T_SERVER_ID service_id, 
                         if(indication_notification_disable)
                         {
                             memcpy(indication_notification_disable, p_simp_cb_data, sizeof(T_MATTER_CALLBACK_DATA));
-                            if (indication_notification_disable->msg_data.write.len !=0)
-                            {
-                                indication_notification_disable->msg_data.write.p_value = os_mem_alloc(0, indication_notification_disable->msg_data.write.len);
-                                memcpy(indication_notification_disable->msg_data.write.p_value, p_simp_cb_data->msg_data.write.p_value, p_simp_cb_data->msg_data.write.len);
-                            }
-
                             if(bt_mesh_device_matter_adapter_send_callback_msg(BT_MATTER_SEND_CB_MSG_IND_NTF_DISABLE, service_id, indication_notification_disable)==false)
                             {
-                                if (indication_notification_disable->msg_data.write.len !=0)
-                                {
-                                    os_mem_free(indication_notification_disable->msg_data.write.p_value);
-                                    indication_notification_disable->msg_data.write.p_value = NULL;
-                                }
                                 os_mem_free(indication_notification_disable);
                                 indication_notification_disable = NULL;
                             }
@@ -1692,29 +1666,39 @@ T_APP_RESULT bt_mesh_device_matter_app_profile_callback(T_SERVER_ID service_id, 
             break;
 
         case SERVICE_CALLBACK_TYPE_READ_CHAR_VALUE:
+            {
+                T_MATTER_BLEMGR_C3_CHAR_READ_CB_ARG c3_char_read_cb_arg;
+                c3_char_read_cb_arg.pp_value = &p_simp_cb_data->msg_data.write_read.p_value;
+                c3_char_read_cb_arg.p_len = &p_simp_cb_data->msg_data.write_read.len;
+                if (matter_blemgr_callback_func) {
+                    matter_blemgr_callback_func(matter_blemgr_callback_data, MATTER_BLEMGR_C3_CHAR_READ_CB, &c3_char_read_cb_arg);
+                }
+            }
+            break;
+
         case SERVICE_CALLBACK_TYPE_WRITE_CHAR_VALUE:
             {
                 //send msg to matter
-                T_MATTER_CALLBACK_DATA *read_write_char_val = os_mem_alloc(0, sizeof(T_MATTER_CALLBACK_DATA));
-                if(read_write_char_val)
+                T_MATTER_CALLBACK_DATA *write_char_val = os_mem_alloc(0, sizeof(T_MATTER_CALLBACK_DATA));
+                if(write_char_val)
                 {
-                    memcpy(read_write_char_val, p_simp_cb_data, sizeof(T_MATTER_CALLBACK_DATA));
+                    memcpy(write_char_val, p_simp_cb_data, sizeof(T_MATTER_CALLBACK_DATA));
 
                     //Make sure not malloc size of 0
-                    if (read_write_char_val->msg_data.write.len !=0)
+                    if (write_char_val->msg_data.write_read.len !=0)
                     {
-                        read_write_char_val->msg_data.write.p_value = os_mem_alloc(0, read_write_char_val->msg_data.write.len);
-                        memcpy(read_write_char_val->msg_data.write.p_value, p_simp_cb_data->msg_data.write.p_value, p_simp_cb_data->msg_data.write.len);
+                        write_char_val->msg_data.write_read.p_value = os_mem_alloc(0, write_char_val->msg_data.write_read.len);
+                        memcpy(write_char_val->msg_data.write_read.p_value, p_simp_cb_data->msg_data.write_read.p_value, p_simp_cb_data->msg_data.write_read.len);
                     }
-                    if(bt_mesh_device_matter_adapter_send_callback_msg(BT_MATTER_SEND_CB_MSG_READ_WRITE_CHAR, service_id, read_write_char_val)==false)
+                    if(bt_mesh_device_matter_adapter_send_callback_msg(BT_MATTER_SEND_CB_MSG_WRITE_CHAR, service_id, write_char_val)==false)
                     {
-                        if (read_write_char_val->msg_data.write.len !=0)
+                        if (write_char_val->msg_data.write_read.len !=0)
                         {
-                            os_mem_free(read_write_char_val->msg_data.write.p_value);
-                            read_write_char_val->msg_data.write.p_value = NULL;
+                            os_mem_free(write_char_val->msg_data.write_read.p_value);
+                            write_char_val->msg_data.write_read.p_value = NULL;
                         }
-                        os_mem_free(read_write_char_val);
-                        read_write_char_val = NULL;
+                        os_mem_free(write_char_val);
+                        write_char_val = NULL;
                     }
                 }
                 else
