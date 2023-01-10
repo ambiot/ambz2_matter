@@ -362,6 +362,10 @@
 #include <example_matter.h>
 #endif
 
+#if defined(CONFIG_EXAMPLE_MATTER_WRITE_PROTECT) && (CONFIG_EXAMPLE_MATTER_WRITE_PROTECT == 1)
+#include <example_matter_write_protect.h>
+#endif
+
 /*
 	Preprocessor of example
 */
@@ -839,6 +843,10 @@ example_hilink();
 
 #if defined(CONFIG_EXAMPLE_MATTER) && (CONFIG_EXAMPLE_MATTER == 1)
 	example_matter_task();
+#endif
+
+#if defined(CONFIG_EXAMPLE_MATTER_WRITE_PROTECT) && (CONFIG_EXAMPLE_MATTER_WRITE_PROTECT == 1)
+	example_matter_write_protect_task();
 #endif
 
 #if defined(API_TEST_MODE)
