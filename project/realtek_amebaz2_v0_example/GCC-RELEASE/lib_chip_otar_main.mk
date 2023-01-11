@@ -149,8 +149,8 @@ INCLUDES += -I$(BASEDIR)/../../../component/os/freertos/freertos_v10.0.1/Source/
 INCLUDES += -I$(BASEDIR)/../../../component/os/os_dep/include
 
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/bluetooth/bt_matter_adapter
-INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/application
-INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/mbedtls
+INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/mbedtls
+INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/port
 
 # CHIP Include folder list
 # -------------------------------------------------------------------

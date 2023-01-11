@@ -54,7 +54,7 @@ clean:
 all_clusters: toolchain mkdir_codegen
 	python3 ../../../third_party/connectedhomeip/scripts/codegen.py --generator cpp-app --output-dir ../../../tools/matter/codegen_helpers/gen --expected-outputs ../../../tools/matter/codegen_helpers/expected.outputs ../../../third_party/connectedhomeip/examples/all-clusters-app/all-clusters-common/all-clusters-app.matter
 	python3 ../../../third_party/connectedhomeip/src/app/zap_cluster_list.py --zap_file ../../../third_party/connectedhomeip/examples/all-clusters-app/all-clusters-common/all-clusters-app.zap > ../../../tools/matter/codegen_helpers/gen/cluster-file.txt
-	python3 ../../../tools/matter/codegen_helpers/parse_clusters.py --cluster_file ../../../tools/matter/codegen_helpers/gen/cluster-file.txt
+	python3 ../../../tools/matter/codegen_helpers/parse_clusters.py --cluster_file ../../../tools/matter/codegen_helpers/gen/cluster-file.txt --chip_path ../../../third_party/connectedhomeip
 	@$(MAKE) -f lib_chip.mk all
 	@$(MAKE) -f lib_chip_main.mk all
 
@@ -62,7 +62,7 @@ all_clusters: toolchain mkdir_codegen
 light: toolchain mkdir_codegen
 	python3 ../../../third_party/connectedhomeip/scripts/codegen.py --generator cpp-app --output-dir ../../../tools/matter/codegen_helpers/gen --expected-outputs ../../../tools/matter/codegen_helpers/expected.outputs ../../../third_party/connectedhomeip/examples/lighting-app/lighting-common/lighting-app.matter
 	python3 ../../../third_party/connectedhomeip/src/app/zap_cluster_list.py --zap_file ../../../third_party/connectedhomeip/examples/lighting-app/lighting-common/lighting-app.zap > ../../../tools/matter/codegen_helpers/gen/cluster-file.txt
-	python3 ../../../tools/matter/codegen_helpers/parse_clusters.py --cluster_file ../../../tools/matter/codegen_helpers/gen/cluster-file.txt
+	python3 ../../../tools/matter/codegen_helpers/parse_clusters.py --cluster_file ../../../tools/matter/codegen_helpers/gen/cluster-file.txt --chip_path ../../../third_party/connectedhomeip
 	@$(MAKE) -f lib_chip_light_core.mk all
 	@$(MAKE) -f lib_chip_light_main.mk all
 
@@ -70,7 +70,7 @@ light: toolchain mkdir_codegen
 switch: toolchain mkdir_codegen
 	python3 ../../../third_party/connectedhomeip/scripts/codegen.py --generator cpp-app --output-dir ../../../tools/matter/codegen_helpers/gen --expected-outputs ../../../tools/matter/codegen_helpers/expected.outputs ../../../third_party/connectedhomeip/examples/light-switch-app/light-switch-common/light-switch-app.matter
 	python3 ../../../third_party/connectedhomeip/src/app/zap_cluster_list.py --zap_file ../../../third_party/connectedhomeip/examples/light-switch-app/light-switch-common/light-switch-app.zap > ../../../tools/matter/codegen_helpers/gen/cluster-file.txt
-	python3 ../../../tools/matter/codegen_helpers/parse_clusters.py --cluster_file ../../../tools/matter/codegen_helpers/gen/cluster-file.txt
+	python3 ../../../tools/matter/codegen_helpers/parse_clusters.py --cluster_file ../../../tools/matter/codegen_helpers/gen/cluster-file.txt --chip_path ../../../third_party/connectedhomeip
 	@$(MAKE) -f lib_chip_switch_core.mk all
 	@$(MAKE) -f lib_chip_switch_main.mk all
 
@@ -78,7 +78,7 @@ switch: toolchain mkdir_codegen
 otar: toolchain mkdir_codegen
 	python3 ../../../third_party/connectedhomeip/scripts/codegen.py --generator cpp-app --output-dir ../../../tools/matter/codegen_helpers/gen --expected-outputs ../../../tools/matter/codegen_helpers/expected.outputs ../../../third_party/connectedhomeip/examples/ota-requestor-app/ota-requestor-common/ota-requestor-app.matter
 	python3 ../../../third_party/connectedhomeip/src/app/zap_cluster_list.py --zap_file ../../../third_party/connectedhomeip/examples/ota-requestor-app/ota-requestor-common/ota-requestor-app.zap > ../../../tools/matter/codegen_helpers/gen/cluster-file.txt
-	python3 ../../../tools/matter/codegen_helpers/parse_clusters.py --cluster_file ../../../tools/matter/codegen_helpers/gen/cluster-file.txt
+	python3 ../../../tools/matter/codegen_helpers/parse_clusters.py --cluster_file ../../../tools/matter/codegen_helpers/gen/cluster-file.txt --chip_path ../../../third_party/connectedhomeip
 	@$(MAKE) -f lib_chip_otar_core.mk all
 	@$(MAKE) -f lib_chip_otar_main.mk all
 
@@ -86,7 +86,7 @@ otar: toolchain mkdir_codegen
 chef: toolchain mkdir_codegen
 	python3 ../../../third_party/connectedhomeip/scripts/codegen.py --generator cpp-app --output-dir ../../../tools/matter/codegen_helpers/gen --expected-outputs ../../../tools/matter/codegen_helpers/expected.outputs ../../../third_party/connectedhomeip/examples/chef/devices/$(SAMPLE_NAME).matter
 	python3 ../../../third_party/connectedhomeip/src/app/zap_cluster_list.py --zap_file ../../../third_party/connectedhomeip/examples/chef/devices/$(SAMPLE_NAME).zap > ../../../tools/matter/codegen_helpers/gen/cluster-file.txt
-	python3 ../../../tools/matter/codegen_helpers/parse_clusters.py --cluster_file ../../../tools/matter/codegen_helpers/gen/cluster-file.txt
+	python3 ../../../tools/matter/codegen_helpers/parse_clusters.py --cluster_file ../../../tools/matter/codegen_helpers/gen/cluster-file.txt --chip_path ../../../third_party/connectedhomeip
 	@$(MAKE) -f lib_chip_chef_core.mk all
 	@$(MAKE) -f lib_chip_chef_main.mk all
 
