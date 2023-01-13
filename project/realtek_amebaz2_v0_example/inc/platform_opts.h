@@ -90,6 +90,8 @@
 
 /* For Matter */
 #define CONFIG_EXAMPLE_MATTER   1
+#define CONFIG_EXAMPLE_MATTER_CHIPTEST   1
+#define CONFIG_EXAMPLE_MATTER_LIGHT   0
 
 /* For WPS and P2P */
 #define CONFIG_ENABLE_WPS		0

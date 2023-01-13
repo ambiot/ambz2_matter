@@ -49,6 +49,7 @@ INCLUDES += -I$(BASEDIR)/../../../component/common/api/wifi/rtw_wpa_supplicant/s
 INCLUDES += -I$(BASEDIR)/../../../component/common/api/wifi/rtw_wpa_supplicant/src/crypto
 INCLUDES += -I$(BASEDIR)/../../../component/common/api/network/include
 INCLUDES += -I$(BASEDIR)/../../../component/common/application
+INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/mqtt/MQTTClient
 INCLUDES += -I$(BASEDIR)/../../../component/common/example
 INCLUDES += -I$(BASEDIR)/../../../component/common/file_system
@@ -149,8 +150,8 @@ INCLUDES += -I$(BASEDIR)/../../../component/os/os_dep/include
 
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/bluetooth
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/bluetooth/bt_matter_adapter
-INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/application
-INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/mbedtls
+INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/mbedtls
+INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/port
 
 # CHIP Include folder list
 # -------------------------------------------------------------------

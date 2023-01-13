@@ -183,17 +183,19 @@ INCLUDES += -I../../../component/os/os_dep/include
 INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/ffs_demo/common/include
 INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/ffs_demo/realtek/configs
 
-#matter
+# Matter
 ifdef BT_MATTER_MESH_ADAPTER
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter
 else
 INCLUDES += -I../../../component/common/application/matter/common/bluetooth/bt_matter_adapter
 endif
 INCLUDES += -I../../../component/common/application/matter/common/bluetooth
-INCLUDES += -I../../../component/common/application/matter/application
-INCLUDES += -I../../../component/common/application/matter/mbedtls
-INCLUDES += -I../../../component/common/application/matter/protobuf
-INCLUDES += -I../../../component/common/application/matter/protobuf/nanopb
+INCLUDES += -I../../../component/common/application/matter/common/port
+INCLUDES += -I../../../component/common/application/matter/common/mbedtls
+INCLUDES += -I../../../component/common/application/matter/common/protobuf
+INCLUDES += -I../../../component/common/application/matter/common/protobuf/nanopb
+INCLUDES += -I../../../component/common/application/matter/example/chiptest
+INCLUDES += -I../../../component/common/application/matter/example/light
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/src/app/hrp/gap
 
 # Source file list
@@ -370,13 +372,13 @@ SRC_C += ../../../component/common/utilities/http_client.c
 SRC_C += ../../../component/common/utilities/xml.c
 
 #matter - app
-SRC_C += ../../../component/common/application/matter/application/matter_dcts.c
-SRC_C += ../../../component/common/application/matter/application/matter_timers.c
-SRC_C += ../../../component/common/application/matter/application/matter_utils.c
-SRC_C += ../../../component/common/application/matter/application/matter_wifis.c
-SRC_C += ../../../component/common/application/matter/application/example_matter.c
-SRC_C += ../../../component/common/application/matter/common/atcmd_matter.c
-SRC_C += ../../../component/common/application/matter/mbedtls/net_sockets.c
+SRC_C += ../../../component/common/application/matter/common/port/matter_dcts.c
+SRC_C += ../../../component/common/application/matter/common/port/matter_timers.c
+SRC_C += ../../../component/common/application/matter/common/port/matter_utils.c
+SRC_C += ../../../component/common/application/matter/common/port/matter_wifis.c
+SRC_C += ../../../component/common/application/matter/example/chiptest/example_matter.c
+SRC_C += ../../../component/common/application/matter/common/atcmd/atcmd_matter.c
+SRC_C += ../../../component/common/application/matter/common/mbedtls/net_sockets.c
 
 #network - app - mqtt
 SRC_C += ../../../component/common/application/mqtt/MQTTClient/MQTTClient.c
@@ -669,10 +671,10 @@ SRC_C += ../../../component/common/example/fatfs/example_fatfs.c
 SRC_C += ../../../component/common/example/tickless_wifi_roaming/example_tickless_wifi_roaming.c
 
 # nanopb for Matter FactoryData
-SRC_C += ../../../component/common/application/matter/protobuf/ameba_factory.pb.c
-SRC_C += ../../../component/common/application/matter/protobuf/nanopb/pb_encode.c  # The nanopb encoder
-SRC_C += ../../../component/common/application/matter/protobuf/nanopb/pb_decode.c  # The nanopb decoder
-SRC_C += ../../../component/common/application/matter/protobuf/nanopb/pb_common.c  # The nanopb common parts
+SRC_C += ../../../component/common/application/matter/common/protobuf/ameba_factory.pb.c
+SRC_C += ../../../component/common/application/matter/common/protobuf/nanopb/pb_encode.c  # The nanopb encoder
+SRC_C += ../../../component/common/application/matter/common/protobuf/nanopb/pb_decode.c  # The nanopb decoder
+SRC_C += ../../../component/common/application/matter/common/protobuf/nanopb/pb_common.c  # The nanopb common parts
 
 #user
 SRC_C += ../src/main.c
