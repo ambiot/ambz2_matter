@@ -11,6 +11,9 @@ extern "C" {
 
 #include <wifi_conf.h>
 
+#define JOIN_HANDSHAKE_DONE (uint32_t)(1 << 7)
+extern uint32_t rtw_join_status;
+
 void wifi_btcoex_set_bt_on(void);
 extern int CHIP_SetWiFiConfig(rtw_wifi_setting_t *config);
 extern int CHIP_GetWiFiConfig(rtw_wifi_setting_t *config);
