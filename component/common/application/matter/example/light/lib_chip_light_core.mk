@@ -7,6 +7,7 @@ SDKROOTDIR := $(BASEDIR)/../../../../../..
 AMEBAZ2_TOOLDIR	= $(SDKROOTDIR)/component/soc/realtek/8710c/misc/iar_utility
 CHIPDIR = $(SDKROOTDIR)/third_party/connectedhomeip
 OUTPUT_DIR = $(CHIPDIR)/examples/lighting-app/ameba/build/chip
+MATTER_TOOLDIR = $(SDKROOTDIR)/tools/matter
 
 OS := $(shell uname)
 
@@ -230,25 +231,28 @@ CHIP_CXXFLAGS += $(INCLUDES)
 all: GENERATE_NINJA
 
 GENERATE_NINJA:
-	echo "INSTALL CHIP..."
-	mkdir -p $(OUTPUT_DIR)
-	echo                                   > $(OUTPUT_DIR)/args.gn
-	echo "import(\"//args.gni\")"          >> $(OUTPUT_DIR)/args.gn
-	echo target_cflags_c  = [$(foreach word,$(CHIP_CFLAGS),\"$(word)\",)] | sed -e 's/=\"/=\\"/g;s/\"\"/\\"\"/g;'  >> $(OUTPUT_DIR)/args.gn
-	echo target_cflags_cc = [$(foreach word,$(CHIP_CXXFLAGS),\"$(word)\",)] | sed -e 's/=\"/=\\"/g;s/\"\"/\\"\"/g;'   >> $(OUTPUT_DIR)/args.gn
-	echo ameba_ar = \"arm-none-eabi-ar\"    >> $(OUTPUT_DIR)/args.gn
-	echo ameba_cc = \"arm-none-eabi-gcc\"   >> $(OUTPUT_DIR)/args.gn
-	echo ameba_cxx = \"arm-none-eabi-c++\"  >> $(OUTPUT_DIR)/args.gn
-	echo ameba_cpu = \"ameba\"               >> $(OUTPUT_DIR)/args.gn
-	echo chip_enable_ota_requestor = "true" >> $(OUTPUT_DIR)/args.gn
-	echo chip_inet_config_enable_ipv4 = "false" >> $(OUTPUT_DIR)/args.gn
-	echo chip_support_enable_storage_api_audit = "false" >> $(OUTPUT_DIR)/args.gn
-	echo chip_use_transitional_commissionable_data_provider = "false" >> $(OUTPUT_DIR)/args.gn
-	sed -i 's/chip_build_tests\ =\ true/chip_build_tests\ =\ false/g' $(CHIPDIR)/config/ameba/args.gni
-	mkdir -p $(CHIPDIR)/config/ameba/components/chip
-	cd $(CHIPDIR)/config/ameba/components/chip && gn gen --check --fail-on-unused-args $(CHIPDIR)/examples/lighting-app/ameba/build/chip
-	cd $(CHIPDIR)/config/ameba/components/chip ; ninja -C $(CHIPDIR)/examples/lighting-app/ameba/build/chip :ameba
+	export ZAP_INSTALL_PATH="$(MATTER_TOOLDIR)/codegen_helpers/zap" && \
+	echo "INSTALL CHIP..." && \
+	echo $(BASEDIR) && \
+	mkdir -p $(OUTPUT_DIR) && \
+	echo                                   > $(OUTPUT_DIR)/args.gn && \
+	echo "import(\"//args.gni\")"          >> $(OUTPUT_DIR)/args.gn && \
+	echo target_cflags_c  = [$(foreach word,$(CHIP_CFLAGS),\"$(word)\",)] | sed -e 's/=\"/=\\"/g;s/\"\"/\\"\"/g;'  >> $(OUTPUT_DIR)/args.gn && \
+	echo target_cflags_cc = [$(foreach word,$(CHIP_CXXFLAGS),\"$(word)\",)] | sed -e 's/=\"/=\\"/g;s/\"\"/\\"\"/g;'   >> $(OUTPUT_DIR)/args.gn && \
+	echo ameba_ar = \"arm-none-eabi-ar\"    >> $(OUTPUT_DIR)/args.gn && \
+	echo ameba_cc = \"arm-none-eabi-gcc\"   >> $(OUTPUT_DIR)/args.gn && \
+	echo ameba_cxx = \"arm-none-eabi-c++\"  >> $(OUTPUT_DIR)/args.gn && \
+	echo ameba_cpu = \"ameba\"               >> $(OUTPUT_DIR)/args.gn && \
+	echo chip_enable_ota_requestor = "true" >> $(OUTPUT_DIR)/args.gn && \
+	echo chip_inet_config_enable_ipv4 = "false" >> $(OUTPUT_DIR)/args.gn && \
+	echo chip_support_enable_storage_api_audit = "false" >> $(OUTPUT_DIR)/args.gn && \
+	echo chip_use_transitional_commissionable_data_provider = "false" >> $(OUTPUT_DIR)/args.gn && \
+	sed -i 's/chip_build_tests\ =\ true/chip_build_tests\ =\ false/g' $(CHIPDIR)/config/ameba/args.gni && \
+	mkdir -p $(CHIPDIR)/config/ameba/components/chip && \
+	cd $(CHIPDIR)/config/ameba/components/chip && gn gen --check --fail-on-unused-args $(CHIPDIR)/examples/lighting-app/ameba/build/chip && \
+	cd $(CHIPDIR)/config/ameba/components/chip ; ninja -C $(CHIPDIR)/examples/lighting-app/ameba/build/chip :ameba && \
 	cp -f $(OUTPUT_DIR)/lib/* $(SDKROOTDIR)/component/soc/realtek/8710c/misc/bsp/lib/common/GCC
+	
 #*****************************************************************************#
 #              CLEAN GENERATED FILES                                          #
 #*****************************************************************************#
