@@ -153,6 +153,140 @@ void matter_get_scan_results(rtw_scan_result_t *result_buf, uint8_t scanned_num)
     memcpy(result_buf, matter_userdata, sizeof(rtw_scan_result_t) * scanned_num);
 }
 
+static int matter_find_ap_from_scan_buf(char*buf, int buflen, char *target_ssid, void *user_data)
+{
+    rtw_wifi_setting_t *pwifi = (rtw_wifi_setting_t *)user_data;
+    int plen = 0;
+
+    while(plen < buflen){
+        u8 len, ssid_len, security_mode;
+        char *ssid;
+
+        // len offset = 0
+        len = (int)*(buf + plen);
+        // check end
+        if(len == 0) break;
+        // ssid offset = 14
+        ssid_len = len - 14;
+        ssid = buf + plen + 14 ;
+        if((ssid_len == strlen(target_ssid))
+            && (!memcmp(ssid, target_ssid, ssid_len)))
+        {
+            strncpy((char*)pwifi->ssid, target_ssid, 33);
+            // channel offset = 13
+            pwifi->channel = *(buf + plen + 13);
+            // security_mode offset = 11
+            security_mode = (u8)*(buf + plen + 11);
+            if(security_mode == IW_ENCODE_ALG_NONE)
+                pwifi->security_type = RTW_SECURITY_OPEN;
+            else if(security_mode == IW_ENCODE_ALG_WEP)
+                pwifi->security_type = RTW_SECURITY_WEP_PSK;
+            else if(security_mode == IW_ENCODE_ALG_CCMP)
+                pwifi->security_type = RTW_SECURITY_WPA2_AES_PSK;
+            break;
+        }
+        plen += len;
+    }
+    return 0;
+}
+
+static int matter_get_ap_security_mode(IN char * ssid, OUT rtw_security_t *security_mode, OUT u8 * channel)
+{
+    rtw_wifi_setting_t wifi;
+    u32 scan_buflen = 1000;
+
+    memset(&wifi, 0, sizeof(wifi));
+
+    if(wifi_scan_networks_with_ssid(matter_find_ap_from_scan_buf, (void*)&wifi, scan_buflen, ssid, strlen(ssid)) != RTW_SUCCESS){
+        printf("Wifi scan failed!\n");
+        return 0;
+    }
+
+    if(strcmp(wifi.ssid, ssid) == 0){
+        *security_mode = wifi.security_type;
+        *channel = wifi.channel;
+        return 1;
+    }
+
+    return 0;
+}
+
+int matter_wifi_connect(
+    char              *ssid,
+    rtw_security_t    security_type,
+    char              *password,
+    int               ssid_len,
+    int               password_len,
+    int               key_id,
+    void              *semaphore)
+{
+    u8 connect_channel;
+    int security_retry_count = 0;
+    int ret = 0;
+    int err = 0;
+
+    if(strlen((const char *) password) != 0) {
+        security_type = RTW_SECURITY_WPA_WPA2_MIXED_PSK;
+    }
+    else {
+        security_type = RTW_SECURITY_OPEN;
+    }
+
+    if(security_type == RTW_SECURITY_WPA_WPA2_MIXED) {
+        while (1) {
+            if (matter_get_ap_security_mode((char*)ssid, &security_type, &connect_channel)) {
+                break;
+            }
+            security_retry_count++;
+            if(security_retry_count >= 3) {
+                printf("Can't get AP security mode and channel.\n");
+                ret = RTW_NOTFOUND;
+                return RTW_ERROR;
+            }
+        }
+        /* Don't set WEP Key ID, default use key_id = 0 for connection
+         * If connection fails, use onnetwork (connect to AP with AT Command) instead of ble-wifi
+         * This behavior matches other devices behavior as phone and laptop is unable to connect with key_id > 0
+         * */
+    }
+
+    err = wifi_connect(ssid, security_type, password, strlen(ssid), strlen(password), key_id, NULL);
+
+    return err;
+}
+
+int matter_wifi_disconnect(void)
+{
+    return wifi_disconnect();
+}
+
+int matter_wifi_on(rtw_mode_t mode)
+{
+    return wifi_on(mode);
+}
+
+int matter_wifi_set_mode(rtw_mode_t mode)
+{
+    return wifi_set_mode(mode);
+}
+
+int matter_wifi_is_connected_to_ap(void)
+{
+    return wifi_is_connected_to_ap();
+}
+
+uint8_t matter_lwip_dhcp(uint8_t idx, uint8_t dhcp_state)
+{
+    if (dhcp_state == DHCP_START)
+    {
+        LwIP_DHCP(0, DHCP_START);
+    }
+    else if (dhcp_state == DHCP6_START)
+    {
+        LwIP_DHCP6(0, DHCP6_START);
+    }
+}
+
 #ifdef __cplusplus
 }
 #endif
