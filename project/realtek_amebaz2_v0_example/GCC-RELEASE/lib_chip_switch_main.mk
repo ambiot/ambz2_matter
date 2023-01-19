@@ -7,7 +7,7 @@ BASEDIR := $(shell pwd)
 AMEBAZ2_TOOLDIR	= $(BASEDIR)/../../../component/soc/realtek/8710c/misc/iar_utility
 CHIPDIR = $(BASEDIR)/../../../third_party/connectedhomeip
 OUTPUT_DIR = $(CHIPDIR)/examples/light-switch-app/ameba/build/chip
-CODEGENDIR = $(BASEDIR)/../../../tools/matter/codegen_helpers/gen
+CODEGENDIR = $(OUTPUT_DIR)/codegen
 
 OS := $(shell uname)
 
@@ -210,8 +210,7 @@ SRC_CPP += $(CHIPDIR)/src/app/reporting/Engine.cpp
 SRC_CPP += $(shell cat $(CODEGENDIR)/cluster-file.txt)
 
 SRC_CPP += $(CODEGENDIR)/app/callback-stub.cpp
-
-SRC_CPP += $(CHIPDIR)/zzz_generated/light-switch-app/zap-generated/IMClusterCommandHandler.cpp
+SRC_CPP += $(CODEGENDIR)/zap-generated/IMClusterCommandHandler.cpp
 
 SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/attributes/Accessors.cpp
 SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/cluster-objects.cpp
