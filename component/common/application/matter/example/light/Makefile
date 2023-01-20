@@ -3,7 +3,7 @@ SDKROOTDIR := $(BASEDIR)/../../../../../..
 AMEBAZ2_TOOLDIR	= $(SDKROOTDIR)/component/soc/realtek/8710c/misc/iar_utility
 CHIPDIR = $(SDKROOTDIR)/third_party/connectedhomeip
 OUTPUT_DIR = $(CHIPDIR)/examples/lighting-app/ameba/build/chip
-CODEGENDIR = $(SDKROOTDIR)/tools/matter/codegen_helpers/gen
+MATTER_TOOLDIR = $(SDKROOTDIR)/tools/matter
 
 OS := $(shell uname)
 LBITS := $(shell getconf LONG_BIT)
@@ -38,20 +38,25 @@ endif
 endif
 	@echo Toolchain unzip done!
 
-.PHONY: mkdir_codegen
-mkdir_codegen:
-	if [ ! -d $(SDKROOTDIR)/tools/matter/codegen_helpers/gen ]; then mkdir $(SDKROOTDIR)/tools/matter/codegen_helpers/gen; fi
+.PHONY: check_zap
+check_zap:
+	cd $(MATTER_TOOLDIR)/codegen_helpers/ && \
+	./check_zap.sh
 
 .PHONY: light
-light: toolchain mkdir_codegen
-	python3 $(SDKROOTDIR)/third_party/connectedhomeip/scripts/codegen.py --generator cpp-app --output-dir $(SDKROOTDIR)/tools/matter/codegen_helpers/gen --expected-outputs $(SDKROOTDIR)/tools/matter/codegen_helpers/expected.outputs $(SDKROOTDIR)/third_party/connectedhomeip/examples/lighting-app/lighting-common/lighting-app.matter
-	python3 $(SDKROOTDIR)/third_party/connectedhomeip/src/app/zap_cluster_list.py --zap_file $(SDKROOTDIR)/third_party/connectedhomeip/examples/lighting-app/lighting-common/lighting-app.zap > $(SDKROOTDIR)/tools/matter/codegen_helpers/gen/cluster-file.txt
-	python3 $(SDKROOTDIR)/tools/matter/codegen_helpers/parse_clusters.py --cluster_file $(SDKROOTDIR)/tools/matter/codegen_helpers/gen/cluster-file.txt --chip_path $(SDKROOTDIR)/third_party/connectedhomeip
-	@$(MAKE) -f lib_chip_light_core.mk all
-	@$(MAKE) -f lib_chip_light_main.mk all
+light: toolchain check_zap
+	export ZAP_INSTALL_PATH="$(MATTER_TOOLDIR)/codegen_helpers/zap" && \
+	mkdir -p $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/zap-generated && \
+	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl.json --output-dir examples/lighting-app/ameba/build/chip/codegen/zap-generated examples/lighting-app/lighting-common/lighting-app.zap && \
+	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/lighting-app/ameba/build/chip/codegen/zap-generated examples/lighting-app/lighting-common/lighting-app.zap && \
+	python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(CHIPDIR)/examples/lighting-app/lighting-common/lighting-app.matter && \
+	python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $(CHIPDIR)/examples/lighting-app/lighting-common/lighting-app.zap > $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/cluster-file.txt && \
+	python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/cluster-file.txt --chip_path $(CHIPDIR) && \
+	$(MAKE) -f lib_chip_light_core.mk all
+	$(MAKE) -f lib_chip_light_main.mk all
 
 .PHONY: clean
 clean:
-	@$(MAKE) -f lib_chip_light_core.mk clean
 	@$(MAKE) -f lib_chip_light_main.mk clean
+	@$(MAKE) -f lib_chip_light_core.mk clean
 	rm -rf $(SDKROOTDIR)/tools/matter/codegen_helpers/gen

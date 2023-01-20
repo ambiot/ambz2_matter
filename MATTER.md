@@ -37,6 +37,21 @@ Make sure ambz2_matter and connectedhomeip are on the same directory level
     source scripts/bootstrap.sh
 
     source scripts/activate.sh
+    
+## ZAP Installation
+- ZAP is automatically downloaded into `tools/matter/codegen_helpers/zap` during make
+- If you need to export the path to `ZAP_INSTALL_PATH` outside of make (for eg, launching ZAP GUI, building `chip-tool`, etc), you can add below lines to your `~/.bashrc` file for convenience
+
+```bash
+# Matter - export zap path
+export ZAP_INSTALL_PATH="<zap-path>"
+```
+- You may also choose to append the zap folder path to `PATH`
+
+```bash
+# Matter - export zap path
+export PATH="<zap-path>":$PATH
+```
 
 ## Make CHIP library by gn and Make lib_main.a
 ### all-clusters-app

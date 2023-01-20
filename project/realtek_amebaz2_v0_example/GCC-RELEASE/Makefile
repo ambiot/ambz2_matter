@@ -3,6 +3,9 @@ all: is
 OS := $(shell uname)
 LBITS := $(shell getconf LONG_BIT)
 
+CHIPDIR = ../../../third_party/connectedhomeip
+MATTER_TOOLDIR = ../../../tools/matter
+
 .PHONY: toolchain
 toolchain:
 	@echo Toolchain unzipping...
@@ -35,7 +38,12 @@ endif
 
 .PHONY: mkdir_codegen
 mkdir_codegen:
-	if [ ! -d ../../../tools/matter/codegen_helpers/gen ]; then mkdir ../../../tools/matter/codegen_helpers/gen; fi
+	if [ ! -d "$(MATTER_TOOLDIR)/codegen_helpers/gen" ]; then mkdir "$(MATTER_TOOLDIR)/codegen_helpers/gen"; fi
+
+.PHONY: check_zap
+check_zap:
+	cd $(MATTER_TOOLDIR)/codegen_helpers/ && \
+	./check_zap.sh
 
 .PHONY: is
 is: toolchain
@@ -51,44 +59,64 @@ clean:
 	@$(MAKE) -f application.is.mk clean
 
 .PHONY: all_clusters
-all_clusters: toolchain mkdir_codegen
-	python3 ../../../third_party/connectedhomeip/scripts/codegen.py --generator cpp-app --output-dir ../../../tools/matter/codegen_helpers/gen --expected-outputs ../../../tools/matter/codegen_helpers/expected.outputs ../../../third_party/connectedhomeip/examples/all-clusters-app/all-clusters-common/all-clusters-app.matter
-	python3 ../../../third_party/connectedhomeip/src/app/zap_cluster_list.py --zap_file ../../../third_party/connectedhomeip/examples/all-clusters-app/all-clusters-common/all-clusters-app.zap > ../../../tools/matter/codegen_helpers/gen/cluster-file.txt
-	python3 ../../../tools/matter/codegen_helpers/parse_clusters.py --cluster_file ../../../tools/matter/codegen_helpers/gen/cluster-file.txt --chip_path ../../../third_party/connectedhomeip
-	@$(MAKE) -f lib_chip.mk all
-	@$(MAKE) -f lib_chip_main.mk all
+all_clusters: toolchain check_zap
+	export ZAP_INSTALL_PATH="$(MATTER_TOOLDIR)/codegen_helpers/zap" && \
+	mkdir -p $(CHIPDIR)/examples/all-clusters-app/ameba/build/chip/codegen/zap-generated && \
+	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl.json --output-dir examples/all-clusters-app/ameba/build/chip/codegen/zap-generated examples/all-clusters-app/all-clusters-common/all-clusters-app.zap && \
+	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/all-clusters-app/ameba/build/chip/codegen/zap-generated examples/all-clusters-app/all-clusters-common/all-clusters-app.zap && \
+	python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(CHIPDIR)/examples/all-clusters-app/ameba/build/chip/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/all-clusters-app.matter && \
+	python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/all-clusters-app.zap > $(CHIPDIR)/examples/all-clusters-app/ameba/build/chip/codegen/cluster-file.txt && \
+	python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $(CHIPDIR)/examples/all-clusters-app/ameba/build/chip/codegen/cluster-file.txt --chip_path $(CHIPDIR) && \
+	$(MAKE) -f lib_chip.mk all
+	$(MAKE) -f lib_chip_main.mk all
 
 .PHONY: light
-light: toolchain mkdir_codegen
-	python3 ../../../third_party/connectedhomeip/scripts/codegen.py --generator cpp-app --output-dir ../../../tools/matter/codegen_helpers/gen --expected-outputs ../../../tools/matter/codegen_helpers/expected.outputs ../../../third_party/connectedhomeip/examples/lighting-app/lighting-common/lighting-app.matter
-	python3 ../../../third_party/connectedhomeip/src/app/zap_cluster_list.py --zap_file ../../../third_party/connectedhomeip/examples/lighting-app/lighting-common/lighting-app.zap > ../../../tools/matter/codegen_helpers/gen/cluster-file.txt
-	python3 ../../../tools/matter/codegen_helpers/parse_clusters.py --cluster_file ../../../tools/matter/codegen_helpers/gen/cluster-file.txt --chip_path ../../../third_party/connectedhomeip
-	@$(MAKE) -f lib_chip_light_core.mk all
-	@$(MAKE) -f lib_chip_light_main.mk all
+light: toolchain check_zap
+	export ZAP_INSTALL_PATH="$(MATTER_TOOLDIR)/codegen_helpers/zap" && \
+	mkdir -p $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/zap-generated && \
+	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl.json --output-dir examples/lighting-app/ameba/build/chip/codegen/zap-generated examples/lighting-app/lighting-common/lighting-app.zap && \
+	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/lighting-app/ameba/build/chip/codegen/zap-generated examples/lighting-app/lighting-common/lighting-app.zap && \
+	python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(CHIPDIR)/examples/lighting-app/lighting-common/lighting-app.matter && \
+	python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $(CHIPDIR)/examples/lighting-app/lighting-common/lighting-app.zap > $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/cluster-file.txt && \
+	python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/cluster-file.txt --chip_path $(CHIPDIR) && \
+	$(MAKE) -f lib_chip_light_core.mk all
+	$(MAKE) -f lib_chip_light_main.mk all
 
 .PHONY: switch
-switch: toolchain mkdir_codegen
-	python3 ../../../third_party/connectedhomeip/scripts/codegen.py --generator cpp-app --output-dir ../../../tools/matter/codegen_helpers/gen --expected-outputs ../../../tools/matter/codegen_helpers/expected.outputs ../../../third_party/connectedhomeip/examples/light-switch-app/light-switch-common/light-switch-app.matter
-	python3 ../../../third_party/connectedhomeip/src/app/zap_cluster_list.py --zap_file ../../../third_party/connectedhomeip/examples/light-switch-app/light-switch-common/light-switch-app.zap > ../../../tools/matter/codegen_helpers/gen/cluster-file.txt
-	python3 ../../../tools/matter/codegen_helpers/parse_clusters.py --cluster_file ../../../tools/matter/codegen_helpers/gen/cluster-file.txt --chip_path ../../../third_party/connectedhomeip
-	@$(MAKE) -f lib_chip_switch_core.mk all
-	@$(MAKE) -f lib_chip_switch_main.mk all
+switch: toolchain check_zap
+	export ZAP_INSTALL_PATH="$(MATTER_TOOLDIR)/codegen_helpers/zap" && \
+	mkdir -p $(CHIPDIR)/examples/light-switch-app/ameba/build/chip/codegen/zap-generated && \
+	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl.json --output-dir examples/light-switch-app/ameba/build/chip/codegen/zap-generated examples/light-switch-app/light-switch-common/light-switch-app.zap && \
+	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/light-switch-app/ameba/build/chip/codegen/zap-generated examples/light-switch-app/light-switch-common/light-switch-app.zap && \
+	python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(CHIPDIR)/examples/light-switch-app/ameba/build/chip/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(CHIPDIR)/examples/light-switch-app/light-switch-common/light-switch-app.matter && \
+	python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $(CHIPDIR)/examples/light-switch-app/light-switch-common/light-switch-app.zap > $(CHIPDIR)/examples/light-switch-app/ameba/build/chip/codegen/cluster-file.txt && \
+	python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $(CHIPDIR)/examples/light-switch-app/ameba/build/chip/codegen/cluster-file.txt --chip_path $(CHIPDIR) && \
+	$(MAKE) -f lib_chip_switch_core.mk all
+	$(MAKE) -f lib_chip_switch_main.mk all
 
 .PHONY: otar
-otar: toolchain mkdir_codegen
-	python3 ../../../third_party/connectedhomeip/scripts/codegen.py --generator cpp-app --output-dir ../../../tools/matter/codegen_helpers/gen --expected-outputs ../../../tools/matter/codegen_helpers/expected.outputs ../../../third_party/connectedhomeip/examples/ota-requestor-app/ota-requestor-common/ota-requestor-app.matter
-	python3 ../../../third_party/connectedhomeip/src/app/zap_cluster_list.py --zap_file ../../../third_party/connectedhomeip/examples/ota-requestor-app/ota-requestor-common/ota-requestor-app.zap > ../../../tools/matter/codegen_helpers/gen/cluster-file.txt
-	python3 ../../../tools/matter/codegen_helpers/parse_clusters.py --cluster_file ../../../tools/matter/codegen_helpers/gen/cluster-file.txt --chip_path ../../../third_party/connectedhomeip
-	@$(MAKE) -f lib_chip_otar_core.mk all
-	@$(MAKE) -f lib_chip_otar_main.mk all
+otar: toolchain check_zap
+	export ZAP_INSTALL_PATH="$(MATTER_TOOLDIR)/codegen_helpers/zap" && \
+	mkdir -p $(CHIPDIR)/examples/ota-requestor-app/ameba/build/chip/codegen/zap-generated && \
+	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl.json --output-dir examples/ota-requestor-app/ameba/build/chip/codegen/zap-generated examples/ota-requestor-app/ota-requestor-common/ota-requestor-app.zap && \
+	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/ota-requestor-app/ameba/build/chip/codegen/zap-generated examples/ota-requestor-app/ota-requestor-common/ota-requestor-app.zap && \
+	python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(CHIPDIR)/examples/ota-requestor-app/ameba/build/chip/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(CHIPDIR)/examples/ota-requestor-app/ota-requestor-common/ota-requestor-app.matter && \
+	python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $(CHIPDIR)/examples/ota-requestor-app/ota-requestor-common/ota-requestor-app.zap > $(CHIPDIR)/examples/ota-requestor-app/ameba/build/chip/codegen/cluster-file.txt && \
+	python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $(CHIPDIR)/examples/ota-requestor-app/ameba/build/chip/codegen/cluster-file.txt --chip_path $(CHIPDIR) && \
+	$(MAKE) -f lib_chip_otar_core.mk all
+	$(MAKE) -f lib_chip_otar_main.mk all
 
 .PHONY: chef
-chef: toolchain mkdir_codegen
-	python3 ../../../third_party/connectedhomeip/scripts/codegen.py --generator cpp-app --output-dir ../../../tools/matter/codegen_helpers/gen --expected-outputs ../../../tools/matter/codegen_helpers/expected.outputs ../../../third_party/connectedhomeip/examples/chef/devices/$(SAMPLE_NAME).matter
-	python3 ../../../third_party/connectedhomeip/src/app/zap_cluster_list.py --zap_file ../../../third_party/connectedhomeip/examples/chef/devices/$(SAMPLE_NAME).zap > ../../../tools/matter/codegen_helpers/gen/cluster-file.txt
-	python3 ../../../tools/matter/codegen_helpers/parse_clusters.py --cluster_file ../../../tools/matter/codegen_helpers/gen/cluster-file.txt --chip_path ../../../third_party/connectedhomeip
-	@$(MAKE) -f lib_chip_chef_core.mk all
-	@$(MAKE) -f lib_chip_chef_main.mk all
+chef: toolchain check_zap
+	export ZAP_INSTALL_PATH="$(MATTER_TOOLDIR)/codegen_helpers/zap" && \
+	mkdir -p $(CHIPDIR)/examples/chef/ameba/build/chip/codegen/zap-generated && \
+	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl.json --output-dir examples/chef/ameba/build/chip/codegen/zap-generated examples/chef/devices/$(SAMPLE_NAME).zap && \
+	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/chef/ameba/build/chip/codegen/zap-generated examples/chef/devices/$(SAMPLE_NAME).zap && \
+	python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(CHIPDIR)/examples/chef/ameba/build/chip/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(CHIPDIR)/examples/chef/devices/$(SAMPLE_NAME).matter && \
+	python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $(CHIPDIR)/examples/chef/devices/$(SAMPLE_NAME).zap > $(CHIPDIR)/examples/chef/ameba/build/chip/codegen/cluster-file.txt && \
+	python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $(CHIPDIR)/examples/chef/ameba/build/chip/codegen/cluster-file.txt --chip_path $(CHIPDIR) && \
+	$(MAKE) -f lib_chip_chef_core.mk all
+	$(MAKE) -f lib_chip_chef_main.mk all
 
 .PHONY: is_matter
 is_matter: toolchain
@@ -97,18 +125,17 @@ is_matter: toolchain
 	
 .PHONY: clean_matter
 clean_matter:
-	@$(MAKE) -f lib_chip.mk clean
 	@$(MAKE) -f lib_chip_main.mk clean
-	@$(MAKE) -f lib_chip_light_core.mk clean
+	@$(MAKE) -f lib_chip.mk clean
 	@$(MAKE) -f lib_chip_light_main.mk clean
-	@$(MAKE) -f lib_chip_switch_core.mk clean
+	@$(MAKE) -f lib_chip_light_core.mk clean
 	@$(MAKE) -f lib_chip_switch_main.mk clean
-	@$(MAKE) -f lib_chip_otar_core.mk clean
+	@$(MAKE) -f lib_chip_switch_core.mk clean
 	@$(MAKE) -f lib_chip_otar_main.mk clean
-	@$(MAKE) -f lib_chip_chef_core.mk clean
+	@$(MAKE) -f lib_chip_otar_core.mk clean
 	@$(MAKE) -f lib_chip_chef_main.mk clean
+	@$(MAKE) -f lib_chip_chef_core.mk clean
 	@$(MAKE) -f application.is.matter.mk clean
-	rm -rf ../../../tools/matter/codegen_helpers/gen
 
 debug: toolchain
 	@$(MAKE) -f application.is.mk debug
