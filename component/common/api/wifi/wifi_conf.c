@@ -14,6 +14,10 @@
 #include <osdep_service.h>
 #include <device_lock.h>
 
+#if CONFIG_EXAMPLE_MATTER
+#include "chip_porting.h"
+#endif
+
 #if CONFIG_EXAMPLE_WLAN_FAST_CONNECT || CONFIG_JD_SMART
 #include "wlan_fast_connect/example_wlan_fast_connect.h"
 #if defined(CONFIG_FAST_DHCP) && CONFIG_FAST_DHCP
@@ -988,6 +992,19 @@ int wifi_connect(
 	}
 
 	result = RTW_SUCCESS;
+
+    // we store the wifi ssid and password in dct
+    // because for Matter onnetwork commissioning,
+    // these won't be added to network lists and won't be persisted
+#if CONFIG_EXAMPLE_MATTER
+    // these keys need to match exactly the same keys in matter sdk, AmebaUtils.cpp
+    const char kWiFiSSIDKeyName[]        = "wifi-ssid";
+    const char kWiFiCredentialsKeyName[] = "wifi-pass";
+
+    setPref_new(kWiFiSSIDKeyName, kWiFiSSIDKeyName, (uint8_t*) ssid, ssid_len);
+    setPref_new(kWiFiCredentialsKeyName, kWiFiCredentialsKeyName, (uint8_t*) password, password_len);
+#endif
+
 #if CONFIG_LWIP_LAYER
 #if defined(CONFIG_MBED_ENABLED) || defined(CONFIG_PLATFOMR_CUSTOMER_RTOS)
 	//TODO
