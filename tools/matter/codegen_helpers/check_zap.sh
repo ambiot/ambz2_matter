@@ -7,7 +7,7 @@ ZAPDIR=$DIR/zap
 echo "Downloading ZAP"
 
 if [ ! -f "$ZIPFILE" ]; then
-    curl -L https://github.com/project-chip/zap/releases/download/v2023.01.19-nightly/zap-linux.zip -o "$ZIPFILE"
+    curl -L https://github.com/project-chip/zap/releases/download/v2023.01.31-nightly/zap-linux.zip -o "$ZIPFILE"
 else
     echo "$ZIPFILE already exists"
 fi
