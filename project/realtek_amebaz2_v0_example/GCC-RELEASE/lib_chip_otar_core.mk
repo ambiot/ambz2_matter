@@ -234,7 +234,6 @@ CHIP_CXXFLAGS += $(INCLUDES)
 all: GENERATE_NINJA
 
 GENERATE_NINJA:
-	export ZAP_INSTALL_PATH="$(MATTER_TOOLDIR)/codegen_helpers/zap" && \
 	echo "INSTALL CHIP..." && \
 	echo $(BASEDIR) && \
 	mkdir -p $(OUTPUT_DIR) && \

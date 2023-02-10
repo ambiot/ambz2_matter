@@ -40,11 +40,6 @@ endif
 mkdir_codegen:
 	if [ ! -d "$(MATTER_TOOLDIR)/codegen_helpers/gen" ]; then mkdir "$(MATTER_TOOLDIR)/codegen_helpers/gen"; fi
 
-.PHONY: check_zap
-check_zap:
-	cd $(MATTER_TOOLDIR)/codegen_helpers/ && \
-	./check_zap.sh
-
 .PHONY: is
 is: toolchain
 	cp partition_default.json partition.json
@@ -59,8 +54,7 @@ clean:
 	@$(MAKE) -f application.is.mk clean
 
 .PHONY: all_clusters
-all_clusters: toolchain check_zap
-	export ZAP_INSTALL_PATH="$(MATTER_TOOLDIR)/codegen_helpers/zap" && \
+all_clusters: toolchain
 	mkdir -p $(CHIPDIR)/examples/all-clusters-app/ameba/build/chip/codegen/zap-generated && \
 	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl.json --output-dir examples/all-clusters-app/ameba/build/chip/codegen/zap-generated examples/all-clusters-app/all-clusters-common/all-clusters-app.zap && \
 	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/all-clusters-app/ameba/build/chip/codegen/zap-generated examples/all-clusters-app/all-clusters-common/all-clusters-app.zap && \
@@ -71,8 +65,7 @@ all_clusters: toolchain check_zap
 	$(MAKE) -f lib_chip_main.mk all
 
 .PHONY: light
-light: toolchain check_zap
-	export ZAP_INSTALL_PATH="$(MATTER_TOOLDIR)/codegen_helpers/zap" && \
+light: toolchain
 	mkdir -p $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/zap-generated && \
 	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl.json --output-dir examples/lighting-app/ameba/build/chip/codegen/zap-generated examples/lighting-app/lighting-common/lighting-app.zap && \
 	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/lighting-app/ameba/build/chip/codegen/zap-generated examples/lighting-app/lighting-common/lighting-app.zap && \
@@ -83,8 +76,7 @@ light: toolchain check_zap
 	$(MAKE) -f lib_chip_light_main.mk all
 
 .PHONY: switch
-switch: toolchain check_zap
-	export ZAP_INSTALL_PATH="$(MATTER_TOOLDIR)/codegen_helpers/zap" && \
+switch: toolchain
 	mkdir -p $(CHIPDIR)/examples/light-switch-app/ameba/build/chip/codegen/zap-generated && \
 	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl.json --output-dir examples/light-switch-app/ameba/build/chip/codegen/zap-generated examples/light-switch-app/light-switch-common/light-switch-app.zap && \
 	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/light-switch-app/ameba/build/chip/codegen/zap-generated examples/light-switch-app/light-switch-common/light-switch-app.zap && \
@@ -95,8 +87,7 @@ switch: toolchain check_zap
 	$(MAKE) -f lib_chip_switch_main.mk all
 
 .PHONY: otar
-otar: toolchain check_zap
-	export ZAP_INSTALL_PATH="$(MATTER_TOOLDIR)/codegen_helpers/zap" && \
+otar: toolchain
 	mkdir -p $(CHIPDIR)/examples/ota-requestor-app/ameba/build/chip/codegen/zap-generated && \
 	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl.json --output-dir examples/ota-requestor-app/ameba/build/chip/codegen/zap-generated examples/ota-requestor-app/ota-requestor-common/ota-requestor-app.zap && \
 	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/ota-requestor-app/ameba/build/chip/codegen/zap-generated examples/ota-requestor-app/ota-requestor-common/ota-requestor-app.zap && \
@@ -107,8 +98,7 @@ otar: toolchain check_zap
 	$(MAKE) -f lib_chip_otar_main.mk all
 
 .PHONY: chef
-chef: toolchain check_zap
-	export ZAP_INSTALL_PATH="$(MATTER_TOOLDIR)/codegen_helpers/zap" && \
+chef: toolchain
 	mkdir -p $(CHIPDIR)/examples/chef/ameba/build/chip/codegen/zap-generated && \
 	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl.json --output-dir examples/chef/ameba/build/chip/codegen/zap-generated examples/chef/devices/$(SAMPLE_NAME).zap && \
 	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/chef/ameba/build/chip/codegen/zap-generated examples/chef/devices/$(SAMPLE_NAME).zap && \
