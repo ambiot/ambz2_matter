@@ -38,14 +38,8 @@ endif
 endif
 	@echo Toolchain unzip done!
 
-.PHONY: check_zap
-check_zap:
-	cd $(MATTER_TOOLDIR)/codegen_helpers/ && \
-	./check_zap.sh
-
 .PHONY: light
-light: toolchain check_zap
-	export ZAP_INSTALL_PATH="$(MATTER_TOOLDIR)/codegen_helpers/zap" && \
+light: toolchain
 	mkdir -p $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/zap-generated && \
 	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl.json --output-dir examples/lighting-app/ameba/build/chip/codegen/zap-generated examples/lighting-app/lighting-common/lighting-app.zap && \
 	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/lighting-app/ameba/build/chip/codegen/zap-generated examples/lighting-app/lighting-common/lighting-app.zap && \
