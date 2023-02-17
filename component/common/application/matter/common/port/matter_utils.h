@@ -68,8 +68,8 @@ typedef struct
 } FactoryData;
 
 // Functions
-uint32_t ReadFactory(uint8_t *buffer, uint16_t *pfactorydata_len);
-uint32_t DecodeFactory(uint8_t *buffer, FactoryData *fdp, uint16_t data_len);
+int32_t ReadFactory(uint8_t *buffer, uint16_t *pfactorydata_len);
+int32_t DecodeFactory(uint8_t *buffer, FactoryData *fdp, uint16_t data_len);
 
 #ifdef __cplusplus
 }

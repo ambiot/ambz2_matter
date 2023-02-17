@@ -15,6 +15,13 @@
 #include <pb_decode.h>
 #include "device_lock.h"
 
+#if CONFIG_ENABLE_FACTORY_DATA_ENCRYPTION
+#include "mbedtls/aes.h"
+unsigned char test_key[] = {0xff, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xff, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
+unsigned char test_iv[] = {0xff, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
+mbedtls_aes_context aes_ctx;
+#endif
+
 bool store_string_spake2_salt(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     FactoryData *fdp = *(FactoryData**) arg;
@@ -231,7 +238,7 @@ bool store_string_rd_id_uid(pb_istream_t *stream, const pb_field_t *field, void 
     return true;
 }
 
-uint32_t ReadFactory(uint8_t *buffer, uint16_t *pfactorydata_len)
+int32_t ReadFactory(uint8_t *buffer, uint16_t *pfactorydata_len)
 {
     uint32_t ret;
     flash_t flash;
@@ -251,11 +258,38 @@ uint32_t ReadFactory(uint8_t *buffer, uint16_t *pfactorydata_len)
     return ret;
 }
 
-uint32_t DecodeFactory(uint8_t *buffer, FactoryData *fdp, uint16_t data_len)
+int32_t DecodeFactory(uint8_t *buffer, FactoryData *fdp, uint16_t data_len)
 {
-    uint32_t ret = 0;
+    int32_t ret = 0;
     pb_istream_t stream;
     FactoryDataProvider FDP = FactoryDataProvider_init_zero;
+
+#if CONFIG_ENABLE_FACTORY_DATA_ENCRYPTION
+    mbedtls_aes_init(&aes_ctx);
+    mbedtls_aes_setkey_enc(&aes_ctx, test_key, 256);
+    // decrypt the factorydata
+    size_t nc_off = 0;
+    unsigned char nonce_counter[16] = {0};
+    unsigned char stream_block[16] = {0};
+    size_t iv_offset = 0;
+    unsigned char *decrypted_output = (unsigned char*) pvPortMalloc(data_len);
+    if (decrypted_output == NULL)
+    {
+        ret = -1;
+        goto exit;
+    }
+
+    memcpy(nonce_counter, test_iv, sizeof(nonce_counter));
+    ret = mbedtls_aes_crypt_ctr(&aes_ctx, data_len, &nc_off, nonce_counter, stream_block, buffer, decrypted_output);
+    if (ret !=0)
+    {
+        goto exit; 
+    }
+
+    memcpy(buffer, decrypted_output, data_len);
+    vPortFree(decrypted_output);
+    mbedtls_aes_free(&aes_ctx);
+#endif
 
     stream = pb_istream_from_buffer(buffer, data_len);
 

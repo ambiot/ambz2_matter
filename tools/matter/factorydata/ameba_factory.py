@@ -227,14 +227,29 @@ def main():
     populate_factory_data(args, spake2p_params)
 
 
+    f = open("ameba_data.bin", "wb")
+    f.write(FACTORY_DATA.SerializeToString())
+    f.close()
+    os.system('openssl enc -aes-256-ctr -e -in ameba_data.bin -out ameba_data.bin.enc -K ff0102030405060708090a0b0c0d0e0fff0102030405060708090a0b0c0d0e0f -iv ff0102030405060708090a0b0c0d0e0f')
+
+    f1 = open("ameba_data.bin.enc", "rb")
+
     # write pbuf to bin file
     # we want to prepend the data length (2bytes) to the bin file
     data_to_write = FACTORY_DATA.SerializeToString()
     data_len = len(data_to_write)
-    f = open("ameba_factory.bin", "wb")
-    f.write(data_len.to_bytes(2, 'little'))
-    f.write(FACTORY_DATA.SerializeToString())
-    f.close()
+    f2 = open("ameba_factory.bin", "ab")
+    f2.write(data_len.to_bytes(2, 'little'))
+    f2.write(f1.read())
+    f2.close()
+
+    f1.close()
+
+
+
+
+    # f.write(FACTORY_DATA.SerializeToString())
+    # f.close()
     print(FACTORY_DATA.ListFields())
     print("Total factorydata size: {}".format(len(FACTORY_DATA.SerializeToString())))
 
