@@ -13,7 +13,7 @@ ssl_func_stubs_t __ram_stubs_ssl;
 
 extern const ssl_func_stubs_t __rom_stubs_ssl;
 
-#if defined(CONFIG_PLATFORM_8710C) && (MBEDTLS_VERSION_NUMBER==0x02100300)
+#if defined(CONFIG_PLATFORM_8710C) && ((MBEDTLS_VERSION_NUMBER==0x02100300) || (MBEDTLS_VERSION_NUMBER==0x021C0000) || (MBEDTLS_VERSION_NUMBER==0x021C0100))
 #if defined(MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT)
 int platform_set_malloc_free(
 	void *(*ssl_calloc)(unsigned int, unsigned int),
@@ -328,13 +328,6 @@ int mbedtls_mpi_is_prime_ext( const mbedtls_mpi *X, int rounds,
 {
 	return __ram_stubs_ssl.mbedtls_mpi_is_prime(X, f_rng, p_rng);
 }
-#else
-int mbedtls_mpi_is_prime_ext( const mbedtls_mpi *X, int rounds,
-                              int (*f_rng)(void *, unsigned char *, size_t),
-                              void *p_rng )
-{
-	return __rom_stubs_ssl.mbedtls_mpi_is_prime(X, f_rng, p_rng);
-}
 #endif
 #endif
 
@@ -396,7 +389,7 @@ int platform_set_malloc_free(
 	/* Variables */
 	rom_ssl_ram_map.use_hw_crypto_func = 1;
 	
-#if defined(CONFIG_PLATFORM_8710C) && (defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER==0x02100300)
+#if defined(CONFIG_PLATFORM_8710C) && ((defined(MBEDTLS_VERSION_NUMBER) && (MBEDTLS_VERSION_NUMBER==0x02100300 || MBEDTLS_VERSION_NUMBER==0x021C0000 || MBEDTLS_VERSION_NUMBER==0x021C0100)))
 	//AES HW CRYPTO
 	rtl_cryptoEngine_init();
 	rom_ssl_ram_map.hw_crypto_aes_ecb_init = rtl_crypto_aes_ecb_init;
@@ -406,7 +399,7 @@ int platform_set_malloc_free(
 	rom_ssl_ram_map.hw_crypto_aes_cbc_decrypt = rtl_crypto_aes_cbc_decrypt;
 	rom_ssl_ram_map.hw_crypto_aes_cbc_encrypt = rtl_crypto_aes_cbc_encrypt;
 #endif
-#if (defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER == 0x02040000) || ((defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER==0x02100300) && (defined(MBEDTLS_USE_ROM_API) || defined(MBEDTLS_BIGNUM_USE_S_ROM_API)))
+#if (defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER == 0x02040000) || ((defined(MBEDTLS_VERSION_NUMBER) && (MBEDTLS_VERSION_NUMBER==0x02100300 || MBEDTLS_VERSION_NUMBER==0x021C0000 || MBEDTLS_VERSION_NUMBER==0x021C0100)) && (defined(MBEDTLS_USE_ROM_API) || defined(MBEDTLS_BIGNUM_USE_S_ROM_API)))
 #if defined(MBEDTLS_BIGNUM_USE_S_ROM_API)
 	if((*((volatile u32*)(0x400001F0)) & (BIT4|BIT5|BIT6|BIT7))>>4 >= 0x3)
 	{
@@ -426,7 +419,7 @@ int platform_set_malloc_free(
 #if defined(CONFIG_PLATFORM_8710C)
 	/// DES funtions are on longer supported on AmebaZ2's HW crypto
 	/// Must set them to NULL, so it will use SW instead of HW even use_hw_crypto_func is enabled
-#if (defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER==0x02100300)
+#if (defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER == 0x02040000) || ((defined(MBEDTLS_VERSION_NUMBER) && (MBEDTLS_VERSION_NUMBER==0x02100300 || MBEDTLS_VERSION_NUMBER==0x021C0000 || MBEDTLS_VERSION_NUMBER==0x021C0100)) && defined(MBEDTLS_USE_ROM_API))
 	//DES HW CRYPTO
 	rom_ssl_ram_map.hw_crypto_des_cbc_init = NULL;
 	rom_ssl_ram_map.hw_crypto_des_cbc_decrypt = NULL;
@@ -2039,7 +2032,7 @@ int mbedtls_pk_write_key_pem(mbedtls_pk_context *key, unsigned char *buf, size_t
 	return __rom_stubs_ssl.mbedtls_pk_write_key_pem(key, buf, size);
 }
 
-#if defined(MBEDTLS_USE_ROM_API) && (defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER==0x02100300)
+#if defined(MBEDTLS_USE_ROM_API) && (defined(MBEDTLS_VERSION_NUMBER) && (MBEDTLS_VERSION_NUMBER==0x02100300 || MBEDTLS_VERSION_NUMBER==0x021C0000 || MBEDTLS_VERSION_NUMBER==0x021C0100))
 int mbedtls_md5_starts_ret( mbedtls_md5_context *ctx )
 {
 	__rom_stubs_ssl.mbedtls_md5_starts(ctx);
@@ -2133,7 +2126,7 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
 	return __rom_stubs_ssl.mbedtls_pk_verify(ctx, md_alg, hash, hash_len, sig, sig_len);
 }
 #endif /* MBEDTLS_USE_ROM_API */
-#if defined(ENABLE_AMAZON_COMMON) || (defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER==0x02100300)
+#if defined(ENABLE_AMAZON_COMMON) || (defined(MBEDTLS_VERSION_NUMBER) && (MBEDTLS_VERSION_NUMBER==0x02100300 || MBEDTLS_VERSION_NUMBER==0x021C0000 || MBEDTLS_VERSION_NUMBER==0x021C0100))
 #if !defined(SUPPORT_HW_SSL_HMAC_SHA256)
 /* sha256 */
 int mbedtls_sha256_starts_ret(mbedtls_sha256_context *ctx, int is224)
