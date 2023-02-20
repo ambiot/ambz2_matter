@@ -32,6 +32,10 @@
 
 #include <string.h>
 
+#if (CONFIG_EXAMPLE_MATTER)
+#include <crypto_api.h>
+#endif
+
 #if defined(MBEDTLS_FS_IO)
 #include <stdio.h>
 #endif
@@ -591,6 +595,21 @@ exit:
 int mbedtls_ctr_drbg_random( void *p_rng, unsigned char *output,
                              size_t output_len )
 {
+#if (CONFIG_EXAMPLE_MATTER)
+#error
+    int ret = crypto_init();
+    if (ret != SUCCESS)
+    {
+        printf("crypto_init() failed\r\n");
+        return ret;
+    }
+
+    ret = crypto_random_generate(output, output_len);
+    if (ret != 0)
+        ret = 0xac // CHIP_ERROR_INTERNAL
+
+    return ret;
+#else
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     mbedtls_ctr_drbg_context *ctx = (mbedtls_ctr_drbg_context *) p_rng;
 
@@ -604,6 +623,7 @@ int mbedtls_ctr_drbg_random( void *p_rng, unsigned char *output,
 #if defined(MBEDTLS_THREADING_C)
     if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
         return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
+#endif
 #endif
 
     return( ret );
