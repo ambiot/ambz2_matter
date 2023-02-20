@@ -22,7 +22,7 @@ Build spake2p tool
     
 Install python dependency
 
-    pip3 install protobuf
+    pip3 install protobuf==4.21.9
 
 Make sure your firmware is built with `CONFIG_ENABLE_AMEBA_FACTORY_DATA` enabled in the **core** and **main** Matter library makefile
 
