@@ -13,6 +13,10 @@
 #include "stdbool.h"
 #include "dct.h"
 #include "chip_porting.h"
+
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+#include "mbedtls/aes.h"
+#endif
 /*
    module size is 4k, we set max module number as 12;
    if backup enabled, the total module number is 12 + 1*12 = 24, the size is 96k;
@@ -32,6 +36,92 @@
 #define ENABLE_BACKUP           0
 #define ENABLE_WEAR_LEVELING    0
 
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+#if defined(MBEDTLS_CIPHER_MODE_CTR)
+    mbedtls_aes_context aes;
+
+    // key length 32 bytes for 256 bit encrypting, it can be 16 or 24 bytes for 128 and 192 bits encrypting mode
+    unsigned char key[] = {0xff, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xff, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
+
+#define DCT_REGION_1 0
+#define DCT_REGION_2 1
+
+    int32_t dct_encrypt(unsigned char *input_to_encrypt, int input_len, unsigned char *encrypt_output)
+    {
+        size_t nc_off = 0;
+
+        unsigned char nonce_counter[16] = {0};
+        unsigned char stream_block[16] = {0};
+        int ret = mbedtls_aes_crypt_ctr(&aes, input_len, &nc_off, nonce_counter, stream_block, input_to_encrypt, encrypt_output);
+        return ret;
+    }
+
+    int32_t dct_decrypt(unsigned char *input_to_decrypt, int input_len, unsigned char *decrypt_output)
+    {
+        size_t nc_off1 = 0;
+        unsigned char nonce_counter1[16] = {0};
+        unsigned char stream_block1[16] = {0};
+        int ret = mbedtls_aes_crypt_ctr(&aes, input_len, &nc_off1, nonce_counter1, stream_block1, input_to_decrypt, decrypt_output);
+        return ret;
+    }
+
+    int32_t dct_set_encrypted_variable(dct_handle_t *dct_handle, char *variable_name, char *variable_value, uint16_t variable_value_length, uint8_t region)
+    {
+        int32_t ret;
+        char data_to_encrypt[VARIABLE_VALUE_SIZE2] = {0};
+        char encrypted_data[VARIABLE_VALUE_SIZE2] = {0};
+        
+        // store the actual length of the data as the first 4 bytes (sizeof(size_t)), we need it for decryption later
+        memcpy(data_to_encrypt, &variable_value_length, sizeof(variable_value_length));
+        memcpy(data_to_encrypt + sizeof(size_t), variable_value, variable_value_length);
+
+        // encrypt the variable value together with the length
+        ret = dct_encrypt(data_to_encrypt, variable_value_length + sizeof(size_t), encrypted_data);
+
+        // store in dct
+        if (region == DCT_REGION_1)
+            ret = dct_set_variable_new(dct_handle, variable_name, encrypted_data, variable_value_length + sizeof(size_t));
+        else if (region == DCT_REGION_2)
+            ret = dct_set_variable_new2(dct_handle, variable_name, encrypted_data, variable_value_length + sizeof(size_t));
+
+        return ret;
+    }
+
+    int32_t dct_get_encrypted_variable(dct_handle_t *dct_handle, char *variable_name, char *buffer, uint16_t *buffer_size, uint8_t region)
+    {
+        int32_t ret;
+        uint8_t data_to_decrypt[404] = {0};
+        uint8_t decrypted_data[404] = {0};
+        uint16_t len = *buffer_size + 4;
+        size_t val_len;
+
+        // get the encrypted value from dct
+        if (region == DCT_REGION_1)
+            ret = dct_get_variable_new(dct_handle, variable_name, data_to_decrypt, &len);
+        else if (region == DCT_REGION_2)
+            ret = dct_get_variable_new2(dct_handle, variable_name, data_to_decrypt, &len);
+
+        // store the actual length back to buffer_size
+        *buffer_size = len - 4;
+
+        if (ret != DCT_SUCCESS)
+            return ret;
+
+        // decrypt the encrypted value
+        ret = dct_decrypt(data_to_decrypt, len, decrypted_data);
+        
+        // post decryption processing
+        memcpy(&val_len, decrypted_data, sizeof(val_len));
+        memcpy(buffer, decrypted_data + sizeof(val_len), val_len);
+        
+        return ret;
+    }
+
+#else
+#error "MBEDTLS_CIPHER_MODE_CTR must be enabled to perform DCT flash encryption" 
+#endif // MBEDTLS_CIPHER_MODE_CTR
+#endif
+
 s32 initPref(void)
 {
     s32 ret;
@@ -46,6 +136,12 @@ s32 initPref(void)
         printf("dct_init2 failed with error: %d\n", ret);
     else
         printf("dct_init2 success\n");
+
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+    // Initialize mbedtls aes context and set encryption key
+    mbedtls_aes_init(&aes);
+    mbedtls_aes_setkey_enc(&aes, key, 256);
+#endif
 
     return ret;
 }
@@ -64,6 +160,11 @@ s32 deinitPref(void)
         printf("dct_format2 failed with error: %d\n", ret);
     else
         printf("dct_format2 success\n");
+
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+    // free aes context
+    mbedtls_aes_free(&aes);
+#endif
 
     return ret;
 }
@@ -154,6 +255,7 @@ exit:
 
 s32 deleteKey(const char *domain, const char *key)
 {
+    printf("%s\n", __FUNCTION__);
     dct_handle_t handle;
     s32 ret = -1;
     char ns[15];
@@ -196,10 +298,11 @@ exit:
 
 bool checkExist(const char *domain, const char *key)
 {
+    printf("%s\n", __FUNCTION__);
     dct_handle_t handle;
     s32 ret = -1;
     uint16_t len = 0;
-    u8 *str = malloc(sizeof(u8) * VARIABLE_VALUE_SIZE2-4); // use the bigger buffer size
+    u8 *str = malloc(sizeof(u8) * VARIABLE_VALUE_SIZE2); // use the bigger buffer size
     char ns[15];
 
     // Loop over DCT1 modules
@@ -247,7 +350,7 @@ bool checkExist(const char *domain, const char *key)
             goto exit;
         }
 
-        len = VARIABLE_VALUE_SIZE2-4;
+        len = VARIABLE_VALUE_SIZE2;
         ret = dct_get_variable_new2(&handle, key, str, &len);
         if(ret == DCT_SUCCESS)
         {
@@ -287,7 +390,11 @@ s32 setPref_new(const char *domain, const char *key, u8 *value, size_t byteCount
 
             if (dct_remain_variable(&handle) > 0)
             {
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+                ret = dct_set_encrypted_variable(&handle, key, value, byteCount, DCT_REGION_1);
+#else
                 ret = dct_set_variable_new(&handle, key, (char *)value, (uint16_t)byteCount);
+#endif
                 if (DCT_SUCCESS != ret)
                 {
                     printf("%s : dct_set_variable(%s) failed with error: %d\n" ,__FUNCTION__, key, ret);
@@ -316,7 +423,11 @@ s32 setPref_new(const char *domain, const char *key, u8 *value, size_t byteCount
 
             if (dct_remain_variable2(&handle) > 0)
             {
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+                ret = dct_set_encrypted_variable(&handle, key, value, byteCount, DCT_REGION_2);
+#else
                 ret = dct_set_variable_new2(&handle, key, (char *)value, (uint16_t)byteCount);
+#endif
                 if (DCT_SUCCESS != ret)
                 {
                     printf("%s : dct_set_variable2(%s) failed with error: %d\n" ,__FUNCTION__, key, ret);
@@ -342,6 +453,14 @@ s32 getPref_bool_new(const char *domain, const char *key, u8 *val)
     uint16_t len = sizeof(u8);
     char ns[15];
 
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+    uint8_t data_to_decrypt[404] = {0};
+    uint8_t decrypted_data[404] = {0};
+
+    // we stored the length in the first 4 bytes during setPref_new
+    len += 4;
+#endif
+
     // Loop over DCT1 modules
     for (size_t i=0; i<MODULE_NUM; i++)
     {
@@ -352,7 +471,11 @@ s32 getPref_bool_new(const char *domain, const char *key, u8 *val)
             printf("%s : dct_open_module(%s) failed with error: %d\n" ,__FUNCTION__, ns, ret);
             goto exit;
         }
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+        ret = dct_get_encrypted_variable(&handle, key, (char *)val, &len, DCT_REGION_1);
+#else
         ret = dct_get_variable_new(&handle, key, (char *)val, &len);
+#endif
         dct_close_module(&handle);
         if (DCT_SUCCESS == ret)
         {
@@ -370,7 +493,11 @@ s32 getPref_bool_new(const char *domain, const char *key, u8 *val)
             printf("%s : dct_open_module2(%s) failed with error: %d\n" ,__FUNCTION__, ns, ret);
             goto exit;
         }
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+        ret = dct_get_encrypted_variable(&handle, key, (char *)val, &len, DCT_REGION_2);
+#else
         ret = dct_get_variable_new2(&handle, key, (char *)val, &len);
+#endif
         dct_close_module2(&handle);
         if (DCT_SUCCESS == ret)
         {
@@ -399,7 +526,11 @@ s32 getPref_u32_new(const char *domain, const char *key, u32 *val)
             printf("%s : dct_open_module(%s) failed with error: %d\n" ,__FUNCTION__, ns, ret);
             goto exit;
         }
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+        ret = dct_get_encrypted_variable(&handle, key, (char *)val, &len, DCT_REGION_1);
+#else
         ret = dct_get_variable_new(&handle, key, (char *)val, &len);
+#endif
         dct_close_module(&handle);
         if (DCT_SUCCESS == ret)
         {
@@ -417,7 +548,11 @@ s32 getPref_u32_new(const char *domain, const char *key, u32 *val)
             printf("%s : dct_open_module2(%s) failed with error: %d\n" ,__FUNCTION__, ns, ret);
             goto exit;
         }
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+        ret = dct_get_encrypted_variable(&handle, key, (char *)val, &len, DCT_REGION_2);
+#else
         ret = dct_get_variable_new2(&handle, key, (char *)val, &len);
+#endif
         dct_close_module2(&handle);
         if (DCT_SUCCESS == ret)
         {
@@ -446,7 +581,11 @@ s32 getPref_u64_new(const char *domain, const char *key, u64 *val)
             printf("%s : dct_open_module(%s) failed with error: %d\n" ,__FUNCTION__, ns, ret);
             goto exit;
         }
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+        ret = dct_get_encrypted_variable(&handle, key, (char *)val, &len, DCT_REGION_1);
+#else
         ret = dct_get_variable_new(&handle, key, (char *)val, &len);
+#endif
         dct_close_module(&handle);
         if (DCT_SUCCESS == ret)
         {
@@ -464,7 +603,11 @@ s32 getPref_u64_new(const char *domain, const char *key, u64 *val)
             printf("%s : dct_open_module2(%s) failed with error: %d\n" ,__FUNCTION__, ns, ret);
             goto exit;
         }
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+        ret = dct_get_encrypted_variable(&handle, key, (char *)val, &len, DCT_REGION_2);
+#else
         ret = dct_get_variable_new2(&handle, key, (char *)val, &len);
+#endif
         dct_close_module2(&handle);
         if (DCT_SUCCESS == ret)
         {
@@ -492,7 +635,11 @@ s32 getPref_str_new(const char *domain, const char *key, char * buf, size_t bufS
             printf("%s : dct_open_module(%s) failed with error: %d\n" ,__FUNCTION__, ns, ret);
             goto exit;
         }
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+        ret = dct_get_encrypted_variable(&handle, key, buf, &bufSize, DCT_REGION_1);
+#else
         ret = dct_get_variable_new(&handle, key, buf, &bufSize);
+#endif
         dct_close_module(&handle);
         if (DCT_SUCCESS == ret)
         {
@@ -511,7 +658,11 @@ s32 getPref_str_new(const char *domain, const char *key, char * buf, size_t bufS
             printf("%s : dct_open_module2(%s) failed with error: %d\n" ,__FUNCTION__, ns, ret);
             goto exit;
         }
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+        ret = dct_get_encrypted_variable(&handle, key, buf, &bufSize, DCT_REGION_2);
+#else
         ret = dct_get_variable_new2(&handle, key, buf, &bufSize);
+#endif
         dct_close_module2(&handle);
         if (DCT_SUCCESS == ret)
         {
@@ -540,7 +691,11 @@ s32 getPref_bin_new(const char *domain, const char *key, u8 * buf, size_t bufSiz
             printf("%s : dct_open_module(%s) failed with error: %d\n" ,__FUNCTION__, ns, ret);
             goto exit;
         }
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+        ret = dct_get_encrypted_variable(&handle, key, (char *)buf, &bufSize, DCT_REGION_1);
+#else
         ret = dct_get_variable_new(&handle, key, (char *)buf, &bufSize);
+#endif
         dct_close_module(&handle);
         if (DCT_SUCCESS == ret)
         {
@@ -559,7 +714,11 @@ s32 getPref_bin_new(const char *domain, const char *key, u8 * buf, size_t bufSiz
             printf("%s : dct_open_module2(%s) failed with error: %d\n" ,__FUNCTION__, ns, ret);
             goto exit;
         }
+#if CONFIG_ENABLE_DCT_ENCRYPTION
+        ret = dct_get_encrypted_variable(&handle, key, (char *)buf, &bufSize, DCT_REGION_2);
+#else
         ret = dct_get_variable_new2(&handle, key, (char *)buf, &bufSize);
+#endif
         dct_close_module2(&handle);
         if (DCT_SUCCESS == ret)
         {
