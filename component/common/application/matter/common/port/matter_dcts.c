@@ -68,21 +68,16 @@
     int32_t dct_set_encrypted_variable(dct_handle_t *dct_handle, char *variable_name, char *variable_value, uint16_t variable_value_length, uint8_t region)
     {
         int32_t ret;
-        char data_to_encrypt[VARIABLE_VALUE_SIZE2] = {0};
         char encrypted_data[VARIABLE_VALUE_SIZE2] = {0};
-        
-        // store the actual length of the data as the first 4 bytes (sizeof(size_t)), we need it for decryption later
-        memcpy(data_to_encrypt, &variable_value_length, sizeof(variable_value_length));
-        memcpy(data_to_encrypt + sizeof(size_t), variable_value, variable_value_length);
 
-        // encrypt the variable value together with the length
-        ret = dct_encrypt(data_to_encrypt, variable_value_length + sizeof(size_t), encrypted_data);
+        // encrypt the variable value
+        ret = dct_encrypt(variable_value, variable_value_length, encrypted_data);
 
         // store in dct
         if (region == DCT_REGION_1)
-            ret = dct_set_variable_new(dct_handle, variable_name, encrypted_data, variable_value_length + sizeof(size_t));
+            ret = dct_set_variable_new(dct_handle, variable_name, encrypted_data, variable_value_length);
         else if (region == DCT_REGION_2)
-            ret = dct_set_variable_new2(dct_handle, variable_name, encrypted_data, variable_value_length + sizeof(size_t));
+            ret = dct_set_variable_new2(dct_handle, variable_name, encrypted_data, variable_value_length);
 
         return ret;
     }
@@ -90,29 +85,19 @@
     int32_t dct_get_encrypted_variable(dct_handle_t *dct_handle, char *variable_name, char *buffer, uint16_t *buffer_size, uint8_t region)
     {
         int32_t ret;
-        uint8_t data_to_decrypt[404] = {0};
-        uint8_t decrypted_data[404] = {0};
-        uint16_t len = *buffer_size + 4;
-        size_t val_len;
+        uint8_t encrypted_data[404] = {0};
 
         // get the encrypted value from dct
         if (region == DCT_REGION_1)
-            ret = dct_get_variable_new(dct_handle, variable_name, data_to_decrypt, &len);
+            ret = dct_get_variable_new(dct_handle, variable_name, encrypted_data, buffer_size);
         else if (region == DCT_REGION_2)
-            ret = dct_get_variable_new2(dct_handle, variable_name, data_to_decrypt, &len);
-
-        // store the actual length back to buffer_size
-        *buffer_size = len - 4;
+            ret = dct_get_variable_new2(dct_handle, variable_name, encrypted_data, buffer_size);
 
         if (ret != DCT_SUCCESS)
             return ret;
 
         // decrypt the encrypted value
-        ret = dct_decrypt(data_to_decrypt, len, decrypted_data);
-        
-        // post decryption processing
-        memcpy(&val_len, decrypted_data, sizeof(val_len));
-        memcpy(buffer, decrypted_data + sizeof(val_len), val_len);
+        ret = dct_decrypt(encrypted_data, *buffer_size, buffer);
         
         return ret;
     }
@@ -452,14 +437,6 @@ s32 getPref_bool_new(const char *domain, const char *key, u8 *val)
     s32 ret = -1;
     uint16_t len = sizeof(u8);
     char ns[15];
-
-#if CONFIG_ENABLE_DCT_ENCRYPTION
-    uint8_t data_to_decrypt[404] = {0};
-    uint8_t decrypted_data[404] = {0};
-
-    // we stored the length in the first 4 bytes during setPref_new
-    len += 4;
-#endif
 
     // Loop over DCT1 modules
     for (size_t i=0; i<MODULE_NUM; i++)
