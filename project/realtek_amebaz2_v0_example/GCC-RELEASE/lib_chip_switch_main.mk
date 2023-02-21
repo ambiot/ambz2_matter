@@ -181,6 +181,8 @@ INCLUDES += -I$(CODEGENDIR)
 # -------------------------------------------------------------------
 
 SRC_C =
+SRC_C += $(CHIPDIR)/examples/platform/ameba/route_hook/ameba_route_hook.c
+SRC_C += $(CHIPDIR)/examples/platform/ameba/route_hook/ameba_route_table.c
 
 SRC_CPP = 
 
@@ -190,7 +192,6 @@ SRC_CPP += $(CHIPDIR)/src/app/server/OnboardingCodesUtil.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/Server.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/CommissioningWindowManager.cpp
 
-SRC_CPP += $(CHIPDIR)/src/app/util/af-event.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-size-util.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-storage.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-table.cpp
