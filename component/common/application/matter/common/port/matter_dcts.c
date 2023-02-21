@@ -240,7 +240,6 @@ exit:
 
 s32 deleteKey(const char *domain, const char *key)
 {
-    printf("%s\n", __FUNCTION__);
     dct_handle_t handle;
     s32 ret = -1;
     char ns[15];
@@ -283,7 +282,6 @@ exit:
 
 bool checkExist(const char *domain, const char *key)
 {
-    printf("%s\n", __FUNCTION__);
     dct_handle_t handle;
     s32 ret = -1;
     uint16_t len = 0;
