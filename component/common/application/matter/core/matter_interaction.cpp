@@ -2,10 +2,10 @@
 #include "matter_events.h"
 #include "matter_interaction.h"
 
-#include <app-common/zap-generated/attribute-id.h>
 #include <app-common/zap-generated/attribute-type.h>
 #include <app-common/zap-generated/attributes/Accessors.h>
-#include <app-common/zap-generated/cluster-id.h>
+#include <app-common/zap-generated/ids/Attributes.h>
+#include <app-common/zap-generated/ids/Clusters.h>
 
 using namespace ::chip;
 using namespace ::chip::app;
@@ -150,17 +150,17 @@ void MatterPostAttributeChangeCallback(const chip::app::ConcreteAttributePath & 
 
     switch (path.mClusterId)
     {
-    case ZCL_ON_OFF_CLUSTER_ID:
+    case Clusters::OnOff::Id:
         uplink_event.mHandler = matter_driver_attribute_update;
         PostUplinkEvent(&uplink_event);
         break;
 
-    case ZCL_LEVEL_CONTROL_CLUSTER_ID:
+    case Clusters::LevelControl::Id:
         uplink_event.mHandler = matter_driver_attribute_update;
         PostUplinkEvent(&uplink_event);
         break;
 
-    case ZCL_IDENTIFY_CLUSTER_ID:
+    case Clusters::Identify::Id:
         uplink_event.mHandler = matter_driver_attribute_update;
         PostUplinkEvent(&uplink_event);
         break;
