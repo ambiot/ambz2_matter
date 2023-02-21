@@ -180,6 +180,8 @@ INCLUDES += -I$(CODEGENDIR)
 # -------------------------------------------------------------------
 
 SRC_C =
+SRC_C += $(CHIPDIR)/examples/platform/ameba/route_hook/ameba_route_hook.c
+SRC_C += $(CHIPDIR)/examples/platform/ameba/route_hook/ameba_route_table.c
 
 SRC_CPP = 
 
