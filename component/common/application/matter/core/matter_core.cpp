@@ -5,9 +5,9 @@
 #include "matter_ota.h"
 #include <DeviceInfoProviderImpl.h>
 
-#include <app-common/zap-generated/attribute-id.h>
 #include <app-common/zap-generated/attributes/Accessors.h>
-#include <app-common/zap-generated/command-id.h>
+#include <app-common/zap-generated/ids/Attributes.h>
+#include <app-common/zap-generated/ids/Commands.h>
 #include <app-common/zap-generated/ids/Clusters.h>
 #include <app/util/af-types.h>
 #include <app/util/attribute-storage.h>

@@ -3,10 +3,10 @@
 #include "led_driver.h"
 #include "gpio_irq_api.h"
 
-#include <app-common/zap-generated/attribute-id.h>
 #include <app-common/zap-generated/attribute-type.h>
 #include <app-common/zap-generated/attributes/Accessors.h>
-#include <app-common/zap-generated/cluster-id.h>
+#include <app-common/zap-generated/ids/Attributes.h>
+#include <app-common/zap-generated/ids/Clusters.h>
 
 using namespace ::chip::app;
 
@@ -125,21 +125,21 @@ void matter_driver_attribute_update(AppEvent *aEvent)
 
     switch(path.mClusterId)
     {
-    case ZCL_ON_OFF_CLUSTER_ID:
-        if(path.mAttributeId == ZCL_ON_OFF_ATTRIBUTE_ID)
+    case Clusters::OnOff::Id:
+        if(path.mAttributeId == Clusters::OnOff::Attributes::OnOff::Id)
         {
             // led.Set(aEvent->value);
             matter_driver_led_set_onoff(aEvent->value);
         }
         break;
-    case ZCL_LEVEL_CONTROL_CLUSTER_ID:
-        if(path.mAttributeId == ZCL_CURRENT_LEVEL_ATTRIBUTE_ID)
+    case Clusters::LevelControl::Id:
+        if(path.mAttributeId == Clusters::LevelControl::Attributes::CurrentLevel::Id)
         {
             // led.SetBrightness(aEvent->value);
             matter_driver_led_set_brightness(aEvent->value);
         }
         break;
-    case ZCL_IDENTIFY_CLUSTER_ID:
+    case Clusters::Identify::Id:
         break;
     }
 
