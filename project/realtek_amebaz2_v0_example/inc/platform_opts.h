@@ -448,12 +448,13 @@
 #undef DCT_BEGIN_ADDR
 #undef DCT_BEGIN_ADDR2
 #undef MATTER_FACTORY_DATA
-#define FAST_RECONNECT_DATA		(0x400000 - 0x1000)  // 0x3FF000
+#define MATTER_FACTORY_DATA		(0x400000 - 0x1000)  // 0x3FF000
 #define BT_FTL_PHY_ADDR0		(0x400000 - 0x2000)  // 0x3FE000
 #define BT_FTL_PHY_ADDR1		(0x400000 - 0x3000)  // 0x3FD000
 #define BT_FTL_BKUP_ADDR		(0x400000 - 0x4000)  // 0x3FC000
 #define UART_SETTING_SECTOR		(0x400000 - 0x5000)  // 0x3FB000
-#define DCT_BEGIN_ADDR			(0x400000 - 0x13000) // 0x3ED000 ~ 0x3FB000 : 56K 
-#define DCT_BEGIN_ADDR2 		(0x400000 - 0x1A000) // 0x3E6000 ~ 0x3ED000 : 24K
-#define MATTER_FACTORY_DATA     (0x3FF000)           // last 4KB of external flash - write protection is supported in this region
+#define DCT_BEGIN_ADDR			(0x400000 - 0x1F000) // 0x3EE000 ~ 0x3FB000 : 52K // with backup, use 0x3E1000 ~ 0x3FB000 : 104K
+#define DCT_BEGIN_ADDR2 		(0x400000 - 0x2B000) // 0x3E8000 ~ 0x3EE000 : 24K // with backup 0x3D5000 ~ 0x3E1000 : 48K
+#define FAST_RECONNECT_DATA		(0x400000 - 0x2C000) // 1KB
+                                                     // FW2 end = 0x364000
 #endif /* defined(CONFIG_EXAMPLE_MATTER) && CONFIG_EXAMPLE_MATTER */

@@ -29,7 +29,7 @@
 #define VARIABLE_NAME_SIZE2     32
 #define VARIABLE_VALUE_SIZE2    400 + 4
 
-#define ENABLE_BACKUP           0
+#define ENABLE_BACKUP           1
 #define ENABLE_WEAR_LEVELING    0
 
 s32 initPref(void)
