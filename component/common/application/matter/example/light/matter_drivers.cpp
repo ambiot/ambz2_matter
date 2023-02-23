@@ -16,11 +16,39 @@ using namespace ::chip::app;
 MatterLED led;
 gpio_irq_t gpio_btn;
 
+void matter_driver_event_handler(AppEvent * event)
+{
+    chip::DeviceLayer::PlatformMgr().LockChipStack();
+    switch (event->Type)
+    {
+        case AppEvent::kEventType_Downlink_OnOff:
+            matter_driver_led_toggle();
+            ChipLogProgress(DeviceLayer, "Writing to OnOff cluster");
+            EmberAfStatus status = Clusters::OnOff::Attributes::OnOff::Set(1, matter_driver_led_get_onoff());
+
+            if (status != EMBER_ZCL_STATUS_SUCCESS)
+            {
+                ChipLogError(DeviceLayer, "Updating on/off cluster failed: %x", status);
+            }
+
+            ChipLogProgress(DeviceLayer, "Writing to Current Level cluster");
+            status = Clusters::LevelControl::Attributes::CurrentLevel::Set(1, matter_driver_led_get_level());
+
+            if (status != EMBER_ZCL_STATUS_SUCCESS)
+            {
+                ChipLogError(DeviceLayer, "Updating level cluster failed: %x", status);
+            }
+            break;
+    }
+    chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+}
+
 void matter_driver_button_callback(uint32_t id, gpio_irq_event event)
 {
     AppEvent downlink_event;
     downlink_event.Type     = AppEvent::kEventType_Downlink_OnOff;
-    downlink_event.mHandler = matter_interaction_onoff_handler;
+    downlink_event.value._u8 = (uint8_t) !matter_driver_led_get_onoff(); // toggle
+    downlink_event.mHandler = matter_driver_event_handler;
     PostDownlinkEvent(&downlink_event);
 }
 
@@ -43,6 +71,7 @@ CHIP_ERROR matter_driver_led_init()
 
 CHIP_ERROR matter_driver_led_set_onoff(uint8_t value)
 {
+    printf("value: %d\n\n", value);
     led.Set(value);
     return CHIP_NO_ERROR;
 }
@@ -115,11 +144,9 @@ CHIP_ERROR matter_driver_led_set_startup_value()
 
 void matter_driver_attribute_update(AppEvent *aEvent)
 {
-    // get endpoint, cluster, attribute, val
-    // according to above, call the LED api
     chip::app::ConcreteAttributePath path = aEvent->path;
 
-    // TODO: this example only considers endpoint1
+    // this example only considers endpoint1
     VerifyOrExit(aEvent->path.mEndpointId == 1,
                  ChipLogError(DeviceLayer, "Unexpected EndPoint ID: `0x%02x'", path.mEndpointId));
 
@@ -129,14 +156,14 @@ void matter_driver_attribute_update(AppEvent *aEvent)
         if(path.mAttributeId == Clusters::OnOff::Attributes::OnOff::Id)
         {
             // led.Set(aEvent->value);
-            matter_driver_led_set_onoff(aEvent->value);
+            matter_driver_led_set_onoff(aEvent->value._u8);
         }
         break;
     case Clusters::LevelControl::Id:
         if(path.mAttributeId == Clusters::LevelControl::Attributes::CurrentLevel::Id)
         {
             // led.SetBrightness(aEvent->value);
-            matter_driver_led_set_brightness(aEvent->value);
+            matter_driver_led_set_brightness(aEvent->value._u8);
         }
         break;
     case Clusters::Identify::Id:
