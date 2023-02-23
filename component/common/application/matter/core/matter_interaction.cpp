@@ -164,6 +164,6 @@ void MatterPostAttributeChangeCallback(const chip::app::ConcreteAttributePath & 
         memcpy(&uplink_event.value._u64, value, size);
     }
 
-    uplink_event.mHandler = matter_driver_attribute_update;
+    uplink_event.mHandler = matter_driver_uplink_update_handler;
     PostUplinkEvent(&uplink_event);
 }

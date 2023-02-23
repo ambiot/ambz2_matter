@@ -81,6 +81,10 @@ Make sure ambz2_matter and connectedhomeip are on the same directory level
 
     make is_matter
     
+## Clean Ameba Matter libraries
+
+    make clean_matter_libs
+
 ## Clean Ameba Matter application
 
     make clean_matter

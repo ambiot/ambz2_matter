@@ -1,39 +1,27 @@
-# Lighting-app Example
-This example is an implementation of the *Dimmable Light* device type. You will need an LED and a button.
-
-| Peripheral | Pin |
-| ----------- | ----------- |
-| LED | PA_23 |
-| Button | PA_17 |
+# Thermostat-app Example
+This example is an implementation of the *Thermostat* device type. Peripherals consists of a thermostat and the thermostat user interface itself. Note that these driver codes are meant to be just the skeleton, you should replace them and implement your own.
 
 ## How it works
-The LED can be controlled in two ways, by the Matter controller, or by a button.
-Thus, 2 streams of communication (FreeRTOS Queues) are needed to control and update the status of the LED effectively:
-  1. Uplink - Matter controller changes the On/Off attribute of the LED -> callback triggers and invokes the LED driver to toggle the LED
-  2. Downlink - Button press toggles the LED -> update the new Matter On/Off attribute of the LED
+We support bidirectional exchanges of attrubute updates (see `light` example) but this example will only make use of uplink updates.
+Feel free to create downlink updates by posting events to the downlink queue (again, see `light` example).
 
 ### Peripheral Initialization
-Both the initializations of the LED and the button are handled in `matter_drivers.cpp`.
-The initialization of the button sets up an IRQ that is triggered whenever the button is pressed.
-
-### Button Press
-Whenever the button is pressed, the interrupt handler will be invoked.
-The interrupt handler will post an event to the downlink queue, which will be received by the interaction handler.
-The interaction handler will be responsible for updating the On/Off attribute of the LED.
+Both the initializations of the thermostat and the thermostat UI are handled in `matter_drivers.cpp`.
 
 ### Matter Attribute Change Callback
-Whenever the Matter controller changes the On/Off attribute of the LED, 2 types of callbacks will be invoked:
-  1. MatterPreAttributeChangeCallback - Toggle the LED before updating the On/Off attribute (TBD)
-  2. MatterPostAttributeChangeCallback - Toggle the LED after updating the On/Off attribute
+Whenever the Matter controller changes the attribute of the Thermostat cluster, 2 types of callbacks will be invoked:
+  1. MatterPreAttributeChangeCallback - Do action before updating the On/Off attribute (TBD)
+  2. MatterPostAttributeChangeCallback - Do action after updating the On/Off attribute
 
 These callbacks are defined in `core/matter_interaction.cpp`.
-These callbacks will post an event to the uplink queue, which will be received by the interaction handler.
-The interaction handler will be responsible for toggling the LED.
+These callbacks will post an event to the uplink queue, which will be handled by `matter_driver_uplink_update_handler` in `matter_drivers.cpp`.
+The driver codes will be called to carry out your actions depending on the Cluster and Attribute ID received.
+You may add clusters and attributes handling in `matter_driver_uplink_update_handler` if they are not present. 
 
 ## How to build
 
-## Configurations
-Enable `CONFIG_EXAMPLE_MATTER` and `CONFIG_EXAMPLE_MATTER_LIGHT` in `platform_opts.h`.
+### Configurations
+Enable `CONFIG_EXAMPLE_MATTER` and `CONFIG_EXAMPLE_MATTER_THERMOSTAT` in `platform_opts.h`.
 Ensure that `CONFIG_EXAMPLE_MATTER_CHIPTEST` is disabled.
 
 ### Setup the Build Environment
@@ -41,25 +29,10 @@ Ensure that `CONFIG_EXAMPLE_MATTER_CHIPTEST` is disabled.
     cd connectedhomeip
     source scripts/activate.sh
 
-### ZAP Installation
-- ZAP is automatically downloaded into `tools/matter/codegen_helpers/zap` during make
-- If you need to export the path to `ZAP_INSTALL_PATH` outside of make (for eg, launching ZAP GUI, building `chip-tool`, etc), you can add below lines to your `~/.bashrc` file for convenience
-
-```bash
-# Matter - export zap path
-export ZAP_INSTALL_PATH="<zap-path>"
-```
-- You may also choose to append the zap folder path to `PATH`
-
-```bash
-# Matter - export zap path
-export PATH="<zap-path>":$PATH
-```
-  
 ### Build Matter Libraries
 
-    cd ambz2_matter/component/common/application/matter/example/light
-    make light
+    cd ambz2_matter/component/common/application/matter/example/thermostat
+    make thermostat
     
 ### Build the Final Firmware
 
@@ -68,3 +41,8 @@ export PATH="<zap-path>":$PATH
     
 ### Flash the Image
 Refer to this [guide](https://github.com/ambiot/ambz2_matter/blob/main/tools/AmebaZ2/Image_Tool_Linux/README.md) to flash the image with the Linux Image Tool
+
+### Clean Matter Libraries
+
+    cd ambz2_matter/component/common/application/matter/example/thermostat
+    make clean

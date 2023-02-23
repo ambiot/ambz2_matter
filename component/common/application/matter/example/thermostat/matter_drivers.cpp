@@ -61,7 +61,7 @@ exit:
     return err;
 }
 
-void matter_driver_attribute_update(AppEvent *aEvent)
+void matter_driver_uplink_update_handler(AppEvent *aEvent)
 {
     chip::app::ConcreteAttributePath path = aEvent->path;
 
