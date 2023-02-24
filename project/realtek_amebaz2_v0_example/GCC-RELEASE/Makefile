@@ -113,8 +113,8 @@ is_matter: toolchain
 	cp partition_matter.json partition.json
 	@$(MAKE) -f application.is.matter.mk
 	
-.PHONY: clean_matter
-clean_matter:
+.PHONY: clean_matter_libs
+clean_matter_libs:
 	@$(MAKE) -f lib_chip_main.mk clean
 	@$(MAKE) -f lib_chip.mk clean
 	@$(MAKE) -f lib_chip_light_main.mk clean
@@ -125,6 +125,9 @@ clean_matter:
 	@$(MAKE) -f lib_chip_otar_core.mk clean
 	@$(MAKE) -f lib_chip_chef_main.mk clean
 	@$(MAKE) -f lib_chip_chef_core.mk clean
+
+.PHONY: clean_matter
+clean_matter:
 	@$(MAKE) -f application.is.matter.mk clean
 
 debug: toolchain

@@ -16,6 +16,12 @@ struct AppEvent
 
     uint16_t Type;
     chip::app::ConcreteAttributePath path;
-    uint8_t value;
+    union
+    {
+       uint8_t _u8;
+       uint16_t _u16;
+       uint32_t _u32;
+       uint64_t _u64;
+    } value;
     EventHandler mHandler;
 };

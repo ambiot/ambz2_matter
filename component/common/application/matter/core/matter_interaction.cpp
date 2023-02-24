@@ -145,72 +145,25 @@ void MatterPostAttributeChangeCallback(const chip::app::ConcreteAttributePath & 
 {
     AppEvent uplink_event;
     uplink_event.Type = AppEvent::kEventType_Uplink;
-    uplink_event.value = *value;
     uplink_event.path = path;
 
-    switch (path.mClusterId)
+    if (size == 1)
     {
-    case Clusters::OnOff::Id:
-        uplink_event.mHandler = matter_driver_attribute_update;
-        PostUplinkEvent(&uplink_event);
-        break;
-
-    case Clusters::LevelControl::Id:
-        uplink_event.mHandler = matter_driver_attribute_update;
-        PostUplinkEvent(&uplink_event);
-        break;
-
-    case Clusters::Identify::Id:
-        uplink_event.mHandler = matter_driver_attribute_update;
-        PostUplinkEvent(&uplink_event);
-        break;
-
-    default:
-        uplink_event.mHandler = NULL;
-        break;
+        uplink_event.value._u8 = *value;
     }
-}
-
-void matter_interaction_update_cluster(AppEvent * event)
-{
-    switch (event->Type)
+    else if (size == 2)
     {
-        case AppEvent::kEventType_Downlink_OnOff:
-            ChipLogProgress(DeviceLayer, "Writing to OnOff cluster");
-            // write the new on/off value
-            // TODO: we only support endpoint1
-            EmberAfStatus status = Clusters::OnOff::Attributes::OnOff::Set(1, matter_driver_led_get_onoff());
-
-            if (status != EMBER_ZCL_STATUS_SUCCESS)
-            {
-                ChipLogError(DeviceLayer, "Updating on/off cluster failed: %x", status);
-            }
-
-            ChipLogError(DeviceLayer, "Writing to Current Level cluster");
-            // write the new currentlevel value
-            // TODO: we only support endpoint1
-            status = Clusters::LevelControl::Attributes::CurrentLevel::Set(1, matter_driver_led_get_level());
-
-            if (status != EMBER_ZCL_STATUS_SUCCESS)
-            {
-                ChipLogError(DeviceLayer, "Updating level cluster failed: %x", status);
-            }
-            break;
-
-    // TODO: Add more attribute changes
+        memcpy(&uplink_event.value._u16, value, size);
     }
-}
-
-void matter_interaction_onoff_handler(AppEvent * aEvent)
-{
-    if (aEvent->Type != AppEvent::kEventType_Downlink_OnOff)
+    else if (size == 3)
     {
-        ChipLogError(DeviceLayer, "Wrong downlink event handler, should not happen!");
-        return;
+        memcpy(&uplink_event.value._u32, value, size);
+    }
+    else // TODO: check max attribute length
+    {
+        memcpy(&uplink_event.value._u64, value, size);
     }
 
-    matter_driver_led_toggle();
-    chip::DeviceLayer::PlatformMgr().LockChipStack();
-    matter_interaction_update_cluster(aEvent);
-    chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+    uplink_event.mHandler = matter_driver_uplink_update_handler;
+    PostUplinkEvent(&uplink_event);
 }

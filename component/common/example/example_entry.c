@@ -847,6 +847,9 @@ example_hilink();
 #elif defined(CONFIG_EXAMPLE_MATTER_LIGHT) && (CONFIG_EXAMPLE_MATTER_LIGHT == 1)
     extern void example_matter_light();
     example_matter_light();
+#elif defined(CONFIG_EXAMPLE_MATTER_THERMOSTAT) && (CONFIG_EXAMPLE_MATTER_THERMOSTAT == 1)
+    extern void example_matter_thermostat();
+    example_matter_thermostat();
 #endif
 #endif
 

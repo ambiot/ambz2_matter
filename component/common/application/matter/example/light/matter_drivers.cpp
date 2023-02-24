@@ -20,7 +20,8 @@ void matter_driver_button_callback(uint32_t id, gpio_irq_event event)
 {
     AppEvent downlink_event;
     downlink_event.Type     = AppEvent::kEventType_Downlink_OnOff;
-    downlink_event.mHandler = matter_interaction_onoff_handler;
+    downlink_event.value._u8 = (uint8_t) !led.IsTurnedOn(); // toggle
+    downlink_event.mHandler = matter_driver_downlink_update_handler;
     PostDownlinkEvent(&downlink_event);
 }
 
@@ -39,34 +40,6 @@ CHIP_ERROR matter_driver_led_init()
 {
     led.Init(PWM_LED);
     return CHIP_NO_ERROR;
-}
-
-CHIP_ERROR matter_driver_led_set_onoff(uint8_t value)
-{
-    led.Set(value);
-    return CHIP_NO_ERROR;
-}
-
-CHIP_ERROR matter_driver_led_set_brightness(uint8_t value)
-{
-    led.SetBrightness(value);
-    return CHIP_NO_ERROR;
-}
-
-CHIP_ERROR matter_driver_led_toggle()
-{
-    led.Toggle();
-    return CHIP_NO_ERROR;
-}
-
-bool matter_driver_led_get_onoff()
-{
-    return led.IsTurnedOn();
-}
-
-uint8_t matter_driver_led_get_level()
-{
-    return led.GetLevel();
 }
 
 CHIP_ERROR matter_driver_led_set_startup_value()
@@ -95,15 +68,14 @@ CHIP_ERROR matter_driver_led_set_startup_value()
 
     // Set LED to onoff value
     // AppLED.Set(LEDOnOffValue);
-    err = matter_driver_led_set_onoff(LEDOnOffValue);
+    led.Set(LEDOnOffValue);
     if (err != CHIP_NO_ERROR)
     {
         ChipLogError(DeviceLayer, "Failed to set startup onoff value");
         return CHIP_ERROR_INTERNAL;
     }
     // Set LED to currentlevel value
-    // AppLED.SetBrightness(LEDCurrentLevelValue.Value());
-    err = matter_driver_led_set_brightness(LEDCurrentLevelValue.Value());
+    led.SetBrightness(LEDCurrentLevelValue.Value());
     if (err != CHIP_NO_ERROR)
     {
         ChipLogError(DeviceLayer, "Failed to set startup level value");
@@ -113,13 +85,11 @@ CHIP_ERROR matter_driver_led_set_startup_value()
     return err;
 }
 
-void matter_driver_attribute_update(AppEvent *aEvent)
+void matter_driver_uplink_update_handler(AppEvent *aEvent)
 {
-    // get endpoint, cluster, attribute, val
-    // according to above, call the LED api
     chip::app::ConcreteAttributePath path = aEvent->path;
 
-    // TODO: this example only considers endpoint1
+    // this example only considers endpoint1
     VerifyOrExit(aEvent->path.mEndpointId == 1,
                  ChipLogError(DeviceLayer, "Unexpected EndPoint ID: `0x%02x'", path.mEndpointId));
 
@@ -128,15 +98,13 @@ void matter_driver_attribute_update(AppEvent *aEvent)
     case Clusters::OnOff::Id:
         if(path.mAttributeId == Clusters::OnOff::Attributes::OnOff::Id)
         {
-            // led.Set(aEvent->value);
-            matter_driver_led_set_onoff(aEvent->value);
+            led.Set(aEvent->value._u8);
         }
         break;
     case Clusters::LevelControl::Id:
         if(path.mAttributeId == Clusters::LevelControl::Attributes::CurrentLevel::Id)
         {
-            // led.SetBrightness(aEvent->value);
-            matter_driver_led_set_brightness(aEvent->value);
+            led.SetBrightness(aEvent->value._u8);
         }
         break;
     case Clusters::Identify::Id:
@@ -145,4 +113,31 @@ void matter_driver_attribute_update(AppEvent *aEvent)
 
 exit:
     return;
+}
+
+void matter_driver_downlink_update_handler(AppEvent * event)
+{
+    chip::DeviceLayer::PlatformMgr().LockChipStack();
+    switch (event->Type)
+    {
+        case AppEvent::kEventType_Downlink_OnOff:
+            led.Toggle();
+            ChipLogProgress(DeviceLayer, "Writing to OnOff cluster");
+            EmberAfStatus status = Clusters::OnOff::Attributes::OnOff::Set(1, led.IsTurnedOn());
+
+            if (status != EMBER_ZCL_STATUS_SUCCESS)
+            {
+                ChipLogError(DeviceLayer, "Updating on/off cluster failed: %x", status);
+            }
+
+            ChipLogProgress(DeviceLayer, "Writing to LevelControl cluster");
+            status = Clusters::LevelControl::Attributes::CurrentLevel::Set(1, led.GetLevel());
+
+            if (status != EMBER_ZCL_STATUS_SUCCESS)
+            {
+                ChipLogError(DeviceLayer, "Updating level cluster failed: %x", status);
+            }
+            break;
+    }
+    chip::DeviceLayer::PlatformMgr().UnlockChipStack();
 }

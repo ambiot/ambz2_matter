@@ -11,13 +11,13 @@
 #include "matter_drivers.h"
 #include "matter_interaction.h"
 
-static void example_matter_light_task(void *pvParameters)
+static void example_matter_thermostat_task(void *pvParameters)
 {
     while(!(wifi_is_up(RTW_STA_INTERFACE) || wifi_is_up(RTW_AP_INTERFACE))) {
         vTaskDelay(500);
     }
 
-    ChipLogProgress(DeviceLayer, "Lighting example!\n");
+    ChipLogProgress(DeviceLayer, "Thermostat example!\n");
 
     CHIP_ERROR err = CHIP_NO_ERROR;
 
@@ -27,17 +27,17 @@ static void example_matter_light_task(void *pvParameters)
     if (err != CHIP_NO_ERROR)
         ChipLogProgress(DeviceLayer, "matter_core_start failed!\n");
 
-    err = matter_driver_led_init();
+    err = matter_driver_thermostat_init();
     if (err != CHIP_NO_ERROR)
-        ChipLogProgress(DeviceLayer, "matter_driver_led_init failed!\n");
+        ChipLogProgress(DeviceLayer, "matter_driver_thermostat_init failed!\n");
 
-    err = matter_driver_led_set_startup_value();
+    err = matter_driver_thermostat_ui_init();
     if (err != CHIP_NO_ERROR)
-        ChipLogProgress(DeviceLayer, "matter_driver_led_set_startup_value failed!\n");
+        ChipLogProgress(DeviceLayer, "matter_driver_thermostat_ui_init failed!\n");
 
-    err = matter_driver_button_init();
+    err = matter_driver_thermostat_ui_set_startup_value();
     if (err != CHIP_NO_ERROR)
-        ChipLogProgress(DeviceLayer, "matter_driver_button_init failed!\n");
+        ChipLogProgress(DeviceLayer, "matter_driver_thermostat_ui_set_startup_value failed!\n");
 
     err = matter_interaction_start_downlink();
     if (err != CHIP_NO_ERROR)
@@ -50,8 +50,8 @@ static void example_matter_light_task(void *pvParameters)
     while(1);
 }
 
-extern "C" void example_matter_light(void)
+extern "C" void example_matter_thermostat(void)
 {
-    if(xTaskCreate(example_matter_light_task, ((const char*)"example_matter_task_thread"), 2048, NULL, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
-        ChipLogProgress(DeviceLayer, "\n\r%s xTaskCreate(example_matter_light) failed", __FUNCTION__);
+    if(xTaskCreate(example_matter_thermostat_task, ((const char*)"example_matter_task_thread"), 2048, NULL, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
+        ChipLogProgress(DeviceLayer, "\n\r%s xTaskCreate(example_matter_thermostat) failed", __FUNCTION__);
 }
