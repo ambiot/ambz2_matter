@@ -221,20 +221,47 @@ def main():
     # parser.add_argument('-e', '--encrypt', action='store_true', required=False,
     #                     help='Encrypt the factory parititon NVS binary')
 
+    # additional arguments for factorydata encryption
+    parser.add_argument('--factorydata-key', type=str, required=False, help='32-bytes key to encrypt factorydata')
+    parser.add_argument('--factorydata-iv', type=str, required=False, help='16-bytes iv to encrypt factorydata')
+
     args = parser.parse_args()
     validate_args(args)
     spake2p_params = gen_spake2p_params(args)
     populate_factory_data(args, spake2p_params)
 
 
-    # write pbuf to bin file
-    # we want to prepend the data length (2bytes) to the bin file
-    data_to_write = FACTORY_DATA.SerializeToString()
-    data_len = len(data_to_write)
-    f = open("ameba_factory.bin", "wb")
-    f.write(data_len.to_bytes(2, 'little'))
+    # write factorydata pbuf to a temp file
+    f = open("ameba_data.bin", "wb")
     f.write(FACTORY_DATA.SerializeToString())
     f.close()
+
+    # if key and/or iv is passed in, encrypt the factorydata
+    if args.factorydata_key:
+        if args.factorydata_iv:
+            os.system('openssl enc -aes-256-ctr -e -in ameba_data.bin -out ameba_data.bin.enc -K {} -iv {}'.format(args.factorydata_key, args.factorydata_iv))
+        else:
+            os.system('openssl enc -aes-256-ctr -e -in ameba_data.bin -out ameba_data.bin.enc -K {}'.format(args.factorydata_key))
+
+        f1 = open("ameba_data.bin.enc", "rb")
+    else:
+        f1 = open("ameba_data.bin", "rb")
+
+    # write the factorydata pbuf (with or without encryption) from temp file to ameba_factory.bin file
+    # we want to prepend the data length (2bytes) to the ameba_factory.bin file in big endian format, the data length is not encrypted
+    data_to_write = FACTORY_DATA.SerializeToString()
+    data_len = len(data_to_write)
+    f2 = open("ameba_factory.bin", "wb")
+    f2.write(data_len.to_bytes(2, 'little') + f1.read())
+    f2.close()
+    f1.close()
+
+    # cleanup
+    if os.path.exists('ameba_data.bin'):
+        os.remove('ameba_data.bin')
+    if os.path.exists('ameba_data.bin.enc'):
+        os.remove('ameba_data.bin.enc')
+
     print(FACTORY_DATA.ListFields())
     print("Total factorydata size: {}".format(len(FACTORY_DATA.SerializeToString())))
 
