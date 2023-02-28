@@ -47,41 +47,28 @@ CHIP_ERROR matter_driver_led_set_startup_value()
     CHIP_ERROR err = CHIP_NO_ERROR;
     bool LEDOnOffValue = 0;
     DataModel::Nullable<uint8_t> LEDCurrentLevelValue;
+    EmberAfStatus getonoffstatus;
+    EmberAfStatus getcurrentlevelstatus;
 
     chip::DeviceLayer::PlatformMgr().LockChipStack();
-    // TODO: this example only considers endpoint1
-    EmberAfStatus onoffstatus = Clusters::OnOff::Attributes::OnOff::Get(1, &LEDOnOffValue);
-    if (onoffstatus != EMBER_ZCL_STATUS_SUCCESS)
-    {
-        ChipLogError(DeviceLayer, "Failed to read onoff value: %x", onoffstatus);
-        return CHIP_ERROR_INTERNAL;
-    }
+    getonoffstatus = Clusters::OnOff::Attributes::OnOff::Get(1, &LEDOnOffValue);
+    VerifyOrExit(getonoffstatus == EMBER_ZCL_STATUS_SUCCESS, err = CHIP_ERROR_INTERNAL);
 
-    // TODO: this example only considers endpoint1
-    EmberAfStatus currentlevelstatus = Clusters::LevelControl::Attributes::CurrentLevel::Get(1, LEDCurrentLevelValue);
-    if (currentlevelstatus != EMBER_ZCL_STATUS_SUCCESS)
-    {
-        ChipLogError(DeviceLayer, "Failed to read currentlevel value: %x", currentlevelstatus);
-        return CHIP_ERROR_INTERNAL;
-    }
+    getcurrentlevelstatus = Clusters::LevelControl::Attributes::CurrentLevel::Get(1, LEDCurrentLevelValue);
+    VerifyOrExit(getcurrentlevelstatus == EMBER_ZCL_STATUS_SUCCESS, err = CHIP_ERROR_INTERNAL);
     chip::DeviceLayer::PlatformMgr().UnlockChipStack();
 
     // Set LED to onoff value
-    // AppLED.Set(LEDOnOffValue);
     led.Set(LEDOnOffValue);
-    if (err != CHIP_NO_ERROR)
-    {
-        ChipLogError(DeviceLayer, "Failed to set startup onoff value");
-        return CHIP_ERROR_INTERNAL;
-    }
+
     // Set LED to currentlevel value
     led.SetBrightness(LEDCurrentLevelValue.Value());
-    if (err != CHIP_NO_ERROR)
-    {
-        ChipLogError(DeviceLayer, "Failed to set startup level value");
-        return CHIP_ERROR_INTERNAL;
-    }
 
+exit:
+    if (err == CHIP_ERROR_INTERNAL)
+    {
+        chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+    }
     return err;
 }
 
