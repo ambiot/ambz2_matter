@@ -58,6 +58,10 @@ CHIP_ERROR matter_driver_thermostat_ui_set_startup_value()
     ui.UpdateDisplay();
 
 exit:
+    if (err == CHIP_ERROR_INTERNAL)
+    {
+        chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+    }
     return err;
 }
 
