@@ -25,13 +25,13 @@
 #define DCT_BEGIN_ADDR_MATTER   DCT_BEGIN_ADDR    /*!< DCT begin address of flash, ex: 0x100000 = 1M */
 #define MODULE_NUM              13                /*!< max number of module */
 #define VARIABLE_NAME_SIZE      32                /*!< max size of the variable name */
-#define VARIABLE_VALUE_SIZE     64                /*!< max size of the variable value */
+#define VARIABLE_VALUE_SIZE     64 + 4            /*!< max size of the variable value, +4 is required, else the max variable size we can store is 60 */ 
                                                   /*!< max number of variable in module = floor (4024 / (32 + 64)) = 41 */
 
 #define DCT_BEGIN_ADDR_MATTER2  DCT_BEGIN_ADDR2
 #define MODULE_NUM2             6 
 #define VARIABLE_NAME_SIZE2     32
-#define VARIABLE_VALUE_SIZE2    400
+#define VARIABLE_VALUE_SIZE2    400 + 4           /* +4 is required, else the max variable size we can store is 396 */
                                                   /*!< max number of variable in module = floor (4024 / (32 + 400)) = 9 */
 
 #define ENABLE_BACKUP           0
