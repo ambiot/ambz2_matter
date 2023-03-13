@@ -1161,23 +1161,34 @@ nd6_tmr(void)
   if (!nd6_tmr_rs_reduction) {
     nd6_tmr_rs_reduction = (ND6_RTR_SOLICITATION_INTERVAL / ND6_TMR_INTERVAL) - 1;
     NETIF_FOREACH(netif) {
+      uint8_t *ipv6_global = LwIP_GetIPv6_global(netif); /* Added by Realtek */
       if ((netif->rs_count > 0) && netif_is_up(netif) &&
           netif_is_link_up(netif) &&
           !ip6_addr_isinvalid(netif_ip6_addr_state(netif, 0)) &&
           !ip6_addr_isduplicated(netif_ip6_addr_state(netif, 0))) {
         if (nd6_send_rs(netif) == ERR_OK) {
           netif->rs_count--;
+		  /* Added by Realtek start */
           if (netif->rs_count == 0){
             netif->rs_timeout = 1;
           }
+		  /* Added by Realtek end */
         }
       }
+      /* Added by Realtek start */
+      else if((netif->rs_count == 0) && netif_is_up(netif) &&
+        netif_is_link_up(netif) &&
+        !ip6_addr_isinvalid(netif_ip6_addr_state(netif, 0)) &&
+        !ip6_addr_isduplicated(netif_ip6_addr_state(netif, 0))
+        && (*ipv6_global == 0)) {
+	    netif->rs_timeout = 1; 
+      }
+      /* Added by Realtek end */
     }
   } else {
     nd6_tmr_rs_reduction--;
   }
 #endif /* LWIP_IPV6_SEND_ROUTER_SOLICIT */
-
 }
 
 /** Send a neighbor solicitation message for a specific neighbor cache entry
