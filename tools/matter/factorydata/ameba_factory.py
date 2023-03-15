@@ -110,36 +110,43 @@ def gen_spake2p_params(args):
 
 # populate_factory_data: populate data into protobuf format to be serialized
 def populate_factory_data(args, spake2p_params):
-    FACTORY_DATA.cdata.passcode = args.passcode
-    FACTORY_DATA.cdata.discriminator = args.discriminator
-    FACTORY_DATA.cdata.spake2_it = int(spake2p_params['Iteration Count'])
-    FACTORY_DATA.cdata.spake2_salt.value = spake2p_params['Salt'].encode('UTF-8')
-    FACTORY_DATA.cdata.spake2_salt.length = len(spake2p_params['Salt'])
-    FACTORY_DATA.cdata.spake2_verifier.value = spake2p_params['Verifier'].encode('UTF-8')
-    FACTORY_DATA.cdata.spake2_verifier.length = len(spake2p_params['Verifier'])
-    f = open(os.path.abspath(args.dac_cert), 'rb')
-    temp_data = f.read() 
-    FACTORY_DATA.dac.dac_cert.value = temp_data
-    FACTORY_DATA.dac.dac_cert.length = len(temp_data)
-    f.close()
-    f = open(os.path.abspath(args.pai_cert), 'rb')
-    temp_data = f.read() 
-    FACTORY_DATA.dac.pai_cert.value = temp_data
-    FACTORY_DATA.dac.pai_cert.length = len(temp_data)
-    f.close()
-    f = open(os.path.abspath(args.cd), 'rb')
-    temp_data = f.read() 
-    FACTORY_DATA.dac.cd.value = temp_data
-    FACTORY_DATA.dac.cd.length = len(temp_data)
-    f.close()
+    if args.passcode is not None:
+        FACTORY_DATA.cdata.passcode = args.passcode
+    if args.discriminator is not None:
+        FACTORY_DATA.cdata.discriminator = args.discriminator
+    if args.spake2p_path is not None:
+        FACTORY_DATA.cdata.spake2_it = int(spake2p_params['Iteration Count'])
+        FACTORY_DATA.cdata.spake2_salt.value = spake2p_params['Salt'].encode('UTF-8')
+        FACTORY_DATA.cdata.spake2_salt.length = len(spake2p_params['Salt'])
+        FACTORY_DATA.cdata.spake2_verifier.value = spake2p_params['Verifier'].encode('UTF-8')
+        FACTORY_DATA.cdata.spake2_verifier.length = len(spake2p_params['Verifier'])
+    if args.dac_cert is not None:
+        f = open(os.path.abspath(args.dac_cert), 'rb')
+        temp_data = f.read() 
+        FACTORY_DATA.dac.dac_cert.value = temp_data
+        FACTORY_DATA.dac.dac_cert.length = len(temp_data)
+        f.close()
+    if args.pai_cert is not None:
+        f = open(os.path.abspath(args.pai_cert), 'rb')
+        temp_data = f.read() 
+        FACTORY_DATA.dac.pai_cert.value = temp_data
+        FACTORY_DATA.dac.pai_cert.length = len(temp_data)
+        f.close()
+    if args.cd is not None:
+        f = open(os.path.abspath(args.cd), 'rb')
+        temp_data = f.read() 
+        FACTORY_DATA.dac.cd.value = temp_data
+        FACTORY_DATA.dac.cd.length = len(temp_data)
+        f.close()
     
     # split up dac-key files into pub and priv keys, extract only the priv keys
-    dac_priv_key = get_raw_private_key_der(os.path.abspath(args.dac_key), None) # password set as None first
-    if dac_priv_key is None:
-        logging.error("Cannot read DAC keys from : {}".format(dac_key))
-        sys.exit(-1)
-    FACTORY_DATA.dac.dac_key.value = dac_priv_key
-    FACTORY_DATA.dac.dac_key.length = len(dac_priv_key)
+    if args.dac_key is not None:
+        dac_priv_key = get_raw_private_key_der(os.path.abspath(args.dac_key), None) # password set as None first
+        if dac_priv_key is None:
+            logging.error("Cannot read DAC keys from : {}".format(args.dac_key))
+            sys.exit(-1)
+        FACTORY_DATA.dac.dac_key.value = dac_priv_key
+        FACTORY_DATA.dac.dac_key.length = len(dac_priv_key)
 
     if args.vendor_id is not None:
         FACTORY_DATA.dii.vendor_id = args.vendor_id
@@ -172,28 +179,28 @@ def main():
 
     parser = argparse.ArgumentParser(description='Ameba Factory NVS Data generator tool')
 
-    parser.add_argument('--spake2p_path', type=str, required=True,
+    parser.add_argument('--spake2p_path', type=str, required=False,
                         help='The path to the spake2p binary')
     # These will be used by CommissionableDataProvider
-    parser.add_argument('-p', '--passcode', type=any_base_int, required=True,
+    parser.add_argument('-p', '--passcode', type=any_base_int, required=False,
                         help='The setup passcode for pairing, range: 0x01-0x5F5E0FE')
-    parser.add_argument('-d', '--discriminator', type=any_base_int, required=True,
+    parser.add_argument('-d', '--discriminator', type=any_base_int, required=False,
                         help='The discriminator for pairing, range: 0x00-0x0FFF')
-    # parser.add_argument("--spake2_it", type=allow_any_int, required=True,
+    # parser.add_argument("--spake2_it", type=allow_any_int, required=False,
     #                     help="[int | hex int] Provide Spake2+ iteration count.")
-    # parser.add_argument("--spake2_salt", type=base64_str, required=True,
+    # parser.add_argument("--spake2_salt", type=base64_str, required=False,
     #                     help="[base64 string] Provide Spake2+ salt.")
     # parser.add_argument("--spake2_verifier", type=base64_str,
     #                     help="[base64 string] Provide Spake2+ verifier without generating it.")
 
     # These will be used by DeviceAttestationCredentialsProvider
-    parser.add_argument('--dac_cert', type=str, required=True,
+    parser.add_argument('--dac_cert', type=str, required=False,
                         help='The path to the DAC certificate in der format')
-    parser.add_argument('--dac_key', type=str, required=True,
+    parser.add_argument('--dac_key', type=str, required=False,
                         help='The path to the DAC private key in der format')
-    parser.add_argument('--pai_cert', type=str, required=True,
+    parser.add_argument('--pai_cert', type=str, required=False,
                         help='The path to the PAI certificate in der format')
-    parser.add_argument('--cd', type=str, required=True,
+    parser.add_argument('--cd', type=str, required=False,
                         help='The path to the certificate declaration der format')
 
     # These will be used by DeviceInstanceInfoProvider
@@ -227,7 +234,10 @@ def main():
 
     args = parser.parse_args()
     validate_args(args)
-    spake2p_params = gen_spake2p_params(args)
+    if args.spake2p_path:
+        spake2p_params = gen_spake2p_params(args)
+    else:
+        spake2p_params = None
     populate_factory_data(args, spake2p_params)
 
 
