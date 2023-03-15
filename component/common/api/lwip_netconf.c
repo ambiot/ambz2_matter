@@ -580,8 +580,10 @@ uint8_t LwIP_DHCP6(uint8_t idx, uint8_t dhcp6_state)
 			{
 				/* Read the new IPv6 address */
 				ipv6_global = LwIP_GetIPv6_global(pnetif);
+				ip6_addr_t zero_address;
+				ip6_addr_set_any(&zero_address);
 
-				if(*ipv6_global!=0){
+				if(!ip6_addr_cmp(&zero_address, netif_ip6_addr(pnetif, 1))){
 
 					DHCP6_state = DHCP6_ADDRESS_ASSIGNED;
 
