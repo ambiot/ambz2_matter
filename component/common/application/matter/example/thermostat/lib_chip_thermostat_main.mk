@@ -149,6 +149,7 @@ INCLUDES += -I$(SDKROOTDIR)/component/os/freertos/freertos_v10.0.1/Source/includ
 INCLUDES += -I$(SDKROOTDIR)/component/os/freertos/freertos_v10.0.1/Source/portable/GCC/ARM_RTL8710C
 INCLUDES += -I$(SDKROOTDIR)/component/os/os_dep/include
 
+INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/api
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/bluetooth/bt_matter_adapter
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/mbedtls
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/port
@@ -219,6 +220,7 @@ SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/cluster-
 SRC_CPP += $(CHIPDIR)/examples/providers/DeviceInfoProviderImpl.cpp
 
 # Custom thermostat src files with porting layer
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_api.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_core.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_interaction.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_ota.cpp
