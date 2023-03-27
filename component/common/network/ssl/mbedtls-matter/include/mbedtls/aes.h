@@ -53,6 +53,7 @@
 /* padlock.c and aesni.c rely on these values! */
 #define MBEDTLS_AES_ENCRYPT     1 /**< AES encryption. */
 #define MBEDTLS_AES_DECRYPT     0 /**< AES decryption. */
+#define RTL_CRYPTO_FRAGMENT 15360
 
 /* Error codes in range 0x0020-0x0022 */
 /** Invalid key length. */
@@ -100,6 +101,10 @@ typedef struct mbedtls_aes_context
                                      <li>Simplifying key expansion in the 256-bit
                                          case by generating an extra round key.
                                          </li></ul> */
+#ifdef RTL_HW_CRYPTO
+    unsigned char enc_key[32];
+    unsigned char dec_key[32];
+#endif
 }
 mbedtls_aes_context;
 

@@ -29,6 +29,11 @@
 
 #include <string.h>
 
+#ifdef RTL_HW_CRYPTO
+#include <hal_crypto.h>
+#include <rom_ssl_ram_map.h>
+#endif
+
 #include "mbedtls/aes.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/platform_util.h"
@@ -528,19 +533,28 @@ void mbedtls_aes_xts_free( mbedtls_aes_xts_context *ctx )
 int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
                     unsigned int keybits )
 {
-    unsigned int i;
-    uint32_t *RK;
-
     AES_VALIDATE_RET( ctx != NULL );
     AES_VALIDATE_RET( key != NULL );
 
-    switch( keybits )
+    switch(keybits)
     {
         case 128: ctx->nr = 10; break;
         case 192: ctx->nr = 12; break;
         case 256: ctx->nr = 14; break;
-        default : return( MBEDTLS_ERR_AES_INVALID_KEY_LENGTH );
+        default : return(MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
     }
+
+#ifdef RTL_HW_CRYPTO
+    if(rom_ssl_ram_map.use_hw_crypto_func)
+    {
+        memcpy(ctx->enc_key, key, (keybits / 8));
+        return 0;
+    }
+#endif /* RTL_HW_CRYPTO */
+
+#ifdef SUPPORT_HW_SW_CRYPTO
+    unsigned int i;
+    uint32_t *RK;
 
 #if !defined(MBEDTLS_AES_ROM_TABLES)
     if( aes_init_done == 0 )
@@ -634,6 +648,7 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
     }
 
     return( 0 );
+#endif /* SUPPORT_HW_SW_CRYPTO */
 }
 #endif /* !MBEDTLS_AES_SETKEY_ENC_ALT */
 
@@ -644,6 +659,22 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
 int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key,
                     unsigned int keybits )
 {
+#ifdef RTL_HW_CRYPTO
+    if(rom_ssl_ram_map.use_hw_crypto_func)
+    {
+        switch(keybits)
+        {
+            case 128: ctx->nr = 10; break;
+            case 192: ctx->nr = 12; break;
+            case 256: ctx->nr = 14; break;
+            default : return(MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
+        }
+        memcpy(ctx->dec_key, key, (keybits / 8));
+        return 0;
+    }
+#endif /* RTL_HW_CRYPTO */
+
+#ifdef SUPPORT_HW_SW_CRYPTO
     int i, j, ret;
     mbedtls_aes_context cty;
     uint32_t *RK;
@@ -706,6 +737,7 @@ exit:
     mbedtls_aes_free( &cty );
 
     return( ret );
+#endif /* SUPPORT_HW_SW_CRYPTO */
 }
 #endif /* !MBEDTLS_AES_SETKEY_DEC_ALT */
 
@@ -966,7 +998,6 @@ int mbedtls_internal_aes_decrypt( mbedtls_aes_context *ctx,
     MBEDTLS_PUT_UINT32_LE( t.X[3], output, 12 );
 
     mbedtls_platform_zeroize( &t, sizeof( t ) );
-
     return( 0 );
 }
 #endif /* !MBEDTLS_AES_DECRYPT_ALT */
@@ -994,6 +1025,28 @@ int mbedtls_aes_crypt_ecb( mbedtls_aes_context *ctx,
     AES_VALIDATE_RET( mode == MBEDTLS_AES_ENCRYPT ||
                       mode == MBEDTLS_AES_DECRYPT );
 
+#ifdef RTL_HW_CRYPTO
+    if(rom_ssl_ram_map.use_hw_crypto_func)
+    {
+        unsigned char key_buf[32 + 32 + 32], *key_buf_aligned;
+        key_buf_aligned = (unsigned char *) (((unsigned int) key_buf + 32) / 32 * 32);
+        if(mode == MBEDTLS_AES_DECRYPT)
+        {
+            memcpy(key_buf_aligned, ctx->dec_key, ((ctx->nr - 6) * 4));
+            rom_ssl_ram_map.hw_crypto_aes_ecb_init(key_buf_aligned, ((ctx->nr - 6) * 4));
+            rom_ssl_ram_map.hw_crypto_aes_ecb_decrypt(input, 16, NULL, 0, output);
+        }
+        else
+        {
+            memcpy(key_buf_aligned, ctx->enc_key, ((ctx->nr - 6) * 4));
+            rom_ssl_ram_map.hw_crypto_aes_ecb_init(key_buf_aligned,((ctx->nr - 6) * 4));
+            rom_ssl_ram_map.hw_crypto_aes_ecb_encrypt(input, 16, NULL, 0, output);
+        }
+        return 0;
+    }
+#endif /* RTL_HW_CRYPTO */
+
+#ifdef SUPPORT_HW_SW_CRYPTO
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
     if( mbedtls_aesni_has_support( MBEDTLS_AESNI_AES ) )
         return( mbedtls_aesni_crypt_ecb( ctx, mode, input, output ) );
@@ -1010,11 +1063,11 @@ int mbedtls_aes_crypt_ecb( mbedtls_aes_context *ctx,
         //
     }
 #endif
-
     if( mode == MBEDTLS_AES_ENCRYPT )
         return( mbedtls_internal_aes_encrypt( ctx, input, output ) );
     else
         return( mbedtls_internal_aes_decrypt( ctx, input, output ) );
+#endif /* SUPPORT_HW_SW_CRYPTO */
 }
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
@@ -1028,10 +1081,6 @@ int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
                     const unsigned char *input,
                     unsigned char *output )
 {
-    int i;
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    unsigned char temp[16];
-
     AES_VALIDATE_RET( ctx != NULL );
     AES_VALIDATE_RET( mode == MBEDTLS_AES_ENCRYPT ||
                       mode == MBEDTLS_AES_DECRYPT );
@@ -1041,6 +1090,65 @@ int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
 
     if( length % 16 )
         return( MBEDTLS_ERR_AES_INVALID_INPUT_LENGTH );
+
+#ifdef RTL_HW_CRYPTO
+    if(rom_ssl_ram_map.use_hw_crypto_func)
+    {
+        unsigned char key_buf[32 + 32 + 32], *key_buf_aligned;
+        unsigned char iv_buf[32 + 16 + 32], *iv_buf_aligned, iv_tmp[16];
+        size_t length_done = 0;
+
+        if(length % 16)
+            return(MBEDTLS_ERR_AES_INVALID_INPUT_LENGTH);
+
+        if(length > 0)
+        {
+            key_buf_aligned = (unsigned char *) (((unsigned int) key_buf + 32) / 32 * 32);
+            iv_buf_aligned = (unsigned char *) (((unsigned int) iv_buf + 32) / 32 * 32);
+
+            memcpy(iv_buf_aligned, iv, 16);
+
+            if(mode == MBEDTLS_AES_DECRYPT)
+            {
+                memcpy(key_buf_aligned, ctx->dec_key, ((ctx->nr - 6) * 4));
+                rom_ssl_ram_map.hw_crypto_aes_cbc_init(key_buf_aligned, ((ctx->nr - 6) * 4));
+
+                while((length - length_done) > RTL_CRYPTO_FRAGMENT)
+                {
+                    memcpy(iv_tmp, (input + length_done + RTL_CRYPTO_FRAGMENT - 16), 16);
+                    rom_ssl_ram_map.hw_crypto_aes_cbc_decrypt(input + length_done, RTL_CRYPTO_FRAGMENT, iv_buf_aligned, 16, output + length_done);
+                    memcpy(iv_buf_aligned, iv_tmp, 16);
+                    length_done += RTL_CRYPTO_FRAGMENT;
+                }
+
+                memcpy(iv_tmp, (input + length - 16), 16);
+                rom_ssl_ram_map.hw_crypto_aes_cbc_decrypt(input + length_done, length - length_done, iv_buf_aligned, 16, output + length_done);
+                memcpy(iv, iv_tmp, 16);
+            }
+            else
+            {
+                memcpy(key_buf_aligned, ctx->enc_key, ((ctx->nr - 6) * 4));
+                rom_ssl_ram_map.hw_crypto_aes_cbc_init(key_buf_aligned,((ctx->nr - 6) * 4));
+
+                while((length - length_done) > RTL_CRYPTO_FRAGMENT)
+                {
+                    rom_ssl_ram_map.hw_crypto_aes_cbc_encrypt(input + length_done, RTL_CRYPTO_FRAGMENT, iv_buf_aligned, 16, output + length_done);
+                    memcpy(iv_buf_aligned, (output + length_done + RTL_CRYPTO_FRAGMENT - 16), 16);
+                    length_done += RTL_CRYPTO_FRAGMENT;
+                }
+
+                rom_ssl_ram_map.hw_crypto_aes_cbc_encrypt(input + length_done, length - length_done, iv_buf_aligned, 16, output + length_done);
+                memcpy(iv, (output + length - 16), 16);
+            }
+        }
+        return 0;
+    }
+#endif /* RTL_HW_CRYPTO */
+
+#ifdef SUPPORT_HW_SW_CRYPTO
+    int i;
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    unsigned char temp[16];
 
 #if defined(MBEDTLS_PADLOCK_C) && defined(MBEDTLS_HAVE_X86)
     if( aes_padlock_ace )
@@ -1094,6 +1202,7 @@ int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
 
 exit:
     return( ret );
+#endif /* SUPPORT_HW_SW_CRYPTO */
 }
 #endif /* MBEDTLS_CIPHER_MODE_CBC */
 
@@ -1791,7 +1900,6 @@ int mbedtls_aes_self_test( int verbose )
 
     memset( key, 0, 32 );
     mbedtls_aes_init( &ctx );
-
     /*
      * ECB mode
      */

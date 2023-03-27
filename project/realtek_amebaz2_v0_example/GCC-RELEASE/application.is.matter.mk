@@ -558,7 +558,7 @@ SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/xtea.c
 
 #network - ssl - ssl_ram_map
 SRC_C += ../../../component/common/network/ssl/ssl_ram_map/rom/rom_ssl_ram_map.c
-#SRC_C += ../../../component/common/network/ssl/ssl_func_stubs/ssl_func_stubs.c
+SRC_C += ../../../component/common/network/ssl/ssl_func_stubs/ssl_func_stubs.c
 
 #network - websocket
 SRC_C += ../../../component/common/network/websocket/wsclient_tls.c

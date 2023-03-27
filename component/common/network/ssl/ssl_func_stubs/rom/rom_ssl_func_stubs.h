@@ -22,6 +22,13 @@
 #include "mbedtls/pk_internal.h"
 #include "mbedtls/arc4.h"
 
+#ifndef u32
+typedef uint32_t u32;
+#endif
+#ifndef u8
+typedef uint8_t  u8;
+#endif
+
 #if defined(CONFIG_PLATFORM_8710C) && defined(CONFIG_BUILD_SECURE) && (CONFIG_BUILD_SECURE == 1)
 typedef struct ssl_func_stubs_s {
 	// ssl_ram_map
