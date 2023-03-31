@@ -25,7 +25,7 @@ typedef int (*chip_connmgr_callback)(void *object);
 void chip_connmgr_set_callback_func(chip_connmgr_callback p, void *data);
 void matter_scan_networks(void);
 void matter_scan_networks_with_ssid(const unsigned char *ssid, size_t length);
-void matter_get_scan_results(rtw_scan_result_t *result_buf, uint8_t scanned_num);
+rtw_scan_result_t *matter_get_scan_results(void);
 int matter_wifi_connect(
     char              *ssid,
     rtw_security_t    security_type,
