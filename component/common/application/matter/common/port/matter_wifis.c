@@ -255,6 +255,11 @@ int matter_wifi_connect(
     return err;
 }
 
+int matter_get_sta_wifi_info(rtw_wifi_setting_t *pSetting)
+{
+    return wifi_get_setting((u8*)WLAN0_NAME, pSetting);
+}
+
 int matter_wifi_disconnect(void)
 {
     return wifi_disconnect();

@@ -34,6 +34,7 @@ int matter_wifi_connect(
     int               password_len,
     int               key_id,
     void              *semaphore);
+int matter_get_sta_wifi_info(rtw_wifi_setting_t *pSetting);
 int matter_wifi_disconnect(void);
 int matter_wifi_on(rtw_mode_t mode);
 int matter_wifi_set_mode(rtw_mode_t mode);
