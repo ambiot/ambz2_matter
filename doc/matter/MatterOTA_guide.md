@@ -13,6 +13,10 @@ Build Linux ota-provider-app
 ## Generating the OTA Image
 
 When building the OTA firmware, ensure that `CHIP_DEVICE_CONFIG_DEVICE_SOFTWARE_VERSION` and `CHIP_DEVICE_CONFIG_DEVICE_SOFTWARE_VERSION_STRING` is higher than that of the current image.
+You can check the current image's software version using `chip-tool` commands below.
+
+    ./chip-tool basicinformation read software-version 1 0
+    ./chip-tool basicinformation read software-version-string 1 0
 
 In `GCC-Release/ameba_firmware.json`, update the **serial** value to a higher number than that of current image.
 
@@ -31,7 +35,7 @@ To check your OTA image
 
     python3 ota_image_tool.py show <ota image>
 
-Once you have ensured that the ITA image is correct, copy the output OTA image to the directory of the ota-provider built from the previous step.
+Once you have ensured that the OTA image is correct, copy the output OTA image to the directory of the ota-provider built from the previous step.
 
     cp ota_image.bin <path to the ota-provider directory>
 
@@ -70,6 +74,11 @@ Announce the ota-provider-app to the device to start the OTA process.
 
 ## Common Mistakes
 
-- VendorID and ProductID of the new OTA image does not match the ones in the Basic Information cluster, causing OTA to fail.
+- VendorID and ProductID of the new OTA image does not match the ones in the Basic Information cluster, causing OTA to fail. 
+Check your VendorID and ProductID using below `chip-tool` commands.
+
+    ./chip-tool basicinformation read vendor-id 1 0
+    ./chip-tool basicinformation read product-id 1 0
+
 - Version of the new OTA image is not higher than the current image's version. OTA will only be allowed to execute if new image is newer than the current image.
 - OTA process completed, but device still reboots into old image instead of the new image. Check if you have updated the **Serial** field in `ameba_firmware.json`.
