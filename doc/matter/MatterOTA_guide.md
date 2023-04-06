@@ -74,11 +74,12 @@ Announce the ota-provider-app to the device to start the OTA process.
 
 ## Common Mistakes
 
-- VendorID and ProductID of the new OTA image does not match the ones in the Basic Information cluster, causing OTA to fail. 
-Check your VendorID and ProductID using below `chip-tool` commands.
+- VendorID and ProductID of the new OTA image does not match the ones in the Basic Information cluster, causing OTA to fail. Check your VendorID and ProductID using below `chip-tool` commands.
 
+```
     ./chip-tool basicinformation read vendor-id 1 0
     ./chip-tool basicinformation read product-id 1 0
+```
 
 - Version of the new OTA image is not higher than the current image's version. OTA will only be allowed to execute if new image is newer than the current image.
 - OTA process completed, but device still reboots into old image instead of the new image. Check if you have updated the **Serial** field in `ameba_firmware.json`.
