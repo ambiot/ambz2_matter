@@ -12,23 +12,26 @@ Build Linux ota-provider-app
 
 ## Generating the OTA Image
 
-- When building the OTA firmware, ensure that `CHIP_DEVICE_CONFIG_DEVICE_SOFTWARE_VERSION` and `CHIP_DEVICE_CONFIG_DEVICE_SOFTWARE_VERSION_STRING` is higher than that of the current image.
-- In `GCC-Release/ameba_firmware.json`, update the **serial** value to a higher number than that of current image.
-- After building the firmware, use the `ota_image_tool.py` to generate the OTA image. This tool will add Matter OTA header to the firmware image.
+When building the OTA firmware, ensure that `CHIP_DEVICE_CONFIG_DEVICE_SOFTWARE_VERSION` and `CHIP_DEVICE_CONFIG_DEVICE_SOFTWARE_VERSION_STRING` is higher than that of the current image.
+
+In `GCC-Release/ameba_firmware.json`, update the **serial** value to a higher number than that of current image.
+
+After building the firmware, use the `ota_image_tool.py` to generate the OTA image. This tool will add Matter OTA header to the firmware image.
 
     python3 ota_image_tool.py create -v <VENDORID> -p <PRODUCTID> -vn <VERSION> -vs <VERSIONSTRING> -da <DIGESTALGO> <path to firmware> <output ota image>
 
-- For example
+For example
 
     cd ambz2_matter/tools/matter/ota
     python3 ota_image_tool.py create -v 0x8888 -p 0x9999 -vn 2 -vs 2.0 -da sha256 ../../../project/realtek_amebaz2_v0_example/GCC-RELEASE/application_is/Debug/bin/firmware_is.bin ota_image.bin
 
-- Ensure that the `VERSION` and `VERSIONSTRING` matches your `CHIP_DEVICE_CONFIG_DEVICE_SOFTWARE_VERSION` and `CHIP_DEVICE_CONFIG_DEVICE_SOFTWARE_VERSION_STRING` respectively.
-- To check your OTA image
+Ensure that the `VERSION` and `VERSIONSTRING` matches your `CHIP_DEVICE_CONFIG_DEVICE_SOFTWARE_VERSION` and `CHIP_DEVICE_CONFIG_DEVICE_SOFTWARE_VERSION_STRING` respectively.
+
+To check your OTA image
 
     python3 ota_image_tool.py show <ota image>
 
-- Once you have ensured that the ITA image is correct, copy the output OTA image to the directory of the ota-provider built from the previous step.
+Once you have ensured that the ITA image is correct, copy the output OTA image to the directory of the ota-provider built from the previous step.
 
     cp ota_image.bin <path to the ota-provider directory>
 
