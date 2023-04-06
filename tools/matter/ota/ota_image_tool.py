@@ -35,7 +35,7 @@ import os
 import struct
 import sys
 from enum import IntEnum
-from tlv import TLVReader, TLVWriter, uint  # noqa: E402
+from tlv import TLVReader, TLVWriter, uint  # noqa: E402 isort:skip
 
 HEADER_MAGIC = 0x1BEEF11E
 FIXED_HEADER_FORMAT = '<IQI'
