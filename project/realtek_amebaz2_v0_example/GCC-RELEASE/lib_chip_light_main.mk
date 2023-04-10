@@ -222,6 +222,8 @@ SRC_CPP += $(CHIPDIR)/examples/lighting-app/ameba/main/LEDWidget.cpp
 SRC_CPP += $(CHIPDIR)/examples/platform/ameba/ota/OTAInitializer.cpp
 SRC_CPP += $(CHIPDIR)/examples/providers/DeviceInfoProviderImpl.cpp
 
+SRC_CPP += $(BASEDIR)/../../../component/common/application/matter/api/matter_api.cpp
+
 #lib_version
 VER_C += $(TARGET)_version.c
 
