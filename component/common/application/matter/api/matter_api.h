@@ -1,4 +1,4 @@
 #pragma once
 
 bool matter_server_is_commissioned(void);
-void matter_get_fabric_indices(uint16_t *pFabricIndices);
+void matter_get_fabric_indexes(uint16_t *pFabricIndexes);
