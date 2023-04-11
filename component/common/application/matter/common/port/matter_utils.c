@@ -268,7 +268,7 @@ int32_t ReadFactory(uint8_t *buffer, uint16_t *pfactorydata_len)
 
 int32_t DecodeFactory(uint8_t *buffer, FactoryData *fdp, uint16_t data_len)
 {
-    int32_t ret = 0;
+    int32_t ret = 1;
     pb_istream_t stream;
     FactoryDataProvider FDP = FactoryDataProvider_init_zero;
 

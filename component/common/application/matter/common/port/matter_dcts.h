@@ -19,7 +19,7 @@ s32 registerPref2(void);
 s32 clearPref(void);
 s32 clearPref2(void);
 s32 deleteKey(const char *domain, const char *key);
-bool checkExist(const char *domain, const char *key);
+s32 checkExist(const char *domain, const char *key);
 s32 setPref_new(const char *domain, const char *key, u8 *value, size_t byteCount);
 s32 getPref_bool_new(const char *domain, const char *key, u8 *val);
 s32 getPref_u32_new(const char *domain, const char *key, u32 *val);
