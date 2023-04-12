@@ -281,7 +281,7 @@ exit:
     return ret;
 }
 
-s32 checkExist(const char *domain, const char *key)
+bool checkExist(const char *domain, const char *key)
 {
     dct_handle_t handle;
     s32 ret;
@@ -346,7 +346,7 @@ s32 checkExist(const char *domain, const char *key)
 
 exit:
     free(str);
-    return ret;
+    return (ret == DCT_SUCCESS) ? true : false;
 }
 
 s32 setPref_new(const char *domain, const char *key, u8 *value, size_t byteCount)
