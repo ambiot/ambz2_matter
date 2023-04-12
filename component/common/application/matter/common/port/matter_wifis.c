@@ -292,6 +292,39 @@ void matter_lwip_dhcp(uint8_t idx, uint8_t dhcp_state)
     }
 }
 
+int matter_wifi_get_ap_bssid(unsigned char *bssid)
+{
+    return wifi_get_ap_bssid(bssid);
+}
+
+int matter_wifi_get_network_mode(rtw_network_mode_t *pmode)
+{
+    return wifi_get_network_mode(pmode);
+}
+
+int matter_wifi_get_security_type(const char *ifname, uint16_t *alg, uint8_t *key_idx, uint8_t *passphrase)
+{
+    if (wext_get_enc_ext(ifname, alg, key_idx, passphrase) < 0)
+    {
+        return RTW_ERROR;
+    }
+    return RTW_SUCCESS;
+}
+
+int matter_wifi_get_wifi_channel_number(const char *ifname, uint8_t *ch)
+{
+    if (wext_get_channel(ifname, ch) < 0)
+    {
+        return RTW_ERROR;
+    }
+    return RTW_SUCCESS;
+}
+
+int matter_wifi_get_rssi(int *prssi)
+{
+    return wifi_get_rssi(prssi);
+}
+
 #ifdef __cplusplus
 }
 #endif
