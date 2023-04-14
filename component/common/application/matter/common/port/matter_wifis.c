@@ -325,6 +325,16 @@ int matter_wifi_get_rssi(int *prssi)
     return wifi_get_rssi(prssi);
 }
 
+int matter_wifi_get_mac_address(char *mac)
+{
+    return wifi_get_mac_address(mac);
+}
+
+int matter_wifi_get_last_error()
+{
+    return wifi_get_last_error();
+}
+
 #ifdef __cplusplus
 }
 #endif

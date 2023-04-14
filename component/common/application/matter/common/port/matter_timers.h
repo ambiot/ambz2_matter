@@ -16,6 +16,9 @@ typedef u32 TickType_t;
 int _nanosleep( const struct timespec * rqtp, struct timespec * rmtp );
 int _vTaskDelay( const TickType_t xTicksToDelay );
 time_t _time( time_t * tloc );
+void matter_rtc_init(void);
+long long matter_rtc_read(void);
+void matter_rtc_write(long long time);
 
 #ifdef __cplusplus
 }

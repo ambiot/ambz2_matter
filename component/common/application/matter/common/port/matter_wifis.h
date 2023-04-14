@@ -45,6 +45,8 @@ int matter_wifi_get_network_mode(rtw_network_mode_t *pmode);
 int matter_wifi_get_security_type(const char *ifname, uint16_t *alg, uint8_t *key_idx, uint8_t *passphrase);
 int matter_wifi_get_wifi_channel_number(const char *ifname, uint8_t *ch);
 int matter_wifi_get_rssi(int *prssi);
+int matter_wifi_get_mac_address(char *mac);
+int matter_wifi_get_last_error(void);
 #ifdef __cplusplus
 }
 #endif
