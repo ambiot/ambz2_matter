@@ -134,7 +134,7 @@ long long matter_rtc_read()
 
 void matter_rtc_write(long long time)
 {
-    rtc_write(time)
+    rtc_write(time);
 }
 
 #ifdef __cplusplus
