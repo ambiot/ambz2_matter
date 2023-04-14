@@ -250,10 +250,10 @@ int32_t ReadFactory(uint8_t *buffer, uint16_t *pfactorydata_len)
     ret = flash_stream_read(&flash, address, length_bytes, pfactorydata_len);
     device_mutex_unlock(RT_DEV_LOCK_FLASH);
 
-    // Check if factory data length is more than 2048
+    // Check if factory data length is more than 4096
     // Which indicates that factory data is not flashed
     // Return to prevent reading from non-existent address
-    if(*pfactorydata_len > 2048)
+    if(*pfactorydata_len > 4096)
     {
         return -1;
     }
