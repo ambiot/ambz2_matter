@@ -58,6 +58,9 @@ ROMIMG =
 # Uncomment to enable BLE mesh with matter
 #BT_MATTER_MESH_ADAPTER = 1
 
+# Uncomment to enable BLE msmart with matter
+BT_MATTER_MSMART_ADAPTER = 1
+
 # Include folder list
 # -------------------------------------------------------------------
 
@@ -176,13 +179,16 @@ INCLUDES += -I../../../component/os/os_dep/include
 INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/ffs_demo/common/include
 INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/ffs_demo/realtek/configs
 
+
 # Matter
 ifdef BT_MATTER_MESH_ADAPTER
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter
 else
+INCLUDES += -I../../../component/common/application/matter/common/bluetooth/
+INCLUDES += -I../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/
 INCLUDES += -I../../../component/common/application/matter/common/bluetooth/bt_matter_adapter
 endif
-INCLUDES += -I../../../component/common/application/matter/common/bluetooth
+#INCLUDES += -I../../../component/common/application/matter/common/bluetooth
 INCLUDES += -I../../../component/common/application/matter/common/port
 INCLUDES += -I../../../component/common/application/matter/common/mbedtls
 INCLUDES += -I../../../component/common/application/matter/common/protobuf
@@ -304,12 +310,28 @@ SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multipl
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter/bt_mesh_device_matter_app_task.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter/bt_mesh_device_matter_cmd.c
 else
+
+ifdef BT_MATTER_MSMART_ADAPTER
+#SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_matter_adapter_service.c
+SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/matter_blemgr_common.c
+
+else
+
+
+#bluetooth - example - ms_ble_adapter
+SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_ms_adapter_app_task.c
+SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_ms_adapter_app_main.c
+SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_ms_adapter_app.c
+SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_ms_adapter_link_mgr.c
+SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_ms_adapter_service.c
+
 #bluetooth - example - bt_matter_adapter
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_app_main.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_app_task.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_peripheral_app.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_service.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_wifi.c
+endif
 endif
 
 #bluetooth - example
@@ -363,7 +385,7 @@ SRC_C += ../../../component/common/api/network/src/wlan_network.c
 SRC_C += ../../../component/common/utilities/cJSON.c
 SRC_C += ../../../component/common/utilities/http_client.c
 SRC_C += ../../../component/common/utilities/xml.c
-
+SRC_C += ../../../component/common/utilities/gb2unicode.c
 #matter - app
 SRC_C += ../../../component/common/application/matter/common/port/matter_dcts.c
 SRC_C += ../../../component/common/application/matter/common/port/matter_timers.c
@@ -709,6 +731,14 @@ CFLAGS += -Wno-maybe-uninitialized -c -MMD
 CFLAGS += -DCONFIG_PLATFORM_8710C -DCONFIG_BUILD_RAM=1
 CFLAGS += -DV8M_STKOVF
 
+
+CFLAGS += -DMS_CONFIG_BLE_SUPPORT
+CFLAGS += -DCONFIG_BT_MS_ADAPTER=1
+CFLAGS += -DWITH_LWIP=1
+CFLAGS += $(foreach define, $(GLOBAL_DEFINES), $(addprefix -D, $(define)))
+
+
+
 CPPFLAGS := $(CFLAGS)
 
 #for time64 
@@ -723,6 +753,13 @@ endif
 ifdef BT_MATTER_MESH_ADAPTER
 CFLAGS += -DCONFIG_BT_MESH_WITH_MATTER=1
 endif
+
+
+# for matter msmart
+ifdef BT_MATTER_MSMART_ADAPTER
+CFLAGS += -DCONFIG_BT_MSMART_WITH_MATTER=1
+endif
+
 
 CFLAGS += -DCHIP_PROJECT=0
 CFLAGS += -DCONFIG_ENABLE_OTA_REQUESTOR=1
