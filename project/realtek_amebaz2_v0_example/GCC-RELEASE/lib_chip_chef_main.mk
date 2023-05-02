@@ -341,16 +341,16 @@ $(SRC_OO): %_$(TARGET).oo : %.cpp | prerequirement
 	$(CC) $(CPPFLAGS) $(INCLUDES) -c $< -o $@
 	$(CC) $(CPPFLAGS) $(INCLUDES) -c $< -MM -MT $@ -MF $(OBJ_DIR)/$(notdir $(patsubst %.oo,%.d,$@))
 	cp $@ $(OBJ_DIR)/$(notdir $@)
-	mv $(notdir $*.ii) $(INFO_DIR)
-	mv $(notdir $*.s) $(INFO_DIR)
+	cp $*_$(TARGET).ii $(INFO_DIR)
+	cp $*_$(TARGET).s $(INFO_DIR)
 	chmod 777 $(OBJ_DIR)/$(notdir $@)
 
 $(SRC_O): %_$(TARGET).o : %.c | prerequirement
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -MM -MT $@ -MF $(OBJ_DIR)/$(notdir $(patsubst %.o,%.d,$@))
 	cp $@ $(OBJ_DIR)/$(notdir $@)
-	mv $(notdir $*.i) $(INFO_DIR)
-	mv $(notdir $*.s) $(INFO_DIR)
+	cp $*_$(TARGET).i $(INFO_DIR)
+	cp $*_$(TARGET).s $(INFO_DIR)
 	chmod 777 $(OBJ_DIR)/$(notdir $@)
 
 -include $(DEPENDENCY_LIST)
@@ -361,6 +361,8 @@ clean:
 	rm -f $(SRC_O) $(DRAM_O) $(VER_O) $(SRC_OO)
 	rm -f $(patsubst %.o,%.d,$(SRC_O)) $(patsubst %.o,%.d,$(DRAM_O)) $(patsubst %.o,%.d,$(VER_O)) $(patsubst %.oo,%.d,$(SRC_OO))
 	rm -f $(patsubst %.o,%.su,$(SRC_O)) $(patsubst %.o,%.su,$(DRAM_O)) $(patsubst %.o,%.su,$(VER_O)) $(patsubst %.oo,%.su,$(SRC_OO))
+	rm -f $(patsubst %.o,%.i,$(SRC_O)) $(patsubst %.o,%.i,$(DRAM_O)) $(patsubst %.o,%.i,$(VER_O)) $(patsubst %.oo,%.ii,$(SRC_OO))
+	rm -f $(patsubst %.o,%.s,$(SRC_O)) $(patsubst %.o,%.s,$(DRAM_O)) $(patsubst %.o,%.s,$(VER_O)) $(patsubst %.oo,%.s,$(SRC_OO))
 	rm -f *.i
 	rm -f *.s
 	rm -f $(VER_C)

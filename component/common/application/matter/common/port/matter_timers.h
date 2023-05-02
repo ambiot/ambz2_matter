@@ -10,6 +10,7 @@ extern "C" {
 #endif
 
 #include <wifi_conf.h>
+#include <time.h>
 
 typedef u32 TickType_t;
 int _nanosleep( const struct timespec * rqtp, struct timespec * rmtp );
