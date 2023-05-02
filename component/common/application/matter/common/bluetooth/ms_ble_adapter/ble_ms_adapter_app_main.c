@@ -41,6 +41,7 @@
 #include <gatt_builtin_services.h>
 #include <wifi_conf.h>
 #include "rtk_coex.h"
+#include "matter_blemgr_common.h"
 #if CONFIG_MS_MULTI_ADV
 #include "vendor_cmd_bt.h"
 #endif
@@ -77,6 +78,8 @@ extern T_SERVER_ID ble_matter_adapter_service_add_service(void *p_func);
 /*============================================================================*
  *                              Functions
  *============================================================================*/
+matter_blemgr_callback matter_blemgr_callback_func = NULL;
+void *matter_blemgr_callback_data = NULL;
 /**
  * @brief  Config bt stack related feature
  *
@@ -192,10 +195,12 @@ void ble_ms_adapter_app_le_gap_init(void)
 	gaps_set_parameter(GAPS_PARAM_DEVICE_NAME_PROPERTY, sizeof(device_name_prop), &device_name_prop);
 	gatt_register_callback((void *)ble_ms_adapter_gap_service_callback);
 #endif
-#if CONFIG_MS_MULTI_ADV
 	T_APP_STATIC_RANDOM_ADDR random_addr;
-	bool gen_addr = true;
 	uint8_t local_bd_type = GAP_LOCAL_ADDR_LE_RANDOM;
+#if CONFIG_MS_MULTI_ADV
+	//T_APP_STATIC_RANDOM_ADDR random_addr;
+	bool gen_addr = true;
+	//uint8_t local_bd_type = GAP_LOCAL_ADDR_LE_RANDOM;
 	if (gen_addr)
 	{
 		if (le_gen_rand_addr(GAP_RAND_ADDR_STATIC, random_addr.bd_addr) == GAP_CAUSE_SUCCESS)

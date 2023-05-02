@@ -315,9 +315,6 @@ ifdef BT_MATTER_MSMART_ADAPTER
 #SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_matter_adapter_service.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/matter_blemgr_common.c
 
-else
-
-
 #bluetooth - example - ms_ble_adapter
 SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_ms_adapter_app_task.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_ms_adapter_app_main.c
@@ -325,6 +322,7 @@ SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_ad
 SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_ms_adapter_link_mgr.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_ms_adapter_service.c
 
+else
 #bluetooth - example - bt_matter_adapter
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_app_main.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_app_task.c

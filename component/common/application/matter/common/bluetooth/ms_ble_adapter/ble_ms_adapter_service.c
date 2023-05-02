@@ -13,7 +13,7 @@ BMS_SERVICE_INFO ble_ms_adapter_srvs_head;
 BMS_SERVICE_INFO *ble_ms_adapter_srv_p = &ble_ms_adapter_srvs_head;
 static P_FUN_SERVER_GENERAL_CB ble_ms_adapter_service_cb = NULL;
 static uint8_t bt_ms_char_write_value[MS_WRITE_MAX_LEN];
-extern void *ms_add_service_sem;
+//extern void *ms_add_service_sem;
 uint8_t ble_ms_adapter_srvs_num = 0;
 
 void ble_ms_adapter_free_service_info(BMS_SERVICE_INFO *service_info)
@@ -154,9 +154,6 @@ const T_FUN_GATT_SERVICE_CBS ble_ms_adapter_service_cbs = {
 T_SERVER_ID ble_ms_adapter_add_service(BMS_SERVICE_INFO *service_info, void *p_func)
 {
 	if (service_info == NULL || service_info->att_tbl == NULL) {
-		if (ms_add_service_sem) {
-			os_sem_give(ms_add_service_sem);
-		}
 		return 0xff;
 	}
 	if (false == server_add_service(&(service_info->srvId),
@@ -165,9 +162,6 @@ T_SERVER_ID ble_ms_adapter_add_service(BMS_SERVICE_INFO *service_info, void *p_f
 									ble_ms_adapter_service_cbs)) {
 		printf("\r\n[%s] add service fail", __FUNCTION__);
 		ble_ms_adapter_move_pointer_and_free_service(service_info);
-		if (ms_add_service_sem) {
-			os_sem_give(ms_add_service_sem);
-		}
 		return 0xff;
 	} else {
 		printf("[%s] add service %d success\n", __FUNCTION__, service_info->srvId);

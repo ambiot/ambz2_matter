@@ -17,12 +17,12 @@
  *                              Header Files
  *============================================================================*/
 #include <platform_opts_bt.h>
-#if defined(CONFIG_BT_MS_ADAPTER) && CONFIG_BT_MS_ADAPTER
+#if defined(CONFIG_BT_MS_ADAPTER) && CONFIG_BT_MS_ADAPTER //to be fixed
 #include <os_msg.h>
 #include <os_task.h>
 #include <gap.h>
 #include <gap_le.h>
-#include <trace_app.h>
+//#include <trace_app.h>
 #include <ble_ms_adapter_app_task.h>
 #include <app_msg.h>
 #include <ble_ms_adapter_app.h>
@@ -44,10 +44,13 @@
 #define BLE_MS_ADAPTER_MAX_NUMBER_OF_GAP_MESSAGE     0x20      //!<  GAP message queue size
 #define BLE_MS_ADAPTER_MAX_NUMBER_OF_IO_MESSAGE      0x20      //!<  IO message queue size
 #define BLE_MS_ADAPTER_MAX_NUMBER_OF_EVENT_MESSAGE   (BLE_MS_ADAPTER_MAX_NUMBER_OF_GAP_MESSAGE + BLE_MS_ADAPTER_MAX_NUMBER_OF_IO_MESSAGE)    //!< Event message queue size
-
+//ble matter
 #define BLE_MS_ADAPTER_CALLBACK_TASK_PRIORITY        4         //!< Task priorities
 #define BLE_MS_ADAPTER_CALLBACK_TASK_STACK_SIZE      256 * 6   //!<  Task stack size
-#define MAX_NUMBER_OF_CALLBACK_MESSAGE               0x60      //!< Callback message queue size
+#define BLE_MS_ADAPTER_MAX_NUMBER_OF_CALLBACK_MESSAGE               0x20      //!< Callback message queue size
+
+
+
 
 /*============================================================================*
  *                              Variables
@@ -60,32 +63,64 @@ void *ble_ms_adapter_callback_task_handle = NULL;    //!< Callback task handle
 void *ble_ms_adapter_callback_queue_handle = NULL;   //!< Callback queue handle
 
 extern T_GAP_DEV_STATE ble_ms_adapter_gap_dev_state;
+#if 1
 extern int ble_ms_adapter_central_app_max_links;
 extern int ble_ms_adapter_peripheral_app_max_links;
 extern void *ms_add_service_sem;
 extern void *ms_add_service_mutex;
 extern void *modify_whitelist_sem;
 extern void *adv_start_sem;
-
+#endif
 /*============================================================================*
  *                              Functions
  *============================================================================*/
-void ble_ms_adapter_send_msg(uint16_t sub_type)
+bool ble_ms_adapter_app_send_api_msg(uint16_t sub_type, void *arg)
 {
-	uint8_t event = EVENT_IO_TO_APP;
-
 	T_IO_MSG io_msg;
+
+	uint8_t event = EVENT_IO_TO_APP;
 
 	io_msg.type = IO_MSG_TYPE_QDECODE;
 	io_msg.subtype = sub_type;
+	io_msg.u.buf = arg;
 
 	if (ble_ms_adapter_evt_queue_handle != NULL && ble_ms_adapter_io_queue_handle != NULL) {
 		if (os_msg_send(ble_ms_adapter_io_queue_handle, &io_msg, 0) == false) {
-			printf("ble ms_adapter send msg fail: subtype 0x%x", io_msg.subtype);
+			printf("[%s] send io queue fail! type = 0x%x\r\n", __FUNCTION__, io_msg.subtype);
+			return false;
 		} else if (os_msg_send(ble_ms_adapter_evt_queue_handle, &event, 0) == false) {
-			printf("ble ms_adapter send event fail: subtype 0x%x", io_msg.subtype);
+			printf("[%s] send event queue fail! type = 0x%x\r\n", __FUNCTION__, io_msg.subtype);
+			return false;
 		}
+	} else {
+		printf("[%s] queue is empty! type = 0x%x\r\n", __FUNCTION__, io_msg.subtype);
+		return false;
 	}
+
+	return true;
+}
+bool ble_ms_adapter_send_callback_msg(uint16_t msg_type, uint8_t cb_type, void *arg)
+{
+	T_IO_MSG callback_msg;
+	callback_msg.type = msg_type;
+
+	if( (msg_type==BT_MATTER_SEND_CB_MSG_SEND_DATA_COMPLETE) || (msg_type==BT_MATTER_SEND_CB_MSG_IND_NTF_ENABLE) ||\
+		(msg_type==BT_MATTER_SEND_CB_MSG_IND_NTF_DISABLE) || (msg_type==BT_MATTER_SEND_CB_MSG_WRITE_CHAR) )
+	{
+		callback_msg.subtype = cb_type;
+	}
+
+	callback_msg.u.buf = arg;
+	if (ble_ms_adapter_callback_queue_handle != NULL) {
+		if (os_msg_send(ble_ms_adapter_callback_queue_handle, &callback_msg, 0) == false) {
+			printf("bt matter send msg fail: subtype 0x%x", callback_msg.type);
+			return false;
+		}
+
+		return true;
+	}
+
+	return false;
 }
 
 void ble_ms_adapter_app_main_task(void *p_param);
@@ -93,12 +128,14 @@ void ble_ms_adapter_app_main_task(void *p_param);
 void ble_ms_adapter_callback_main_task(void *p_param)
 {
 	(void)p_param;
-	T_BMS_CALLBACK_MSG callback_msg;
+	T_IO_MSG callback_msg;
 
-	os_msg_queue_create(&ble_ms_adapter_callback_queue_handle, MAX_NUMBER_OF_CALLBACK_MESSAGE, sizeof(T_BMS_CALLBACK_MSG));
+	os_msg_queue_create(&ble_ms_adapter_callback_queue_handle, BLE_MS_ADAPTER_MAX_NUMBER_OF_CALLBACK_MESSAGE, sizeof(T_IO_MSG));
 
-	while (true) {
-		if (os_msg_recv(ble_ms_adapter_callback_queue_handle, &callback_msg, 0xFFFFFFFF) == true) {
+	while (true)
+	{
+		if (os_msg_recv(ble_ms_adapter_callback_queue_handle, &callback_msg, 0xFFFFFFFF) == true)
+		{
 			ble_ms_adapter_app_handle_callback_msg(callback_msg);
 		}
 	}
@@ -194,24 +231,12 @@ void ble_ms_adapter_app_task_deinit(void)
 	ble_ms_adapter_central_app_max_links = 0;
 	ble_ms_adapter_peripheral_app_max_links = 0;
 
-	if (ms_add_service_sem) {
-		os_sem_delete(ms_add_service_sem);
-		ms_add_service_sem = NULL;
+	//bt matter
+	if (ble_ms_adapter_callback_task_handle) {
+		os_task_delete(ble_ms_adapter_callback_task_handle);
 	}
-
-	if (ms_add_service_mutex) {
-		os_mutex_delete(ms_add_service_mutex);
-		ms_add_service_mutex = NULL;
-	}
-
-	if (modify_whitelist_sem) {
-		os_sem_delete(modify_whitelist_sem);
-		modify_whitelist_sem = NULL;
-	}
-
-	if (adv_start_sem) {
-		os_sem_delete(adv_start_sem);
-		adv_start_sem = NULL;
+	if (ble_ms_adapter_callback_queue_handle) {
+		os_msg_queue_delete(ble_ms_adapter_callback_queue_handle);
 	}
 
 }

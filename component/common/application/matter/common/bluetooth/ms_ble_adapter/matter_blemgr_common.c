@@ -35,14 +35,10 @@ uint16_t matter_adv_int_max = 0x20;
 uint8_t matter_adv_data[31] = {0};
 uint8_t matter_adv_data_length = 0;
 
+extern int ble_ms_adapter_app_init(void);
 int matter_blemgr_init(void) {
 	printf("[%s]enter...\r\n", __func__);
-	T_GAP_DEV_STATE new_state;
-	le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
-	while (new_state.gap_init_state != GAP_INIT_STATE_STACK_READY) {
-		os_delay(100);
-		le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
-	}
+	ble_ms_adapter_app_init();
 	return 0;
 }
 void matter_blemgr_set_callback_func(matter_blemgr_callback p, void *data) {

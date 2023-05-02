@@ -47,72 +47,36 @@ extern "C" {
  *============================================================================*/
 extern T_CLIENT_ID   ble_ms_adapter_gcs_client_id;         /**< General Common Services client client id*/
 
-typedef enum {
-	BMS_API_MSG_UPDATE_ADV_PARAM,
-	BMS_API_MSG_START_ADV,
-	BMS_API_MSG_STOP_ADV,
-	BMS_API_MSG_START_NON_ADV,
-	BMS_API_MSG_STOP_NON_ADV,
-	BMS_API_MSG_CONNECT,
-	BMS_API_MSG_DISCONNECT,
-	BMS_API_MSG_START_SCAN,
-	BMS_API_MSG_STOP_SCAN,
-	BMS_API_MSG_INDICAT_SEND,
-	BMS_API_MSG_ADD_SERVICE,
-	BMS_API_MSG_DISC_ALL_SRV,
-	BMS_API_MSG_DISC_SRV_BY_UUID,
-	BMS_API_MSG_DISC_ALL_CHAR,
-	BMS_API_MSG_DISC_CHAR_BY_UUID,
-	BMS_API_MSG_DISC_ALL_DESC,
-	BMS_API_MSG_SET_CCCD,
-	BMS_API_MSG_CONN_PARAM_REQ,
-	BMS_API_MSG_DISC_WRITE,
-	//BMS_API_MSG_ADD_WHITELIST,
-	//BMS_API_MSG_CLEAR_WHITELIST,
-	BMS_API_MSG_MODIFY_WHITELIST,
-	BMS_API_MSG_SET_DEVICE_NAME,
-	//BMS_API_MSG_SET_DEVICE_APPEAR,
-	BMS_API_MSG_MAX
-} T_BMS_API_MSG_TYPE;
+typedef struct
+{
+	uint8_t conn_id;
+	uint8_t new_state;
+	uint16_t disc_cause;
+} BT_MATTER_CONN_EVENT;
 
-typedef enum {
-	BMS_CALLBACK_MSG_STACK_READY,
-	BMS_CALLBACK_MSG_ADV_ON,
-	BMS_CALLBACK_MSG_ADV_OFF,
-	BMS_CALLBACK_MSG_CONNECTED,
-	BMS_CALLBACK_MSG_DISCONNECTED,
-	BMS_CALLBACK_MSG_SCAN_ON,
-	BMS_CALLBACK_MSG_SCAN_OFF,
-	BMS_CALLBACK_MSG_NON_ADV_ON,
-	BMS_CALLBACK_MSG_NON_ADV_OFF,
-	BMS_CALLBACK_MSG_NOTIFY_REQ,
-	BMS_CALLBACK_MSG_INDICATE_REQ,
-	BMS_CALLBACK_MSG_DISC_SVC_REPORT,
-	BMS_CALLBACK_MSG_DISC_CHAR_REPORT,
-	BMS_CALLBACK_MSG_DISC_DESC_REPORT,
-	//BMS_CALLBACK_MSG_MTU_CHANGED,
-	//BMS_CALLBACK_MSG_CONNECT_PARAM_UPDATE_REQ,
-	BMS_CALLBACK_MSG_CMP_MTU,
-	BMS_CALLBACK_MSG_CMP_SVC_DISC,
-	BMS_CALLBACK_MSG_CMP_CHAR_DISC,
-	BMS_CALLBACK_MSG_CMP_DISC_DESC_CHAR,
-	BMS_CALLBACK_MSG_CMP_WRITE,  //mster  write req and write cmd
-	BMS_CALLBACK_MSG_CMP_WRITE_RECIEVED,  //slave
-	BMS_CALLBACK_MSG_CMP_NOTIFY,
-	BMS_CALLBACK_MSG_CMP_INDICATE,
-	BMS_CALLBACK_MSG_SEND_SCAN_INFO,
-	BMS_CALLBACK_MSG_CONNECTED_MATTER,
-	BMS_CALLBACK_MSG_DISCONNECTED_MATTER,
-	BMS_CALLBACK_MSG_CMP_WRITE_RECV_MATTER,
-	BMS_CALLBACK_MSG_CMP_CCCD_RECV_MATTER,
-	BMS_CALLBACK_MSG_CMP_INDICATE_MATTER,
-	BMS_CALLBACK_MSG_MAX
-} T_BMS_CALLBACK_MSG_TYPE;
+typedef enum
+{
+	BT_MATTER_MSG_START_ADV = 12,
+	BT_MATTER_MSG_STOP_ADV,
+	BT_MATTER_MSG_SEND_DATA,
+} BT_MATTER_SERVER_MSG_TYPE;
 
-typedef struct {
-	T_BMS_CALLBACK_MSG_TYPE type;
-	void *buf;
-} T_BMS_CALLBACK_MSG;
+typedef enum
+{
+	BT_MATTER_SEND_CB_MSG_DISCONNECTED = 1,
+	BT_MATTER_SEND_CB_MSG_CONNECTED,
+	BT_MATTER_SEND_CB_MSG_SEND_DATA_COMPLETE,
+	BT_MATTER_SEND_CB_MSG_IND_NTF_ENABLE,
+	BT_MATTER_SEND_CB_MSG_IND_NTF_DISABLE,
+	BT_MATTER_SEND_CB_MSG_WRITE_CHAR,
+} BT_MATTER_SEND_MSG_TYPE;
+
+typedef enum
+{
+	CB_PROFILE_CALLBACK = 0x01,  /**< bt_matter_adapter_app_profile_callback */
+	CB_GAP_CALLBACK = 0x02, /**< bt_matter_adapter_app_gap_callback */
+	CB_GAP_MSG_CONN_EVENT = 0x3, /**< bt_matter_adapter_app_handle_gap_msg */
+} T_CHIP_BLEMGR_CALLBACK_TYPE;
 
 typedef struct {
 	uint8_t      adv_evt_type;
@@ -266,13 +230,12 @@ T_APP_RESULT ble_ms_adapter_app_gap_callback(uint8_t cb_type, void *p_cb_data);
  * @param  p_data  pointer to data.
  * @retval   result @ref T_APP_RESULT
  */
-bool ble_ms_adapter_app_send_api_msg(T_BMS_API_MSG_TYPE sub_type, void *buf);
 T_APP_RESULT ble_ms_adapter_gcs_client_callback(T_CLIENT_ID client_id, uint8_t conn_id, void *p_data);
 #if F_BT_GAPS_CHAR_WRITEABLE
 T_APP_RESULT ble_ms_adapter_gap_service_callback(T_SERVER_ID service_id, void *p_para);
 #endif
 
-void ble_ms_adapter_app_handle_callback_msg(T_BMS_CALLBACK_MSG callback_msg);
+void ble_ms_adapter_app_handle_callback_msg(T_IO_MSG callback_msg);
 void ble_ms_adapter_app_vendor_callback(uint8_t cb_type, void *p_cb_data);
 #if CONFIG_MS_MULTI_ADV
 void ble_ms_adapter_multi_adv_init();

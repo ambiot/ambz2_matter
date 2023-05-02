@@ -12,17 +12,23 @@
    * <h2><center>&copy; COPYRIGHT 2017 Realtek Semiconductor Corporation</center></h2>
    **************************************************************************************
   */
-#ifndef _APP_TASK_H_
-#define _APP_TASK_H_
+#ifndef __BT_PERIPHERIAL_MATTER_APP_TASK_H_
+#define __BT_PERIPHERIAL_MATTER_APP_TASK_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @brief  Initialize App task
  * @return void
  */
-void ble_ms_adapter_send_msg(uint16_t sub_type);
+bool ble_ms_adapter_app_send_api_msg(uint16_t sub_type, void *arg);
+bool ble_ms_adapter_send_callback_msg(uint16_t msg_type, uint8_t cb_type, void *arg);
 void ble_ms_adapter_app_task_init(void);
-//void ble_peripheral_ble_central_concurrent_app_task_init(void);
 void ble_ms_adapter_app_task_deinit(void);
 
+#ifdef __cplusplus
+}
 #endif
-
+#endif
