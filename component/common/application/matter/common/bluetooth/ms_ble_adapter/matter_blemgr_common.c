@@ -139,15 +139,27 @@ int matter_blemgr_send_indication(uint8_t connect_id, uint8_t *data, uint16_t da
 		printf("[%s]:invalid param:conn_hdl %d,data 0x%x data_length 0x%x\r\n",__func__, connect_id, data, data_length);
 		return 1;
 	}
-	BMS_INDICATION_PARAM *indication_param = (BMS_INDICATION_PARAM *)os_mem_alloc(0, sizeof(BMS_INDICATION_PARAM));
-	memset(indication_param, 0, sizeof(BMS_INDICATION_PARAM));
-	indication_param->val = (uint8_t *) os_mem_alloc(0, data_length);
+	BT_MATTER_SERVER_SEND_DATA *indication_param = (BT_MATTER_SERVER_SEND_DATA *)os_mem_alloc(0, sizeof(BT_MATTER_SERVER_SEND_DATA));
+	memset(indication_param, 0, sizeof(BT_MATTER_SERVER_SEND_DATA));
 	indication_param->conn_id = connect_id;
 	indication_param->srv_id = ble_matter_adapter_service_id;
-	indication_param->attrib_index = BT_MATTER_ADAPTER_SERVICE_CHAR_INDICATE_CCCD_INDEX - 1;
-	indication_param->type = 1;
-	indication_param->len = data_length;
+	indication_param->attrib_index = BT_MATTER_ADAPTER_SERVICE_CHAR_TX_INDEX;
+	indication_param->data_length = data_length;
+	indication_param->type = GATT_PDU_TYPE_INDICATION;
+	if (indication_param->data_len != 0)
+        {
+            indication_param->p_data = os_mem_alloc(0, indication_param->data_len);
+            memcpy(indication_param->p_data, data, indication_param->data_len);
+        }
+        if (bt_mesh_device_matter_adapter_send_msg(4, param) == false)
+        {
+            printf("os_mem_free\r\n");
+            os_mem_free(param);
+            os_mem_free(indication_param->p_data);
+            return false;
+        }
 	memcpy(indication_param->val, data, data_length);
+        
 	if (ble_ms_adapter_app_send_api_msg(BMS_API_MSG_INDICAT_SEND, indication_param) == false) {
 		printf("[%s] msg send fail\r\n", __func__);
 		os_mem_free(indication_param->val);
@@ -156,6 +168,5 @@ int matter_blemgr_send_indication(uint8_t connect_id, uint8_t *data, uint16_t da
 	}
 #endif
 	return 0;
-
 }
 //#endif

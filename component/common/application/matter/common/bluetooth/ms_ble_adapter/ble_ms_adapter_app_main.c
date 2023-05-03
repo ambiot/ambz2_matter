@@ -78,8 +78,8 @@ extern T_SERVER_ID ble_matter_adapter_service_add_service(void *p_func);
 /*============================================================================*
  *                              Functions
  *============================================================================*/
-matter_blemgr_callback matter_blemgr_callback_func = NULL;
-void *matter_blemgr_callback_data = NULL;
+extern matter_blemgr_callback matter_blemgr_callback_func;
+extern void *matter_blemgr_callback_data;
 /**
  * @brief  Config bt stack related feature
  *

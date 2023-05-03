@@ -11,7 +11,7 @@
 *********************************************************************************************************
 */
 #include <platform_opts_bt.h>
-#if defined(CONFIG_MS_MULTI_ADV) && CONFIG_MS_MULTI_ADV
+//#if defined(CONFIG_MS_MULTI_ADV) && CONFIG_MS_MULTI_ADV
 #include <string.h>
 #include <trace_app.h>
 #include "ble_ms_adapter_service.h"
@@ -274,4 +274,4 @@ T_SERVER_ID ble_matter_adapter_service_add_service(void *p_func)
     ble_matter_adapter_service_cb = (P_FUN_SERVER_GENERAL_CB)p_func;
     return ble_matter_adapter_service_id;
 }
-#endif
+//#endif

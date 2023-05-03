@@ -8,12 +8,16 @@
 #define BT_MATTER_ADAPTER_SERVICE_CHAR_WRITE_INDEX   0x2
 #define BT_MATTER_ADAPTER_SERVICE_CHAR_INDICATE_INDEX  0x4
 #define BT_MATTER_ADAPTER_SERVICE_CHAR_INDICATE_CCCD_INDEX  BT_MATTER_ADAPTER_SERVICE_CHAR_INDICATE_INDEX + 1
-#if CONFIG_MS_MULTI_ADV
+
+#define MATTER_NOTIFY_INDICATE_V3_ENABLE 1
+#define MATTER_NOTIFY_INDICATE_V3_DISABLE 2
+
+//#if CONFIG_MS_MULTI_ADV     /*To fix ble_ms_adapter_service.h:36:2: error: unknown type name 'T_MS_READ_MSG'*/
 typedef struct {
 	unsigned int *p_len;
 	uint8_t *p_value;
 } T_MS_READ_MSG;
-#endif
+//#endif
 
 typedef struct {
 	T_WRITE_TYPE write_type;
@@ -28,9 +32,9 @@ typedef struct {
 } T_MS_CCCD_MSG;
 
 typedef union {
-#if CONFIG_MS_MULTI_ADV
+//#if CONFIG_MS_MULTI_ADV  /*To fix ble_matter_adapter_service.c:157:24: error: 'T_MS_MSG_DATA' has no member named 'read'*/
 	T_MS_READ_MSG read;
-#endif
+//#endif
 	T_MS_CCCD_MSG cccd;
 	T_MS_WRITE_MSG write;
 } T_MS_MSG_DATA;
