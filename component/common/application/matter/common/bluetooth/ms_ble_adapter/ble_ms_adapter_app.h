@@ -103,7 +103,7 @@ typedef struct {
 	uint16_t 	adv_int_min;
 	uint16_t 	adv_int_max;
 } M_MULTI_ADV_PARAM;
-
+#endif
 typedef struct {
 	void *task_handle;
 	void *sem_handle;
@@ -114,7 +114,7 @@ typedef struct {
 	uint8_t adv_id;
 } T_MULTI_ADV_CONCURRENT;
 
-#endif
+
 typedef enum {
 	BMS_CONN_ADV = 1,
 	BMS_NONCONN_ADV,

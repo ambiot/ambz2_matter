@@ -27,6 +27,7 @@
 #define MATTER_UUID_C3		0x04, 0x8F, 0x21, 0x83, 0x8A, 0x74, 0x7D, 0xB8, 0xF2, 0x45, 0x72, 0x87, 0x38, 0x02, 0x63, 0x64
 
 T_SERVER_ID ble_matter_adapter_service_id;
+#define BT_MATTER_ADAPTER_SERVICE_C3_INDEX 0x07
 /**<  Value of bt config characteristic. */
 static uint8_t ble_matter_char_write_value[MS_WRITE_MAX_LEN] = {0};
 static uint8_t ble_matter_char_read_value[MS_READ_MAX_LEN] = {0};
@@ -149,21 +150,26 @@ T_APP_RESULT  ble_matter_adapter_service_attr_read_cb(uint8_t conn_id, T_SERVER_
                                             uint16_t attrib_index, uint16_t offset, uint16_t *p_length, uint8_t **pp_value)
 {
     T_APP_RESULT  cause  = APP_RESULT_SUCCESS;
-	T_MS_ADAPTER_CALLBACK_DATA callback_data;
-	callback_data.msg_type = SERVICE_CALLBACK_TYPE_READ_CHAR_VALUE;
-	callback_data.conn_id = conn_id;
-	callback_data.srv_id = service_id;
-
-	callback_data.msg_data.read.p_value = &ble_matter_char_read_value;
-	callback_data.msg_data.read.p_len = ble_matter_char_read_len;
-
-	if (ble_matter_adapter_service_cb)
+    switch (attrib_index)
     {
-        ble_matter_adapter_service_cb(service_id, (void *)&callback_data);
+    case BT_MATTER_ADAPTER_SERVICE_C3_INDEX:
+        {
+            T_MATTER_CALLBACK_DATA callback_data;
+            callback_data.msg_type = SERVICE_CALLBACK_TYPE_READ_CHAR_VALUE;
+            callback_data.conn_id = conn_id;
+            if (ble_matter_adapter_service_cb)
+            {
+                ble_matter_adapter_service_cb(service_id, (void *)&callback_data);
+            }
+            *pp_value = callback_data.msg_data.write_read.p_value;
+            *p_length = callback_data.msg_data.write_read.len;
+        }
+        break;
+    default:
+        printf("bt_matter_adapter_service_attr_read_cb, Attr not found, index %d", attrib_index);
+        cause = APP_RESULT_ATTR_NOT_FOUND;
+        break;
     }
-
-	*pp_value = ble_matter_char_read_value;
-    *p_length = ble_matter_char_read_len;
 
     return (cause);
 }
@@ -182,36 +188,35 @@ T_APP_RESULT ble_matter_adapter_service_attr_write_cb(uint8_t conn_id, T_SERVER_
                                             uint16_t attrib_index, T_WRITE_TYPE write_type, uint16_t length, uint8_t *p_value,
                                             P_FUN_WRITE_IND_POST_PROC *p_write_ind_post_proc)
 {
-	//printf("[BT_MATTER_ADAPTER] Write %d\n\r", length);
-	T_MS_ADAPTER_CALLBACK_DATA callback_data;
+    //printf("[BT_MATTER_ADAPTER] Write %d\n\r", length);
+    T_MATTER_CALLBACK_DATA callback_data;
+    T_APP_RESULT  cause = APP_RESULT_SUCCESS;
+    APP_PRINT_INFO1("bt_matter_adapter_service_attr_write_cb write_type = 0x%x", write_type);
+    *p_write_ind_post_proc = NULL;
 
-	T_APP_RESULT  cause = APP_RESULT_SUCCESS;
-	APP_PRINT_INFO1("bt_matter_adapter_service_attr_write_cb write_type = 0x%x", write_type);
-	*p_write_ind_post_proc = NULL;
+    if (BT_MATTER_ADAPTER_SERVICE_CHAR_RX_INDEX == attrib_index) {
+        /* Make sure written value size is valid. */
+        if (p_value == NULL) {
+            cause  = APP_RESULT_INVALID_VALUE_SIZE;
+        } else {
+            /* Notify Application. */
+            callback_data.msg_type = SERVICE_CALLBACK_TYPE_WRITE_CHAR_VALUE;
+            callback_data.conn_id  = conn_id;
+            callback_data.msg_data.write_read.len = length;
+            callback_data.msg_data.write_read.p_value = p_value;
 
-	if (BT_MATTER_ADAPTER_SERVICE_CHAR_WRITE_INDEX == attrib_index) {
-		/* Make sure written value size is valid. */
-		if (p_value == NULL) {
-			cause  = APP_RESULT_INVALID_VALUE_SIZE;
-		} else {
-			/* Notify Application. */
-			callback_data.msg_type = SERVICE_CALLBACK_TYPE_WRITE_CHAR_VALUE;
-			callback_data.conn_id  = conn_id;
-			callback_data.msg_data.write.write_type = write_type;
-			callback_data.msg_data.write.p_value = p_value;
-			callback_data.msg_data.write.len = length;
+            //handle_bt_matter_adapter_app_data(p_value, length);
+            if (ble_matter_adapter_service_cb) {
+                ble_matter_adapter_service_cb(service_id, (void *)&callback_data);
+            }
+        }
+    } else {
+            APP_PRINT_ERROR2("bt_matter_adapter_service_attr_write_cb Error: attrib_index 0x%x, length %d",
+                attrib_index, length);
+            cause = APP_RESULT_ATTR_NOT_FOUND;
+    }
 
-			if (ble_matter_adapter_service_cb) {
-				ble_matter_adapter_service_cb(service_id, (void *)&callback_data);
-			}
-		}
-	} else {
-			APP_PRINT_ERROR2("bt_matter_adapter_service_attr_write_cb Error: attrib_index 0x%x, length %d",
-			 attrib_index, length);
-			cause = APP_RESULT_ATTR_NOT_FOUND;
-	}
-
-	return cause;
+    return cause;
 }
 
 /**
@@ -226,15 +231,33 @@ T_APP_RESULT ble_matter_adapter_service_attr_write_cb(uint8_t conn_id, T_SERVER_
 void ble_matter_adapter_service_cccd_update_cb(uint8_t conn_id, T_SERVER_ID service_id, uint16_t index,
                                      uint16_t cccbits)
 {
-    T_MS_ADAPTER_CALLBACK_DATA callback_data;
+    T_MATTER_CALLBACK_DATA callback_data;
+    bool is_handled = false;
     callback_data.conn_id = conn_id;
     callback_data.msg_type = SERVICE_CALLBACK_TYPE_INDIFICATION_NOTIFICATION;
-    callback_data.conn_id = conn_id;
-	callback_data.srv_id = service_id;
-	callback_data.msg_data.cccd.attr_index = index;
-	callback_data.msg_data.cccd.ccc_val = cccbits;
+    //printf("simp_ble_service_cccd_update_cb: index = %d, cccbits 0x%x\r\n", index, cccbits);
+    switch (index)
+    {
+    case BT_MATTER_ADAPTER_SERVICE_CHAR_INDICATE_CCCD_INDEX:
+        {
+            if (cccbits & GATT_CLIENT_CHAR_CONFIG_INDICATE)
+            {
+                // Enable Notification
+                callback_data.msg_data.notification_indification_index = MATTER_NOTIFY_INDICATE_V3_ENABLE;
+            }
+            else
+            {
+                // Disable Notification
+                callback_data.msg_data.notification_indification_index = MATTER_NOTIFY_INDICATE_V3_DISABLE;
+            }
+            is_handled =  true;
+        }
+        break;
+    default:
+        break;
+    }
     /* Notify Application. */
-    if (ble_matter_adapter_service_cb)
+    if (ble_matter_adapter_service_cb && (is_handled == true))
     {
         ble_matter_adapter_service_cb(service_id, (void *)&callback_data);
     }

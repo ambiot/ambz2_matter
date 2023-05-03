@@ -66,10 +66,10 @@ extern T_APP_RESULT ble_ms_adapter_app_profile_callback(T_SERVER_ID service_id, 
 /** @brief  Default maximum advertising interval */
 #define DEFAULT_ADVERTISING_INTERVAL_MAX            192 //120ms
 
-extern BMS_SERVICE_INFO ble_ms_adapter_srvs_head;
-extern BMS_SERVICE_INFO *ble_ms_adapter_srv_p;
-extern uint8_t ble_ms_adapter_srvs_num;
-extern void ble_ms_adapter_free_service_info(BMS_SERVICE_INFO *service_info);
+//extern BMS_SERVICE_INFO ble_ms_adapter_srvs_head;
+//extern BMS_SERVICE_INFO *ble_ms_adapter_srv_p;
+//extern uint8_t ble_ms_adapter_srvs_num;
+//extern void ble_ms_adapter_free_service_info(BMS_SERVICE_INFO *service_info);
 #if CONFIG_MS_MULTI_ADV
 extern T_SERVER_ID ble_matter_adapter_service_id;
 extern uint8_t ms_local_static_random_addr[6];
@@ -78,8 +78,6 @@ extern T_SERVER_ID ble_matter_adapter_service_add_service(void *p_func);
 /*============================================================================*
  *                              Functions
  *============================================================================*/
-extern matter_blemgr_callback matter_blemgr_callback_func;
-extern void *matter_blemgr_callback_data;
 /**
  * @brief  Config bt stack related feature
  *
@@ -235,15 +233,24 @@ void ble_ms_adapter_app_le_gap_init(void)
  * @brief  Add GATT clients and register callbacks
  * @return void
  */
+ extern T_SERVER_ID ble_matter_adapter_service_add_service(void *p_func);
+ extern T_APP_RESULT ble_ms_adapter_app_client_callback(T_CLIENT_ID client_id, uint8_t conn_id, void *p_data);
+ extern T_SERVER_ID ble_matter_adapter_service_id;	
 void ble_ms_adapter_app_le_profile_init(void)
 {
-	client_init(1);
-	ble_ms_adapter_gcs_client_id = gcs_add_client(ble_ms_adapter_gcs_client_callback, BLE_MS_ADAPTER_APP_MAX_LINKS, BLE_MS_ADAPTER_APP_MAX_DISCOV_TABLE_NUM);
-	server_init(MAX_REGISRABLE_SERVICE_NUMBER - 2);
+	/* Register Server Callback */
+	server_init(1);
 #if CONFIG_MS_MULTI_ADV
 	ble_matter_adapter_service_id = ble_matter_adapter_service_add_service((void *)ble_ms_adapter_app_profile_callback);
 #endif
+	ble_matter_adapter_service_id = ble_matter_adapter_service_add_service((void *)ble_ms_adapter_app_profile_callback);
 	server_register_app_cb(ble_ms_adapter_app_profile_callback);
+	
+	/* Add Client Module */
+	client_init(1);
+	ble_ms_adapter_gcs_client_id = gcs_add_client(ble_ms_adapter_gcs_client_callback, BLE_MS_ADAPTER_APP_MAX_LINKS, BLE_MS_ADAPTER_APP_MAX_DISCOV_TABLE_NUM);
+	/* Register Client Callback--App_ClientCallback to handle events from Profile Client layer. */
+        client_register_general_client_cb(ble_ms_adapter_app_client_callback);
 }
 
 
@@ -307,6 +314,7 @@ int ble_ms_adapter_app_init(void)
 
 }
 
+#if 0
 void ble_ms_adapter_free_service_table(void)
 {
 	BMS_SERVICE_INFO *p_srv = NULL;
@@ -318,18 +326,21 @@ void ble_ms_adapter_free_service_table(void)
 	ble_ms_adapter_srv_p = &ble_ms_adapter_srvs_head;
 	ble_ms_adapter_srvs_num = 0;
 }
+#endif
 
 extern void gcs_delete_client(void);
+extern T_GAP_DEV_STATE bt_mesh_device_matter_gap_dev_state;
 void ble_ms_adapter_app_deinit(void)
 {
-	ble_ms_adapter_free_service_table();
-
-	ble_ms_adapter_app_task_deinit();
+	//ble_ms_adapter_free_service_table();
 	T_GAP_DEV_STATE state;
+	ble_ms_adapter_app_task_deinit();
 	le_get_gap_param(GAP_PARAM_DEV_STATE, &state);
 	if (state.gap_init_state != GAP_INIT_STATE_STACK_READY) {
 		printf("[BLE Ms Adapter]BT Stack is not running\n\r");
+		bt_mesh_device_matter_gap_dev_state.gap_init_state = GAP_INIT_STATE_INIT;
 	}
+	
 #if F_BT_DEINIT
 	else {
 		gcs_delete_client();
@@ -338,6 +349,7 @@ void ble_ms_adapter_app_deinit(void)
 		printf("[BLE Ms Adapter]BT Stack deinitalized\n\r");
 	}
 #endif
+	bt_mesh_device_matter_gap_dev_state.gap_init_state = GAP_INIT_STATE_INIT;
 }
 
 /** @} */ /* End of group CENTRAL_CLIENT_DEMO_MAIN */
