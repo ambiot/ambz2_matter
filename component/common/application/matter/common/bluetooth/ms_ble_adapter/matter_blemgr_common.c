@@ -42,10 +42,11 @@ uint8_t matter_adv_data_length = 0;
 
 extern T_SERVER_ID ble_matter_adapter_service_id;
 extern int ble_ms_adapter_app_init(void);
-
+extern void ble_ms_adapter_multi_adv_init();
 int matter_blemgr_init(void) {
 	printf("[%s]enter...\r\n", __func__);
 	ble_ms_adapter_app_init();
+	ble_ms_adapter_multi_adv_init();
 	return 0;
 }
 void matter_blemgr_set_callback_func(matter_blemgr_callback p, void *data) {
@@ -173,4 +174,14 @@ int matter_blemgr_send_indication(uint8_t connect_id, uint8_t *data, uint16_t da
     	}
 	return 0;
 }
+void ble_ms_adapter_switch_bt_address(uint8_t *address) {
+	uint8_t tmp=0;
+	for(int i=0;i<6/2;++i){
+	tmp=address[6-1-i];
+	address[6-1-i]=address[i];
+	address[i]=tmp;
+	}
+
+}
+
 //#endif

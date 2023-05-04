@@ -103,6 +103,24 @@ typedef struct {
 	uint16_t 	adv_int_min;
 	uint16_t 	adv_int_max;
 } M_MULTI_ADV_PARAM;
+
+typedef enum {
+	BMS_CALLBACK_MSG_CONNECTED,
+	BMS_CALLBACK_MSG_CONNECTED_MATTER,
+	BMS_CALLBACK_MSG_DISCONNECTED,
+	BMS_CALLBACK_MSG_DISCONNECTED_MATTER,
+	BMS_CALLBACK_MSG_ADV_OFF,
+	BMS_CALLBACK_MSG_CMP_WRITE_RECV_MATTER,
+	BMS_CALLBACK_MSG_CMP_WRITE_RECIEVED,
+	BMS_CALLBACK_MSG_CMP_CCCD_RECV_MATTER,
+	BMS_CALLBACK_MSG_CMP_INDICATE,
+	BMS_CALLBACK_MSG_CMP_INDICATE_MATTER
+} T_BMS_CALLBACK_MSG_TYPE;
+
+typedef struct {
+	T_BMS_CALLBACK_MSG_TYPE type;
+	void *buf;
+} T_BMS_CALLBACK_MSG;
 #endif
 typedef struct {
 	void *task_handle;
@@ -235,7 +253,13 @@ T_APP_RESULT ble_ms_adapter_gcs_client_callback(T_CLIENT_ID client_id, uint8_t c
 T_APP_RESULT ble_ms_adapter_gap_service_callback(T_SERVER_ID service_id, void *p_para);
 #endif
 
+#if CONFIG_MS_MULTI_ADV
+void ble_ms_adapter_app_handle_callback_msg(T_BMS_CALLBACK_MSG callback_msg);
+#else
 void ble_ms_adapter_app_handle_callback_msg(T_IO_MSG callback_msg);
+#endif
+
+
 void ble_ms_adapter_app_vendor_callback(uint8_t cb_type, void *p_cb_data);
 #if CONFIG_MS_MULTI_ADV
 void ble_ms_adapter_multi_adv_init();
