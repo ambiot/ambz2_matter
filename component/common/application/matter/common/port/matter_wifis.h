@@ -42,6 +42,7 @@ int matter_wifi_is_connected_to_ap(void);
 void matter_lwip_dhcp(void);
 void matter_lwip_dhcp6(void);
 void matter_lwip_releaseip(void);
+
 #ifdef __cplusplus
 }
 #endif
