@@ -39,7 +39,9 @@ int matter_wifi_disconnect(void);
 int matter_wifi_on(rtw_mode_t mode);
 int matter_wifi_set_mode(rtw_mode_t mode);
 int matter_wifi_is_connected_to_ap(void);
-uint8_t matter_lwip_dhcp(uint8_t idx, uint8_t dhcp_state);
+void matter_lwip_dhcp(void);
+void matter_lwip_dhcp6(void);
+void matter_lwip_releaseip(void);
 #ifdef __cplusplus
 }
 #endif
