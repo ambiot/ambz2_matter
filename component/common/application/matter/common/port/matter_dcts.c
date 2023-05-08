@@ -648,7 +648,7 @@ exit:
 s32 getPref_bin_new(const char *domain, const char *key, u8 * buf, size_t bufSize, size_t *outLen)
 {
     dct_handle_t handle;
-    s32 ret = -1;
+    s32 ret;
     char ns[15];
 
     // Loop over DCT1 modules
