@@ -473,14 +473,23 @@ printf("[%s]enter...%d,  msg_type =%d\r\n", __func__, __LINE__, msg_type);
 	}
 	break;
 	case BMS_CALLBACK_MSG_CMP_WRITE_RECV_MATTER: {
-		T_MATTER_BLEMGR_RX_CHAR_WRITE_CB_ARG * write_matter = callback_msg.u.buf;
-		matter_blemgr_callback_func(matter_blemgr_callback_data, MATTER_BLEMGR_RX_CHAR_WRITE_CB, callback_msg.u.buf);
-		if (write_matter->len) {
-			os_mem_free((void *)write_matter->p_value);
-		}
-		os_mem_free(callback_msg.u.buf);
-	}
-	break;
+            T_MATTER_CALLBACK_DATA *write_char_val = callback_msg.u.buf;
+            T_MATTER_BLEMGR_RX_CHAR_WRITE_CB_ARG rx_char_write_cb_arg;
+            rx_char_write_cb_arg.conn_id = write_char_val->conn_id;
+            rx_char_write_cb_arg.p_value = write_char_val->msg_data.write_read.p_value;
+            rx_char_write_cb_arg.len = write_char_val->msg_data.write_read.len;
+            if (matter_blemgr_callback_func) {
+                matter_blemgr_callback_func(matter_blemgr_callback_data, MATTER_BLEMGR_RX_CHAR_WRITE_CB, &rx_char_write_cb_arg);
+            }
+            if (write_char_val->msg_data.write_read.len != 0)
+            {
+                os_mem_free(write_char_val->msg_data.write_read.p_value);
+                write_char_val->msg_data.write_read.p_value = NULL;
+            }
+            os_mem_free(callback_msg.u.buf);
+            callback_msg.u.buf = NULL;
+        }
+        break;
 	case BMS_CALLBACK_MSG_CMP_CCCD_RECV_MATTER: {
 		matter_blemgr_callback_func(matter_blemgr_callback_data, MATTER_BLEMGR_TX_CHAR_CCCD_WRITE_CB, callback_msg.u.buf);
 		os_mem_free(callback_msg.u.buf);
@@ -2115,7 +2124,7 @@ printf("[%s]enter...%d, p_ms_cb_data->conn_id = %d \r\n", __func__, __LINE__, p_
                         write_char_val->msg_data.write_read.p_value = os_mem_alloc(0, write_char_val->msg_data.write_read.len);
                         memcpy(write_char_val->msg_data.write_read.p_value, p_ms_cb_data->msg_data.write_read.p_value, p_ms_cb_data->msg_data.write_read.len);
                     }
-                    if(ble_ms_adapter_send_callback_msg(BT_MATTER_SEND_CB_MSG_WRITE_CHAR, service_id, write_char_val)==false)
+                    if(ble_ms_adapter_send_callback_msg(BMS_CALLBACK_MSG_CMP_WRITE_RECV_MATTER, service_id, write_char_val)==false)
                     {
                         if (write_char_val->msg_data.write_read.len !=0)
                         {
