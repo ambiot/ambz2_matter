@@ -23,6 +23,7 @@
 #include <credentials/examples/DeviceAttestationCredsExample.h>
 
 #include <lib/dnssd/Advertiser.h>
+#include <platform/Ameba/AmebaUtils.h>
 
 #include <platform/Ameba/AmebaConfig.h>
 #include <platform/Ameba/FactoryDataProvider.h>
@@ -33,6 +34,10 @@
 #include <support/CHIPMem.h>
 #include <support/CodeUtils.h>
 #include <support/ErrorStr.h>
+
+#if CONFIG_ENABLE_CHIP_SHELL
+#include <shell/launch_shell.h>
+#endif
 
 using namespace ::chip;
 using namespace ::chip::DeviceLayer;
@@ -49,7 +54,7 @@ void matter_core_device_callback_internal(const ChipDeviceEvent * event, intptr_
     {
     case DeviceEventType::kInternetConnectivityChange:
 #if CHIP_DEVICE_CONFIG_ENABLE_OTA_REQUESTOR
-        static bool isOTAInitialized = false;
+        static bool isOTAInitialized = false; // use this static variable to replace CheckInit()
 #endif
         if (event->InternetConnectivityChange.IPv4 == kConnectivity_Established)
         {
@@ -65,8 +70,6 @@ void matter_core_device_callback_internal(const ChipDeviceEvent * event, intptr_
             ChipLogProgress(DeviceLayer, "IPv6 Server ready...");
             chip::app::DnssdServer::Instance().StartServer();
 
-            ChipLogProgress(DeviceLayer, "Initializing route hook...");
-            ameba_route_hook_init();
 #if CHIP_DEVICE_CONFIG_ENABLE_OTA_REQUESTOR
             // Init OTA requestor only when we have gotten IPv6 address
             if (!isOTAInitialized)
@@ -92,6 +95,15 @@ void matter_core_device_callback_internal(const ChipDeviceEvent * event, intptr_
             // newly selected address.
             chip::app::DnssdServer::Instance().StartServer();
         }
+        if (event->InterfaceIpAddressChanged.Type == InterfaceIpChangeType::kIpV6_Assigned)
+        {
+            ChipLogProgress(DeviceLayer, "Initializing route hook...");
+            ameba_route_hook_init();
+        }
+        break;
+    case DeviceEventType::kCommissioningComplete:
+        ChipLogProgress(DeviceLayer, "Commissioning Complete");
+        chip::DeviceLayer::Internal::AmebaUtils::SetCurrentProvisionedNetwork();
         break;
     }
 }
@@ -104,6 +116,7 @@ void matter_core_init_server(intptr_t context)
     initParams.InitializeStaticResourcesBeforeServerInit();
     chip::Server::GetInstance().Init(initParams);
     gExampleDeviceInfoProvider.SetStorageDelegate(&Server::GetInstance().GetPersistentStorage());
+    // TODO: Use our own DeviceInfoProvider
     chip::DeviceLayer::SetDeviceInfoProvider(&gExampleDeviceInfoProvider);
 
     sWiFiNetworkCommissioningInstance.Init();
@@ -117,6 +130,11 @@ void matter_core_init_server(intptr_t context)
         // QR code will be used with CHIP Tool
         PrintOnboardingCodes(chip::RendezvousInformationFlags(chip::RendezvousInformationFlag::kBLE));
     }
+
+#if CONFIG_ENABLE_CHIP_SHELL
+    InitBindingHandler();
+#endif
+
     xTaskNotifyGive(task_to_notify);
 }
 
@@ -130,9 +148,15 @@ CHIP_ERROR matter_core_init()
     err = PlatformMgr().InitChipStack();
     SuccessOrExit(err);
 
-    // TODO: update this when upstream PR merged
+    err = mFactoryDataProvider.Init();
+    if (err != CHIP_NO_ERROR)
+    {
+        ChipLogError(DeviceLayer, "Error initializing FactoryData!");
+        ChipLogError(DeviceLayer, "Check if you have flashed it correctly!");
+    }
     SetCommissionableDataProvider(&mFactoryDataProvider);
     SetDeviceAttestationCredentialsProvider(&mFactoryDataProvider);
+    SetDeviceInstanceInfoProvider(&mFactoryDataProvider);
 
     if (CONFIG_NETWORK_LAYER_BLE)
     {

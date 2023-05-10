@@ -5,6 +5,9 @@ CHIPDIR = $(SDKROOTDIR)/third_party/connectedhomeip
 OUTPUT_DIR = $(CHIPDIR)/examples/lighting-app/ameba/build/chip
 MATTER_TOOLDIR = $(SDKROOTDIR)/tools/matter
 
+THERMOSTAT_FILE = $(CHIPDIR)/examples/thermostat/ameba/build/chip/codegen/cluster-file.txt
+THERMOSTAT_ZAP = $(CHIPDIR)/examples/thermostat/thermostat-common/thermostat.zap
+
 OS := $(shell uname)
 LBITS := $(shell getconf LONG_BIT)
 
@@ -38,14 +41,16 @@ endif
 endif
 	@echo Toolchain unzip done!
 
+$(THERMOSTAT_FILE): $(THERMOSTAT_ZAP)
+	@mkdir -p $(CHIPDIR)/examples/thermostat/ameba/build/chip/codegen/zap-generated
+	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl.json --output-dir examples/thermostat/ameba/build/chip/codegen/zap-generated  $^
+	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/thermostat/ameba/build/chip/codegen/zap-generated $^
+	@python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(CHIPDIR)/examples/thermostat/ameba/build/chip/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(CHIPDIR)/examples/thermostat/thermostat-common/thermostat.matter
+	@python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $^ > $(CHIPDIR)/examples/thermostat/ameba/build/chip/codegen/cluster-file.txt
+	@python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $@ --chip_path $(CHIPDIR)
+
 .PHONY: thermostat
-thermostat: toolchain
-	mkdir -p $(CHIPDIR)/examples/thermostat/ameba/build/chip/codegen/zap-generated && \
-	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl.json --output-dir examples/thermostat/ameba/build/chip/codegen/zap-generated examples/thermostat/thermostat-common/thermostat.zap && \
-	python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/thermostat/ameba/build/chip/codegen/zap-generated examples/thermostat/thermostat-common/thermostat.zap && \
-	python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(CHIPDIR)/examples/thermostat/ameba/build/chip/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(CHIPDIR)/examples/thermostat/thermostat-common/thermostat.matter && \
-	python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $(CHIPDIR)/examples/thermostat/thermostat-common/thermostat.zap > $(CHIPDIR)/examples/thermostat/ameba/build/chip/codegen/cluster-file.txt && \
-	python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $(CHIPDIR)/examples/thermostat/ameba/build/chip/codegen/cluster-file.txt --chip_path $(CHIPDIR) && \
+thermostat: toolchain $(THERMOSTAT_FILE)
 	$(MAKE) -f lib_chip_thermostat_core.mk all
 	$(MAKE) -f lib_chip_thermostat_main.mk all
 
