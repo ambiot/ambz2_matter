@@ -253,11 +253,8 @@ T_APP_RESULT ble_ms_adapter_gcs_client_callback(T_CLIENT_ID client_id, uint8_t c
 T_APP_RESULT ble_ms_adapter_gap_service_callback(T_SERVER_ID service_id, void *p_para);
 #endif
 
-#if CONFIG_MS_MULTI_ADV
-void ble_ms_adapter_app_handle_callback_msg(T_BMS_CALLBACK_MSG callback_msg);
-#else
 void ble_ms_adapter_app_handle_callback_msg(T_IO_MSG callback_msg);
-#endif
+
 
 
 void ble_ms_adapter_app_vendor_callback(uint8_t cb_type, void *p_cb_data);

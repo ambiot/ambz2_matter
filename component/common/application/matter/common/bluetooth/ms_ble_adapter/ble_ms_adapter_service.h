@@ -53,10 +53,9 @@ typedef union {
 
 typedef struct {
 	uint8_t conn_id;
-	T_SERVER_ID srv_id;
 	T_SERVICE_CALLBACK_TYPE msg_type;
 	T_MS_MSG_DATA msg_data;
-
+	T_SERVER_ID srv_id;
 } T_MS_ADAPTER_CALLBACK_DATA;
 
 typedef struct

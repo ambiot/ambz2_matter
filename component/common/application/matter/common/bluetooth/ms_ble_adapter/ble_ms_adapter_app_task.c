@@ -128,11 +128,7 @@ void ble_ms_adapter_app_main_task(void *p_param);
 void ble_ms_adapter_callback_main_task(void *p_param)
 {
 	(void)p_param;
-#if CONFIG_MS_MULTI_ADV
-	T_BMS_CALLBACK_MSG callback_msg;
-#else
 	T_IO_MSG callback_msg;
-#endif
 	os_msg_queue_create(&ble_ms_adapter_callback_queue_handle, BLE_MS_ADAPTER_MAX_NUMBER_OF_CALLBACK_MESSAGE, sizeof(T_IO_MSG));
 
 	while (true)
