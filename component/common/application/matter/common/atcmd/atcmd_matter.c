@@ -16,6 +16,9 @@ extern void amebaApplyUpdateCmdHandler();
 #endif
 #endif
 
+// Queue for matter shell
+QueueHandle_t shell_queue;
+
 void fATchipapp(void *arg)
 {
 	/* To avoid gcc warnings */
@@ -55,18 +58,32 @@ void fATchipapp2(void *arg)
 #endif
 }
 
+void fATmattershell(void *arg)
+{
+    if (arg != NULL)
+    {
+        xQueueSend(shell_queue, arg, pdMS_TO_TICKS(10));
+    }
+    else
+    {
+        printf("No arguments provided for matter shell\r\n");
+    } 
+}
+
 log_item_t at_matter_items[] = {
 #ifndef CONFIG_INIC_NO_FLASH
 #if ATCMD_VER == ATVER_1
-	{"ATS$", fATchipapp, {NULL,NULL}},
-	{"ATS%", fATchipapp1, {NULL, NULL}},
-	{"ATS^", fATchipapp2, {NULL, NULL}},
+	{"ATM$", fATchipapp, {NULL,NULL}},
+	{"ATM%", fATchipapp1, {NULL, NULL}},
+	{"ATM^", fATchipapp2, {NULL, NULL}},
+    {"ATMS", fATmattershell, {NULL, NULL}},
 #endif // end of #if ATCMD_VER == ATVER_1
 #endif
 };
 
 void at_matter_init(void)
 {
+    shell_queue = xQueueCreate(3, 256); // backlog 3 commands max
 	log_service_add_table(at_matter_items, sizeof(at_matter_items)/sizeof(at_matter_items[0]));
 }
 
