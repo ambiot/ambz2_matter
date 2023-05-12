@@ -34,6 +34,7 @@ extern T_MULTI_ADV_CONCURRENT ms_multi_adapter;
 matter_blemgr_callback matter_blemgr_callback_func = NULL;
 void *matter_blemgr_callback_data = NULL;
 uint8_t matter_adv_id = MAX_ADV_NUMBER;
+extern uint8_t msmart_adv_id;
 uint16_t matter_adv_interval = 0;
 uint16_t matter_adv_int_min = 0x20;
 uint16_t matter_adv_int_max = 0x20;
@@ -61,6 +62,7 @@ int matter_blemgr_start_adv(void) {
 	bool result = 0;
 #if CONFIG_MS_MULTI_ADV
 	result = msmart_matter_ble_adv_start_by_adv_id(&matter_adv_id, NULL, 0, NULL, 0, 1);
+	result = msmart_matter_ble_adv_start_by_adv_id(&msmart_adv_id, NULL, 23, NULL, 4, 2);
 	if (result == 1)
 		return 1;
 #endif
