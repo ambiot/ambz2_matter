@@ -115,6 +115,7 @@ INCLUDES += -I$(SDKROOTDIR)/component/common/bluetooth/realtek/sdk/example/bt_me
 INCLUDES += -I$(SDKROOTDIR)/component/common/bluetooth/realtek/sdk/example/bt_mesh_device_rtk_demo
 INCLUDES += -I$(SDKROOTDIR)/component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/device_multiple_profile
 INCLUDES += -I$(SDKROOTDIR)/component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/provisioner_multiple_profile
+INCLUDES += -I$(SDKROOTDIR)/component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter
 INCLUDES += -I$(SDKROOTDIR)/component/common/bluetooth/realtek/sdk/example/bt_mesh_test
 INCLUDES += -I$(SDKROOTDIR)/component/common/bluetooth/realtek/sdk/src/mcu/module/data_uart_cmd
 INCLUDES += -I$(SDKROOTDIR)/component/common/bluetooth/realtek/sdk/src/app/hrp/gap
@@ -143,6 +144,7 @@ INCLUDES += -I$(SDKROOTDIR)/component/os/freertos/freertos_v10.0.1/Source/includ
 INCLUDES += -I$(SDKROOTDIR)/component/os/freertos/freertos_v10.0.1/Source/portable/GCC/ARM_RTL8710C
 INCLUDES += -I$(SDKROOTDIR)/component/os/os_dep/include
 
+INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/bluetooth
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/bluetooth/bt_matter_adapter
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/mbedtls
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/port
@@ -177,6 +179,9 @@ CFLAGS += -include time64.h
 else
 CFLAGS += -DCONFIG_SYSTEM_TIME64=0
 endif
+
+# for matter blemgr adapter
+#CFLAGS += -DCONFIG_MATTER_BLEMGR_ADAPTER=1
 
 # CHIP options
 # -------------------------------------------------------------------
