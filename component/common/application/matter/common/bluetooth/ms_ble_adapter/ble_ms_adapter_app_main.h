@@ -40,6 +40,16 @@ typedef struct
 /*============================================================================*
  *                              Functions
  *============================================================================*/
+void ble_ms_adapter_task_init(void);
+
+
+#ifndef PLATFORM_OHOS
+void ble_ms_adapter_bt_stack_config_init(void);
+#else
+extern void gap_config_deinit_flow(uint8_t deinit_flow);
+void ble_ms_adapter_bt_stack_config_init(void);
+#endif
+
 uint16_t ble_att_mtu_z2(uint16_t conn_id);
 
 bool ble_matter_netmgr_server_send_data(uint8_t conn_id, T_SERVER_ID service_id, uint16_t attrib_index,

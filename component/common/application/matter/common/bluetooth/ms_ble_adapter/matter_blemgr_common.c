@@ -25,7 +25,7 @@
 
 //extern T_SERVER_ID ble_matter_adapter_service_id;
 //extern M_MULTI_ADV_PARAM ms_multi_adv_param_array[MAX_ADV_NUMBER];
-extern int ble_ms_adapter_peripheral_app_max_links;
+extern int ble_matter_adapter_peripheral_app_max_links;
 extern T_MULTI_ADV_CONCURRENT ms_multi_adapter;
 
 //Temp
@@ -42,12 +42,12 @@ uint8_t matter_adv_data[31] = {0};
 uint8_t matter_adv_data_length = 0;
 
 extern T_SERVER_ID ble_matter_adapter_service_id;
-extern int ble_ms_adapter_app_init(void);
-extern void ble_ms_adapter_multi_adv_init();
+extern int ble_matter_adapter_app_init(void);
+extern void ble_matter_adapter_multi_adv_init();
 int matter_blemgr_init(void) {
 	printf("[%s]enter...\r\n", __func__);
-	ble_ms_adapter_app_init();
-	ble_ms_adapter_multi_adv_init();
+	ble_matter_adapter_app_init();
+	ble_matter_adapter_multi_adv_init();
 	return 0;
 }
 void matter_blemgr_set_callback_func(matter_blemgr_callback p, void *data) {
@@ -78,7 +78,7 @@ int matter_blemgr_stop_adv(void) {
 		return 1;
 	}
 
-	result = ms_matter_ble_adv_stop_by_adv_id(&matter_adv_id);
+	result = matter_ble_adv_stop_by_adv_id(&matter_adv_id);
 	if (result == 1)
 		return 1;
 	ms_multi_adapter.matter_sta_sto_flag = true;
@@ -102,7 +102,7 @@ uint16_t matter_blemgr_get_mtu(uint8_t connect_id) {
 	int ret;
 	uint16_t mtu_size;
 
-	if (ble_ms_adapter_peripheral_app_max_links == 0) {
+	if (ble_matter_adapter_peripheral_app_max_links == 0) {
 		printf("[%s]matter as slave, no connection\r\n", __func__);
 		return 1;
 	}
@@ -130,7 +130,7 @@ int matter_blemgr_set_device_name(char *device_name, uint8_t device_name_length)
 
 int matter_blemgr_disconnect(uint8_t connect_id) {
 	printf("[%s]enter...\r\n", __func__);
-	if (connect_id >= BLE_MS_ADAPTER_APP_MAX_LINKS) {
+	if (connect_id >= BLE_MATTER_ADAPTER_APP_MAX_LINKS) {
 		printf("[%s]:invalid conn_hdl[%d]\r\n", __func__, connect_id);
 		return 1;
 	}
@@ -138,7 +138,7 @@ int matter_blemgr_disconnect(uint8_t connect_id) {
 	uint8_t *conn_id = (uint8_t *)os_mem_alloc(0, sizeof(uint8_t));
 	*conn_id = connect_id;
 
-	if ((ble_ms_adapter_app_send_api_msg(5, conn_id)) == false) {
+	if ((ble_matter_adapter_app_send_api_msg(5, conn_id)) == false) {
 		printf("[%s] send msg fail\r\n", __func__);
 		os_mem_free(conn_id);
 		return 1;
@@ -149,7 +149,7 @@ int matter_blemgr_disconnect(uint8_t connect_id) {
 int matter_blemgr_send_indication(uint8_t connect_id, uint8_t *data, uint16_t data_length) {
 	printf("[%s]enter...\r\n", __func__);
 
-	if (connect_id >= BLE_MS_ADAPTER_APP_MAX_LINKS || data == NULL || data_length == 0) {
+	if (connect_id >= BLE_MATTER_ADAPTER_APP_MAX_LINKS || data == NULL || data_length == 0) {
 		printf("[%s]:invalid param:conn_hdl %d,data 0x%x data_length 0x%x\r\n",__func__, connect_id, data, data_length);
 		return 1;
 	}
@@ -166,7 +166,7 @@ int matter_blemgr_send_indication(uint8_t connect_id, uint8_t *data, uint16_t da
             		indication_param->p_data = os_mem_alloc(0, indication_param->data_len);
             		memcpy(indication_param->p_data, data, indication_param->data_len);
         	}
-        	if (ble_ms_adapter_app_send_api_msg(4, indication_param) == false)
+        	if (ble_matter_adapter_app_send_api_msg(4, indication_param) == false)
         	{
             		printf("[%s] os_mem_free\r\n");
             		os_mem_free(indication_param->p_data);
@@ -176,7 +176,7 @@ int matter_blemgr_send_indication(uint8_t connect_id, uint8_t *data, uint16_t da
     	}
 	return 0;
 }
-void ble_ms_adapter_switch_bt_address(uint8_t *address) {
+void ble_matter_adapter_switch_bt_address(uint8_t *address) {
 	uint8_t tmp=0;
 	for(int i=0;i<6/2;++i){
 	tmp=address[6-1-i];

@@ -13,7 +13,7 @@
 #ifndef __MS_HAL_H__
 #define __MS_HAL_H__
 
-#include "ms_osal_log.h"
+//#include "ms_osal_log.h"
 
 #ifdef __cplusplus
 extern "C" {

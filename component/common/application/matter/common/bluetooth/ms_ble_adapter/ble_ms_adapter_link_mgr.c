@@ -26,7 +26,7 @@
  *                              Constants
  *============================================================================*/
 /** @brief  Define start offset of the flash to save static random address. */
-#define BLE_MS_ADAPTER_APP_STATIC_RANDOM_ADDR_OFFSET 0
+#define BLE_MATTER_ADAPTER_APP_STATIC_RANDOM_ADDR_OFFSET 0
 
 /*============================================================================*
  *                              Variables
@@ -34,10 +34,10 @@
 /** @addtogroup  CENTRAL_CLIENT_GAP_MSG
     * @{
     */
-T_APP_LINK ble_ms_adapter_app_link_table[BLE_MS_ADAPTER_APP_MAX_LINKS];
+T_APP_LINK ble_matter_adapter_app_link_table[BLE_MATTER_ADAPTER_APP_MAX_LINKS];
 
-T_DEV_INFO ble_ms_adapter_dev_list[BLE_MS_ADAPTER_APP_MAX_DEVICE_INFO];
-uint8_t ble_ms_adapter_dev_list_count = 0;
+T_DEV_INFO ble_matter_adapter_dev_list[BLE_MATTER_ADAPTER_APP_MAX_DEVICE_INFO];
+uint8_t ble_matter_adapter_dev_list_count = 0;
 /** @} */
 
 /*============================================================================*
@@ -54,24 +54,24 @@ uint8_t ble_ms_adapter_dev_list_count = 0;
  * @retval true Success.
  * @retval false Failed, device list is full.
  */
-bool ble_ms_adapter_link_mgr_add_device(uint8_t *bd_addr, uint8_t bd_type)
+bool ble_matter_adapter_link_mgr_add_device(uint8_t *bd_addr, uint8_t bd_type)
 {
 	/* If result count not at max */
-	if (ble_ms_adapter_dev_list_count < BLE_MS_ADAPTER_APP_MAX_DEVICE_INFO) {
+	if (ble_matter_adapter_dev_list_count < BLE_MATTER_ADAPTER_APP_MAX_DEVICE_INFO) {
 		uint8_t i;
 		/* Check if device is already in device list*/
-		for (i = 0; i < ble_ms_adapter_dev_list_count; i++) {
-			if (memcmp(bd_addr, ble_ms_adapter_dev_list[i].bd_addr, GAP_BD_ADDR_LEN) == 0) {
+		for (i = 0; i < ble_matter_adapter_dev_list_count; i++) {
+			if (memcmp(bd_addr, ble_matter_adapter_dev_list[i].bd_addr, GAP_BD_ADDR_LEN) == 0) {
 				return true;
 			}
 		}
 
 		/*Add addr to device list list*/
-		memcpy(ble_ms_adapter_dev_list[ble_ms_adapter_dev_list_count].bd_addr, bd_addr, GAP_BD_ADDR_LEN);
-		ble_ms_adapter_dev_list[ble_ms_adapter_dev_list_count].bd_type = bd_type;
+		memcpy(ble_matter_adapter_dev_list[ble_matter_adapter_dev_list_count].bd_addr, bd_addr, GAP_BD_ADDR_LEN);
+		ble_matter_adapter_dev_list[ble_matter_adapter_dev_list_count].bd_type = bd_type;
 
 		/*Increment device list count*/
-		ble_ms_adapter_dev_list_count++;
+		ble_matter_adapter_dev_list_count++;
 	} else {
 		return false;
 	}
@@ -82,9 +82,9 @@ bool ble_ms_adapter_link_mgr_add_device(uint8_t *bd_addr, uint8_t bd_type)
  * @brief Clear device list.
  * @retval None.
  */
-void ble_ms_adapter_link_mgr_clear_device_list(void)
+void ble_matter_adapter_link_mgr_clear_device_list(void)
 {
-	ble_ms_adapter_dev_list_count = 0;
+	ble_matter_adapter_dev_list_count = 0;
 }
 /** @} */
 /** @addtogroup  SCATTERNET_APP
@@ -100,10 +100,10 @@ void ble_ms_adapter_link_mgr_clear_device_list(void)
  * @retval 0 Save success.
  * @retval other Failed.
  */
-uint32_t ble_ms_adapter_app_save_static_random_address(T_APP_STATIC_RANDOM_ADDR *p_addr)
+uint32_t ble_matter_adapter_app_save_static_random_address(T_APP_STATIC_RANDOM_ADDR *p_addr)
 {
-	APP_PRINT_INFO0("ble_ms_adapter_app_save_static_random_address");
-	return ftl_save(p_addr, BLE_MS_ADAPTER_APP_STATIC_RANDOM_ADDR_OFFSET, sizeof(T_APP_STATIC_RANDOM_ADDR));
+	APP_PRINT_INFO0("ble_matter_adapter_app_save_static_random_address");
+	return ftl_save(p_addr, BLE_MATTER_ADAPTER_APP_STATIC_RANDOM_ADDR_OFFSET, sizeof(T_APP_STATIC_RANDOM_ADDR));
 }
 /**
   * @brief  Load static random address information from storage.
@@ -111,12 +111,12 @@ uint32_t ble_ms_adapter_app_save_static_random_address(T_APP_STATIC_RANDOM_ADDR 
   * @retval 0 Load success.
   * @retval other Failed.
   */
-uint32_t ble_ms_adapter_app_load_static_random_address(T_APP_STATIC_RANDOM_ADDR *p_addr)
+uint32_t ble_matter_adapter_app_load_static_random_address(T_APP_STATIC_RANDOM_ADDR *p_addr)
 {
 	uint32_t result;
-	result = ftl_load(p_addr, BLE_MS_ADAPTER_APP_STATIC_RANDOM_ADDR_OFFSET,
+	result = ftl_load(p_addr, BLE_MATTER_ADAPTER_APP_STATIC_RANDOM_ADDR_OFFSET,
 					  sizeof(T_APP_STATIC_RANDOM_ADDR));
-	APP_PRINT_INFO1("ble_ms_adapter_app_load_static_random_address: result 0x%x", result);
+	APP_PRINT_INFO1("ble_matter_adapter_app_load_static_random_address: result 0x%x", result);
 	if (result) {
 		memset(p_addr, 0, sizeof(T_APP_STATIC_RANDOM_ADDR));
 	}

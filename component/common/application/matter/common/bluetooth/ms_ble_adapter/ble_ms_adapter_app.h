@@ -45,7 +45,7 @@ extern "C" {
 /*============================================================================*
  *                              Variables
  *============================================================================*/
-extern T_CLIENT_ID   ble_ms_adapter_gcs_client_id;         /**< General Common Services client client id*/
+extern T_CLIENT_ID   ble_matter_adapter_gcs_client_id;         /**< General Common Services client client id*/
 
 typedef struct
 {
@@ -206,7 +206,7 @@ typedef struct {
 typedef struct {
 	uint8_t write_len;
 	uint8_t write_value[MS_WRITE_MAX_LEN];
-	ms_hal_ble_service_write_cb write_cb;
+	matter_hal_ble_service_write_cb write_cb;
 } T_MS_WRITE_DATA;
 
 typedef struct {
@@ -216,8 +216,8 @@ typedef struct {
 
 typedef struct save_scan_info_t {
 	struct save_scan_info_t *p_next; // Pointer to the next item, must be the first field.
-	ms_hal_ble_report_type     type;                           // report ad type
-	ms_hal_ble_addr_t     peer_addr;                           // peer addr
+	matter_hal_ble_report_type     type;                           // report ad type
+	matter_hal_ble_addr_t     peer_addr;                           // peer addr
 	int8_t                   tx_pwr;                           /// TX power (in dBm)
 	int8_t                     rssi;                           // rssi
 	uint16_t                    len;                           //data len
@@ -235,14 +235,14 @@ typedef struct save_scan_info_t {
  * @param[in] io_msg  IO message data
  * @return   void
  */
-void ble_ms_adapter_app_handle_io_msg(T_IO_MSG io_msg);
+void ble_matter_adapter_app_handle_io_msg(T_IO_MSG io_msg);
 /**
   * @brief Callback for gap le to notify app
   * @param[in] cb_type callback msy type @ref GAP_LE_MSG_Types.
   * @param[in] p_cb_data point to callback data @ref T_LE_CB_DATA.
   * @retval result @ref T_APP_RESULT
   */
-T_APP_RESULT ble_ms_adapter_app_gap_callback(uint8_t cb_type, void *p_cb_data);
+T_APP_RESULT ble_matter_adapter_app_gap_callback(uint8_t cb_type, void *p_cb_data);
 
 /**
  * @brief  Callback will be called when data sent from profile client layer.
@@ -251,21 +251,21 @@ T_APP_RESULT ble_ms_adapter_app_gap_callback(uint8_t cb_type, void *p_cb_data);
  * @param  p_data  pointer to data.
  * @retval   result @ref T_APP_RESULT
  */
-T_APP_RESULT ble_ms_adapter_gcs_client_callback(T_CLIENT_ID client_id, uint8_t conn_id, void *p_data);
+T_APP_RESULT ble_matter_adapter_gcs_client_callback(T_CLIENT_ID client_id, uint8_t conn_id, void *p_data);
 #if F_BT_GAPS_CHAR_WRITEABLE
-T_APP_RESULT ble_ms_adapter_gap_service_callback(T_SERVER_ID service_id, void *p_para);
+T_APP_RESULT ble_matter_adapter_gap_service_callback(T_SERVER_ID service_id, void *p_para);
 #endif
 
-void ble_ms_adapter_app_handle_callback_msg(T_IO_MSG callback_msg);
+void ble_matter_adapter_app_handle_callback_msg(T_IO_MSG callback_msg);
 
 
 
-void ble_ms_adapter_app_vendor_callback(uint8_t cb_type, void *p_cb_data);
+void ble_matter_adapter_app_vendor_callback(uint8_t cb_type, void *p_cb_data);
 #if CONFIG_MS_MULTI_ADV
-void ble_ms_adapter_multi_adv_init();
-void ble_ms_adapter_multi_adv_deinit();
-void ble_ms_adapter_send_multi_adv_msg(uint8_t adv_id);
-void ble_ms_adapter_legacy_start_adv_callback(void *data);
+void ble_matter_adapter_multi_adv_init();
+void ble_matter_adapter_multi_adv_deinit();
+void ble_matter_adapter_send_multi_adv_msg(uint8_t adv_id);
+void ble_matter_adapter_legacy_start_adv_callback(void *data);
 #endif
 #ifdef __cplusplus
 }

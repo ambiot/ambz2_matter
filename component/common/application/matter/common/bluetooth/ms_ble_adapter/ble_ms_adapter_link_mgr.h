@@ -25,7 +25,7 @@
  *                              Constants
  *============================================================================*/
 /** @brief  Define device list table size. */
-#define BLE_MS_ADAPTER_APP_MAX_DEVICE_INFO 6
+#define BLE_MATTER_ADAPTER_APP_MAX_DEVICE_INFO 6
 /** @addtogroup
     * @{
     */
@@ -61,10 +61,10 @@ typedef struct {
  *                              Variables
  *============================================================================*/
 /** @brief  App link table */
-extern T_APP_LINK ble_ms_adapter_app_link_table[BLE_MS_ADAPTER_APP_MAX_LINKS];
-extern T_DEV_INFO ble_ms_adapter_dev_list[BLE_MS_ADAPTER_APP_MAX_DEVICE_INFO];
+extern T_APP_LINK ble_matter_adapter_app_link_table[BLE_MATTER_ADAPTER_APP_MAX_LINKS];
+extern T_DEV_INFO ble_matter_adapter_dev_list[BLE_MATTER_ADAPTER_APP_MAX_DEVICE_INFO];
 /** @brief  The number of device informations saved in dev_list. */
-extern uint8_t ble_ms_adapter_dev_list_count;
+extern uint8_t ble_matter_adapter_dev_list_count;
 
 /*============================================================================*
  *                              Functions
@@ -72,9 +72,9 @@ extern uint8_t ble_ms_adapter_dev_list_count;
 /*============================================================================*
  *                              Functions
  *============================================================================*/
-bool ble_ms_adapter_link_mgr_add_device(uint8_t *bd_addr, uint8_t bd_type);
-void ble_ms_adapter_link_mgr_clear_device_list(void);
+bool ble_matter_adapter_link_mgr_add_device(uint8_t *bd_addr, uint8_t bd_type);
+void ble_matter_adapter_link_mgr_clear_device_list(void);
 
-uint32_t ble_ms_adapter_app_save_static_random_address(T_APP_STATIC_RANDOM_ADDR *p_addr);
-uint32_t ble_ms_adapter_app_load_static_random_address(T_APP_STATIC_RANDOM_ADDR *p_addr);
+uint32_t ble_matter_adapter_app_save_static_random_address(T_APP_STATIC_RANDOM_ADDR *p_addr);
+uint32_t ble_matter_adapter_app_load_static_random_address(T_APP_STATIC_RANDOM_ADDR *p_addr);
 #endif

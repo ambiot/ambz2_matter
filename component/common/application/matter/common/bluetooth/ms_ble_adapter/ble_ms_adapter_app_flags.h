@@ -12,8 +12,8 @@
    * <h2><center>&copy; COPYRIGHT 2017 Realtek Semiconductor Corporation</center></h2>
    **************************************************************************************
   */
-#ifndef _BLE_MS_ADAPTER__APP_FLAGS_H_
-#define _BLE_MS_ADAPTER__APP_FLAGS_H_
+#ifndef _BLE_MATTER_ADAPTER__APP_FLAGS_H_
+#define _BLE_MATTER_ADAPTER__APP_FLAGS_H_
 
 #include <trace_app.h>
 #include <bt_flags.h>
@@ -29,17 +29,17 @@
  *============================================================================*/
 /** @brief  Config APP LE link number */
 #if defined(CONFIG_PLATFORM_8721D)
-#define BLE_MS_ADAPTER_APP_MAX_LINKS  4
-#define BLE_MS_ADAPTER_PERIPHERAL_APP_MAX_LINKS   1 //for max slave link num
-#define BLE_MS_ADAPTER_CENTRAL_APP_MAX_LINKS      3 //for max master link num
+#define BLE_MATTER_ADAPTER_APP_MAX_LINKS  4
+#define BLE_MATTER_ADAPTER_PERIPHERAL_APP_MAX_LINKS   1 //for max slave link num
+#define BLE_MATTER_ADAPTER_CENTRAL_APP_MAX_LINKS      3 //for max master link num
 #elif defined(CONFIG_PLATFORM_8710C)
-#define BLE_MS_ADAPTER_APP_MAX_LINKS  2
-#define BLE_MS_ADAPTER_PERIPHERAL_APP_MAX_LINKS   1 //for max slave link num
-#define BLE_MS_ADAPTER_CENTRAL_APP_MAX_LINKS      1 //for max master link num
+#define BLE_MATTER_ADAPTER_APP_MAX_LINKS  2
+#define BLE_MATTER_ADAPTER_PERIPHERAL_APP_MAX_LINKS   1 //for max slave link num
+#define BLE_MATTER_ADAPTER_CENTRAL_APP_MAX_LINKS      1 //for max master link num
 #endif
 
 /** @brief  Config the discovery table number of gcs_client */
-#define BLE_MS_ADAPTER_APP_MAX_DISCOV_TABLE_NUM 40
+#define BLE_MATTER_ADAPTER_APP_MAX_DISCOV_TABLE_NUM 40
 
 /** @} */ /* End of group CENTRAL_CLIENT_Config */
 
