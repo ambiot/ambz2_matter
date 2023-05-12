@@ -103,7 +103,7 @@ static const uint8_t scan_rsp_data[] =
     HI_WORD(GAP_GATT_APPEARANCE_UNKNOWN),
 };
 
-uint8_t bt_mesh_device_matter_adv_data[31] =
+uint8_t bt_mesh_device_matter_adv_data[] =
 {
     /* Flags */
     0x02,             /* length */
@@ -122,6 +122,7 @@ uint8_t bt_mesh_device_matter_adv_data[31] =
 int array_count_of_adv_data = sizeof(bt_mesh_device_matter_adv_data) / sizeof(bt_mesh_device_matter_adv_data[0]);
 
 plt_timer_t bt_mesh_device_matter_adv_timer = NULL;
+uint8_t bt_mesh_device_matter_adv_data_length = 0;
 uint8_t bt_mesh_device_matter_le_adv_start_enable = 0;
 uint16_t bt_mesh_device_matter_adv_interval = 352;
 
@@ -461,6 +462,7 @@ void bt_mesh_device_matter_app_le_gap_init(void)
         T_APP_STATIC_RANDOM_ADDR random_addr;
         bool gen_addr = true;
         uint8_t local_bd_type = GAP_LOCAL_ADDR_LE_RANDOM;
+#if 0
         if (ble_scatternet_app_load_static_random_address(&random_addr) == 0)
         {
             if (random_addr.is_exist == true)
@@ -468,12 +470,21 @@ void bt_mesh_device_matter_app_le_gap_init(void)
                 gen_addr = false;
             }
         }
+#endif
         if (gen_addr)
         {
             if (le_gen_rand_addr(GAP_RAND_ADDR_STATIC, random_addr.bd_addr) == GAP_CAUSE_SUCCESS)
             {
                 random_addr.is_exist = true;
-                ble_scatternet_app_save_static_random_address(&random_addr);
+                //ble_scatternet_app_save_static_random_address(&random_addr);
+                printf("bd addr: %02x:%02x:%02x:%02x:%02x:%02x\r\n",
+                    random_addr.bd_addr[5],
+                    random_addr.bd_addr[4],
+                    random_addr.bd_addr[3],
+                    random_addr.bd_addr[2],
+                    random_addr.bd_addr[1],
+                    random_addr.bd_addr[0]
+                  );
             }
         }
         le_cfg_local_identity_address(random_addr.bd_addr, GAP_IDENT_ADDR_RAND);
@@ -719,7 +730,7 @@ int matter_blemgr_config_adv(uint16_t adv_int_min, uint16_t adv_int_max, uint8_t
     bt_mesh_device_matter_config_adv_flag = 1; //matter moudle enable config adv
     bt_mesh_device_matter_adv_interval = adv_int_min;
     memcpy(bt_mesh_device_matter_adv_data, adv_data, adv_data_length);
-
+    bt_mesh_device_matter_adv_data_length = adv_data_length;
     return 0;
 }
 

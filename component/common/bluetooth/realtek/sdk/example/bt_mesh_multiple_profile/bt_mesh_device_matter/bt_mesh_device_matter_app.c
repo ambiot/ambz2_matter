@@ -77,6 +77,7 @@ extern matter_blemgr_callback matter_blemgr_callback_func;
 extern void *matter_blemgr_callback_data;
 
 extern uint8_t bt_mesh_device_matter_adv_data[31];
+extern uint8_t bt_mesh_device_matter_adv_data_length;
 extern uint8_t bt_mesh_device_matter_le_adv_start_enable;
 extern void bt_mesh_device_matter_le_adv_start(void);
 extern void bt_mesh_device_matter_le_adv_stop(void);
@@ -257,12 +258,13 @@ void bt_mesh_device_matter_app_handle_io_msg(T_IO_MSG io_msg)
 
                 gap_sched_task_p ptask = CONTAINER_OF(padv_data, gap_sched_task_t, adv_data);
 
-                memcpy(padv_data, (uint8_t *)bt_mesh_device_matter_adv_data, sizeof(bt_mesh_device_matter_adv_data));
+                memcpy(padv_data, (uint8_t *)bt_mesh_device_matter_adv_data, bt_mesh_device_matter_adv_data_length);
 
-                ptask->adv_len += 23;
+                ptask->adv_len += bt_mesh_device_matter_adv_data_length;
                 ptask->adv_type = GAP_SCHED_ADV_TYPE_IND;
+                ptask->adv_addr_type = GAP_SCHED_ADV_ADDR_TYPE_RANDOM;
 
-                gap_sched_try(ptask); 
+                gap_sched_try(ptask);
            }
         }
         break;
