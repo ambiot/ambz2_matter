@@ -30,15 +30,17 @@
 #include <ble_matter_adapter_app.h>
 #include <ble_matter_adapter_app_task.h>
 #include "ble_matter_adapter_app_main.h"
-#include <ble_matter_adapter_link_mgr.h>
+//#include <ble_matter_adapter_link_mgr.h>
 #include <gcs_client.h>
 #include "gatt_builtin_services.h"
-#include "ms_hal_ble.h"
+//#include "ms_hal_ble.h"
 #include "os_mem.h"
 #include "os_msg.h"
 #include "os_sync.h"
 #include "os_queue.h"
 #include "matter_blemgr_common.h"
+#include <gap_conn_le.h>
+#include <ble_matter_adapter_app_flags.h>
 #if CONFIG_BLE_MATTER_MULTI_ADV
 #include "vendor_cmd_bt.h"
 #include "matter_blemgr_common.h"
@@ -69,11 +71,8 @@ int ble_matter_adapter_peripheral_app_max_links = 0;
 int ble_matter_adapter_central_app_max_links = 0;
 int bt_matter_device_matter_scan_state = 0;
 T_OS_QUEUE scan_info_queue;
-extern void *matter_add_service_sem;
-extern uint8_t modify_whitelist_result;
-extern void *modify_whitelist_sem;
-extern bool M_accept;
-extern ms_hal_ble_stack_callback_t callback_handler;
+
+
 extern uint8_t adv_type;
 uint8_t update_adv = 0;
 uint8_t adv_type = 0;
@@ -81,13 +80,29 @@ uint8_t adv_type = 0;
 extern void *ble_matter_adapter_evt_queue_handle;  //!< Event queue handle
 extern void *ble_matter_adapter_io_queue_handle;   //!< IO queue handle
 extern void *ble_matter_adapter_callback_queue_handle;   //!< Callback queue handle
-extern ms_hal_ble_scan_callback_t scan_result_callback;
 extern T_APP_RESULT ble_matter_adapter_app_profile_callback(T_SERVER_ID service_id, void *p_data);
-extern void ble_matter_adapter_switch_bt_address(uint8_t *address);
-extern void ble_matter_adapter_search_and_free_service(T_SERVER_ID service_id);
 int scan_info_flag = 0;
+typedef struct {
+	T_GAP_CONN_STATE        conn_state;          /**< Connection state. */
+	T_GAP_REMOTE_ADDR_TYPE  bd_type;             /**< remote BD type*/
+	uint8_t                 bd_addr[GAP_BD_ADDR_LEN]; /**< remote BD */
+	T_GAP_ROLE              role;                   //!< Device role
+} T_APP_LINK;
+/** @} */
+/* End of group */
+/** @addtogroup  CENTRAL_CLIENT_SCAN_MGR
+	 * @brief  Device list block definition.
+	 */
+typedef struct {
+	uint8_t 	 bd_addr[GAP_BD_ADDR_LEN];	/**< remote BD */
+	uint8_t 	 bd_type;			   /**< remote BD type*/
+} T_DEV_INFO;
 
+#define BLE_MATTER_ADAPTER_APP_MAX_DEVICE_INFO 6
+T_APP_LINK ble_matter_adapter_app_link_table[BLE_MATTER_ADAPTER_APP_MAX_LINKS];
 
+T_DEV_INFO ble_matter_adapter_dev_list[BLE_MATTER_ADAPTER_APP_MAX_DEVICE_INFO];
+uint8_t ble_matter_adapter_dev_list_count = 0;
 
 #if CONFIG_BLE_MATTER_MULTI_ADV
 uint8_t matter_local_public_addr[6] = {0};
@@ -501,7 +516,7 @@ printf("[%s]enter...%d,  msg_type =%d\r\n", __func__, __LINE__, msg_type);
         }
         break;
 
-	case BMS_CALLBACK_MSG_CMP_WRITE_RECV_MATTER: {
+	case BLE_MATTER_MSG_WRITE_CHAR: {
             T_MATTER_CALLBACK_DATA *write_char_val = callback_msg.u.buf;
             T_MATTER_BLEMGR_RX_CHAR_WRITE_CB_ARG rx_char_write_cb_arg;
             rx_char_write_cb_arg.conn_id = write_char_val->conn_id;
@@ -519,12 +534,13 @@ printf("[%s]enter...%d,  msg_type =%d\r\n", __func__, __LINE__, msg_type);
             callback_msg.u.buf = NULL;
         }
         break;
-        case BMS_CALLBACK_MSG_CMP_CCCD_RECV_MATTER: {
+        case BLE_MATTER_MSG_CCCD_RECV_ENABLE: {
                matter_blemgr_callback_func(matter_blemgr_callback_data, MATTER_BLEMGR_TX_CHAR_CCCD_WRITE_CB, callback_msg.u.buf);
                os_mem_free(callback_msg.u.buf);
         }
         break;
-       case BMS_CALLBACK_MSG_CMP_INDICATE_MATTER: {
+       case BLE_MATTER_MSG_CCCD_RECV_DISABLE:
+       case BLE_MATTER_MSG_SEND_DATA_COMPLETE_MULTI_ADV: {
                matter_blemgr_callback_func(matter_blemgr_callback_data, MATTER_BLEMGR_TX_COMPLETE_CB, callback_msg.u.buf);
                os_mem_free(callback_msg.u.buf);
         }
@@ -738,34 +754,8 @@ void ble_matter_adapter_delete_adv(uint8_t adv_id)
 
 }
 
-void ble_matter_adapter_stop_all_adv(void)
-{
-
-	if (matter_multi_adapter.msmart_sta_sto_flag == false) {
-		printf("stop mamsrt adv\r\n");
-		ble_matter_adapter_delete_adv(msmart_adv_id);
-		matter_multi_adapter.msmart_sta_sto_flag = true;
-		msmart_adv_id = MAX_ADV_NUMBER;
-		ms_hal_ble_stack_msg_t *adv_off_msg = (ms_hal_ble_stack_msg_t *)os_mem_alloc(0, sizeof(ms_hal_ble_stack_msg_t));
-		memset(adv_off_msg, 0, sizeof(ms_hal_ble_stack_msg_t));
-		adv_off_msg->event_type = MS_HAL_BLE_STACK_EVENT_ADV_OFF;
-
-		if (ble_matter_adapter_send_callback_msg(BMS_CALLBACK_MSG_ADV_OFF, NULL, adv_off_msg) == false) {
-			printf("[%s] send callback msg fail\r\n", __func__);
-			os_mem_free(adv_off_msg);
-			return MS_HAL_RESULT_ERROR;
-		}
-
-	}
-	if (matter_multi_adapter.matter_sta_sto_flag == false) {
-		printf("stop matter adv\r\n");
-		ble_matter_adapter_delete_adv(matter_adv_id);
-		matter_multi_adapter.matter_sta_sto_flag = true;
-		matter_adv_id = MAX_ADV_NUMBER;
-	}
-
-}
 #endif
+
 void ble_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE new_state, uint16_t disc_cause)
 {
 printf("[%s]enter...%d,new_state =%d, cause =%d\r\n", __func__, __LINE__, new_state, disc_cause);
@@ -814,15 +804,7 @@ printf("[%s]enter...%d \r\n", __func__, __LINE__);
 				os_mem_free(disconnected_msg_matter);
 			}
 		} else if (link_customer == 2) { //msmart
-			ms_hal_ble_stack_msg_t *disconnected_msg_msmart = (ms_hal_ble_stack_msg_t *)os_mem_alloc(0, sizeof(ms_hal_ble_stack_msg_t));
-			memset(disconnected_msg_msmart, 0, sizeof(ms_hal_ble_stack_msg_t));
-			disconnected_msg_msmart->event_type = MS_HAL_BLE_STACK_EVENT_DISCONNECTED;
-			disconnected_msg_msmart->param.disconnect_msg.conn_hdl = conn_id;
-			disconnected_msg_msmart->param.disconnect_msg.reason = disc_cause;
-			if (ble_matter_adapter_send_callback_msg(BMS_CALLBACK_MSG_DISCONNECTED, NULL,disconnected_msg_msmart) == false) {
-				printf("[%s] send callback msg fail\r\n", __func__);
-				os_mem_free(disconnected_msg_msmart);
-			}
+			printf("[%s] link_customer = 2\r\n", __func__);
 		}
 #else
 		//send data to matter
@@ -897,7 +879,7 @@ printf("[%s]enter...%d \r\n", __func__, __LINE__);
             printf("Connected success conn_id %d\r\n", conn_id);
 
 #if CONFIG_BLE_MATTER_MULTI_ADV
-		ble_matter_adapter_stop_all_adv();
+
 		//get local adv bt type
 		if (local_bd_type == GAP_LOCAL_ADDR_LE_RANDOM) {//matter
 			link_customer = 1;
@@ -907,32 +889,6 @@ printf("[%s]enter...%d \r\n", __func__, __LINE__);
 			if (ble_matter_adapter_send_callback_msg(BMS_CALLBACK_MSG_CONNECTED_MATTER, NULL, conn_msg_matter) == false) {
 				printf("[%s] send callback msg fail\r\n", __func__);
 				os_mem_free(conn_msg_matter);
-			}
-		} else if (local_bd_type == GAP_LOCAL_ADDR_LE_PUBLIC) { //msmart
-			link_customer = 2;
-			ms_hal_ble_stack_msg_t *conn_msg_msmart = (ms_hal_ble_stack_msg_t *)os_mem_alloc(0, sizeof(ms_hal_ble_stack_msg_t));
-			memset(conn_msg_msmart, 0, sizeof(ms_hal_ble_stack_msg_t));
-			conn_msg_msmart->event_type = MS_HAL_BLE_STACK_EVENT_CONNECTION_REPORT;
-			conn_msg_msmart->param.connection_msg.conn_hdl = conn_id;
-			conn_msg_msmart->param.connection_msg.clk_accuracy = 0; //not support
-			conn_msg_msmart->param.connection_msg.con_interval = conn_interval;
-			conn_msg_msmart->param.connection_msg.con_latency = conn_latency;
-			conn_msg_msmart->param.connection_msg.peer_addr_type = local_bd_type;
-			if (conn_info.role == GAP_LINK_ROLE_MASTER) {
-				conn_msg_msmart->param.connection_msg.role = 0;
-			} else if (conn_info.role == GAP_LINK_ROLE_SLAVE) {
-				conn_msg_msmart->param.connection_msg.role = 1;
-			} else {
-				printf("[%s]:unknow role[%d]\r\n", __func__, conn_info.role);
-			}
-			conn_msg_msmart->param.connection_msg.sup_timeout = conn_supervision_timeout;
-			conn_msg_msmart->param.connection_msg.addr = (uint8_t *)os_mem_alloc(0, GAP_BD_ADDR_LEN);
-			memcpy(conn_msg_msmart->param.connection_msg.addr, remote_bd, GAP_BD_ADDR_LEN);
-			ble_matter_adapter_switch_bt_address(conn_msg_msmart->param.connection_msg.addr);
-			if (ble_matter_adapter_send_callback_msg(BMS_CALLBACK_MSG_CONNECTED, NULL, conn_msg_msmart) == false) {
-				printf("[%s] send callback msg fail\r\n", __func__);
-				os_mem_free(conn_msg_msmart->param.connection_msg.addr);
-				os_mem_free(conn_msg_msmart);
 			}
 		}
 #else	   
@@ -1567,57 +1523,7 @@ printf("[%s]enter...%d,\r\n", __func__, __LINE__);
 
 /** @} */ /* End of group PERIPH_GAP_CALLBACK */
 
-#if F_BT_GAPS_CHAR_WRITEABLE
-/** @defgroup  SCATTERNET_GAPS_WRITE GAP Service Callback Handler
-    * @brief Use @ref F_BT_GAPS_CHAR_WRITEABLE to open
-    * @{
-    */
-/**
- * @brief    All the BT GAP service callback events are handled in this function
- * @param[in] service_id  Profile service ID
- * @param[in] p_para      Pointer to callback data
- * @return   Indicates the function call is successful or not
- * @retval   result @ref T_APP_RESULT
- */
-T_APP_RESULT ble_matter_adapter_gap_service_callback(T_SERVER_ID service_id, void *p_para)
-{
-printf("[%s]enter...%d,\r\n", __func__, __LINE__);
-	(void) service_id;
-	T_APP_RESULT  result = APP_RESULT_SUCCESS;
-	T_GAPS_CALLBACK_DATA *p_gap_data = (T_GAPS_CALLBACK_DATA *)p_para;
-	APP_PRINT_INFO2("gap_service_callback: conn_id = %d msg_type = %d\n", p_gap_data->conn_id,
-					p_gap_data->msg_type);
-	APP_PRINT_INFO2("gap_service_callback: len = 0x%x,opcode = %d\n", p_gap_data->msg_data.len,
-					p_gap_data->msg_data.opcode);
-	if (p_gap_data->msg_type == SERVICE_CALLBACK_TYPE_WRITE_CHAR_VALUE) {
-		switch (p_gap_data->msg_data.opcode) {
-		case GAPS_WRITE_DEVICE_NAME: {
-			T_LOCAL_NAME device_name;
-			memcpy(device_name.local_name, p_gap_data->msg_data.p_value, p_gap_data->msg_data.len);
-			device_name.local_name[p_gap_data->msg_data.len] = 0;
-			printf("GAPS_WRITE_DEVICE_NAME:device_name = %s\r\n", device_name.local_name);
-			flash_save_local_name(&device_name);
-		}
-		break;
 
-		case GAPS_WRITE_APPEARANCE: {
-			uint16_t appearance_val;
-			T_LOCAL_APPEARANCE appearance;
-			LE_ARRAY_TO_UINT16(appearance_val, p_gap_data->msg_data.p_value);
-			appearance.local_appearance = appearance_val;
-			//printf("GAPS_WRITE_APPEARANCE:appearance = %s\r\n",appearance.local_appearance);
-			flash_save_local_appearance(&appearance);
-		}
-		break;
-		default:
-			APP_PRINT_ERROR1("gap_service_callback: unhandled msg_data.opcode 0x%x", p_gap_data->msg_data.opcode);
-			//printf("gap_service_callback: unhandled msg_data.opcode 0x%x\r\n", p_gap_data->msg_data.opcode);
-			break;
-		}
-	}
-	return result;
-}
-#endif
 
 /** @defgroup  CENTRAL_CLIENT_GAP_CALLBACK GAP Callback Event Handler
     * @brief Handle GAP callback event
@@ -2049,24 +1955,16 @@ T_APP_RESULT ble_matter_adapter_app_profile_callback(T_SERVER_ID service_id, voi
 			if (p_param->event_data.send_data_result.cause == GAP_SUCCESS) {
 				APP_PRINT_INFO0("PROFILE_EVT_SEND_DATA_COMPLETE success");
 				printf("PROFILE_EVT_SEND_DATA_COMPLETE success\r\n");
-				//send msg to matter
+//send msg to matter
 #if CONFIG_BLE_MATTER_MULTI_ADV
 				if (p_param->event_data.send_data_result.service_id == ble_matter_adapter_service_id) {
-					T_MATTER_BLEMGR_TX_COMPLETE_CB_ARG *indication_complete_msg_matter = (T_MATTER_BLEMGR_TX_COMPLETE_CB_ARG *) os_mem_alloc(0, sizeof(T_MATTER_BLEMGR_TX_COMPLETE_CB_ARG));
-					memset(indication_complete_msg_matter, 0, sizeof(T_MATTER_BLEMGR_TX_COMPLETE_CB_ARG));
-					indication_complete_msg_matter->conn_id = p_param->event_data.send_data_result.conn_id;
-					//if (ble_matter_adapter_send_callback_msg(BMS_CALLBACK_MSG_SEND_DATA_COMPLETE_MATTER, NULL,indication_complete_msg_matter) == false) {
-					if (ble_matter_adapter_send_callback_msg(BMS_CALLBACK_MSG_CMP_INDICATE_MATTER, NULL,indication_complete_msg_matter) == false) {
+					T_SERVER_APP_CB_DATA *indication_complete_msg_matter = (T_SERVER_APP_CB_DATA *) os_mem_alloc(0, sizeof(T_SERVER_APP_CB_DATA));
+					memset(indication_complete_msg_matter, 0, sizeof(T_SERVER_APP_CB_DATA));
+					indication_complete_msg_matter->event_data.send_data_result.conn_id = p_param->event_data.send_data_result.conn_id;
+					
+					if (ble_matter_adapter_send_callback_msg(BLE_MATTER_MSG_SEND_DATA_COMPLETE_MULTI_ADV, NULL,indication_complete_msg_matter) == false) {
 						printf("\n\r[%s] send callback msg fail\r\n", __func__);
 						os_mem_free(indication_complete_msg_matter);
-					}
-				} else {
-					ms_hal_ble_stack_msg_t *indication_complete_msg_msmart = (ms_hal_ble_stack_msg_t *)os_mem_alloc(0, sizeof(ms_hal_ble_stack_msg_t));
-					memset(indication_complete_msg_msmart, 0, sizeof(ms_hal_ble_stack_msg_t));
-					indication_complete_msg_msmart->event_type = MS_HAL_BLE_STACK_EVENT_CMP_INDICATE;
-					if (ble_matter_adapter_send_callback_msg(BMS_CALLBACK_MSG_CMP_INDICATE, NULL,indication_complete_msg_msmart) == false) {
-						printf("\n\r[%s] send callback msg fail\r\n", __func__);
-						os_mem_free(indication_complete_msg_msmart);
 					}
 				}
 #else
@@ -2076,7 +1974,7 @@ T_APP_RESULT ble_matter_adapter_app_profile_callback(T_SERVER_ID service_id, voi
 				    if(send_data_complete)
 				    {
 					    memcpy(send_data_complete, p_param, sizeof(T_SERVER_APP_CB_DATA));
-					    if(ble_matter_adapter_send_callback_msg(BT_MATTER_SEND_CB_MSG_SEND_DATA_COMPLETE, service_id, send_data_complete)==false)
+					    if(ble_matter_adapter_send_callback_msg(BMS_CALLBACK_MSG_CMP_INDICATE, service_id, send_data_complete)==false)
 					    {
 					        os_mem_free(send_data_complete);
 					    }
@@ -2097,11 +1995,8 @@ T_APP_RESULT ble_matter_adapter_app_profile_callback(T_SERVER_ID service_id, voi
 	} else if (service_id == ble_matter_adapter_service_id) {
 		printf("[%s]enter...%d, ble_matter_adapter_service_id = %d \r\n", __func__, __LINE__, ble_matter_adapter_service_id);
 		
-#if CONFIG_BLE_MATTER_MULTI_ADV
         T_MATTER_CALLBACK_DATA *p_ms_cb_data = (T_MATTER_CALLBACK_DATA *)p_data;
-#else
-	T_MATTER_CALLBACK_DATA *p_simp_cb_data = (T_MATTER_CALLBACK_DATA *)p_data;
-#endif
+
 printf("[%s]enter...%d, p_ms_cb_data->msg_type = %d \r\n", __func__, __LINE__, p_ms_cb_data->msg_type); //165 3 0 0 1 0
 //printf("[%s]enter...%d, p_ms_cb_data->srv_id = %d \r\n", __func__, __LINE__, p_ms_cb_data->srv_id);
 printf("[%s]enter...%d, p_ms_cb_data->conn_id = %d \r\n", __func__, __LINE__, p_ms_cb_data->conn_id);
@@ -2126,7 +2021,7 @@ printf("[%s]enter...%d, p_ms_cb_data->conn_id = %d \r\n", __func__, __LINE__, p_
                             memcpy(indication_notification_enable, p_ms_cb_data, sizeof(T_MATTER_CALLBACK_DATA));
                             printf("L2055,BT_MATTER_SEND_CB_MSG_IND_NTF_ENABLE=%d\r\n",BT_MATTER_SEND_CB_MSG_IND_NTF_ENABLE);
                             //if(ble_matter_adapter_send_callback_msg(BMS_CALLBACK_MSG_CMP_CCCD_RECV_ENABLE_MATTER, service_id, indication_notification_enable)==false)
-                            if(ble_matter_adapter_send_callback_msg(BMS_CALLBACK_MSG_CMP_CCCD_RECV_MATTER, service_id, indication_notification_enable)==false)
+                            if(ble_matter_adapter_send_callback_msg(BLE_MATTER_MSG_CCCD_RECV_ENABLE, service_id, indication_notification_enable)==false)
                             {
                                 os_mem_free(indication_notification_enable);
                                 indication_notification_enable = NULL;
@@ -2148,7 +2043,7 @@ printf("[%s]enter...%d, p_ms_cb_data->conn_id = %d \r\n", __func__, __LINE__, p_
                         {
                             memcpy(indication_notification_disable, p_ms_cb_data, sizeof(T_MATTER_CALLBACK_DATA));
                             //if(ble_matter_adapter_send_callback_msg(BMS_CALLBACK_MSG_CMP_CCCD_RECV_DISABLE_MATTER, service_id, indication_notification_disable)==false)
-			    if(ble_matter_adapter_send_callback_msg(BMS_CALLBACK_MSG_CMP_INDICATE_MATTER, service_id, indication_notification_disable)==false)
+			    if(ble_matter_adapter_send_callback_msg(BLE_MATTER_MSG_CCCD_RECV_DISABLE, service_id, indication_notification_disable)==false)
                             {
                                 os_mem_free(indication_notification_disable);
                                 indication_notification_disable = NULL;
@@ -2189,7 +2084,7 @@ printf("[%s]enter...%d, p_ms_cb_data->conn_id = %d \r\n", __func__, __LINE__, p_
                         write_char_val->msg_data.write_read.p_value = os_mem_alloc(0, write_char_val->msg_data.write_read.len);
                         memcpy(write_char_val->msg_data.write_read.p_value, p_ms_cb_data->msg_data.write_read.p_value, p_ms_cb_data->msg_data.write_read.len);
                     }
-                    if(ble_matter_adapter_send_callback_msg(BMS_CALLBACK_MSG_CMP_WRITE_RECV_MATTER, service_id, write_char_val)==false)
+                    if(ble_matter_adapter_send_callback_msg(BLE_MATTER_MSG_WRITE_CHAR, service_id, write_char_val)==false)
                     {
                         if (write_char_val->msg_data.write_read.len !=0)
                         {
@@ -2249,6 +2144,58 @@ printf("[%s]enter...%d, cb_type = %d \r\n", __func__, __LINE__, cb_type);
 	}
 
 	return;
+}
+#endif
+
+#if F_BT_GAPS_CHAR_WRITEABLE
+/** @defgroup  SCATTERNET_GAPS_WRITE GAP Service Callback Handler
+    * @brief Use @ref F_BT_GAPS_CHAR_WRITEABLE to open
+    * @{
+    */
+/**
+ * @brief    All the BT GAP service callback events are handled in this function
+ * @param[in] service_id  Profile service ID
+ * @param[in] p_para      Pointer to callback data
+ * @return   Indicates the function call is successful or not
+ * @retval   result @ref T_APP_RESULT
+ */
+T_APP_RESULT ble_matter_adapter_gap_service_callback(T_SERVER_ID service_id, void *p_para)
+{
+printf("[%s]enter...%d,\r\n", __func__, __LINE__);
+	(void) service_id;
+	T_APP_RESULT  result = APP_RESULT_SUCCESS;
+	T_GAPS_CALLBACK_DATA *p_gap_data = (T_GAPS_CALLBACK_DATA *)p_para;
+	APP_PRINT_INFO2("gap_service_callback: conn_id = %d msg_type = %d\n", p_gap_data->conn_id,
+					p_gap_data->msg_type);
+	APP_PRINT_INFO2("gap_service_callback: len = 0x%x,opcode = %d\n", p_gap_data->msg_data.len,
+					p_gap_data->msg_data.opcode);
+	if (p_gap_data->msg_type == SERVICE_CALLBACK_TYPE_WRITE_CHAR_VALUE) {
+		switch (p_gap_data->msg_data.opcode) {
+		case GAPS_WRITE_DEVICE_NAME: {
+			T_LOCAL_NAME device_name;
+			memcpy(device_name.local_name, p_gap_data->msg_data.p_value, p_gap_data->msg_data.len);
+			device_name.local_name[p_gap_data->msg_data.len] = 0;
+			printf("GAPS_WRITE_DEVICE_NAME:device_name = %s\r\n", device_name.local_name);
+			flash_save_local_name(&device_name);
+		}
+		break;
+
+		case GAPS_WRITE_APPEARANCE: {
+			uint16_t appearance_val;
+			T_LOCAL_APPEARANCE appearance;
+			LE_ARRAY_TO_UINT16(appearance_val, p_gap_data->msg_data.p_value);
+			appearance.local_appearance = appearance_val;
+			//printf("GAPS_WRITE_APPEARANCE:appearance = %s\r\n",appearance.local_appearance);
+			flash_save_local_appearance(&appearance);
+		}
+		break;
+		default:
+			APP_PRINT_ERROR1("gap_service_callback: unhandled msg_data.opcode 0x%x", p_gap_data->msg_data.opcode);
+			//printf("gap_service_callback: unhandled msg_data.opcode 0x%x\r\n", p_gap_data->msg_data.opcode);
+			break;
+		}
+	}
+	return result;
 }
 #endif
 /** @} */ /* End of group PERIPH_SEVER_CALLBACK */

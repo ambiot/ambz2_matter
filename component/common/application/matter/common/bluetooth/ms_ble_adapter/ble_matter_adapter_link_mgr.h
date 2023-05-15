@@ -51,11 +51,7 @@ typedef struct {
 /** @addtogroup  SCATTERNET_RANDOM
 	* @{
 	*/
-typedef struct {
-	uint8_t 	 is_exist;
-	uint8_t 	 reserved;		   /**< remote BD type*/
-	uint8_t 	 bd_addr[GAP_BD_ADDR_LEN];	/**< remote BD */
-} T_APP_STATIC_RANDOM_ADDR;
+
 
 /*============================================================================*
  *                              Variables

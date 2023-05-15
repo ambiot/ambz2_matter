@@ -30,7 +30,7 @@
 #include <profile_client.h>
 #include <gap_msg.h>
 #include <gcs_client.h>
-#include <ble_matter_adapter_link_mgr.h>
+
 #include "trace_uart.h"
 #include <bte.h>
 #include "wifi_constants.h"
@@ -70,6 +70,12 @@ extern T_GAP_DEV_STATE ble_matter_adapter_gap_dev_state;
 #if CONFIG_BLE_MATTER_MULTI_ADV
 extern uint8_t matter_local_static_random_addr[6];
 #endif
+
+typedef struct {
+	uint8_t 	 is_exist;
+	uint8_t 	 reserved;		   /**< remote BD type*/
+	uint8_t 	 bd_addr[GAP_BD_ADDR_LEN];	/**< remote BD */
+} T_APP_STATIC_RANDOM_ADDR;
 /*============================================================================*
  *                              Functions
  *============================================================================*/

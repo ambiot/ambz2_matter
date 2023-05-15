@@ -9,7 +9,6 @@
 
 #include <trace_app.h>
 #include "ble_ms_adapter_service.h"
-#include "ms_hal_ble.h"
 
 /*============================================================================*
  *                              Constants

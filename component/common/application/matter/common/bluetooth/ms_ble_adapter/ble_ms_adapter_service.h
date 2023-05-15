@@ -1,5 +1,4 @@
 #include <profile_server.h>
-#include "ms_hal_ble.h"
 #include "platform_opts_bt.h"
 
 #define MS_READ_MAX_LEN 300

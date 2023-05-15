@@ -127,9 +127,13 @@ typedef enum {
 	BMS_CALLBACK_MSG_CMP_WRITE_RECIEVED,
 	//BMS_CALLBACK_MSG_CMP_CCCD_RECV_ENABLE_MATTER,
 	//BMS_CALLBACK_MSG_CMP_CCCD_RECV_DISABLE_MATTER,
-	BMS_CALLBACK_MSG_CMP_INDICATE_MATTER,
+	BLE_MATTER_MSG_CCCD_RECV_DISABLE,
+	BLE_MATTER_MSG_SEND_DATA_COMPLETE_MULTI_ADV,
+	BLE_MATTER_IND_NTF_ENABLE,
+	BLE_MATTER_MSG_CCCD_RECV_ENABLE,
 	BMS_CALLBACK_MSG_CMP_CCCD_RECV_MATTER,
 	BMS_CALLBACK_MSG_CMP_INDICATE,
+	BLE_MATTER_MSG_WRITE_CHAR,
 	//BMS_CALLBACK_MSG_SEND_DATA_COMPLETE_MATTER
 } T_BMS_CALLBACK_MSG_TYPE;
 
@@ -216,26 +220,12 @@ typedef struct {
 	T_GAP_REMOTE_ADDR_TYPE local_bd_type;
 } M_CON_PARAM;
 
-typedef struct {
-	uint8_t write_len;
-	uint8_t write_value[MS_WRITE_MAX_LEN];
-	ms_hal_ble_service_write_cb write_cb;
-} T_MS_WRITE_DATA;
+
 
 typedef struct {
 	uint8_t device_name_len;
 	uint8_t *device_name;
 } M_SET_DEVICE_NAME;
-
-typedef struct save_scan_info_t {
-	struct save_scan_info_t *p_next; // Pointer to the next item, must be the first field.
-	ms_hal_ble_report_type     type;                           // report ad type
-	ms_hal_ble_addr_t     peer_addr;                           // peer addr
-	int8_t                   tx_pwr;                           /// TX power (in dBm)
-	int8_t                     rssi;                           // rssi
-	uint16_t                    len;                           //data len
-	uint8_t                   *data;                           //data
-} M_SAVE_SCAN_INFO;
 
 /*============================================================================*
  *                              Functions
@@ -297,9 +287,6 @@ void ble_matter_adapter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCO
  * @retval   result @ref T_APP_RESULT
  */
 T_APP_RESULT ble_matter_adapter_gcs_client_callback(T_CLIENT_ID client_id, uint8_t conn_id, void *p_data);
-#if F_BT_GAPS_CHAR_WRITEABLE
-T_APP_RESULT ble_matter_adapter_gap_service_callback(T_SERVER_ID service_id, void *p_para);
-#endif
 
 void bt_matter_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info);
 
@@ -317,7 +304,10 @@ T_APP_RESULT ble_matter_adapter_app_profile_callback(T_SERVER_ID service_id, voi
 
 #if CONFIG_BLE_MATTER_MULTI_ADV
 void ble_matter_adapter_app_vendor_callback(uint8_t cb_type, void *p_cb_data);
+#endif
 
+#if F_BT_GAPS_CHAR_WRITEABLE
+T_APP_RESULT ble_matter_adapter_gap_service_callback(T_SERVER_ID service_id, void *p_para)
 #endif
 
 #ifdef __cplusplus
