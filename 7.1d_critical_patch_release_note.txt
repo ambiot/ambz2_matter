@@ -1,0 +1,31 @@
+Realtek IOT AmebaZ2 7.1d SDK Release Notes
+
+7.1d Patch List:
+
+	Updates for 7.1d_critical_patch_full_20220905_988a2b12_v(17).zip:
+		1. Include bt patch from 247c97fb to 943c89c1: For bug fix and new implementation
+		2. Add LZMA compress/decompress code for IAR and GCC generation
+		3. Include Wi-Fi Patch from 53d432d0 to 94141f9e: For bug fix and new implementation
+		4. Add wifi random slot mechanism for WiFi connected and BLE scan
+		5. Include bt patch from 0bf03653 to 988a2b12: For bug fix and new implementation
+		6. Fix PM_SleepCG example
+		7. Fix build error of display confirmation value_and random value for bt mesh
+
+	Updates for 7.1d_critical_patch_full_20230228_de0b7af2_v(18).zip:
+		
+		1. Fix WPA3 AP compatibility issue for disconnection status 53 which is related to pmkid
+		2. Update HAL pwmout API and PM_SleepCG example
+		3. Update ATWS print logs and elf2bin
+		4. Update mqtt build and changed cleanstart back to cleansession
+		5. Fix the HTTPC example hard fault after reboot in trustzone environment.
+		6. Update atcmd_lwip ssl part to receive data correctly
+		7. Fix wpa3 reconnection failed issue when ap send sa query during reconnection
+		8. Update BT related source files to version b2843ae3.
+		9. Fix socket select example due to massive error message printed during infinite loop
+		10. Update BT mesh files to version de0b7af2
+
+	Updates for 7.1d_critical_patch_full_20230303_8d5d1b96_v(19).zip:
+	
+		1. Add support for EAP example only for IS project, not support for TZ project
+		2. Update coverity fixes
+	

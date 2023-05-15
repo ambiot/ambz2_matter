@@ -66,6 +66,8 @@ INCLUDES += -I../../../component/common/api/wifi/rtw_wpa_supplicant/src/crypto
 INCLUDES += -I../../../component/common/api/network/include
 INCLUDES += -I../../../component/common/application
 INCLUDES += -I../../../component/common/application/mqtt/MQTTClient
+INCLUDES += -I../../../component/common/application/mqtt/MQTTPacket/V5
+INCLUDES += -I../../../component/common/application/mqtt/MQTTPacket
 INCLUDES += -I../../../component/common/example
 INCLUDES += -I../../../component/common/file_system
 INCLUDES += -I../../../component/common/file_system/dct
@@ -110,31 +112,6 @@ INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_config
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/ble_central
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_fuzz_test
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_ota_central_client
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_datatrans
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/cmd
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/common
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/gap
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/inc
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/inc/amebaz2
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/realtek
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/platform
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/profile
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/utility
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/provisioner
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/device
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/api/common
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/api/provisioner
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/api/device
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/api
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_provisioner_rtk_demo
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_provisioner_rtk_demo/inc
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_device_rtk_demo
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/device_multiple_profile
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/provisioner_multiple_profile
-INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_test
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/src/mcu/module/data_uart_cmd
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/board/common/inc
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_airsync_config
@@ -217,6 +194,12 @@ SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral/
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral/ble_peripheral_at_cmd.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral/peripheral_app.c
 
+#bluetooth - example - ble_scatternet
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_app.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_app_main.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_app_task.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_link_mgr.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_user_cmd.c
 #bluetooth - example - bt_config
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_config_app_main.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_config_app_task.c
@@ -290,6 +273,8 @@ SRC_C += ../../../component/common/application/mqtt/MQTTPacket/MQTTSubscribeClie
 SRC_C += ../../../component/common/application/mqtt/MQTTPacket/MQTTSubscribeServer.c
 SRC_C += ../../../component/common/application/mqtt/MQTTPacket/MQTTUnsubscribeClient.c
 SRC_C += ../../../component/common/application/mqtt/MQTTPacket/MQTTUnsubscribeServer.c
+SRC_C += ../../../component/common/application/mqtt/MQTTPacket/V5/MQTTProperties.c
+SRC_C += ../../../component/common/application/mqtt/MQTTPacket/V5/MQTTV5Packet.c
 
 #network - coap
 SRC_C += ../../../component/common/network/coap/sn_coap_ameba_port.c
@@ -507,7 +492,6 @@ SRC_C += ../../../component/common/example/http_client/example_http_client.c
 SRC_C += ../../../component/common/example/http_download/example_http_download.c
 SRC_C += ../../../component/common/example/httpc/example_httpc.c
 SRC_C += ../../../component/common/example/httpd/example_httpd.c
-SRC_C += ../../../component/common/example/mbedtls_ecdhe/example_mbedtls_ecdhe.c
 SRC_C += ../../../component/common/example/mcast/example_mcast.c
 SRC_C += ../../../component/common/example/mqtt/example_mqtt.c
 SRC_C += ../../../component/common/example/nonblock_connect/example_nonblock_connect.c
@@ -566,7 +550,7 @@ CFLAGS =
 CFLAGS += -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=soft -D__thumb2__ -g -gdwarf-3 -Os
 CFLAGS += -D__ARM_ARCH_8M_MAIN__=1 -gdwarf-3 -fstack-usage -fdata-sections -ffunction-sections 
 CFLAGS += -fdiagnostics-color=always -Wall -Wpointer-arith -Wundef -Wno-write-strings --save-temps
-CFLAGS += -Wno-maybe-uninitialized -c -MMD
+CFLAGS += -Wno-maybe-uninitialized -c -MMD -fsigned-char
 CFLAGS += -DCONFIG_PLATFORM_8710C -DCONFIG_BUILD_RAM=1
 CFLAGS += -DV8M_STKOVF
 
