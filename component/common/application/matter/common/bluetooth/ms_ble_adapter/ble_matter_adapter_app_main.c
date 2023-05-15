@@ -17,10 +17,10 @@
  *                              Header Files
  *============================================================================*/
 #include "platform_opts_bt.h"
-#if defined(CONFIG_BT_MS_ADAPTER) && CONFIG_BT_MS_ADAPTER
+#if defined(CONFIG_BLE_MATTER_ADAPTER) && CONFIG_BLE_MATTER_ADAPTER
 #include <os_sched.h>
 #include <string.h>
-#include <ble_ms_adapter_app_task.h>
+#include <ble_matter_adapter_app_task.h>
 #include <trace_app.h>
 #include <gap.h>
 #include <gap_config.h>
@@ -28,9 +28,9 @@
 #include <gap_scan.h>
 #include <profile_client.h>
 #include <gap_msg.h>
-#include <ble_ms_adapter_app.h>
+#include <ble_matter_adapter_app.h>
 #include <gcs_client.h>
-#include <ble_ms_adapter_link_mgr.h>
+#include <ble_matter_adapter_link_mgr.h>
 #include "trace_uart.h"
 #include <bte.h>
 #include "wifi_constants.h"
@@ -42,7 +42,7 @@
 #include <wifi_conf.h>
 #include "rtk_coex.h"
 #include "matter_blemgr_common.h"
-#if CONFIG_MS_MULTI_ADV
+#if CONFIG_BLE_MATTER_MULTI_ADV
 #include "vendor_cmd_bt.h"
 #endif
 /** @defgroup  CENTRAL_CLIENT_DEMO_MAIN Central Client Main
@@ -53,16 +53,18 @@
 /*============================================================================*
  *                              Constants
  *============================================================================*/
+/** @brief Default scan interval (units of 0.625ms, 0x520=820ms) */
+#define DEFAULT_SCAN_INTERVAL     0x520
+/** @brief Default scan window (units of 0.625ms, 0x520=820ms) */
+#define DEFAULT_SCAN_WINDOW       0x520
+
 /** @brief  Default minimum advertising interval when device is discoverable (units of 625us, 160=100ms) */
 #define DEFAULT_ADVERTISING_INTERVAL_MIN            192 //120ms
 /** @brief  Default maximum advertising interval */
 #define DEFAULT_ADVERTISING_INTERVAL_MAX            192 //120ms
 
-extern T_SERVER_ID ble_matter_adapter_service_add_service(void *p_func);
 extern T_APP_RESULT ble_matter_adapter_app_profile_callback(T_SERVER_ID service_id, void *p_data);
-extern T_APP_RESULT ble_matter_adapter_app_gap_callback(uint8_t cb_type, void *p_cb_data);
-extern T_APP_RESULT ble_matter_adapter_app_client_callback(T_CLIENT_ID client_id, uint8_t conn_id, void *p_data);	
-#if CONFIG_MS_MULTI_ADV
+#if CONFIG_BLE_MATTER_MULTI_ADV
 extern T_SERVER_ID ble_matter_adapter_service_id;
 extern uint8_t matter_local_static_random_addr[6];
 extern T_SERVER_ID ble_matter_adapter_service_add_service(void *p_func);
@@ -71,15 +73,27 @@ extern T_SERVER_ID ble_matter_adapter_service_add_service(void *p_func);
  *                              Functions
  *============================================================================*/
 /**
- * @brief    Contains the initialization of all tasks
- * @note     There is only one task in BLE Central Client APP, thus only one APP task is init here
- * @return   void
+ * @brief  Config bt stack related feature
+ *
+ * NOTE: This function shall be called before @ref bte_init is invoked.
+ * @return void
  */
-void ble_matter_adapter_task_init(void)
+#ifndef PLATFORM_OHOS
+void ble_matter_adapter_bt_stack_config_init(void)
 {
-	ble_matter_adapter_app_task_init();
+	gap_config_max_le_link_num(BLE_MATTER_ADAPTER_APP_MAX_LINKS);
+	gap_config_max_le_paired_device(BLE_MATTER_ADAPTER_APP_MAX_LINKS);
 }
 
+#else
+extern void gap_config_deinit_flow(uint8_t deinit_flow);
+void ble_matter_adapter_bt_stack_config_init(void)
+{
+	gap_config_max_le_link_num(BLE_MATTER_ADAPTER_APP_MAX_LINKS);
+	gap_config_max_le_paired_device(BLE_MATTER_ADAPTER_APP_MAX_LINKS);
+	gap_config_deinit_flow(1);
+}
+#endif
 /**
   * @brief  Initialize central and gap bond manager related parameters
   * @return void
@@ -87,7 +101,7 @@ void ble_matter_adapter_task_init(void)
 void ble_matter_adapter_app_le_gap_init(void)
 {
 	/* Device name and device appearance */
-	uint8_t  device_name[GAP_DEVICE_NAME_LEN] = "MATTER_BLE_ADAPTER";
+	uint8_t  device_name[GAP_DEVICE_NAME_LEN] = "BLE_MATTER_ADAPTER";
 	uint16_t appearance = GAP_GATT_APPEARANCE_UNKNOWN;
 
 	/* Advertising parameters */
@@ -98,6 +112,13 @@ void ble_matter_adapter_app_le_gap_init(void)
 	uint8_t  adv_filter_policy = GAP_ADV_FILTER_ANY;
 	uint16_t adv_int_min = DEFAULT_ADVERTISING_INTERVAL_MIN;
 	uint16_t adv_int_max = DEFAULT_ADVERTISING_INTERVAL_MAX;
+
+	/* Scan parameters */
+	uint8_t  scan_mode = GAP_SCAN_MODE_ACTIVE;
+	uint16_t scan_interval = DEFAULT_SCAN_INTERVAL;
+	uint16_t scan_window = DEFAULT_SCAN_WINDOW;
+	uint8_t  scan_filter_policy = GAP_SCAN_FILTER_ANY;
+	uint8_t  scan_filter_duplicate = GAP_SCAN_FILTER_DUPLICATE_ENABLE;
 
 	/* GAP Bond Manager parameters */
 	uint8_t  auth_pair_mode = GAP_PAIRING_MODE_PAIRABLE;
@@ -123,6 +144,15 @@ void ble_matter_adapter_app_le_gap_init(void)
 	le_adv_set_param(GAP_PARAM_ADV_FILTER_POLICY, sizeof(adv_filter_policy), &adv_filter_policy);
 	le_adv_set_param(GAP_PARAM_ADV_INTERVAL_MIN, sizeof(adv_int_min), &adv_int_min);
 	le_adv_set_param(GAP_PARAM_ADV_INTERVAL_MAX, sizeof(adv_int_max), &adv_int_max);
+
+	/* Set scan parameters */
+	le_scan_set_param(GAP_PARAM_SCAN_MODE, sizeof(scan_mode), &scan_mode);
+	le_scan_set_param(GAP_PARAM_SCAN_INTERVAL, sizeof(scan_interval), &scan_interval);
+	le_scan_set_param(GAP_PARAM_SCAN_WINDOW, sizeof(scan_window), &scan_window);
+	le_scan_set_param(GAP_PARAM_SCAN_FILTER_POLICY, sizeof(scan_filter_policy),
+					  &scan_filter_policy);
+	le_scan_set_param(GAP_PARAM_SCAN_FILTER_DUPLICATES, sizeof(scan_filter_duplicate),
+					  &scan_filter_duplicate);
 
 	/* Setup the GAP Bond Manager */
 	gap_set_param(GAP_PARAM_BOND_PAIRING_MODE, sizeof(auth_pair_mode), &auth_pair_mode);
@@ -159,8 +189,10 @@ void ble_matter_adapter_app_le_gap_init(void)
 #endif
 	T_APP_STATIC_RANDOM_ADDR random_addr;
 	uint8_t local_bd_type = GAP_LOCAL_ADDR_LE_RANDOM;
-#if CONFIG_MS_MULTI_ADV
+#if CONFIG_BLE_MATTER_MULTI_ADV
+	//T_APP_STATIC_RANDOM_ADDR random_addr;
 	bool gen_addr = true;
+	//uint8_t local_bd_type = GAP_LOCAL_ADDR_LE_RANDOM;
 	if (gen_addr)
 	{
 		if (le_gen_rand_addr(GAP_RAND_ADDR_STATIC, random_addr.bd_addr) == GAP_CAUSE_SUCCESS)
@@ -186,7 +218,7 @@ void ble_matter_adapter_app_le_gap_init(void)
 	le_set_gap_param(GAP_PARAM_DEFAULT_TX_PHYS_PREFER, sizeof(tx_phys_prefer), &tx_phys_prefer);
 	le_set_gap_param(GAP_PARAM_DEFAULT_RX_PHYS_PREFER, sizeof(rx_phys_prefer), &rx_phys_prefer);
 #endif
-#if CONFIG_MS_MULTI_ADV
+#if CONFIG_BLE_MATTER_MULTI_ADV
 	vendor_cmd_init(ble_matter_adapter_app_vendor_callback);
 #endif
 }
@@ -195,12 +227,14 @@ void ble_matter_adapter_app_le_gap_init(void)
  * @brief  Add GATT clients and register callbacks
  * @return void
  */
-
+ extern T_SERVER_ID ble_matter_adapter_service_add_service(void *p_func);
+ extern T_APP_RESULT ble_matter_adapter_app_client_callback(T_CLIENT_ID client_id, uint8_t conn_id, void *p_data);
+ extern T_SERVER_ID ble_matter_adapter_service_id;	
 void ble_matter_adapter_app_le_profile_init(void)
 {
 	/* Register Server Callback */
 	server_init(1);
-#if CONFIG_MS_MULTI_ADV
+#if CONFIG_BLE_MATTER_MULTI_ADV
 	ble_matter_adapter_service_id = ble_matter_adapter_service_add_service((void *)ble_matter_adapter_app_profile_callback);
 	printf("[%s]enter...%d, ble_matter_adapter_service_id = %d \r\n", __func__, __LINE__, ble_matter_adapter_service_id);
 #else
@@ -217,29 +251,16 @@ void ble_matter_adapter_app_le_profile_init(void)
 }
 
 
-
 /**
- * @brief  Config bt stack related feature
- *
- * NOTE: This function shall be called before @ref bte_init is invoked.
- * @return void
+ * @brief    Contains the initialization of all tasks
+ * @note     There is only one task in BLE Central Client APP, thus only one APP task is init here
+ * @return   void
  */
-#ifndef PLATFORM_OHOS
-void ble_matter_adapter_bt_stack_config_init(void)
+void ble_matter_adapter_task_init(void)
 {
-	gap_config_max_le_link_num(BLE_MATTER_ADAPTER_APP_MAX_LINKS);
-	gap_config_max_le_paired_device(BLE_MATTER_ADAPTER_APP_MAX_LINKS);
+	ble_matter_adapter_app_task_init();
 }
 
-#else
-extern void gap_config_deinit_flow(uint8_t deinit_flow);
-void ble_matter_adapter_bt_stack_config_init(void)
-{
-	gap_config_max_le_link_num(BLE_MATTER_ADAPTER_APP_MAX_LINKS);
-	gap_config_max_le_paired_device(BLE_MATTER_ADAPTER_APP_MAX_LINKS);
-	gap_config_deinit_flow(1);
-}
-#endif
 /**
  * @brief    Entry of APP code
  * @return   int (To avoid compile warning)
@@ -257,11 +278,13 @@ int ble_matter_adapter_app_main(void)
 	return 0;
 }
 
+//extern void wifi_btcoex_set_bt_on(void);
 int ble_matter_adapter_app_init(void)
 {
 	//(void) bt_stack_already_on;
 	T_GAP_DEV_STATE new_state;
 
+	//uint32_t random_1 = 0;
 	/*Wait WIFI init complete*/
 	while(!(wifi_is_up(RTW_STA_INTERFACE) || wifi_is_up(RTW_AP_INTERFACE))) {
 		os_delay(1000);
@@ -292,11 +315,12 @@ extern void gcs_delete_client(void);
 extern T_GAP_DEV_STATE bt_mesh_device_matter_gap_dev_state;
 void ble_matter_adapter_app_deinit(void)
 {
+	//ble_matter_adapter_free_service_table();
 	T_GAP_DEV_STATE state;
 	ble_matter_adapter_app_task_deinit();
 	le_get_gap_param(GAP_PARAM_DEV_STATE, &state);
 	if (state.gap_init_state != GAP_INIT_STATE_STACK_READY) {
-		printf("[BLE MATTER Adapter]BT Stack is not running\n\r");
+		printf("[BLE Matter Adapter]BT Stack is not running\n\r");
 		bt_mesh_device_matter_gap_dev_state.gap_init_state = GAP_INIT_STATE_INIT;
 	}
 	
@@ -305,7 +329,7 @@ void ble_matter_adapter_app_deinit(void)
 		gcs_delete_client();
 		bte_deinit();
 		bt_trace_uninit();
-		printf("[BLE MATTER Adapter]BT Stack deinitalized\n\r");
+		printf("[BLE Matter Adapter]BT Stack deinitalized\n\r");
 	}
 #endif
 	bt_mesh_device_matter_gap_dev_state.gap_init_state = GAP_INIT_STATE_INIT;

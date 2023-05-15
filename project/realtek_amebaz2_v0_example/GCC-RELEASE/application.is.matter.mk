@@ -312,15 +312,15 @@ SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multipl
 else
 
 ifdef BT_MATTER_MSMART_ADAPTER
-SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_matter_adapter_service.c
+SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_ms_adapter_service.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/matter_blemgr_common.c
 #bluetooth - example - ms_ble_adapter
-SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_ms_adapter_app_task.c
-SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_ms_adapter_app_main.c
-SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_ms_adapter_app.c
-SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_ms_adapter_link_mgr.c
+SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_matter_adapter_app_task.c
+SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_matter_adapter_app_main.c
+SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_matter_adapter_app.c
+SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_matter_adapter_link_mgr.c
 
-SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_ms_adapter_service.c
+SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_matter_adapter_service.c
 
 else
 #bluetooth - example - bt_matter_adapter
@@ -731,7 +731,7 @@ CFLAGS += -DV8M_STKOVF
 
 
 CFLAGS += -DMS_CONFIG_BLE_SUPPORT
-CFLAGS += -DCONFIG_BT_MS_ADAPTER=1
+CFLAGS += -DCONFIG_BLE_MATTER_ADAPTER=1
 CFLAGS += -DWITH_LWIP=1
 CFLAGS += $(foreach define, $(GLOBAL_DEFINES), $(addprefix -D, $(define)))
 

@@ -19,7 +19,7 @@
  *============================================================================*/
 #include <app_msg.h>
 #include <gap_conn_le.h>
-#include <ble_ms_adapter_app_flags.h>
+#include <ble_matter_adapter_app_flags.h>
 
 /*============================================================================*
  *                              Constants

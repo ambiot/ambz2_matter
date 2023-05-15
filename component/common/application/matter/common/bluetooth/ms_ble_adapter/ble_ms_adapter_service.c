@@ -1,22 +1,22 @@
 #include <platform_opts_bt.h>
-#if defined(CONFIG_BT_MS_ADAPTER) && CONFIG_BT_MS_ADAPTER
+#if defined(CONFIG_BLE_MATTER_ADAPTER) && CONFIG_BLE_MATTER_ADAPTER
 #include <gap.h>
 #include <os_mem.h>
 #include <profile_server.h>
-#include "ble_ms_adapter_app.h"
+#include "ble_matter_adapter_app.h"
 #include <string.h>
 #include "platform_stdlib.h"
 #include "ms_hal_ble.h"
 #include "os_sync.h"
 
-BMS_SERVICE_INFO ble_matter_adapter_srvs_head;
-BMS_SERVICE_INFO *ble_matter_adapter_srv_p = &ble_matter_adapter_srvs_head;
-static P_FUN_SERVER_GENERAL_CB ble_matter_adapter_service_cb = NULL;
-static uint8_t bt_matter_char_write_value[MS_WRITE_MAX_LEN];
+BMS_SERVICE_INFO ble_ms_adapter_srvs_head;
+BMS_SERVICE_INFO *ble_ms_adapter_srv_p = &ble_ms_adapter_srvs_head;
+static P_FUN_SERVER_GENERAL_CB ble_ms_adapter_service_cb = NULL;
+static uint8_t bt_ms_char_write_value[MS_WRITE_MAX_LEN];
 //extern void *matter_add_service_sem;
-uint8_t ble_matter_adapter_srvs_num = 0;
+uint8_t ble_ms_adapter_srvs_num = 0;
 
-void ble_matter_adapter_free_service_info(BMS_SERVICE_INFO *service_info)
+void ble_ms_adapter_free_service_info(BMS_SERVICE_INFO *service_info)
 {
 	for (int i = 0; i < service_info->att_num; i ++) {
 		if (service_info->att_tbl[i].p_value_context != NULL) {
@@ -28,28 +28,28 @@ void ble_matter_adapter_free_service_info(BMS_SERVICE_INFO *service_info)
 	os_mem_free(service_info);
 }
 
-void ble_matter_adapter_move_pointer_and_free_service(BMS_SERVICE_INFO *service_info)
+void ble_ms_adapter_move_pointer_and_free_service(BMS_SERVICE_INFO *service_info)
 {
 	BMS_SERVICE_INFO *pnext = service_info->next;
-	BMS_SERVICE_INFO *p_srv = &ble_matter_adapter_srvs_head;
+	BMS_SERVICE_INFO *p_srv = &ble_ms_adapter_srvs_head;
 
 	while (p_srv) {
 		if (p_srv->next == service_info) {
 			p_srv->next = pnext;
 			if (pnext == NULL) {
-				ble_matter_adapter_srv_p = p_srv;
+				ble_ms_adapter_srv_p = p_srv;
 			}
 			break;
 		} else {
 			p_srv = p_srv->next;
 		}
 	}
-	ble_matter_adapter_free_service_info(service_info);
+	ble_ms_adapter_free_service_info(service_info);
 }
 
 void ble_matter_adapter_search_and_free_service(T_SERVER_ID service_id)
 {
-	BMS_SERVICE_INFO *p_srv = &ble_matter_adapter_srvs_head;
+	BMS_SERVICE_INFO *p_srv = &ble_ms_adapter_srvs_head;
 	BMS_SERVICE_INFO *pnext;
 
 	while (p_srv) {
@@ -57,10 +57,10 @@ void ble_matter_adapter_search_and_free_service(T_SERVER_ID service_id)
 		if (pnext->srvId == service_id) {
 			p_srv->next = pnext->next;
 			if (pnext->next == NULL) {
-				ble_matter_adapter_srv_p = p_srv;
+				ble_ms_adapter_srv_p = p_srv;
 			}
-			ble_matter_adapter_srvs_num --;
-			ble_matter_adapter_free_service_info(pnext);
+			ble_ms_adapter_srvs_num --;
+			ble_ms_adapter_free_service_info(pnext);
 			break;
 		} else {
 			p_srv = p_srv->next;
@@ -69,7 +69,7 @@ void ble_matter_adapter_search_and_free_service(T_SERVER_ID service_id)
 
 }
 
-bool ble_matter_adapter_send_indication_notification(uint8_t conn_id, uint8_t service_id, uint8_t handle,
+bool ble_ms_adapter_send_indication_notification(uint8_t conn_id, uint8_t service_id, uint8_t handle,
 		uint8_t *p_value, uint16_t length, bool type)
 {
 	if (p_value == NULL) {
@@ -86,13 +86,13 @@ bool ble_matter_adapter_send_indication_notification(uint8_t conn_id, uint8_t se
 }
 
 
-T_APP_RESULT ble_matter_adapter_attr_write_cb(uint8_t conn_id, T_SERVER_ID service_id,
+T_APP_RESULT ble_ms_adapter_attr_write_cb(uint8_t conn_id, T_SERVER_ID service_id,
 		uint16_t attrib_index, T_WRITE_TYPE write_type, uint16_t length, uint8_t *p_value,
 		P_FUN_WRITE_IND_POST_PROC *p_write_ind_post_proc)
 {
 	T_APP_RESULT  cause = APP_RESULT_SUCCESS;
 	printf("[%s] service_id %d index 0x%x\r\n", __FUNCTION__, service_id, attrib_index);
-	T_MATTER_ADAPTER_CALLBACK_DATA callback_data;
+	T_MS_ADAPTER_CALLBACK_DATA callback_data;
 
 	/* Make sure written value size is valid. */
 	if (p_value == NULL) {
@@ -103,11 +103,11 @@ T_APP_RESULT ble_matter_adapter_attr_write_cb(uint8_t conn_id, T_SERVER_ID servi
 		callback_data.conn_id  = conn_id;
 		callback_data.srv_id = service_id;
 		callback_data.msg_data.write.write_type = write_type;
-		memcpy(bt_matter_char_write_value, p_value, length);
-		callback_data.msg_data.write.p_value = bt_matter_char_write_value;
+		memcpy(bt_ms_char_write_value, p_value, length);
+		callback_data.msg_data.write.p_value = bt_ms_char_write_value;
 		callback_data.msg_data.write.len = length;
 
-		BMS_SERVICE_INFO *p = ble_matter_adapter_srvs_head.next;
+		BMS_SERVICE_INFO *p = ble_ms_adapter_srvs_head.next;
 		while (p) {
 			if (p->srvId == service_id) {
 				break;
@@ -122,18 +122,18 @@ T_APP_RESULT ble_matter_adapter_attr_write_cb(uint8_t conn_id, T_SERVER_ID servi
 			printf("[%s] can not find write callback\r\n");
 		}
 
-		if (ble_matter_adapter_service_cb) {
-			ble_matter_adapter_service_cb(service_id, (void *)&callback_data);
+		if (ble_ms_adapter_service_cb) {
+			ble_ms_adapter_service_cb(service_id, (void *)&callback_data);
 		}
 	}
 
 	return (cause);
 }
 
-void ble_matter_adapter_cccd_update_cb(uint8_t conn_id, T_SERVER_ID service_id, uint16_t attrib_index,
+void ble_ms_adapter_cccd_update_cb(uint8_t conn_id, T_SERVER_ID service_id, uint16_t attrib_index,
 								   uint16_t cccbits)
 {
-	T_MATTER_ADAPTER_CALLBACK_DATA callback_data;
+	T_MS_ADAPTER_CALLBACK_DATA callback_data;
 	callback_data.msg_type = SERVICE_CALLBACK_TYPE_INDIFICATION_NOTIFICATION;
 	callback_data.conn_id = conn_id;
 	callback_data.srv_id = service_id;
@@ -141,17 +141,17 @@ void ble_matter_adapter_cccd_update_cb(uint8_t conn_id, T_SERVER_ID service_id, 
 	callback_data.msg_data.cccd.ccc_val = cccbits;
 
 	/* Notify Application. */
-	if (ble_matter_adapter_service_cb) {
-		ble_matter_adapter_service_cb(service_id, (void *)&callback_data);
+	if (ble_ms_adapter_service_cb) {
+		ble_ms_adapter_service_cb(service_id, (void *)&callback_data);
 	}
 }
-const T_FUN_GATT_SERVICE_CBS ble_matter_adapter_service_cbs = {
+const T_FUN_GATT_SERVICE_CBS ble_ms_adapter_service_cbs = {
 	NULL,   /* Read callback function pointer */
-	ble_matter_adapter_attr_write_cb,  /* Write callback function pointer */
-	ble_matter_adapter_cccd_update_cb  /* CCCD update callback function pointer */
+	ble_ms_adapter_attr_write_cb,  /* Write callback function pointer */
+	ble_ms_adapter_cccd_update_cb  /* CCCD update callback function pointer */
 };
 
-T_SERVER_ID ble_matter_adapter_add_service(BMS_SERVICE_INFO *service_info, void *p_func)
+T_SERVER_ID ble_ms_adapter_add_service(BMS_SERVICE_INFO *service_info, void *p_func)
 {
 	if (service_info == NULL || service_info->att_tbl == NULL) {
 		return 0xff;
@@ -159,17 +159,17 @@ T_SERVER_ID ble_matter_adapter_add_service(BMS_SERVICE_INFO *service_info, void 
 	if (false == server_add_service(&(service_info->srvId),
 									(uint8_t *) service_info->att_tbl,
 									(service_info->att_num) * sizeof(T_ATTRIB_APPL),
-									ble_matter_adapter_service_cbs)) {
+									ble_ms_adapter_service_cbs)) {
 		printf("\r\n[%s] add service fail", __FUNCTION__);
-		ble_matter_adapter_move_pointer_and_free_service(service_info);
+		ble_ms_adapter_move_pointer_and_free_service(service_info);
 		return 0xff;
 	} else {
 		printf("[%s] add service %d success\n", __FUNCTION__, service_info->srvId);
-		ble_matter_adapter_srvs_num ++;
+		ble_ms_adapter_srvs_num ++;
 	}
-	if (ble_matter_adapter_service_cb == NULL) {
+	if (ble_ms_adapter_service_cb == NULL) {
 
-		ble_matter_adapter_service_cb = (P_FUN_SERVER_GENERAL_CB) p_func;
+		ble_ms_adapter_service_cb = (P_FUN_SERVER_GENERAL_CB) p_func;
 	}
 	return service_info->srvId;
 }
@@ -268,7 +268,7 @@ static int setup_ble_char_user_desc_attr(T_ATTRIB_APPL *attr, uint8_t *value, ui
 
 	return 0;
 }
-BMS_SERVICE_INFO *ble_matter_adapter_parse_srv_tbl(matter_hal_ble_service_attrib_t **profile, uint16_t attrib_count)
+BMS_SERVICE_INFO *ble_ms_adapter_parse_srv_tbl(ms_hal_ble_service_attrib_t **profile, uint16_t attrib_count)
 {
 	BMS_SERVICE_INFO *new_srv = (BMS_SERVICE_INFO *) os_mem_alloc(0, sizeof(BMS_SERVICE_INFO));
 	memset(new_srv, 0, sizeof(BMS_SERVICE_INFO));
@@ -289,24 +289,24 @@ BMS_SERVICE_INFO *ble_matter_adapter_parse_srv_tbl(matter_hal_ble_service_attrib
 		} else if (profile[j]->att_type == ENUM_MS_HAL_BLE_ATTRIB_TYPE_CHAR_VALUE) {
 			setup_ble_char_value_desc_attr(&new_srv->att_tbl[i], profile[j]->value_context, profile[j]->uuid, profile[j]->uuid_type, profile[j]->perm);
 			new_srv->cbInfo[i].att_handle = i;
-			memcpy(&(new_srv->cbInfo[i].func), &(profile[j]->callback), sizeof(matter_hal_ble_attrib_callback_t));
+			memcpy(&(new_srv->cbInfo[i].func), &(profile[j]->callback), sizeof(ms_hal_ble_attrib_callback_t));
 			i ++;
 		} else if (profile[j]->att_type == ENUM_MS_HAL_BLE_ATTRIB_TYPE_CHAR_CLIENT_CONFIG) {
 			setup_ble_char_cccd_attr(&new_srv->att_tbl[i]);
 			new_srv->cbInfo[i].att_handle = i;
-			memcpy(&(new_srv->cbInfo[i].func), &(profile[j]->callback), sizeof(matter_hal_ble_attrib_callback_t));
+			memcpy(&(new_srv->cbInfo[i].func), &(profile[j]->callback), sizeof(ms_hal_ble_attrib_callback_t));
 			i ++;
 		} else if (profile[j]->att_type == ENUM_MS_HAL_BLE_ATTRIB_TYPE_CHAR_USER_DESCR) {
 			setup_ble_char_user_desc_attr(&new_srv->att_tbl[i], profile[j]->value_context, profile[j]->value_len, profile[j]->perm);
 			new_srv->cbInfo[i].att_handle = i;
-			memcpy(&(new_srv->cbInfo[i].func), &(profile[j]->callback), sizeof(matter_hal_ble_attrib_callback_t));
+			memcpy(&(new_srv->cbInfo[i].func), &(profile[j]->callback), sizeof(ms_hal_ble_attrib_callback_t));
 			i ++;
 		} else {
 			printf("\n\r[%s]:Unknow Attribute Type...\r\n", __func__);
 		}
 	}
-	ble_matter_adapter_srv_p->next = new_srv;
-	ble_matter_adapter_srv_p = ble_matter_adapter_srv_p->next;
+	ble_ms_adapter_srv_p->next = new_srv;
+	ble_ms_adapter_srv_p = ble_ms_adapter_srv_p->next;
 	return new_srv;
 
 }

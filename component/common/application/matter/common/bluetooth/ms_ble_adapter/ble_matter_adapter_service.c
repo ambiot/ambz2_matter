@@ -11,7 +11,7 @@
 *********************************************************************************************************
 */
 #include <platform_opts_bt.h>
-//#if defined(CONFIG_MS_MULTI_ADV) && CONFIG_MS_MULTI_ADV
+//#if defined(CONFIG_BLE_MATTER_MULTI_ADV) && CONFIG_BLE_MATTER_MULTI_ADV
 #include <string.h>
 #include <trace_app.h>
 #include "ble_ms_adapter_service.h"

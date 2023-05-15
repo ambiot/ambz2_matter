@@ -1,6 +1,6 @@
 #include <profile_server.h>
-#include "platform_opts_bt.h"
 #include "ms_hal_ble.h"
+#include "platform_opts_bt.h"
 
 #define MS_READ_MAX_LEN 300
 #define MS_WRITE_MAX_LEN 300
@@ -23,40 +23,40 @@
 #define BT_MATTER_ADAPTER_SERVICE_CHAR_INDICATE_CCCD_INDEX      (BT_MATTER_ADAPTER_SERVICE_CHAR_TX_INDEX + 1)
 #define BT_MATTER_ADAPTER_SERVICE_C3_INDEX                      0x07
 
-//#if CONFIG_MATTER_MULTI_ADV     /*To fix ble_matter_adapter_service.h:36:2: error: unknown type name 'T_MATTER_READ_MSG'*/
+//#if CONFIG_BLE_MATTER_MULTI_ADV     /*To fix ble_ms_adapter_service.h:36:2: error: unknown type name 'T_MS_READ_MSG'*/
 typedef struct {
 	unsigned int *p_len;
 	uint8_t *p_value;
-} T_MATTER_READ_MSG;
+} T_MS_READ_MSG;
 //#endif
 
 typedef struct {
 	T_WRITE_TYPE write_type;
 	unsigned int len;
 	uint8_t *p_value;
-	matter_hal_ble_service_write_cb write_cb;
-} T_MATTER_WRITE_MSG;
+	ms_hal_ble_service_write_cb write_cb;
+} T_MS_WRITE_MSG;
 
 typedef struct {
 	uint16_t attr_index;
 	uint16_t ccc_val;
-} T_MATTER_CCCD_MSG;
+} T_MS_CCCD_MSG;
 
 typedef union {
-//#if CONFIG_MATTER_MULTI_ADV  /*To fix ble_matter_adapter_service.c:157:24: error: 'T_MATTER_MSG_DATA' has no member named 'read'*/
-	T_MATTER_READ_MSG read;
+//#if CONFIG_BLE_MATTER_MULTI_ADV  /*To fix ble_matter_adapter_service.c:157:24: error: 'T_MS_MSG_DATA' has no member named 'read'*/
+	T_MS_READ_MSG read;
 //#endif
-	T_MATTER_CCCD_MSG cccd;
-	T_MATTER_WRITE_MSG write;
-} T_MATTER_MSG_DATA;
+	T_MS_CCCD_MSG cccd;
+	T_MS_WRITE_MSG write;
+} T_MS_MSG_DATA;
 
 
 typedef struct {
 	uint8_t conn_id;
 	T_SERVICE_CALLBACK_TYPE msg_type;
-	T_MATTER_MSG_DATA msg_data;
+	T_MS_MSG_DATA msg_data;
 	T_SERVER_ID srv_id;
-} T_MATTER_ADAPTER_CALLBACK_DATA;
+} T_MS_ADAPTER_CALLBACK_DATA;
 
 typedef struct
 {
@@ -98,7 +98,7 @@ typedef struct {
 
 typedef struct {
 	uint8_t att_handle;
-	matter_hal_ble_attrib_callback_t func;
+	ms_hal_ble_attrib_callback_t func;
 } BMS_SERVICE_CALLBACK_INFO;
 
 
@@ -110,8 +110,8 @@ typedef struct BMS_SERVICE_INFO {
 	struct BMS_SERVICE_INFO *next;
 } BMS_SERVICE_INFO;
 
-BMS_SERVICE_INFO *ble_matter_adapter_parse_srv_tbl(matter_hal_ble_service_attrib_t **profile, uint16_t attrib_count);
-bool ble_matter_adapter_send_indication_notification(uint8_t conn_id, uint8_t service_id, uint8_t handle, uint8_t *p_value, uint16_t length, bool type);
-T_SERVER_ID ble_matter_adapter_add_service(BMS_SERVICE_INFO *service_info, void *p_func);
+BMS_SERVICE_INFO *ble_ms_adapter_parse_srv_tbl(ms_hal_ble_service_attrib_t **profile, uint16_t attrib_count);
+bool ble_ms_adapter_send_indication_notification(uint8_t conn_id, uint8_t service_id, uint8_t handle, uint8_t *p_value, uint16_t length, bool type);
+T_SERVER_ID ble_ms_adapter_add_service(BMS_SERVICE_INFO *service_info, void *p_func);
 
 

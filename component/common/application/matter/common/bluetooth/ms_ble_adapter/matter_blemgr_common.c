@@ -16,17 +16,17 @@
 //#include "os_msg.h"
 #include "os_timer.h"
 #include "matter_blemgr_common.h"
-#include "ble_ms_adapter_app_main.h"
-#include "ble_ms_adapter_app_flags.h"
-#include "ble_ms_adapter_app.h"
+#include "ble_matter_adapter_app_main.h"
+#include "ble_matter_adapter_app_flags.h"
+#include "ble_matter_adapter_app.h"
 //#include "ble_ms_adapter_service.h"
 
 #include "os_sched.h"
 
 //extern T_SERVER_ID ble_matter_adapter_service_id;
-//extern M_MULTI_ADV_PARAM ms_multi_adv_param_array[MAX_ADV_NUMBER];
+//extern M_MULTI_ADV_PARAM matter_multi_adv_param_array[MAX_ADV_NUMBER];
 extern int ble_matter_adapter_peripheral_app_max_links;
-extern T_MULTI_ADV_CONCURRENT ms_multi_adapter;
+extern T_MULTI_ADV_CONCURRENT matter_multi_adapter;
 
 //Temp
 #define MAX_ADV_NUMBER 2
@@ -60,7 +60,7 @@ void matter_blemgr_set_callback_func(matter_blemgr_callback p, void *data) {
 int matter_blemgr_start_adv(void) {
 	printf("[%s]enter...\r\n", __func__);
 	bool result = 0;
-#if CONFIG_MS_MULTI_ADV
+#if CONFIG_BLE_MATTER_MULTI_ADV
 	result = msmart_matter_ble_adv_start_by_adv_id(&matter_adv_id, NULL, 0, NULL, 0, 1);
 	result = msmart_matter_ble_adv_start_by_adv_id(&msmart_adv_id, NULL, 23, NULL, 4, 2);
 	if (result == 1)
@@ -72,16 +72,16 @@ int matter_blemgr_start_adv(void) {
 int matter_blemgr_stop_adv(void) {
 	printf("[%s]enter...\r\n", __func__);
 	bool result = 0;
-#if CONFIG_MS_MULTI_ADV
-	if (ms_multi_adapter.matter_sta_sto_flag != false) {
+#if CONFIG_BLE_MATTER_MULTI_ADV
+	if (matter_multi_adapter.matter_sta_sto_flag != false) {
 		printf("[%s]adv already stop...\r\n", __func__);
 		return 1;
 	}
 
-	result = matter_ble_adv_stop_by_adv_id(&matter_adv_id);
+	result = matter_matter_ble_adv_stop_by_adv_id(&matter_adv_id);
 	if (result == 1)
 		return 1;
-	ms_multi_adapter.matter_sta_sto_flag = true;
+	matter_multi_adapter.matter_sta_sto_flag = true;
 #endif
 	return 0;
 }

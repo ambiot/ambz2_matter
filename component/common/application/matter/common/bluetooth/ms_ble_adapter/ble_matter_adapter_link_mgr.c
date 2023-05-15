@@ -16,9 +16,9 @@
  *                              Header Files
  *============================================================================*/
 #include <platform_opts_bt.h>
-#if (defined(CONFIG_BT_MS_ADAPTER) && CONFIG_BT_MS_ADAPTER)
+#if (defined(CONFIG_BLE_MATTER_ADAPTER) && CONFIG_BLE_MATTER_ADAPTER)
 
-#include <ble_ms_adapter_link_mgr.h>
+#include <ble_matter_adapter_link_mgr.h>
 #include <trace_app.h>
 #include <string.h>
 #include "ftl_app.h"

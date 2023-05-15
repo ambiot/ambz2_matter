@@ -17,15 +17,15 @@
  *                              Header Files
  *============================================================================*/
 #include <platform_opts_bt.h>
-#if defined(CONFIG_BT_MS_ADAPTER) && CONFIG_BT_MS_ADAPTER //to be fixed
+#if defined(CONFIG_BLE_MATTER_ADAPTER) && CONFIG_BLE_MATTER_ADAPTER //to be fixed
 #include <os_msg.h>
 #include <os_task.h>
 #include <gap.h>
 #include <gap_le.h>
 //#include <trace_app.h>
-#include <ble_ms_adapter_app_task.h>
+#include <ble_matter_adapter_app_task.h>
 #include <app_msg.h>
-#include <ble_ms_adapter_app.h>
+#include <ble_matter_adapter_app.h>
 #include <basic_types.h>
 #include <gap_msg.h>
 #include <os_sync.h>
@@ -39,15 +39,15 @@
 /*============================================================================*
  *                              Macros
  *============================================================================*/
-#define BLE_MS_ADAPTER_APP_TASK_PRIORITY             4         //!< Task priorities
-#define BLE_MS_ADAPTER_APP_TASK_STACK_SIZE           256 * 6   //!<  Task stack size
-#define BLE_MS_ADAPTER_MAX_NUMBER_OF_GAP_MESSAGE     0x20      //!<  GAP message queue size
-#define BLE_MS_ADAPTER_MAX_NUMBER_OF_IO_MESSAGE      0x20      //!<  IO message queue size
-#define BLE_MS_ADAPTER_MAX_NUMBER_OF_EVENT_MESSAGE   (BLE_MS_ADAPTER_MAX_NUMBER_OF_GAP_MESSAGE + BLE_MS_ADAPTER_MAX_NUMBER_OF_IO_MESSAGE)    //!< Event message queue size
+#define BLE_MATTER_ADAPTER_APP_TASK_PRIORITY             4         //!< Task priorities
+#define BLE_MATTER_ADAPTER_APP_TASK_STACK_SIZE           256 * 6   //!<  Task stack size
+#define BLE_MATTER_ADAPTER_MAX_NUMBER_OF_GAP_MESSAGE     0x20      //!<  GAP message queue size
+#define BLE_MATTER_ADAPTER_MAX_NUMBER_OF_IO_MESSAGE      0x20      //!<  IO message queue size
+#define BLE_MATTER_ADAPTER_MAX_NUMBER_OF_EVENT_MESSAGE   (BLE_MATTER_ADAPTER_MAX_NUMBER_OF_GAP_MESSAGE + BLE_MATTER_ADAPTER_MAX_NUMBER_OF_IO_MESSAGE)    //!< Event message queue size
 //ble matter
-#define BLE_MS_ADAPTER_CALLBACK_TASK_PRIORITY        4         //!< Task priorities
-#define BLE_MS_ADAPTER_CALLBACK_TASK_STACK_SIZE      256 * 6   //!<  Task stack size
-#define BLE_MS_ADAPTER_MAX_NUMBER_OF_CALLBACK_MESSAGE               0x20      //!< Callback message queue size
+#define BLE_MATTER_ADAPTER_CALLBACK_TASK_PRIORITY        4         //!< Task priorities
+#define BLE_MATTER_ADAPTER_CALLBACK_TASK_STACK_SIZE      256 * 6   //!<  Task stack size
+#define BLE_MATTER_ADAPTER_MAX_NUMBER_OF_CALLBACK_MESSAGE               0x20      //!< Callback message queue size
 
 
 
@@ -66,8 +66,8 @@ extern T_GAP_DEV_STATE ble_matter_adapter_gap_dev_state;
 #if 1
 extern int ble_matter_adapter_central_app_max_links;
 extern int ble_matter_adapter_peripheral_app_max_links;
-extern void *ms_add_service_sem;
-extern void *ms_add_service_mutex;
+extern void *matter_add_service_sem;
+extern void *matter_add_service_mutex;
 extern void *modify_whitelist_sem;
 extern void *adv_start_sem;
 #endif
@@ -129,7 +129,7 @@ void ble_matter_adapter_callback_main_task(void *p_param)
 {
 	(void)p_param;
 	T_IO_MSG callback_msg;
-	os_msg_queue_create(&ble_matter_adapter_callback_queue_handle, BLE_MS_ADAPTER_MAX_NUMBER_OF_CALLBACK_MESSAGE, sizeof(T_IO_MSG));
+	os_msg_queue_create(&ble_matter_adapter_callback_queue_handle, BLE_MATTER_ADAPTER_MAX_NUMBER_OF_CALLBACK_MESSAGE, sizeof(T_IO_MSG));
 
 	while (true)
 	{
@@ -145,10 +145,10 @@ void ble_matter_adapter_callback_main_task(void *p_param)
  */
 void ble_matter_adapter_app_task_init(void)
 {
-	os_task_create(&ble_matter_adapter_app_task_handle, "ble_matter_adapter_app", ble_matter_adapter_app_main_task, 0, BLE_MS_ADAPTER_APP_TASK_STACK_SIZE,
-				   BLE_MS_ADAPTER_APP_TASK_PRIORITY);
-	os_task_create(&ble_matter_adapter_callback_task_handle, "ble_matter_adapter_callback", ble_matter_adapter_callback_main_task, 0, BLE_MS_ADAPTER_CALLBACK_TASK_STACK_SIZE,
-				   BLE_MS_ADAPTER_CALLBACK_TASK_PRIORITY);
+	os_task_create(&ble_matter_adapter_app_task_handle, "ble_matter_adapter_app", ble_matter_adapter_app_main_task, 0, BLE_MATTER_ADAPTER_APP_TASK_STACK_SIZE,
+				   BLE_MATTER_ADAPTER_APP_TASK_PRIORITY);
+	os_task_create(&ble_matter_adapter_callback_task_handle, "ble_matter_adapter_callback", ble_matter_adapter_callback_main_task, 0, BLE_MATTER_ADAPTER_CALLBACK_TASK_STACK_SIZE,
+				   BLE_MATTER_ADAPTER_CALLBACK_TASK_PRIORITY);
 }
 
 /**
@@ -161,10 +161,10 @@ void ble_matter_adapter_app_main_task(void *p_param)
 	(void) p_param;
 	uint8_t event;
 
-	os_msg_queue_create(&ble_matter_adapter_io_queue_handle, BLE_MS_ADAPTER_MAX_NUMBER_OF_IO_MESSAGE, sizeof(T_IO_MSG));
-	os_msg_queue_create(&ble_matter_adapter_evt_queue_handle, BLE_MS_ADAPTER_MAX_NUMBER_OF_EVENT_MESSAGE, sizeof(uint8_t));
+	os_msg_queue_create(&ble_matter_adapter_io_queue_handle, BLE_MATTER_ADAPTER_MAX_NUMBER_OF_IO_MESSAGE, sizeof(T_IO_MSG));
+	os_msg_queue_create(&ble_matter_adapter_evt_queue_handle, BLE_MATTER_ADAPTER_MAX_NUMBER_OF_EVENT_MESSAGE, sizeof(uint8_t));
 
-	gap_start_bt_stack(ble_matter_adapter_evt_queue_handle, ble_matter_adapter_io_queue_handle, BLE_MS_ADAPTER_MAX_NUMBER_OF_GAP_MESSAGE);
+	gap_start_bt_stack(ble_matter_adapter_evt_queue_handle, ble_matter_adapter_io_queue_handle, BLE_MATTER_ADAPTER_MAX_NUMBER_OF_GAP_MESSAGE);
 
 	while (true) {
 		if (os_msg_recv(ble_matter_adapter_evt_queue_handle, &event, 0xFFFFFFFF) == true) {

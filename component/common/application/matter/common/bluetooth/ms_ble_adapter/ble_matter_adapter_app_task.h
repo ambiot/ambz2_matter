@@ -23,10 +23,10 @@ extern "C" {
  * @brief  Initialize App task
  * @return void
  */
-bool ble_ms_adapter_app_send_api_msg(uint16_t sub_type, void *arg);
-bool ble_ms_adapter_send_callback_msg(uint16_t msg_type, uint8_t cb_type, void *arg);
-void ble_ms_adapter_app_task_init(void);
-void ble_ms_adapter_app_task_deinit(void);
+bool ble_matter_adapter_app_send_api_msg(uint16_t sub_type, void *arg);
+bool ble_matter_adapter_send_callback_msg(uint16_t msg_type, uint8_t cb_type, void *arg);
+void ble_matter_adapter_app_task_init(void);
+void ble_matter_adapter_app_task_deinit(void);
 
 #ifdef __cplusplus
 }

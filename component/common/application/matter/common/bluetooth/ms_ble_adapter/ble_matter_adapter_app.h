@@ -13,8 +13,8 @@
    **************************************************************************************
   */
 
-#ifndef _MS_ADAPTER_APP_H_
-#define _MS_ADAPTER_APP_H_
+#ifndef _BLE_MATTER_ADAPTER_APP_H_
+#define _BLE_MATTER_ADAPTER_APP_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,7 +24,7 @@ extern "C" {
  *============================================================================*/
 #include <profile_client.h>
 #include <app_msg.h>
-#include <ble_ms_adapter_app_flags.h>
+#include <ble_matter_adapter_app_flags.h>
 #include <profile_server.h>
 #include "ble_ms_adapter_service.h"
 
@@ -36,11 +36,11 @@ extern "C" {
 
 #define MAX_REGISRABLE_SERVICE_NUMBER 12
 
-#if CONFIG_MS_MULTI_ADV
+#if CONFIG_BLE_MATTER_MULTI_ADV
 #define MAX_ADV_NUMBER     2
-#define MS_MULTI_TASK_STACK_SIZE  256*10
-#define MS_MULTI_TASK_PRIORITY  4
-#define MS_MULTI_ADV_DATA_QUEUE_SIZE  0x60
+#define MATTER_MULTI_TASK_STACK_SIZE  256*10
+#define MATTER_MULTI_TASK_PRIORITY  4
+#define MATTER_MULTI_ADV_DATA_QUEUE_SIZE  0x60
 #endif
 /*============================================================================*
  *                              Variables
@@ -87,7 +87,7 @@ typedef struct {
 	uint8_t      adv_data[31];
 	uint8_t      scanrsp_data[31];
 } M_ADV_PARAM;
-#if CONFIG_MS_MULTI_ADV
+#if CONFIG_BLE_MATTER_MULTI_ADV
 typedef struct {
 	uint8_t 	 adv_datalen;
 	uint8_t 	 scanrsp_datalen;
@@ -206,7 +206,7 @@ typedef struct {
 typedef struct {
 	uint8_t write_len;
 	uint8_t write_value[MS_WRITE_MAX_LEN];
-	matter_hal_ble_service_write_cb write_cb;
+	ms_hal_ble_service_write_cb write_cb;
 } T_MS_WRITE_DATA;
 
 typedef struct {
@@ -216,8 +216,8 @@ typedef struct {
 
 typedef struct save_scan_info_t {
 	struct save_scan_info_t *p_next; // Pointer to the next item, must be the first field.
-	matter_hal_ble_report_type     type;                           // report ad type
-	matter_hal_ble_addr_t     peer_addr;                           // peer addr
+	ms_hal_ble_report_type     type;                           // report ad type
+	ms_hal_ble_addr_t     peer_addr;                           // peer addr
 	int8_t                   tx_pwr;                           /// TX power (in dBm)
 	int8_t                     rssi;                           // rssi
 	uint16_t                    len;                           //data len
@@ -261,7 +261,7 @@ void ble_matter_adapter_app_handle_callback_msg(T_IO_MSG callback_msg);
 
 
 void ble_matter_adapter_app_vendor_callback(uint8_t cb_type, void *p_cb_data);
-#if CONFIG_MS_MULTI_ADV
+#if CONFIG_BLE_MATTER_MULTI_ADV
 void ble_matter_adapter_multi_adv_init();
 void ble_matter_adapter_multi_adv_deinit();
 void ble_matter_adapter_send_multi_adv_msg(uint8_t adv_id);
