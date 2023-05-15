@@ -21,6 +21,7 @@
 #include <os_sched.h>
 #include <string.h>
 #include <ble_matter_adapter_app_task.h>
+#include <ble_matter_adapter_app_main.h>
 #include <trace_app.h>
 #include <gap.h>
 #include <gap_config.h>
@@ -28,7 +29,6 @@
 #include <gap_scan.h>
 #include <profile_client.h>
 #include <gap_msg.h>
-#include <ble_matter_adapter_app.h>
 #include <gcs_client.h>
 #include <ble_matter_adapter_link_mgr.h>
 #include "trace_uart.h"
@@ -42,6 +42,8 @@
 #include <wifi_conf.h>
 #include "rtk_coex.h"
 #include "matter_blemgr_common.h"
+
+#include <ble_matter_adapter_app.h>
 #if CONFIG_BLE_MATTER_MULTI_ADV
 #include "vendor_cmd_bt.h"
 #endif
@@ -63,11 +65,10 @@
 /** @brief  Default maximum advertising interval */
 #define DEFAULT_ADVERTISING_INTERVAL_MAX            192 //120ms
 
-extern T_APP_RESULT ble_matter_adapter_app_profile_callback(T_SERVER_ID service_id, void *p_data);
+extern T_SERVER_ID ble_matter_adapter_service_id;//from service.c
+extern T_GAP_DEV_STATE ble_matter_adapter_gap_dev_state;
 #if CONFIG_BLE_MATTER_MULTI_ADV
-extern T_SERVER_ID ble_matter_adapter_service_id;
 extern uint8_t matter_local_static_random_addr[6];
-extern T_SERVER_ID ble_matter_adapter_service_add_service(void *p_func);
 #endif
 /*============================================================================*
  *                              Functions
@@ -84,7 +85,6 @@ void ble_matter_adapter_bt_stack_config_init(void)
 	gap_config_max_le_link_num(BLE_MATTER_ADAPTER_APP_MAX_LINKS);
 	gap_config_max_le_paired_device(BLE_MATTER_ADAPTER_APP_MAX_LINKS);
 }
-
 #else
 extern void gap_config_deinit_flow(uint8_t deinit_flow);
 void ble_matter_adapter_bt_stack_config_init(void)
@@ -94,6 +94,7 @@ void ble_matter_adapter_bt_stack_config_init(void)
 	gap_config_deinit_flow(1);
 }
 #endif
+
 /**
   * @brief  Initialize central and gap bond manager related parameters
   * @return void
@@ -190,9 +191,7 @@ void ble_matter_adapter_app_le_gap_init(void)
 	T_APP_STATIC_RANDOM_ADDR random_addr;
 	uint8_t local_bd_type = GAP_LOCAL_ADDR_LE_RANDOM;
 #if CONFIG_BLE_MATTER_MULTI_ADV
-	//T_APP_STATIC_RANDOM_ADDR random_addr;
 	bool gen_addr = true;
-	//uint8_t local_bd_type = GAP_LOCAL_ADDR_LE_RANDOM;
 	if (gen_addr)
 	{
 		if (le_gen_rand_addr(GAP_RAND_ADDR_STATIC, random_addr.bd_addr) == GAP_CAUSE_SUCCESS)
@@ -210,6 +209,7 @@ void ble_matter_adapter_app_le_gap_init(void)
 	le_cfg_local_identity_address(random_addr.bd_addr, GAP_IDENT_ADDR_RAND);
 	le_adv_set_param(GAP_PARAM_ADV_LOCAL_ADDR_TYPE, sizeof(local_bd_type), &local_bd_type);
 #endif
+
 #if F_BT_LE_5_0_SET_PHY_SUPPORT
 	uint8_t phys_prefer = GAP_PHYS_PREFER_ALL;
 	uint8_t tx_phys_prefer = GAP_PHYS_PREFER_1M_BIT | GAP_PHYS_PREFER_2M_BIT;
@@ -218,6 +218,7 @@ void ble_matter_adapter_app_le_gap_init(void)
 	le_set_gap_param(GAP_PARAM_DEFAULT_TX_PHYS_PREFER, sizeof(tx_phys_prefer), &tx_phys_prefer);
 	le_set_gap_param(GAP_PARAM_DEFAULT_RX_PHYS_PREFER, sizeof(rx_phys_prefer), &rx_phys_prefer);
 #endif
+
 #if CONFIG_BLE_MATTER_MULTI_ADV
 	vendor_cmd_init(ble_matter_adapter_app_vendor_callback);
 #endif
@@ -226,21 +227,19 @@ void ble_matter_adapter_app_le_gap_init(void)
 /**
  * @brief  Add GATT clients and register callbacks
  * @return void
- */
- extern T_SERVER_ID ble_matter_adapter_service_add_service(void *p_func);
- extern T_APP_RESULT ble_matter_adapter_app_client_callback(T_CLIENT_ID client_id, uint8_t conn_id, void *p_data);
- extern T_SERVER_ID ble_matter_adapter_service_id;	
+ */	
 void ble_matter_adapter_app_le_profile_init(void)
 {
 	/* Register Server Callback */
 	server_init(1);
+
 #if CONFIG_BLE_MATTER_MULTI_ADV
 	ble_matter_adapter_service_id = ble_matter_adapter_service_add_service((void *)ble_matter_adapter_app_profile_callback);
 	printf("[%s]enter...%d, ble_matter_adapter_service_id = %d \r\n", __func__, __LINE__, ble_matter_adapter_service_id);
 #else
 	ble_matter_adapter_service_id = ble_matter_adapter_service_add_service((void *)ble_matter_adapter_app_profile_callback);
 #endif
-			printf("[%s]enter...%d, ble_matter_adapter_service_id = %d \r\n", __func__, __LINE__, ble_matter_adapter_service_id);
+	printf("[%s]enter...%d, ble_matter_adapter_service_id = %d \r\n", __func__, __LINE__, ble_matter_adapter_service_id);
 	server_register_app_cb(ble_matter_adapter_app_profile_callback);
 	
 	/* Add Client Module */
@@ -278,13 +277,11 @@ int ble_matter_adapter_app_main(void)
 	return 0;
 }
 
-//extern void wifi_btcoex_set_bt_on(void);
 int ble_matter_adapter_app_init(void)
 {
 	//(void) bt_stack_already_on;
 	T_GAP_DEV_STATE new_state;
 
-	//uint32_t random_1 = 0;
 	/*Wait WIFI init complete*/
 	while(!(wifi_is_up(RTW_STA_INTERFACE) || wifi_is_up(RTW_AP_INTERFACE))) {
 		os_delay(1000);
@@ -311,17 +308,15 @@ int ble_matter_adapter_app_init(void)
 
 }
 
-extern void gcs_delete_client(void);
-extern T_GAP_DEV_STATE bt_mesh_device_matter_gap_dev_state;
 void ble_matter_adapter_app_deinit(void)
 {
-	//ble_matter_adapter_free_service_table();
+
 	T_GAP_DEV_STATE state;
 	ble_matter_adapter_app_task_deinit();
 	le_get_gap_param(GAP_PARAM_DEV_STATE, &state);
 	if (state.gap_init_state != GAP_INIT_STATE_STACK_READY) {
 		printf("[BLE Matter Adapter]BT Stack is not running\n\r");
-		bt_mesh_device_matter_gap_dev_state.gap_init_state = GAP_INIT_STATE_INIT;
+		ble_matter_adapter_gap_dev_state.gap_init_state = GAP_INIT_STATE_INIT;
 	}
 	
 #if F_BT_DEINIT
@@ -332,7 +327,7 @@ void ble_matter_adapter_app_deinit(void)
 		printf("[BLE Matter Adapter]BT Stack deinitalized\n\r");
 	}
 #endif
-	bt_mesh_device_matter_gap_dev_state.gap_init_state = GAP_INIT_STATE_INIT;
+	ble_matter_adapter_gap_dev_state.gap_init_state = GAP_INIT_STATE_INIT;
 }
 
 /** @} */ /* End of group CENTRAL_CLIENT_DEMO_MAIN */

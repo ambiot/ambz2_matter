@@ -123,7 +123,7 @@ bool ble_matter_adapter_send_callback_msg(uint16_t msg_type, uint8_t cb_type, vo
 	return false;
 }
 
-void ble_matter_adapter_app_main_task(void *p_param);
+
 
 void ble_matter_adapter_callback_main_task(void *p_param)
 {

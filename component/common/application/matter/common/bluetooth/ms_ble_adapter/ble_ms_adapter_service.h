@@ -23,41 +23,9 @@
 #define BT_MATTER_ADAPTER_SERVICE_CHAR_INDICATE_CCCD_INDEX      (BT_MATTER_ADAPTER_SERVICE_CHAR_TX_INDEX + 1)
 #define BT_MATTER_ADAPTER_SERVICE_C3_INDEX                      0x07
 
-//#if CONFIG_BLE_MATTER_MULTI_ADV     /*To fix ble_ms_adapter_service.h:36:2: error: unknown type name 'T_MS_READ_MSG'*/
-typedef struct {
-	unsigned int *p_len;
-	uint8_t *p_value;
-} T_MS_READ_MSG;
-//#endif
-
-typedef struct {
-	T_WRITE_TYPE write_type;
-	unsigned int len;
-	uint8_t *p_value;
-	ms_hal_ble_service_write_cb write_cb;
-} T_MS_WRITE_MSG;
-
-typedef struct {
-	uint16_t attr_index;
-	uint16_t ccc_val;
-} T_MS_CCCD_MSG;
-
-typedef union {
-//#if CONFIG_BLE_MATTER_MULTI_ADV  /*To fix ble_matter_adapter_service.c:157:24: error: 'T_MS_MSG_DATA' has no member named 'read'*/
-	T_MS_READ_MSG read;
-//#endif
-	T_MS_CCCD_MSG cccd;
-	T_MS_WRITE_MSG write;
-} T_MS_MSG_DATA;
-
-
-typedef struct {
-	uint8_t conn_id;
-	T_SERVICE_CALLBACK_TYPE msg_type;
-	T_MS_MSG_DATA msg_data;
-	T_SERVER_ID srv_id;
-} T_MS_ADAPTER_CALLBACK_DATA;
-
+/*============================================================================*
+ *                              Constants
+ *============================================================================*/
 typedef struct
 {
     uint16_t len;
@@ -85,33 +53,19 @@ typedef struct
     T_SERVICE_CALLBACK_TYPE msg_type;
     T_MATTER_UPSTREAM_MSG_DATA msg_data;
 } T_MATTER_CALLBACK_DATA;
-
-typedef struct {
-	uint8_t type;
-	uint8_t conn_id;
-	uint8_t srv_id;
-	uint16_t attrib_index;
-	uint8_t *val;
-	uint16_t len;
-} BMS_INDICATION_PARAM;
-
-
-typedef struct {
-	uint8_t att_handle;
-	ms_hal_ble_attrib_callback_t func;
-} BMS_SERVICE_CALLBACK_INFO;
-
-
-typedef struct BMS_SERVICE_INFO {
-	uint8_t srvId;
-	uint8_t att_num;
-	T_ATTRIB_APPL *att_tbl;
-	BMS_SERVICE_CALLBACK_INFO *cbInfo;
-	struct BMS_SERVICE_INFO *next;
-} BMS_SERVICE_INFO;
-
-BMS_SERVICE_INFO *ble_ms_adapter_parse_srv_tbl(ms_hal_ble_service_attrib_t **profile, uint16_t attrib_count);
-bool ble_ms_adapter_send_indication_notification(uint8_t conn_id, uint8_t service_id, uint8_t handle, uint8_t *p_value, uint16_t length, bool type);
-T_SERVER_ID ble_ms_adapter_add_service(BMS_SERVICE_INFO *service_info, void *p_func);
+/*============================================================================*
+ *                              Functions
+ *============================================================================*/
+T_APP_RESULT  ble_matter_adapter_service_attr_read_cb(uint8_t conn_id, T_SERVER_ID service_id,
+                                            uint16_t attrib_index, uint16_t offset, uint16_t *p_length, uint8_t **pp_value);
+                                            
+T_APP_RESULT ble_matter_adapter_service_attr_write_cb(uint8_t conn_id, T_SERVER_ID service_id,
+                                            uint16_t attrib_index, T_WRITE_TYPE write_type, uint16_t length, uint8_t *p_value,
+                                            P_FUN_WRITE_IND_POST_PROC *p_write_ind_post_proc); 
+                                                       
+void ble_matter_adapter_service_cccd_update_cb(uint8_t conn_id, T_SERVER_ID service_id, uint16_t index,
+                                     uint16_t cccbits);      
+                                                               
+T_SERVER_ID ble_matter_adapter_service_add_service(void *p_func);
 
 

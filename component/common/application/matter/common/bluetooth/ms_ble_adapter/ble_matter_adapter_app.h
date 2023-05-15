@@ -27,6 +27,9 @@ extern "C" {
 #include <ble_matter_adapter_app_flags.h>
 #include <profile_server.h>
 #include "ble_ms_adapter_service.h"
+#include <gap.h>
+#include <gap_msg.h>
+#include <gcs_client.h>
 
 #define BLE_PRINT    printf
 #define BD_ADDR_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
@@ -46,6 +49,16 @@ extern "C" {
  *                              Variables
  *============================================================================*/
 extern T_CLIENT_ID   ble_matter_adapter_gcs_client_id;         /**< General Common Services client client id*/
+
+typedef struct
+{
+	uint8_t conn_id;
+	uint8_t service_id;
+	uint16_t attrib_index;
+	uint8_t *p_data;
+	uint16_t data_len;
+	uint8_t type;
+} BT_MATTER_SERVER_SEND_DATA;
 
 typedef struct
 {
@@ -227,7 +240,25 @@ typedef struct save_scan_info_t {
 /*============================================================================*
  *                              Functions
  *============================================================================*/
+uint8_t matter_get_unused_adv_index(void);
 
+bool matter_matter_ble_adv_stop_by_adv_id(uint8_t *adv_id);
+
+bool msmart_matter_ble_adv_start_by_adv_id(uint8_t *adv_id, uint8_t *adv_data, uint16_t adv_len, uint8_t *rsp_data, uint16_t rsp_len, uint8_t type);
+
+uint8_t ble_matter_adapter_judge_adv_stop(uint8_t adv_id);
+
+void ble_matter_adapter_multi_adv_task_func(void *arg);
+#if CONFIG_BLE_MATTER_MULTI_ADV
+void ble_matter_adapter_multi_adv_init();
+
+void ble_matter_adapter_multi_adv_deinit();
+
+void ble_matter_adapter_send_multi_adv_msg(uint8_t adv_id);
+
+void ble_matter_adapter_legacy_start_adv_callback(void *data);
+#endif
+int ble_ms_adapter_app_handle_upstream_msg(uint16_t subtype, void *pdata);
 /**
  * @brief    All the application messages are pre-handled in this function
  * @note     All the IO MSGs are sent to this function, then the event handling
@@ -236,13 +267,27 @@ typedef struct save_scan_info_t {
  * @return   void
  */
 void ble_matter_adapter_app_handle_io_msg(T_IO_MSG io_msg);
-/**
-  * @brief Callback for gap le to notify app
-  * @param[in] cb_type callback msy type @ref GAP_LE_MSG_Types.
-  * @param[in] p_cb_data point to callback data @ref T_LE_CB_DATA.
-  * @retval result @ref T_APP_RESULT
-  */
-T_APP_RESULT ble_matter_adapter_app_gap_callback(uint8_t cb_type, void *p_cb_data);
+
+void ble_matter_adapter_app_handle_callback_msg(T_IO_MSG callback_msg);
+
+void ble_matter_adapter_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t cause);
+
+#if CONFIG_BLE_MATTER_MULTI_ADV
+void ble_matter_adapter_delete_adv(uint8_t adv_id);
+void ble_matter_adapter_stop_all_adv(void);
+#endif
+
+void ble_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE new_state, uint16_t disc_cause);
+
+void ble_matter_adapter_app_handle_authen_state_evt(uint8_t conn_id, uint8_t new_state, uint16_t cause);
+
+void ble_matter_adapter_app_handle_conn_mtu_info_evt(uint8_t conn_id, uint16_t mtu_size);
+
+void ble_matter_adapter_app_handle_conn_param_update_evt(uint8_t conn_id, uint8_t status, uint16_t cause);
+
+void ble_matter_adapter_app_handle_gap_msg(T_IO_MSG *p_gap_msg);
+
+void ble_matter_adapter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY_RESULT discov_result);
 
 /**
  * @brief  Callback will be called when data sent from profile client layer.
@@ -256,17 +301,25 @@ T_APP_RESULT ble_matter_adapter_gcs_client_callback(T_CLIENT_ID client_id, uint8
 T_APP_RESULT ble_matter_adapter_gap_service_callback(T_SERVER_ID service_id, void *p_para);
 #endif
 
-void ble_matter_adapter_app_handle_callback_msg(T_IO_MSG callback_msg);
+void bt_matter_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info);
 
+/**
+  * @brief Callback for gap le to notify app
+  * @param[in] cb_type callback msy type @ref GAP_LE_MSG_Types.
+  * @param[in] p_cb_data point to callback data @ref T_LE_CB_DATA.
+  * @retval result @ref T_APP_RESULT
+  */
+T_APP_RESULT ble_matter_adapter_app_gap_callback(uint8_t cb_type, void *p_cb_data);
 
+T_APP_RESULT ble_matter_adapter_app_client_callback(T_CLIENT_ID client_id, uint8_t conn_id, void *p_data);
 
-void ble_matter_adapter_app_vendor_callback(uint8_t cb_type, void *p_cb_data);
+T_APP_RESULT ble_matter_adapter_app_profile_callback(T_SERVER_ID service_id, void *p_data);
+
 #if CONFIG_BLE_MATTER_MULTI_ADV
-void ble_matter_adapter_multi_adv_init();
-void ble_matter_adapter_multi_adv_deinit();
-void ble_matter_adapter_send_multi_adv_msg(uint8_t adv_id);
-void ble_matter_adapter_legacy_start_adv_callback(void *data);
+void ble_matter_adapter_app_vendor_callback(uint8_t cb_type, void *p_cb_data);
+
 #endif
+
 #ifdef __cplusplus
 }
 #endif

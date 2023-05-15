@@ -320,8 +320,6 @@ SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_ad
 SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_matter_adapter_app.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_matter_adapter_link_mgr.c
 
-SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_matter_adapter_service.c
-
 else
 #bluetooth - example - bt_matter_adapter
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_app_main.c

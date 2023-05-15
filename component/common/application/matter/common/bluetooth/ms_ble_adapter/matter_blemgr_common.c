@@ -23,26 +23,28 @@
 
 #include "os_sched.h"
 
-//extern T_SERVER_ID ble_matter_adapter_service_id;
-//extern M_MULTI_ADV_PARAM matter_multi_adv_param_array[MAX_ADV_NUMBER];
-extern int ble_matter_adapter_peripheral_app_max_links;
-extern T_MULTI_ADV_CONCURRENT matter_multi_adapter;
-
-//Temp
+/*============================================================================*
+ *                              Constants
+ *============================================================================*/
 #define MAX_ADV_NUMBER 2
 
-matter_blemgr_callback matter_blemgr_callback_func = NULL;
-void *matter_blemgr_callback_data = NULL;
 uint8_t matter_adv_id = MAX_ADV_NUMBER;
-extern uint8_t msmart_adv_id;
 uint16_t matter_adv_interval = 0;
 uint16_t matter_adv_int_min = 0x20;
 uint16_t matter_adv_int_max = 0x20;
-uint8_t matter_adv_data[31] = {0};
 uint8_t matter_adv_data_length = 0;
+uint8_t matter_adv_data[31] = {0};
 
+matter_blemgr_callback matter_blemgr_callback_func = NULL;
+void *matter_blemgr_callback_data = NULL;
+
+extern T_MULTI_ADV_CONCURRENT matter_multi_adapter; //app.c
+extern int ble_matter_adapter_peripheral_app_max_links; //app.c
+extern uint8_t msmart_adv_id;
 extern T_SERVER_ID ble_matter_adapter_service_id;
-extern int ble_matter_adapter_app_init(void);
+/*============================================================================*
+ *                              Functions
+ *============================================================================*/
 extern void ble_matter_adapter_multi_adv_init();
 int matter_blemgr_init(void) {
 	printf("[%s]enter...\r\n", __func__);
@@ -50,13 +52,14 @@ int matter_blemgr_init(void) {
 	ble_matter_adapter_multi_adv_init();
 	return 0;
 }
+
 void matter_blemgr_set_callback_func(matter_blemgr_callback p, void *data) {
 	printf("[%s]enter...\r\n", __func__);
 	matter_blemgr_callback_func = p;
 	matter_blemgr_callback_data = data;
 }
 
-
+extern bool msmart_matter_ble_adv_start_by_adv_id(uint8_t *adv_id, uint8_t *adv_data, uint16_t adv_len, uint8_t *rsp_data, uint16_t rsp_len, uint8_t type);
 int matter_blemgr_start_adv(void) {
 	printf("[%s]enter...\r\n", __func__);
 	bool result = 0;
@@ -69,6 +72,7 @@ int matter_blemgr_start_adv(void) {
 	return 0;
 }
 
+extern bool matter_matter_ble_adv_stop_by_adv_id(uint8_t *adv_id);
 int matter_blemgr_stop_adv(void) {
 	printf("[%s]enter...\r\n", __func__);
 	bool result = 0;
@@ -176,6 +180,7 @@ int matter_blemgr_send_indication(uint8_t connect_id, uint8_t *data, uint16_t da
     	}
 	return 0;
 }
+
 void ble_matter_adapter_switch_bt_address(uint8_t *address) {
 	uint8_t tmp=0;
 	for(int i=0;i<6/2;++i){
