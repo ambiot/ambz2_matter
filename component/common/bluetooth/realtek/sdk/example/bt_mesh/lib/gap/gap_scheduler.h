@@ -197,6 +197,13 @@ typedef enum
     GAP_SCHED_ADV_REPORT_TYPE_UNKNOWN_IND = 0xff
 } gap_sched_adv_report_type_t;
 
+typedef enum
+{
+    GAP_SCHED_ADV_ADDR_TYPE_DEFAULT,
+    GAP_SCHED_ADV_ADDR_TYPE_PUBLIC,
+    GAP_SCHED_ADV_ADDR_TYPE_RANDOM
+} gap_sched_adv_addr_type_t;
+
 typedef enum _mesh_msg_send_stat_t mesh_msg_send_stat_t;
 typedef void (*gap_sched_send_cb_pf)(void *cb_params, mesh_msg_send_stat_t stat, uint32_t cb_data);
 typedef struct _gap_sched_task_t
@@ -215,6 +222,7 @@ typedef struct _gap_sched_task_t
     uint8_t adv_len;
     uint8_t adv_data[31];
     uint32_t last_adv_time;
+    gap_sched_adv_addr_type_t adv_addr_type;
 } gap_sched_task_t, *gap_sched_task_p;
 
 #define GAP_SCHED_LINK_INVALID     0xff

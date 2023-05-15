@@ -155,7 +155,7 @@ void delay_execution_timer_stop(const mesh_model_info_t *pmodel_info,
     delay_execution_t *pexecute = NULL;
     for (; pcur != &delay_list_head; pprev = pcur, pcur = pcur->next)
     {
-        delay_execution_t *pexecute = CONTAINER_OF(pcur, delay_execution_t, node);
+        pexecute = CONTAINER_OF(pcur, delay_execution_t, node);
         if ((pexecute->pmodel_info == pmodel_info) &&
             (pexecute->delay_type == delay_type))
         {

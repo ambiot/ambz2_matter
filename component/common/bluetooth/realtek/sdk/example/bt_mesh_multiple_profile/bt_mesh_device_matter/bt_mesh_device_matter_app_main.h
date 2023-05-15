@@ -23,7 +23,7 @@ extern "C" {
  *============================================================================*/
 #include <app_msg.h>
 #include <profile_server.h>
-
+#include "chip_porting.h"
 /*============================================================================*
  *                              Variables
  *============================================================================*/
@@ -36,6 +36,15 @@ typedef struct
 	uint16_t data_len;
 	uint8_t type;
 } BT_MATTER_SERVER_SEND_DATA;
+
+#if (F_BT_LE_USE_STATIC_RANDOM_ADDR==1)
+typedef struct
+{
+	uint8_t 	 is_exist;
+	uint8_t 	 reserved;		   /**< remote BD type*/
+	uint8_t 	 bd_addr[GAP_BD_ADDR_LEN];	/**< remote BD */
+} T_APP_STATIC_RANDOM_ADDR;
+#endif
 
 /*============================================================================*
  *                              Functions
