@@ -30,6 +30,8 @@ extern "C" {
 #include <gap.h>
 #include <gap_msg.h>
 #include <gcs_client.h>
+#include <gap_scan.h>
+#include <gap_conn_le.h>
 
 #define BLE_PRINT    printf
 #define BD_ADDR_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
@@ -119,9 +121,9 @@ typedef struct {
 
 typedef enum {
 	BMS_CALLBACK_MSG_CONNECTED,
-	BMS_CALLBACK_MSG_CONNECTED_MATTER,
+	BLE_MATTER_MSG_CONNECTED_MULTI_ADV,
 	BMS_CALLBACK_MSG_DISCONNECTED,
-	BMS_CALLBACK_MSG_DISCONNECTED_MATTER,
+	BLE_MATTER_MSG_DISCONNECTED_MULTI_ADV,
 	BMS_CALLBACK_MSG_ADV_OFF,
 	BMS_CALLBACK_MSG_CMP_WRITE_RECV_MATTER,
 	BMS_CALLBACK_MSG_CMP_WRITE_RECIEVED,
@@ -227,6 +229,21 @@ typedef struct {
 	uint8_t *device_name;
 } M_SET_DEVICE_NAME;
 
+typedef struct {
+	T_GAP_CONN_STATE        conn_state;          /**< Connection state. */
+	T_GAP_REMOTE_ADDR_TYPE  bd_type;             /**< remote BD type*/
+	uint8_t                 bd_addr[GAP_BD_ADDR_LEN]; /**< remote BD */
+	T_GAP_ROLE              role;                   //!< Device role
+} T_APP_LINK;
+/** @} */
+/* End of group */
+/** @addtogroup  CENTRAL_CLIENT_SCAN_MGR
+	 * @brief  Device list block definition.
+	 */
+typedef struct {
+	uint8_t 	 bd_addr[GAP_BD_ADDR_LEN];	/**< remote BD */
+	uint8_t 	 bd_type;			   /**< remote BD type*/
+} T_DEV_INFO;
 /*============================================================================*
  *                              Functions
  *============================================================================*/

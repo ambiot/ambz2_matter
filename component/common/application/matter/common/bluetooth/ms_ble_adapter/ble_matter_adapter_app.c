@@ -30,10 +30,8 @@
 #include <ble_matter_adapter_app.h>
 #include <ble_matter_adapter_app_task.h>
 #include "ble_matter_adapter_app_main.h"
-//#include <ble_matter_adapter_link_mgr.h>
 #include <gcs_client.h>
 #include "gatt_builtin_services.h"
-//#include "ms_hal_ble.h"
 #include "os_mem.h"
 #include "os_msg.h"
 #include "os_sync.h"
@@ -41,36 +39,65 @@
 #include "matter_blemgr_common.h"
 #include <gap_conn_le.h>
 #include <ble_matter_adapter_app_flags.h>
+
 #if CONFIG_BLE_MATTER_MULTI_ADV
 #include "vendor_cmd_bt.h"
 #include "matter_blemgr_common.h"
 #include "os_timer.h"
 #endif
-/** @defgroup  CENTRAL_CLIENT_APP Central Client Application
-    * @brief This file handles BLE central client application routines.
-    * @{
-    */
+/*============================================================================*
+ *                              Constants
+ *============================================================================*/
+#define BLE_MATTER_ADAPTER_APP_MAX_DEVICE_INFO 6
+ 
+ 
+
+ 
+ 
 /*============================================================================*
  *                              Variables
  *============================================================================*/
 /** @addtogroup  CENTRAL_CLIIENT_CALLBACK
     * @{
     */
-T_CLIENT_ID ble_matter_adapter_gcs_client_id;         /**< General Common Services client client id*/
-extern T_SERVER_ID ble_matter_adapter_service_id;				 /**< BT matter service id*/
-extern matter_blemgr_callback matter_blemgr_callback_func;
-extern void *matter_blemgr_callback_data;
-/** @} */ /* End of group CENTRAL_CLIIENT_CALLBACK */
 
-/** @defgroup  CENTRAL_CLIENT_GAP_MSG GAP Message Handler
-    * @brief Handle GAP Message
-    * @{
-    */
-T_GAP_DEV_STATE ble_matter_adapter_gap_dev_state = {0, 0, 0, 0, 0};                /**< GAP device state */
+int bt_matter_device_matter_scan_state = 0;
 int ble_matter_adapter_peripheral_app_max_links = 0;
 int ble_matter_adapter_central_app_max_links = 0;
-int bt_matter_device_matter_scan_state = 0;
-T_OS_QUEUE scan_info_queue;
+
+T_GAP_DEV_STATE ble_matter_adapter_gap_dev_state = {0, 0, 0, 0, 0};                /**< GAP device state */
+T_APP_LINK ble_matter_adapter_app_link_table[BLE_MATTER_ADAPTER_APP_MAX_LINKS];
+
+T_CLIENT_ID ble_matter_adapter_gcs_client_id;         /**< General Common Services client client id*/
+T_SERVER_ID ble_matter_adapter_service_id;	/**< Matter service id */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+extern matter_blemgr_callback matter_blemgr_callback_func;
+extern void *matter_blemgr_callback_data;
+
 
 
 extern uint8_t adv_type;
@@ -82,24 +109,10 @@ extern void *ble_matter_adapter_io_queue_handle;   //!< IO queue handle
 extern void *ble_matter_adapter_callback_queue_handle;   //!< Callback queue handle
 extern T_APP_RESULT ble_matter_adapter_app_profile_callback(T_SERVER_ID service_id, void *p_data);
 int scan_info_flag = 0;
-typedef struct {
-	T_GAP_CONN_STATE        conn_state;          /**< Connection state. */
-	T_GAP_REMOTE_ADDR_TYPE  bd_type;             /**< remote BD type*/
-	uint8_t                 bd_addr[GAP_BD_ADDR_LEN]; /**< remote BD */
-	T_GAP_ROLE              role;                   //!< Device role
-} T_APP_LINK;
-/** @} */
-/* End of group */
-/** @addtogroup  CENTRAL_CLIENT_SCAN_MGR
-	 * @brief  Device list block definition.
-	 */
-typedef struct {
-	uint8_t 	 bd_addr[GAP_BD_ADDR_LEN];	/**< remote BD */
-	uint8_t 	 bd_type;			   /**< remote BD type*/
-} T_DEV_INFO;
 
-#define BLE_MATTER_ADAPTER_APP_MAX_DEVICE_INFO 6
-T_APP_LINK ble_matter_adapter_app_link_table[BLE_MATTER_ADAPTER_APP_MAX_LINKS];
+
+
+
 
 T_DEV_INFO ble_matter_adapter_dev_list[BLE_MATTER_ADAPTER_APP_MAX_DEVICE_INFO];
 uint8_t ble_matter_adapter_dev_list_count = 0;
@@ -121,6 +134,9 @@ extern uint8_t matter_adv_data[31];
 extern uint8_t matter_adv_data_length;
 extern uint8_t matter_adv_id;
 uint8_t matter_msmart_bt_deinit_id=0xff;
+/*============================================================================*
+ *                              Functions
+ *============================================================================*/
 uint8_t matter_get_unused_adv_index(void)
 {
 	int i;
@@ -491,7 +507,7 @@ printf("[%s]enter...%d,  msg_type =%d\r\n", __func__, __LINE__, msg_type);
     {
     
 #if CONFIG_BLE_MATTER_MULTI_ADV
-	case BMS_CALLBACK_MSG_CONNECTED_MATTER: {
+	case BLE_MATTER_MSG_CONNECTED_MULTI_ADV: {
             BT_MATTER_CONN_EVENT *connected = callback_msg.u.buf;
             T_MATTER_BLEMGR_GAP_CONNECT_CB_ARG gap_connect_cb_arg;
             gap_connect_cb_arg.conn_id = connected->conn_id;
@@ -503,7 +519,7 @@ printf("[%s]enter...%d,  msg_type =%d\r\n", __func__, __LINE__, msg_type);
         }
         break;
 
-	case BMS_CALLBACK_MSG_DISCONNECTED_MATTER: {
+	case BLE_MATTER_MSG_DISCONNECTED_MULTI_ADV: {
             BT_MATTER_CONN_EVENT *disconnected = callback_msg.u.buf;
             T_MATTER_BLEMGR_GAP_DISCONNECT_CB_ARG gap_disconnect_cb_arg;
             gap_disconnect_cb_arg.conn_id = disconnected->conn_id;
@@ -799,7 +815,7 @@ printf("[%s]enter...%d \r\n", __func__, __LINE__);
 			memset(disconnected_msg_matter, 0, sizeof(T_MATTER_BLEMGR_GAP_DISCONNECT_CB_ARG));
 			disconnected_msg_matter->conn_id = conn_id;
 			disconnected_msg_matter->disc_cause = disc_cause;
-			if (ble_matter_adapter_send_callback_msg(BMS_CALLBACK_MSG_DISCONNECTED_MATTER,NULL, disconnected_msg_matter) == false) {
+			if (ble_matter_adapter_send_callback_msg(BLE_MATTER_MSG_DISCONNECTED_MULTI_ADV,NULL, disconnected_msg_matter) == false) {
 				printf("[%s] send callback msg fail\r\n", __func__);
 				os_mem_free(disconnected_msg_matter);
 			}
@@ -886,7 +902,7 @@ printf("[%s]enter...%d \r\n", __func__, __LINE__);
 			T_MATTER_BLEMGR_GAP_CONNECT_CB_ARG *conn_msg_matter = (T_MATTER_BLEMGR_GAP_CONNECT_CB_ARG *)os_mem_alloc(0, sizeof(T_MATTER_BLEMGR_GAP_CONNECT_CB_ARG));
 			memset(conn_msg_matter, 0, sizeof(T_MATTER_BLEMGR_GAP_CONNECT_CB_ARG));
 			conn_msg_matter->conn_id = conn_id;
-			if (ble_matter_adapter_send_callback_msg(BMS_CALLBACK_MSG_CONNECTED_MATTER, NULL, conn_msg_matter) == false) {
+			if (ble_matter_adapter_send_callback_msg(BLE_MATTER_MSG_CONNECTED_MULTI_ADV, NULL, conn_msg_matter) == false) {
 				printf("[%s] send callback msg fail\r\n", __func__);
 				os_mem_free(conn_msg_matter);
 			}

@@ -19,7 +19,7 @@
 
 #define BT_MATTER_ADAPTER_SERVICE_C3_INDEX 0x07
 
-T_SERVER_ID ble_matter_adapter_service_id;
+extern T_SERVER_ID ble_matter_adapter_service_id;
 
 /**<  Function pointer used to send event to application from ble config wifi profile. Initiated in bt_matter_adapter_service_add_service. */
 static P_FUN_SERVER_GENERAL_CB ble_matter_adapter_service_cb = NULL;

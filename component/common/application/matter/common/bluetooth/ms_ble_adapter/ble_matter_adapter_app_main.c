@@ -65,7 +65,7 @@
 /** @brief  Default maximum advertising interval */
 #define DEFAULT_ADVERTISING_INTERVAL_MAX            192 //120ms
 
-extern T_SERVER_ID ble_matter_adapter_service_id;//from service.c
+extern T_SERVER_ID ble_matter_adapter_service_id;//from app.c
 extern T_GAP_DEV_STATE ble_matter_adapter_gap_dev_state;
 #if CONFIG_BLE_MATTER_MULTI_ADV
 extern uint8_t matter_local_static_random_addr[6];
