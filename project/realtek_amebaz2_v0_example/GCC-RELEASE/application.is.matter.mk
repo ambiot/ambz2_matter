@@ -59,7 +59,7 @@ ROMIMG =
 #BT_MATTER_MESH_ADAPTER = 1
 
 # Uncomment to enable BLE msmart with matter
-BT_MATTER_MSMART_ADAPTER = 1
+BLE_MATTER_ADAPTER = 1
 
 # Include folder list
 # -------------------------------------------------------------------
@@ -183,9 +183,10 @@ INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/ffs_demo/r
 # Matter
 ifdef BT_MATTER_MESH_ADAPTER
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter
-else
+else if BLE_MATTER_ADAPTER
 INCLUDES += -I../../../component/common/application/matter/common/bluetooth/
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/ble_matter_adapter/
+else
 INCLUDES += -I../../../component/common/application/matter/common/bluetooth/bt_matter_adapter
 endif
 #INCLUDES += -I../../../component/common/application/matter/common/bluetooth
@@ -311,7 +312,7 @@ SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multipl
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter/bt_mesh_device_matter_cmd.c
 else
 
-ifdef BT_MATTER_MSMART_ADAPTER
+ifdef BLE_MATTER_ADAPTER
 SRC_C += ../../../component/common/application/matter/common/bluetooth/matter_blemgr_common.c
 
 #bluetooth - example - ble_matter_adapter
@@ -727,14 +728,6 @@ CFLAGS += -Wno-maybe-uninitialized -c -MMD
 CFLAGS += -DCONFIG_PLATFORM_8710C -DCONFIG_BUILD_RAM=1
 CFLAGS += -DV8M_STKOVF
 
-
-CFLAGS += -DMS_CONFIG_BLE_SUPPORT
-CFLAGS += -DCONFIG_BLE_MATTER_ADAPTER=1
-CFLAGS += -DWITH_LWIP=1
-CFLAGS += $(foreach define, $(GLOBAL_DEFINES), $(addprefix -D, $(define)))
-
-
-
 CPPFLAGS := $(CFLAGS)
 
 #for time64 
@@ -751,9 +744,9 @@ CFLAGS += -DCONFIG_BT_MESH_WITH_MATTER=1
 endif
 
 
-# for matter msmart
-ifdef BT_MATTER_MSMART_ADAPTER
-CFLAGS += -DCONFIG_BT_MSMART_WITH_MATTER=1
+# for matter adapter
+ifdef BLE_MATTER_ADAPTER
+CFLAGS += -DCONFIG_BLE_MATTER_ADAPTER=1
 endif
 
 
