@@ -20,8 +20,6 @@
 #if defined(CONFIG_BLE_MATTER_ADAPTER) && CONFIG_BLE_MATTER_ADAPTER
 #include <os_sched.h>
 #include <string.h>
-#include <ble_matter_adapter_app_task.h>
-#include <ble_matter_adapter_app_main.h>
 #include <trace_app.h>
 #include <gap.h>
 #include <gap_config.h>
@@ -30,7 +28,6 @@
 #include <profile_client.h>
 #include <gap_msg.h>
 #include <gcs_client.h>
-
 #include "trace_uart.h"
 #include <bte.h>
 #include "wifi_constants.h"
@@ -42,8 +39,9 @@
 #include <wifi_conf.h>
 #include "rtk_coex.h"
 #include "matter_blemgr_common.h"
-
 #include <ble_matter_adapter_app.h>
+#include <ble_matter_adapter_app_task.h>
+#include <ble_matter_adapter_app_main.h>
 #if CONFIG_BLE_MATTER_MULTI_ADV
 #include "vendor_cmd_bt.h"
 #endif

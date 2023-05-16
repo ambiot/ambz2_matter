@@ -22,7 +22,6 @@
 #include <os_task.h>
 #include <gap.h>
 #include <gap_le.h>
-//#include <trace_app.h>
 #include <ble_matter_adapter_app_task.h>
 #include <app_msg.h>
 #include <ble_matter_adapter_app.h>
@@ -48,10 +47,6 @@
 #define BLE_MATTER_ADAPTER_CALLBACK_TASK_PRIORITY        4         //!< Task priorities
 #define BLE_MATTER_ADAPTER_CALLBACK_TASK_STACK_SIZE      256 * 6   //!<  Task stack size
 #define BLE_MATTER_ADAPTER_MAX_NUMBER_OF_CALLBACK_MESSAGE               0x20      //!< Callback message queue size
-
-
-
-
 /*============================================================================*
  *                              Variables
  *============================================================================*/
@@ -63,14 +58,8 @@ void *ble_matter_adapter_callback_task_handle = NULL;    //!< Callback task hand
 void *ble_matter_adapter_callback_queue_handle = NULL;   //!< Callback queue handle
 
 extern T_GAP_DEV_STATE ble_matter_adapter_gap_dev_state;
-#if 1
 extern int ble_matter_adapter_central_app_max_links;
 extern int ble_matter_adapter_peripheral_app_max_links;
-extern void *matter_add_service_sem;
-extern void *matter_add_service_mutex;
-extern void *modify_whitelist_sem;
-extern void *adv_start_sem;
-#endif
 /*============================================================================*
  *                              Functions
  *============================================================================*/
@@ -99,6 +88,7 @@ bool ble_matter_adapter_app_send_api_msg(uint16_t sub_type, void *arg)
 
 	return true;
 }
+
 bool ble_matter_adapter_send_callback_msg(uint16_t msg_type, uint8_t cb_type, void *arg)
 {
 	T_IO_MSG callback_msg;
@@ -122,8 +112,6 @@ bool ble_matter_adapter_send_callback_msg(uint16_t msg_type, uint8_t cb_type, vo
 
 	return false;
 }
-
-
 
 void ble_matter_adapter_callback_main_task(void *p_param)
 {

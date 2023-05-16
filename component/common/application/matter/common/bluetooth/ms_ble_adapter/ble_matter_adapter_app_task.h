@@ -12,8 +12,8 @@
    * <h2><center>&copy; COPYRIGHT 2017 Realtek Semiconductor Corporation</center></h2>
    **************************************************************************************
   */
-#ifndef __BT_PERIPHERIAL_MATTER_APP_TASK_H_
-#define __BT_PERIPHERIAL_MATTER_APP_TASK_H_
+#ifndef __BLE_MATTER_ADAPTER_APP_TASK_H_
+#define __BLE_MATTER_ADAPTER_APP_TASK_H_
 
 #ifdef __cplusplus
 extern "C" {

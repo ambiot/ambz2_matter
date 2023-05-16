@@ -1,11 +1,8 @@
 #include <platform_opts_bt.h>
-//#if defined(CONFIG_MULTI_ADV) && CONFIG_MULTI_ADV
+#if defined(CONFIG_BLE_MATTER_ADAPTER) && CONFIG_BLE_MATTER_ADAPTER
 #include "string.h"
 #include "gap.h"
-//#include "gap_msg.h"
 #include "gap_le.h"
-//#include "ble_ms_adapter_app_flags.h"
-//#include "ble_ms_adapter_app.h"
 #include "os_mem.h"
 #include "gap_le.h"
 #include "gap_adv.h"
@@ -13,14 +10,11 @@
 #include "platform_stdlib.h"
 #include "os_sync.h"
 #include "os_sched.h"
-//#include "os_msg.h"
 #include "os_timer.h"
 #include "matter_blemgr_common.h"
 #include "ble_matter_adapter_app_main.h"
 #include "ble_matter_adapter_app_flags.h"
 #include "ble_matter_adapter_app.h"
-//#include "ble_ms_adapter_service.h"
-
 #include "os_sched.h"
 
 /*============================================================================*
@@ -34,6 +28,8 @@ uint16_t matter_adv_int_min = 0x20;
 uint16_t matter_adv_int_max = 0x20;
 uint8_t matter_adv_data_length = 0;
 uint8_t matter_adv_data[31] = {0};
+uint8_t customer_adv_data[] = {0x02, 0x01, 0x05, 0x03, 0x03, 0x0A, 0xA0, 0x0F,0x09, 'B', 'L', 'E', '_', 'J', 'I', 'A', 'N', 'G', '_', 'T', 'E', 'S', 'T'};
+uint8_t customer_rsp_data[] = {0x03, 0x19, 0x00,0x00};
 
 matter_blemgr_callback matter_blemgr_callback_func = NULL;
 void *matter_blemgr_callback_data = NULL;
@@ -191,4 +187,4 @@ void ble_matter_adapter_switch_bt_address(uint8_t *address) {
 
 }
 
-//#endif
+#endif

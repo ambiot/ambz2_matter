@@ -12,12 +12,10 @@
    * <h2><center>&copy; COPYRIGHT 2017 Realtek Semiconductor Corporation</center></h2>
    **************************************************************************************
   */
-#ifndef _BLE_MATTER_ADAPTER__APP_FLAGS_H_
-#define _BLE_MATTER_ADAPTER__APP_FLAGS_H_
+#ifndef _BLE_MATTER_ADAPTER_APP_FLAGS_H_
+#define _BLE_MATTER_ADAPTER_APP_FLAGS_H_
 
-#include <trace_app.h>
 #include <bt_flags.h>
-
 #include <app_common_flags.h>
 
 /** @defgroup  CENTRAL_CLIENT_Config Central Client App Configuration

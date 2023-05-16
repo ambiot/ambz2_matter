@@ -24,14 +24,13 @@ extern "C" {
  *============================================================================*/
 #include <profile_client.h>
 #include <app_msg.h>
-#include <ble_matter_adapter_app_flags.h>
 #include <profile_server.h>
-#include "ble_ms_adapter_service.h"
 #include <gap.h>
 #include <gap_msg.h>
 #include <gcs_client.h>
-#include <gap_scan.h>
 #include <gap_conn_le.h>
+#include <ble_matter_adapter_app_flags.h>
+#include "ble_matter_adapter_service.h"
 
 #define BLE_PRINT    printf
 #define BD_ADDR_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
@@ -69,6 +68,22 @@ typedef struct
 	uint16_t disc_cause;
 } BT_MATTER_CONN_EVENT;
 
+typedef struct {
+	T_GAP_CONN_STATE        conn_state;          /**< Connection state. */
+	T_GAP_REMOTE_ADDR_TYPE  bd_type;             /**< remote BD type*/
+	uint8_t                 bd_addr[GAP_BD_ADDR_LEN]; /**< remote BD */
+	T_GAP_ROLE              role;                   //!< Device role
+} T_APP_LINK;
+/** @} */
+/* End of group */
+/** @addtogroup  CENTRAL_CLIENT_SCAN_MGR
+	 * @brief  Device list block definition.
+	 */
+typedef struct {
+	uint8_t 	 bd_addr[GAP_BD_ADDR_LEN];	/**< remote BD */
+	uint8_t 	 bd_type;			   /**< remote BD type*/
+} T_DEV_INFO;
+
 typedef enum
 {
 	BT_MATTER_MSG_START_ADV = 12,
@@ -84,6 +99,14 @@ typedef enum
 	BT_MATTER_SEND_CB_MSG_IND_NTF_ENABLE,
 	BT_MATTER_SEND_CB_MSG_IND_NTF_DISABLE,
 	BT_MATTER_SEND_CB_MSG_WRITE_CHAR,
+#if CONFIG_BLE_MATTER_MULTI_ADV
+	BLE_MATTER_MSG_CONNECTED_MULTI_ADV,
+	BLE_MATTER_MSG_DISCONNECTED_MULTI_ADV,
+	BLE_MATTER_MSG_WRITE_CHAR_MULTI_ADV,
+	BLE_MATTER_MSG_CCCD_RECV_ENABLE_MULTI_ADV,
+	BLE_MATTER_MSG_CCCD_RECV_DISABLE_MULTI_ADV,
+	BLE_MATTER_MSG_SEND_DATA_COMPLETE_MULTI_ADV,
+#endif
 } BT_MATTER_SEND_MSG_TYPE;
 
 typedef enum
@@ -93,15 +116,6 @@ typedef enum
 	CB_GAP_MSG_CONN_EVENT = 0x3, /**< bt_matter_adapter_app_handle_gap_msg */
 } T_CHIP_BLEMGR_CALLBACK_TYPE;
 
-typedef struct {
-	uint8_t      adv_evt_type;
-	uint32_t     adv_intv_min;       /// Minimum advertising interval (in unit of 625us). Must be greater than 20ms
-	uint32_t     adv_intv_max;       /// Maximum advertising interval (in unit of 625us). Must be greater than 20ms
-	unsigned int adv_datalen;
-	unsigned int scanrsp_datalen;
-	uint8_t      adv_data[31];
-	uint8_t      scanrsp_data[31];
-} M_ADV_PARAM;
 #if CONFIG_BLE_MATTER_MULTI_ADV
 typedef struct {
 	uint8_t 	 adv_datalen;
@@ -119,31 +133,6 @@ typedef struct {
 	uint16_t 	adv_int_max;
 } M_MULTI_ADV_PARAM;
 
-typedef enum {
-	BMS_CALLBACK_MSG_CONNECTED,
-	BLE_MATTER_MSG_CONNECTED_MULTI_ADV,
-	BMS_CALLBACK_MSG_DISCONNECTED,
-	BLE_MATTER_MSG_DISCONNECTED_MULTI_ADV,
-	BMS_CALLBACK_MSG_ADV_OFF,
-	BMS_CALLBACK_MSG_CMP_WRITE_RECV_MATTER,
-	BMS_CALLBACK_MSG_CMP_WRITE_RECIEVED,
-	//BMS_CALLBACK_MSG_CMP_CCCD_RECV_ENABLE_MATTER,
-	//BMS_CALLBACK_MSG_CMP_CCCD_RECV_DISABLE_MATTER,
-	BLE_MATTER_MSG_CCCD_RECV_DISABLE,
-	BLE_MATTER_MSG_SEND_DATA_COMPLETE_MULTI_ADV,
-	BLE_MATTER_IND_NTF_ENABLE,
-	BLE_MATTER_MSG_CCCD_RECV_ENABLE,
-	BMS_CALLBACK_MSG_CMP_CCCD_RECV_MATTER,
-	BMS_CALLBACK_MSG_CMP_INDICATE,
-	BLE_MATTER_MSG_WRITE_CHAR,
-	//BMS_CALLBACK_MSG_SEND_DATA_COMPLETE_MATTER
-} T_BMS_CALLBACK_MSG_TYPE;
-
-typedef struct {
-	T_BMS_CALLBACK_MSG_TYPE type;
-	void *buf;
-} T_BMS_CALLBACK_MSG;
-#endif
 typedef struct {
 	void *task_handle;
 	void *sem_handle;
@@ -153,100 +142,11 @@ typedef struct {
 	uint8_t matter_sta_sto_flag;   //for matter
 	uint8_t adv_id;
 } T_MULTI_ADV_CONCURRENT;
-
-
-typedef enum {
-	BMS_CONN_ADV = 1,
-	BMS_NONCONN_ADV,
-} M_ADV_TYPE;
-
-typedef struct {
-
-	uint8_t  scan_mode;
-	uint8_t  scan_filter_duplicate;
-	uint8_t  scan_filter_policy;
-	uint16_t scan_interval;
-	uint16_t scan_window;
-} M_SCAN_PARAM;
-
-typedef struct {
-
-	uint16_t conn_id;
-	uint8_t uuid_size;
-	uint8_t *uuid;
-} M_DISC_SRV_UUID_PARAM;
-
-typedef struct {
-
-	uint16_t conn_id;
-	uint16_t start_hdl;
-	uint16_t end_hdl;
-	uint8_t uuid_size;
-	uint8_t *uuid;
-} M_DISC_CHAR_UUID_PARAM;
-
-typedef struct {
-
-	uint16_t conn_id;
-	uint16_t start_hdl;
-	uint16_t end_hdl;
-} M_DISC_DESC_PARAM;
-
-typedef struct {
-	uint16_t conn_id;
-	T_GATT_WRITE_TYPE type;
-	uint8_t *value;
-	uint16_t value_size;
-	uint16_t att_handle;
-} M_WRITE_PARAM;
-
-typedef struct {
-	T_GAP_WHITE_LIST_OP operation;
-	uint8_t *remote_bd;
-	T_GAP_REMOTE_ADDR_TYPE remote_bd_type;
-} M_MODIFY_WHITELIST_PARAM;
-
-typedef struct {
-	uint16_t conn_id;
-	uint16_t conn_interval_min;
-	uint16_t conn_interval_max;
-	uint16_t slave_latency;
-	uint16_t supervision_timeout;
-	uint16_t ce_length_min;
-	uint16_t ce_length_max;
-} M_CONNECTION_REQ_PARAM; //connection param request
-
-typedef struct {
-	uint8_t remote_bd[GAP_BD_ADDR_LEN];
-	T_GAP_REMOTE_ADDR_TYPE remote_bd_type;
-	T_GAP_REMOTE_ADDR_TYPE local_bd_type;
-} M_CON_PARAM;
-
-
-
-typedef struct {
-	uint8_t device_name_len;
-	uint8_t *device_name;
-} M_SET_DEVICE_NAME;
-
-typedef struct {
-	T_GAP_CONN_STATE        conn_state;          /**< Connection state. */
-	T_GAP_REMOTE_ADDR_TYPE  bd_type;             /**< remote BD type*/
-	uint8_t                 bd_addr[GAP_BD_ADDR_LEN]; /**< remote BD */
-	T_GAP_ROLE              role;                   //!< Device role
-} T_APP_LINK;
-/** @} */
-/* End of group */
-/** @addtogroup  CENTRAL_CLIENT_SCAN_MGR
-	 * @brief  Device list block definition.
-	 */
-typedef struct {
-	uint8_t 	 bd_addr[GAP_BD_ADDR_LEN];	/**< remote BD */
-	uint8_t 	 bd_type;			   /**< remote BD type*/
-} T_DEV_INFO;
+#endif
 /*============================================================================*
  *                              Functions
  *============================================================================*/
+#if CONFIG_BLE_MATTER_MULTI_ADV
 uint8_t matter_get_unused_adv_index(void);
 
 bool matter_matter_ble_adv_stop_by_adv_id(uint8_t *adv_id);
@@ -256,7 +156,7 @@ bool msmart_matter_ble_adv_start_by_adv_id(uint8_t *adv_id, uint8_t *adv_data, u
 uint8_t ble_matter_adapter_judge_adv_stop(uint8_t adv_id);
 
 void ble_matter_adapter_multi_adv_task_func(void *arg);
-#if CONFIG_BLE_MATTER_MULTI_ADV
+
 void ble_matter_adapter_multi_adv_init();
 
 void ble_matter_adapter_multi_adv_deinit();
@@ -264,25 +164,17 @@ void ble_matter_adapter_multi_adv_deinit();
 void ble_matter_adapter_send_multi_adv_msg(uint8_t adv_id);
 
 void ble_matter_adapter_legacy_start_adv_callback(void *data);
+
+void ble_matter_adapter_delete_adv(uint8_t adv_id);
 #endif
+
 int ble_ms_adapter_app_handle_upstream_msg(uint16_t subtype, void *pdata);
-/**
- * @brief    All the application messages are pre-handled in this function
- * @note     All the IO MSGs are sent to this function, then the event handling
- *           function shall be called according to the MSG type.
- * @param[in] io_msg  IO message data
- * @return   void
- */
-void ble_matter_adapter_app_handle_io_msg(T_IO_MSG io_msg);
 
 void ble_matter_adapter_app_handle_callback_msg(T_IO_MSG callback_msg);
 
-void ble_matter_adapter_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t cause);
+void ble_matter_adapter_app_handle_io_msg(T_IO_MSG io_msg);
 
-#if CONFIG_BLE_MATTER_MULTI_ADV
-void ble_matter_adapter_delete_adv(uint8_t adv_id);
-void ble_matter_adapter_stop_all_adv(void);
-#endif
+void ble_matter_adapter_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t cause);
 
 void ble_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE new_state, uint16_t disc_cause);
 
@@ -294,6 +186,8 @@ void ble_matter_adapter_app_handle_conn_param_update_evt(uint8_t conn_id, uint8_
 
 void ble_matter_adapter_app_handle_gap_msg(T_IO_MSG *p_gap_msg);
 
+void bt_matter_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info);
+
 void ble_matter_adapter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCOVERY_RESULT discov_result);
 
 /**
@@ -304,8 +198,6 @@ void ble_matter_adapter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DISCO
  * @retval   result @ref T_APP_RESULT
  */
 T_APP_RESULT ble_matter_adapter_gcs_client_callback(T_CLIENT_ID client_id, uint8_t conn_id, void *p_data);
-
-void bt_matter_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info);
 
 /**
   * @brief Callback for gap le to notify app
