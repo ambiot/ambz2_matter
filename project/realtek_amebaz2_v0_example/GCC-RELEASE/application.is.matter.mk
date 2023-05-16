@@ -185,7 +185,7 @@ ifdef BT_MATTER_MESH_ADAPTER
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter
 else
 INCLUDES += -I../../../component/common/application/matter/common/bluetooth/
-INCLUDES += -I../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/
+INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/ble_matter_adapter/
 INCLUDES += -I../../../component/common/application/matter/common/bluetooth/bt_matter_adapter
 endif
 #INCLUDES += -I../../../component/common/application/matter/common/bluetooth
@@ -312,12 +312,13 @@ SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multipl
 else
 
 ifdef BT_MATTER_MSMART_ADAPTER
-SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_matter_adapter_service.c
-SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/matter_blemgr_common.c
-#bluetooth - example - ms_ble_adapter
-SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_matter_adapter_app_task.c
-SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_matter_adapter_app_main.c
-SRC_C += ../../../component/common/application/matter/common/bluetooth/ms_ble_adapter/ble_matter_adapter_app.c
+SRC_C += ../../../component/common/application/matter/common/bluetooth/matter_blemgr_common.c
+
+#bluetooth - example - ble_matter_adapter
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_matter_adapter/ble_matter_adapter_service.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_matter_adapter/ble_matter_adapter_app_task.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_matter_adapter/ble_matter_adapter_app_main.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_matter_adapter/ble_matter_adapter_app.c
 
 else
 #bluetooth - example - bt_matter_adapter
