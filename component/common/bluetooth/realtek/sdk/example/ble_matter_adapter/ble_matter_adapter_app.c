@@ -76,13 +76,9 @@ extern uint8_t matter_adv_id;
 extern matter_blemgr_callback matter_blemgr_callback_func;
 extern void *matter_blemgr_callback_data;
 
-extern uint8_t customer_adv_data;
-extern uint8_t customer_rsp_data;
 extern uint16_t matter_adv_interval;
 extern uint16_t matter_adv_int_min;
 extern uint16_t matter_adv_int_max;
-extern uint8_t matter_adv_data[31];
-extern uint8_t matter_adv_data_length;
 #endif
 /*============================================================================*
  *                              Multi ADV Functions
@@ -148,8 +144,8 @@ bool matter_multi_adv_start_by_id(uint8_t *adv_id, uint8_t *adv_data, uint16_t a
 	}
 	if (type == 1) { //matter
 		os_mutex_take(h_adv_param->update_adv_mutex, 0xFFFF);
-		memcpy(h_adv_param->adv_data, matter_adv_data, matter_adv_data_length);
-		h_adv_param->adv_datalen = matter_adv_data_length;
+		memcpy(h_adv_param->adv_data, adv_data, adv_len);
+		h_adv_param->adv_datalen = adv_len;
 		h_adv_param->adv_int_min = matter_adv_int_min;
 		h_adv_param->adv_int_max = matter_adv_int_max;
 		h_adv_param->local_bd_type = GAP_LOCAL_ADDR_LE_RANDOM;
@@ -160,8 +156,8 @@ bool matter_multi_adv_start_by_id(uint8_t *adv_id, uint8_t *adv_data, uint16_t a
 		os_mutex_give(h_adv_param->update_adv_mutex);
 	} else if (type == 2) { //customer
 		os_mutex_take(h_adv_param->update_adv_mutex, 0xFFFF);
-		memcpy(h_adv_param->adv_data, customer_adv_data, adv_len);
-		memcpy(h_adv_param->scanrsp_data, customer_rsp_data, rsp_len);
+		memcpy(h_adv_param->adv_data, adv_data, adv_len);
+		memcpy(h_adv_param->scanrsp_data, rsp_data, rsp_len);
 		h_adv_param->adv_datalen = adv_len;
 		h_adv_param->scanrsp_datalen = rsp_len;
 		h_adv_param->local_bd_type = GAP_LOCAL_ADDR_LE_PUBLIC;
