@@ -28,7 +28,7 @@ uint16_t matter_adv_int_min = 0x20;
 uint16_t matter_adv_int_max = 0x20;
 uint8_t matter_adv_data_length = 0;
 uint8_t matter_adv_data[31] = {0};
-uint8_t customer_adv_data[] = {0x02, 0x01, 0x05, 0x03, 0x03, 0x0A, 0xA0, 0x0F,0x09, 'B', 'L', 'E', '_', 'J', 'I', 'A', 'N', 'G', '_', 'T', 'E', 'S', 'T'};
+uint8_t customer_adv_data[] = {0x02, 0x01, 0x05, 0x03, 0x03, 0x0A, 0xA0, 0x0F,0x09, 'B', 'L', 'E', '_', 'C', 'U', 'S', 'T', 'O', 'M', 'E', 'R', '_', 'A', 'D', 'V'};
 uint8_t customer_rsp_data[] = {0x03, 0x19, 0x00,0x00};
 
 matter_blemgr_callback matter_blemgr_callback_func = NULL;
@@ -36,32 +36,29 @@ void *matter_blemgr_callback_data = NULL;
 
 extern T_MULTI_ADV_CONCURRENT matter_multi_adapter; //app.c
 extern int ble_matter_adapter_peripheral_app_max_links; //app.c
-extern uint8_t msmart_adv_id;
+extern uint8_t customer_adv_id;
 extern T_SERVER_ID ble_matter_adapter_service_id;
 /*============================================================================*
  *                              Functions
  *============================================================================*/
 extern void ble_matter_adapter_multi_adv_init();
 int matter_blemgr_init(void) {
-	printf("[%s]enter...\r\n", __func__);
 	ble_matter_adapter_app_init();
 	ble_matter_adapter_multi_adv_init();
 	return 0;
 }
 
 void matter_blemgr_set_callback_func(matter_blemgr_callback p, void *data) {
-	printf("[%s]enter...\r\n", __func__);
 	matter_blemgr_callback_func = p;
 	matter_blemgr_callback_data = data;
 }
 
-extern bool msmart_matter_ble_adv_start_by_adv_id(uint8_t *adv_id, uint8_t *adv_data, uint16_t adv_len, uint8_t *rsp_data, uint16_t rsp_len, uint8_t type);
+extern bool matter_multi_adv_start_by_id(uint8_t *adv_id, uint8_t *adv_data, uint16_t adv_len, uint8_t *rsp_data, uint16_t rsp_len, uint8_t type);
 int matter_blemgr_start_adv(void) {
-	printf("[%s]enter...\r\n", __func__);
 	bool result = 0;
 #if CONFIG_BLE_MATTER_MULTI_ADV
-	result = msmart_matter_ble_adv_start_by_adv_id(&matter_adv_id, NULL, 0, NULL, 0, 1);
-	result = msmart_matter_ble_adv_start_by_adv_id(&msmart_adv_id, NULL, 23, NULL, 4, 2);
+	result = matter_multi_adv_start_by_id(&matter_adv_id, NULL, 0, NULL, 0, 1);
+	result = matter_multi_adv_start_by_id(&customer_adv_id, NULL, 23, NULL, 4, 2);
 	if (result == 1)
 		return 1;
 #endif
@@ -70,7 +67,6 @@ int matter_blemgr_start_adv(void) {
 
 extern bool matter_matter_ble_adv_stop_by_adv_id(uint8_t *adv_id);
 int matter_blemgr_stop_adv(void) {
-	printf("[%s]enter...\r\n", __func__);
 	bool result = 0;
 #if CONFIG_BLE_MATTER_MULTI_ADV
 	if (matter_multi_adapter.matter_sta_sto_flag != false) {
@@ -87,7 +83,6 @@ int matter_blemgr_stop_adv(void) {
 }
 
 int matter_blemgr_config_adv(uint16_t adv_int_min, uint16_t adv_int_max, uint8_t *adv_data, uint8_t adv_data_length) {
-	printf("[%s]enter...\r\n", __func__);
 	matter_adv_interval = adv_int_max;
 	matter_adv_int_min = adv_int_min;
 	matter_adv_int_max = adv_int_max;
@@ -98,7 +93,6 @@ int matter_blemgr_config_adv(uint16_t adv_int_min, uint16_t adv_int_max, uint8_t
 }
 
 uint16_t matter_blemgr_get_mtu(uint8_t connect_id) {
-	printf("[%s]enter...\r\n", __func__);
 	int ret;
 	uint16_t mtu_size;
 
@@ -117,7 +111,6 @@ uint16_t matter_blemgr_get_mtu(uint8_t connect_id) {
 }
 
 int matter_blemgr_set_device_name(char *device_name, uint8_t device_name_length) {
-	printf("[%s]enter...\r\n", __func__);
 	if (device_name == NULL || device_name_length > GAP_DEVICE_NAME_LEN) {
 		printf("[%s]:invalid name or len:name 0x%x,len %d\r\n",__func__, device_name, device_name_length);
 		return 1;
@@ -129,7 +122,6 @@ int matter_blemgr_set_device_name(char *device_name, uint8_t device_name_length)
 }
 
 int matter_blemgr_disconnect(uint8_t connect_id) {
-	printf("[%s]enter...\r\n", __func__);
 	if (connect_id >= BLE_MATTER_ADAPTER_APP_MAX_LINKS) {
 		printf("[%s]:invalid conn_hdl[%d]\r\n", __func__, connect_id);
 		return 1;
@@ -147,7 +139,6 @@ int matter_blemgr_disconnect(uint8_t connect_id) {
 }
 
 int matter_blemgr_send_indication(uint8_t connect_id, uint8_t *data, uint16_t data_length) {
-	printf("[%s]enter...\r\n", __func__);
 
 	if (connect_id >= BLE_MATTER_ADAPTER_APP_MAX_LINKS || data == NULL || data_length == 0) {
 		printf("[%s]:invalid param:conn_hdl %d,data 0x%x data_length 0x%x\r\n",__func__, connect_id, data, data_length);

@@ -178,7 +178,6 @@ T_APP_RESULT ble_matter_adapter_service_attr_write_cb(uint8_t conn_id, T_SERVER_
                                             uint16_t attrib_index, T_WRITE_TYPE write_type, uint16_t length, uint8_t *p_value,
                                             P_FUN_WRITE_IND_POST_PROC *p_write_ind_post_proc)
 {
-    //printf("[BT_MATTER_ADAPTER] Write %d\n\r", length);
     T_MATTER_CALLBACK_DATA callback_data;
     T_APP_RESULT  cause = APP_RESULT_SUCCESS;
     APP_PRINT_INFO1("bt_matter_adapter_service_attr_write_cb write_type = 0x%x", write_type);
@@ -225,7 +224,6 @@ void ble_matter_adapter_service_cccd_update_cb(uint8_t conn_id, T_SERVER_ID serv
     bool is_handled = false;
     callback_data.conn_id = conn_id;
     callback_data.msg_type = SERVICE_CALLBACK_TYPE_INDIFICATION_NOTIFICATION;
-    //printf("simp_ble_service_cccd_update_cb: index = %d, cccbits 0x%x\r\n", index, cccbits);
     switch (index)
     {
     case BT_MATTER_ADAPTER_SERVICE_CHAR_INDICATE_CCCD_INDEX:

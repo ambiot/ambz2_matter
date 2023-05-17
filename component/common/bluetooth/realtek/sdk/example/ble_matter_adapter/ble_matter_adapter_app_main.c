@@ -239,11 +239,9 @@ void ble_matter_adapter_app_le_profile_init(void)
 
 #if CONFIG_BLE_MATTER_MULTI_ADV
 	ble_matter_adapter_service_id = ble_matter_adapter_service_add_service((void *)ble_matter_adapter_app_profile_callback);
-	printf("[%s]enter...%d, ble_matter_adapter_service_id = %d \r\n", __func__, __LINE__, ble_matter_adapter_service_id);
 #else
 	ble_matter_adapter_service_id = ble_matter_adapter_service_add_service((void *)ble_matter_adapter_app_profile_callback);
 #endif
-	printf("[%s]enter...%d, ble_matter_adapter_service_id = %d \r\n", __func__, __LINE__, ble_matter_adapter_service_id);
 	server_register_app_cb(ble_matter_adapter_app_profile_callback);
 	
 	/* Add Client Module */

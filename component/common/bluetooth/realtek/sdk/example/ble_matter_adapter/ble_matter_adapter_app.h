@@ -125,7 +125,7 @@ typedef struct {
 	uint16_t 	 H_adv_intval;
 	uint8_t 	 local_bd_type;
 	uint8_t 	 is_used;
-	uint8_t 	 type;        //1 means matter   2 means msmart
+	uint8_t 	 type;        //1 means matter   2 means customer
 	uint8_t 	 adv_id;
 	void 		*one_shot_timer;
 	void 		*update_adv_mutex;
@@ -138,7 +138,7 @@ typedef struct {
 	void *sem_handle;
 	void *queue_handle;
 	bool deinit_flag;
-	uint8_t msmart_sta_sto_flag;   //for msmart
+	uint8_t customer_sta_sto_flag;   //for customer
 	uint8_t matter_sta_sto_flag;   //for matter
 	uint8_t adv_id;
 } T_MULTI_ADV_CONCURRENT;
@@ -151,7 +151,7 @@ uint8_t matter_get_unused_adv_index(void);
 
 bool matter_matter_ble_adv_stop_by_adv_id(uint8_t *adv_id);
 
-bool msmart_matter_ble_adv_start_by_adv_id(uint8_t *adv_id, uint8_t *adv_data, uint16_t adv_len, uint8_t *rsp_data, uint16_t rsp_len, uint8_t type);
+bool customer_matter_ble_adv_start_by_adv_id(uint8_t *adv_id, uint8_t *adv_data, uint16_t adv_len, uint8_t *rsp_data, uint16_t rsp_len, uint8_t type);
 
 uint8_t ble_matter_adapter_judge_adv_stop(uint8_t adv_id);
 
@@ -168,7 +168,7 @@ void ble_matter_adapter_legacy_start_adv_callback(void *data);
 void ble_matter_adapter_delete_adv(uint8_t adv_id);
 #endif
 
-int ble_ms_adapter_app_handle_upstream_msg(uint16_t subtype, void *pdata);
+int ble_matter_adapter_app_handle_upstream_msg(uint16_t subtype, void *pdata);
 
 void ble_matter_adapter_app_handle_callback_msg(T_IO_MSG callback_msg);
 
