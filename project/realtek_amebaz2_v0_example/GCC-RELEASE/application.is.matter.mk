@@ -182,6 +182,7 @@ INCLUDES += -I../../../component/common/application/amazon/amazon-ffs/ffs_demo/r
 
 # Matter
 ifdef BT_MATTER_MESH_ADAPTER
+INCLUDES += -I../../../component/common/application/matter/common/bluetooth/
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/bt_mesh_multiple_profile/bt_mesh_device_matter
 else if BLE_MATTER_ADAPTER
 INCLUDES += -I../../../component/common/application/matter/common/bluetooth/
@@ -189,6 +190,7 @@ INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/example/ble_matter
 else
 INCLUDES += -I../../../component/common/application/matter/common/bluetooth/bt_matter_adapter
 endif
+
 #INCLUDES += -I../../../component/common/application/matter/common/bluetooth
 INCLUDES += -I../../../component/common/application/matter/common/port
 INCLUDES += -I../../../component/common/application/matter/common/mbedtls
@@ -742,7 +744,6 @@ endif
 ifdef BT_MATTER_MESH_ADAPTER
 CFLAGS += -DCONFIG_BT_MESH_WITH_MATTER=1
 endif
-
 
 # for matter adapter
 ifdef BLE_MATTER_ADAPTER

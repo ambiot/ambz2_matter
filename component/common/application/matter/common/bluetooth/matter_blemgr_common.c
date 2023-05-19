@@ -38,6 +38,7 @@ extern T_MULTI_ADV_CONCURRENT matter_multi_adapter; //app.c
 extern int ble_matter_adapter_peripheral_app_max_links; //app.c
 extern uint8_t customer_adv_id;
 extern T_SERVER_ID ble_matter_adapter_service_id;
+
 /*============================================================================*
  *                              Functions
  *============================================================================*/
@@ -67,7 +68,7 @@ int matter_blemgr_start_adv(void) {
 	return 0;
 }
 
-extern bool matter_matter_ble_adv_stop_by_adv_id(uint8_t *adv_id);
+extern bool matter_multi_adv_stop_by_id(uint8_t *adv_id);
 int matter_blemgr_stop_adv(void) {
 	bool result = 0;
 #if CONFIG_BLE_MATTER_MULTI_ADV
@@ -76,7 +77,7 @@ int matter_blemgr_stop_adv(void) {
 		return 1;
 	}
 
-	result = matter_matter_ble_adv_stop_by_adv_id(&matter_adv_id);
+	result = matter_multi_adv_stop_by_id(&matter_adv_id);
 	if (result == 1)
 		return 1;
 	matter_multi_adapter.matter_sta_sto_flag = true;

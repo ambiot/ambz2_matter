@@ -79,6 +79,12 @@ extern void *matter_blemgr_callback_data;
 extern uint16_t matter_adv_interval;
 extern uint16_t matter_adv_int_min;
 extern uint16_t matter_adv_int_max;
+extern uint8_t customer_adv_data;
+extern uint8_t customer_rsp_data;
+extern uint8_t matter_adv_data[31];
+extern uint8_t matter_adv_data_length;
+extern bool matter_server_is_commissioned();
+
 #endif
 /*============================================================================*
  *                              Multi ADV Functions
@@ -95,7 +101,7 @@ uint8_t matter_get_unused_adv_index(void)
 }
 
 //reserve for future use
-bool matter_matter_ble_adv_stop_by_adv_id(uint8_t *adv_id) 
+bool matter_multi_adv_stop_by_id(uint8_t *adv_id)
 {
 	if(*adv_id < 0 || *adv_id >= MAX_ADV_NUMBER){
 			printf("[%s] wrong input advId:%d\r\n",__func__, *adv_id);
@@ -169,7 +175,6 @@ bool matter_multi_adv_start_by_id(uint8_t *adv_id, uint8_t *adv_data, uint16_t a
 	}
 
 	if(h_adv_param->one_shot_timer == NULL){
-		printf("[%s]2.4 enter...%d, timer_id=%d \r\n", __func__, __LINE__,adv_index);
 		if (os_timer_create(&h_adv_param->one_shot_timer, "start adv_timer", adv_index, (int)(h_adv_param->H_adv_intval*0.625), 1, ble_matter_adapter_legacy_start_adv_callback) == false){
 			printf("os_timer_create h_adv_param->one_shot_timer fail!\r\n");
 			return 1;
@@ -217,12 +222,14 @@ void ble_matter_adapter_multi_adv_task_func(void *arg)
 				printf("[%s]device ble deinit flag is set, break\r\n", __func__);
 				break;
 			} else if (adv_id == customer_adv_id) {
+				//printf("[%s] adv_id = %d  customer_adv_id\r\n", __func__, adv_id);
 				matter_multi_adapter.adv_id = customer_adv_id;
 				if (matter_multi_adapter.customer_sta_sto_flag == true) {
 					printf("[%s]stop customer conn adv flag is set[%d]continue\r\n", __func__, adv_id);
 					continue;
 				}
 			} else if (adv_id == matter_adv_id) {
+				//printf("[%s] adv_id = %d  matter_adv_id\r\n", __func__, adv_id);
 				matter_multi_adapter.adv_id = matter_adv_id;
 				if (matter_multi_adapter.matter_sta_sto_flag == true) {
 					printf("[%s]stop matter conn adv flag is set[%d], continue\r\n", __func__, adv_id);
@@ -256,7 +263,6 @@ void ble_matter_adapter_multi_adv_task_func(void *arg)
 				printf("[%s]send api msg fail\r\n", __func__);
 				continue;
 			}
-
 			if (os_sem_take(matter_multi_adapter.sem_handle, 0xFFFFFFFF) == false) {
 				printf("os_sem_take matter_multi_adapter.sem_handle fail!\r\n");
 			}
@@ -276,6 +282,8 @@ void ble_matter_adapter_multi_adv_init()
 	matter_multi_adapter.matter_sta_sto_flag = true;
 	matter_multi_adapter.customer_sta_sto_flag = true;
 	matter_multi_adapter.adv_id = MAX_ADV_NUMBER;
+	matter_multi_adv_param_array[0].connect_flag = false;
+	matter_multi_adv_param_array[1].connect_flag = false;
 
 	if (os_sem_create(&matter_multi_adapter.sem_handle, 0, 1) == false) {
 		printf("os_sem_create ms_milti_adapter.sem_handle fail!\r\n");
@@ -658,14 +666,7 @@ void ble_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_ST
 			APP_PRINT_ERROR2("ble_matter_adapter_app_handle_conn_state_evt: connection lost, conn_id %d, cause 0x%x", conn_id,
 							 disc_cause);
 		}
-
 		printf("Disconnect conn_id %d, cause 0x%x\r\n", conn_id, disc_cause);
-///judge the type of disconnect is central or peripheral,if peripheral,start ADV
-		if (ble_matter_adapter_app_link_table[conn_id].role == GAP_LINK_ROLE_SLAVE) {
-			printf("As peripheral,recieve disconncect,please start ADV\r\n");
-			//todo
-			matter_blemgr_start_adv();
-		}
 
 		if (ble_matter_adapter_app_link_table[conn_id].role == GAP_LINK_ROLE_MASTER) {
 			ble_matter_adapter_central_app_max_links --;
@@ -673,9 +674,20 @@ void ble_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_ST
 			ble_matter_adapter_peripheral_app_max_links --;
 		}
 
+		if (ble_matter_adapter_app_link_table[conn_id].role == GAP_LINK_ROLE_SLAVE) {
+			printf("As peripheral,recieve disconncect,please start ADV\r\n");
+		}
+
 		memset(&ble_matter_adapter_app_link_table[conn_id], 0, sizeof(T_APP_LINK));
 #if CONFIG_BLE_MATTER_MULTI_ADV
 		if (link_customer == 1) { //matter
+        //if(matter_multi_adv_param_array[0].connect_flag == true) {
+			matter_multi_adv_param_array[0].connect_flag = false;
+
+			if(!matter_server_is_commissioned()) {
+				matter_multi_adv_start_by_id(&matter_adv_id, matter_adv_data, matter_adv_data_length, NULL, 0, 1); // the last parameter 0: Matter 1: Customer
+			}
+#if 1  //send data to matter
 			T_MATTER_BLEMGR_GAP_DISCONNECT_CB_ARG *disconnected_msg_matter = (T_MATTER_BLEMGR_GAP_DISCONNECT_CB_ARG *)os_mem_alloc(0, sizeof(T_MATTER_BLEMGR_GAP_DISCONNECT_CB_ARG));
 			memset(disconnected_msg_matter, 0, sizeof(T_MATTER_BLEMGR_GAP_DISCONNECT_CB_ARG));
 			disconnected_msg_matter->conn_id = conn_id;
@@ -684,24 +696,29 @@ void ble_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_ST
 				printf("[%s] send callback msg fail\r\n", __func__);
 				os_mem_free(disconnected_msg_matter);
 			}
+#endif
+		//}
 		} else if (link_customer == 2) { //customer
-			printf("[%s] link_customer = 2\r\n", __func__);
+		//if(matter_multi_adv_param_array[1].connect_flag == true) {
+				matter_multi_adv_param_array[1].connect_flag = false;
+				matter_multi_adv_start_by_id(&customer_adv_id, customer_adv_data, sizeof(customer_adv_data), customer_rsp_data, sizeof(customer_rsp_data), 2);
+		//}
 		}
 #else
-		//send data to matter
-		    BT_MATTER_CONN_EVENT *disconnected = os_mem_alloc(0, sizeof(BT_MATTER_CONN_EVENT));
-		    if(disconnected)
-		    {
-		        disconnected->conn_id = conn_id;
-		        disconnected->new_state = new_state;
-		        disconnected->disc_cause = disc_cause;
-		        if(ble_matter_adapter_send_callback_msg(BT_MATTER_SEND_CB_MSG_DISCONNECTED, NULL, disconnected)==false)
-		        {
-		            os_mem_free(disconnected);
-		        }
-		    }
-		    else
-		        printf("Malloc failed\r\n");
+        //send data to matter
+        BT_MATTER_CONN_EVENT *disconnected = os_mem_alloc(0, sizeof(BT_MATTER_CONN_EVENT));
+	    if(disconnected)
+	    {
+	        disconnected->conn_id = conn_id;
+	        disconnected->new_state = new_state;
+	        disconnected->disc_cause = disc_cause;
+	        if(ble_matter_adapter_send_callback_msg(BT_MATTER_SEND_CB_MSG_DISCONNECTED, NULL, disconnected)==false)
+	        {
+	            os_mem_free(disconnected);
+	        }
+	    }
+	    else
+	        printf("Malloc failed\r\n");
 #endif
 
 	}
@@ -725,9 +742,7 @@ void ble_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_ST
 		}
 		printf("Connected success conn_id %d\r\n", conn_id);
 		
-        //print bt address type
         uint8_t local_bd_type;
-        //uint8_t features[8];
         uint8_t remote_bd_type;
 		le_get_conn_param(GAP_PARAM_CONN_LOCAL_BD_TYPE, &local_bd_type, conn_id);
 		le_get_conn_param(GAP_PARAM_CONN_BD_ADDR_TYPE, &remote_bd_type, conn_id);
@@ -748,7 +763,7 @@ void ble_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_ST
 
 #if CONFIG_BLE_MATTER_MULTI_ADV
 		//get local adv bt type
-		if (local_bd_type == GAP_LOCAL_ADDR_LE_RANDOM) {//matter
+		if (local_bd_type == GAP_LOCAL_ADDR_LE_RANDOM) { // matter
 			link_customer = 1;
 			T_MATTER_BLEMGR_GAP_CONNECT_CB_ARG *conn_msg_matter = (T_MATTER_BLEMGR_GAP_CONNECT_CB_ARG *)os_mem_alloc(0, sizeof(T_MATTER_BLEMGR_GAP_CONNECT_CB_ARG));
 			memset(conn_msg_matter, 0, sizeof(T_MATTER_BLEMGR_GAP_CONNECT_CB_ARG));
@@ -757,6 +772,12 @@ void ble_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_ST
 				printf("[%s] send callback msg fail\r\n", __func__);
 				os_mem_free(conn_msg_matter);
 			}
+                matter_multi_adv_param_array[0].connect_flag == true;
+                matter_multi_adv_stop_by_id(&matter_adv_id); // stop matter adv
+		} else if (local_bd_type == GAP_LOCAL_ADDR_LE_PUBLIC) { // customer
+                link_customer = 2;
+                matter_multi_adv_param_array[1].connect_flag == true;
+		matter_multi_adv_stop_by_id(&customer_adv_id); // stop customer adv
 		}
 #else	   
 	    //send data to matter
@@ -1817,9 +1838,9 @@ T_APP_RESULT ble_matter_adapter_app_profile_callback(T_SERVER_ID service_id, voi
 //send msg to matter
 #if CONFIG_BLE_MATTER_MULTI_ADV
 				if (p_param->event_data.send_data_result.service_id == ble_matter_adapter_service_id) {
-					T_SERVER_APP_CB_DATA *indication_complete_msg_matter = (T_SERVER_APP_CB_DATA *) os_mem_alloc(0, sizeof(T_SERVER_APP_CB_DATA));
-					memset(indication_complete_msg_matter, 0, sizeof(T_SERVER_APP_CB_DATA));
-					indication_complete_msg_matter->event_data.send_data_result.conn_id = p_param->event_data.send_data_result.conn_id;
+					T_MATTER_BLEMGR_TX_COMPLETE_CB_ARG *indication_complete_msg_matter = (T_MATTER_BLEMGR_TX_COMPLETE_CB_ARG *) os_mem_alloc(0, sizeof(T_MATTER_BLEMGR_TX_COMPLETE_CB_ARG));
+					memset(indication_complete_msg_matter, 0, sizeof(T_MATTER_BLEMGR_TX_COMPLETE_CB_ARG));
+					indication_complete_msg_matter->conn_id = p_param->event_data.send_data_result.conn_id;
 					
 					if (ble_matter_adapter_send_callback_msg(BLE_MATTER_MSG_SEND_DATA_COMPLETE_MULTI_ADV, NULL,indication_complete_msg_matter) == false) {
 						printf("\n\r[%s] send callback msg fail\r\n", __func__);

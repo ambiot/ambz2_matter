@@ -131,6 +131,7 @@ typedef struct {
 	void 		*update_adv_mutex;
 	uint16_t 	adv_int_min;
 	uint16_t 	adv_int_max;
+	bool		connect_flag;
 } M_MULTI_ADV_PARAM;
 
 typedef struct {
