@@ -35,7 +35,7 @@
 #endif
 
 #define RTL_HW_CRYPTO
-//#define SUPPORT_HW_SW_CRYPTO
+#define SUPPORT_HW_SW_CRYPTO
 
 #define MBEDTLS_PLATFORM_SNPRINTF_MACRO snprintf
 
