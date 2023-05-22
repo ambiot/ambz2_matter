@@ -28,9 +28,10 @@ uint16_t matter_adv_int_min = 0x20;
 uint16_t matter_adv_int_max = 0x20;
 uint8_t matter_adv_data_length = 0;
 uint8_t matter_adv_data[31] = {0};
-uint8_t customer_adv_data[] = {0x02, 0x01, 0x05, 0x03, 0x03, 0x0A, 0xA0, 0x0F,0x09, 'B', 'L', 'E', '_', 'C', 'U', 'S', 'T', 'O', 'M', 'E', 'R'};
+uint8_t customer_adv_data[] = {0x02, 0x01, 0x05, 0x03, 0x03, 0x0A, 0xA0, 0x0D,0x09, 'B', 'L', 'E', '_', 'C', 'U', 'S', 'T', 'O', 'M', 'E', 'R'};
 uint8_t customer_rsp_data[] = {0x03, 0x19, 0x00,0x00};
-
+uint8_t customer_adv_data_length = sizeof(customer_adv_data);
+uint8_t customer_rsp_data_length = sizeof(customer_rsp_data);
 matter_blemgr_callback matter_blemgr_callback_func = NULL;
 void *matter_blemgr_callback_data = NULL;
 
@@ -61,7 +62,7 @@ int matter_blemgr_start_adv(void) {
 	result = matter_multi_adv_start_by_id(&matter_adv_id, matter_adv_data, matter_adv_data_length, NULL, 0, 1); // the last parameter 0: Matter 1: Customer
 	if (result == 1)
 		return 1;
-	result = matter_multi_adv_start_by_id(&customer_adv_id, customer_adv_data, sizeof(customer_adv_data), customer_rsp_data, sizeof(customer_rsp_data), 2);
+	result = matter_multi_adv_start_by_id(&customer_adv_id, customer_adv_data, customer_adv_data_length, customer_rsp_data, customer_rsp_data_length, 2);
 	if (result == 1)
 		return 1;
 #endif

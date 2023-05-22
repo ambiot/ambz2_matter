@@ -79,8 +79,10 @@ extern void *matter_blemgr_callback_data;
 extern uint16_t matter_adv_interval;
 extern uint16_t matter_adv_int_min;
 extern uint16_t matter_adv_int_max;
-extern uint8_t customer_adv_data;
-extern uint8_t customer_rsp_data;
+extern uint8_t customer_adv_data[];
+extern uint8_t customer_rsp_data[];
+extern uint8_t customer_adv_data_length;
+extern uint8_t customer_rsp_data_length;
 extern uint8_t matter_adv_data[31];
 extern uint8_t matter_adv_data_length;
 extern bool matter_server_is_commissioned();
@@ -685,7 +687,7 @@ void ble_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_ST
 			matter_multi_adv_param_array[0].connect_flag = false;
 
 			if(!matter_server_is_commissioned()) {
-				matter_multi_adv_start_by_id(&matter_adv_id, matter_adv_data, matter_adv_data_length, NULL, 0, 1); // the last parameter 0: Matter 1: Customer
+				matter_multi_adv_start_by_id(&matter_adv_id, matter_adv_data, matter_adv_data_length, NULL, 0, 1); // the last parameter: 1 for Matter; 2 for Customer
 			}
 #if 1  //send data to matter
 			T_MATTER_BLEMGR_GAP_DISCONNECT_CB_ARG *disconnected_msg_matter = (T_MATTER_BLEMGR_GAP_DISCONNECT_CB_ARG *)os_mem_alloc(0, sizeof(T_MATTER_BLEMGR_GAP_DISCONNECT_CB_ARG));
@@ -701,7 +703,7 @@ void ble_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_ST
 		} else if (link_customer == 2) { //customer
 		//if(matter_multi_adv_param_array[1].connect_flag == true) {
 				matter_multi_adv_param_array[1].connect_flag = false;
-				matter_multi_adv_start_by_id(&customer_adv_id, customer_adv_data, sizeof(customer_adv_data), customer_rsp_data, sizeof(customer_rsp_data), 2);
+				matter_multi_adv_start_by_id(&customer_adv_id, customer_adv_data, customer_adv_data_length, customer_rsp_data, customer_rsp_data_length, 2);
 		//}
 		}
 #else
@@ -884,23 +886,17 @@ void ble_matter_adapter_app_handle_conn_param_update_evt(uint8_t conn_id, uint8_
 		le_get_conn_param(GAP_PARAM_CONN_TIMEOUT, &conn_supervision_timeout, conn_id);
 		APP_PRINT_INFO4("ble_matter_adapter_app_handle_conn_param_update_evt update success:conn_id %d, conn_interval 0x%x, conn_slave_latency 0x%x, conn_supervision_timeout 0x%x",
 						conn_id, conn_interval, conn_slave_latency, conn_supervision_timeout);
-		printf("\n\rble_matter_adapter_app_handle_conn_param_update_evt update success:conn_id %d, conn_interval 0x%x, conn_slave_latency 0x%x, conn_supervision_timeout 0x%x \r\n",
-			   conn_id, conn_interval, conn_slave_latency, conn_supervision_timeout);
 	}
 	break;
 
 	case GAP_CONN_PARAM_UPDATE_STATUS_FAIL: {
 		APP_PRINT_ERROR2("ble_matter_adapter_app_handle_conn_param_update_evt update failed: conn_id %d, cause 0x%x",
 						 conn_id, cause);
-		printf("\n\rble_matter_adapter_app_handle_conn_param_update_evt update failed: conn_id %d, cause 0x%x\r\n",
-			   conn_id, cause);
 	}
 	break;
 
 	case GAP_CONN_PARAM_UPDATE_STATUS_PENDING: {
 		APP_PRINT_INFO1("ble_matter_adapter_app_handle_conn_param_update_evt update pending: conn_id %d", conn_id);
-		printf("\n\rble_matter_adapter_app_handle_conn_param_update_evt update pending: conn_id %d\r\n", conn_id);
-
 	}
 	break;
 

@@ -58,7 +58,7 @@ ROMIMG =
 # Uncomment to enable BLE mesh with matter
 #BT_MATTER_MESH_ADAPTER = 1
 
-# Uncomment to enable BLE msmart with matter
+# Uncomment to enable multiple BLE with matter
 BLE_MATTER_ADAPTER = 1
 
 # Include folder list
