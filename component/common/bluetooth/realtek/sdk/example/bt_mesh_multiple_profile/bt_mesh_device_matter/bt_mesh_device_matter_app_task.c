@@ -107,6 +107,7 @@ bool bt_mesh_device_matter_adapter_send_callback_msg(uint16_t msg_type, uint8_t 
 {
 	T_IO_MSG callback_msg;
 	callback_msg.type = msg_type;
+	callback_msg.u.buf = arg;
 
 	if( (msg_type==BT_MATTER_SEND_CB_MSG_SEND_DATA_COMPLETE) || (msg_type==BT_MATTER_SEND_CB_MSG_IND_NTF_ENABLE) ||\
 		(msg_type==BT_MATTER_SEND_CB_MSG_IND_NTF_DISABLE) || (msg_type==BT_MATTER_SEND_CB_MSG_WRITE_CHAR) )
@@ -114,7 +115,6 @@ bool bt_mesh_device_matter_adapter_send_callback_msg(uint16_t msg_type, uint8_t 
 		callback_msg.subtype = cb_type;
 	}
 
-	callback_msg.u.buf = arg;
 	if (bt_mesh_device_matter_callback_queue_handle != NULL) {
 		if (os_msg_send(bt_mesh_device_matter_callback_queue_handle, &callback_msg, 0) == false) {
 			printf("bt matter send msg fail: subtype 0x%x", callback_msg.type);
