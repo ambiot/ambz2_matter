@@ -144,7 +144,7 @@ INCLUDES += -I$(BASEDIR)/../../../component/os/freertos/freertos_v10.0.1/Source/
 INCLUDES += -I$(BASEDIR)/../../../component/os/freertos/freertos_v10.0.1/Source/portable/GCC/ARM_RTL8710C
 INCLUDES += -I$(BASEDIR)/../../../component/os/os_dep/include
 
-INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/bluetooth/
+INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/bluetooth
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/bluetooth/bt_matter_adapter
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/mbedtls
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/port
@@ -181,7 +181,7 @@ CFLAGS += -DCONFIG_SYSTEM_TIME64=0
 endif
 
 # for matter blemgr adapter
-CFLAGS += -DCONFIG_MATTER_BLEMGR_ADAPTER=1
+#CFLAGS += -DCONFIG_MATTER_BLEMGR_ADAPTER=1
 
 # CHIP options
 # -------------------------------------------------------------------

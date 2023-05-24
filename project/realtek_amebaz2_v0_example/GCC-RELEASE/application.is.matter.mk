@@ -59,7 +59,7 @@ ROMIMG =
 #BT_MATTER_MESH_ADAPTER = 1
 
 # Uncomment to enable multiple BLE with matter
-BLE_MATTER_ADAPTER = 1
+#BLE_MATTER_ADAPTER = 1
 
 # Include folder list
 # -------------------------------------------------------------------
