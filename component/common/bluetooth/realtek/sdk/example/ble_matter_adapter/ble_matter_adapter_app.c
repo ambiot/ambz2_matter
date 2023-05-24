@@ -683,12 +683,11 @@ void ble_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_ST
 		memset(&ble_matter_adapter_app_link_table[conn_id], 0, sizeof(T_APP_LINK));
 #if CONFIG_BLE_MATTER_MULTI_ADV
 		if (link_customer == 1) { //matter
-        //if(matter_multi_adv_param_array[0].connect_flag == true) {
 			matter_multi_adv_param_array[0].connect_flag = false;
 
-			if(!matter_server_is_commissioned()) {
-				matter_multi_adv_start_by_id(&matter_adv_id, matter_adv_data, matter_adv_data_length, NULL, 0, 1); // the last parameter: 1 for Matter; 2 for Customer
-			}
+			/* Matter ADV will be restarted from Matter upper layer */
+			//matter_multi_adv_start_by_id(&matter_adv_id, matter_adv_data, matter_adv_data_length, NULL, 0, 1); // the last parameter: 1 for Matter; 2 for Customer
+
 #if 1  //send data to matter
 			T_MATTER_BLEMGR_GAP_DISCONNECT_CB_ARG *disconnected_msg_matter = (T_MATTER_BLEMGR_GAP_DISCONNECT_CB_ARG *)os_mem_alloc(0, sizeof(T_MATTER_BLEMGR_GAP_DISCONNECT_CB_ARG));
 			memset(disconnected_msg_matter, 0, sizeof(T_MATTER_BLEMGR_GAP_DISCONNECT_CB_ARG));
@@ -699,12 +698,11 @@ void ble_matter_adapter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_ST
 				os_mem_free(disconnected_msg_matter);
 			}
 #endif
-		//}
 		} else if (link_customer == 2) { //customer
-		//if(matter_multi_adv_param_array[1].connect_flag == true) {
-				matter_multi_adv_param_array[1].connect_flag = false;
-				matter_multi_adv_start_by_id(&customer_adv_id, customer_adv_data, customer_adv_data_length, customer_rsp_data, customer_rsp_data_length, 2);
-		//}
+			matter_multi_adv_param_array[1].connect_flag = false;
+
+			/* Customer ADV can be restarted on customer's application */
+			matter_multi_adv_start_by_id(&customer_adv_id, customer_adv_data, customer_adv_data_length, customer_rsp_data, customer_rsp_data_length, 2); // the last parameter: 1 for Matter; 2 for Customer
 		}
 #else
         //send data to matter
