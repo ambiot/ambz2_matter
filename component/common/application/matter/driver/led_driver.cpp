@@ -8,6 +8,8 @@ void MatterLED::Init(PinName pin)
     mPwm_obj                        = (pwmout_t*) pvPortMalloc(sizeof(pwmout_t));
 
     pwmout_init(mPwm_obj, pin);
+    pwmout_period_us(mPwm_obj, 20000);
+    pwmout_start(mPwm_obj);
 
     mRgb                            = false;
     mState                          = false;

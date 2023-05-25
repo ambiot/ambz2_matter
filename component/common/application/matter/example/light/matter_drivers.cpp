@@ -1,5 +1,6 @@
 #include "matter_drivers.h"
 #include "matter_interaction.h"
+#include "matter_id.h"
 #include "led_driver.h"
 #include "gpio_irq_api.h"
 
@@ -50,6 +51,7 @@ CHIP_ERROR matter_driver_led_init()
 CHIP_ERROR matter_driver_led_set_startup_value()
 {
     CHIP_ERROR err = CHIP_NO_ERROR;
+#if 0
     bool LEDOnOffValue = 0;
     DataModel::Nullable<uint8_t> LEDCurrentLevelValue;
     EmberAfStatus getonoffstatus;
@@ -68,6 +70,24 @@ CHIP_ERROR matter_driver_led_set_startup_value()
 
     // Set LED to currentlevel value
     led.SetBrightness(LEDCurrentLevelValue.Value());
+#else
+    char key[26];
+    uint8_t LEDOnOffValue;
+    uint32_t LEDCurrentLevelValue;
+
+    sprintf(key, "g/a/%x/%ld/%ld", 1 /* endpoint */, MATTER_ONOFF_CLUSTER_ID, MATTER_ONOFF_ONOFF_ATTRIBUTE_ID);
+    getPref_bool_new(key, key, &LEDOnOffValue);
+
+    sprintf(key, "g/a/%x/%ld/%ld", 1 /* endpoint */, MATTER_LEVELCONTROL_CLUSTER_ID, MATTER_LEVELCONTROL_CURRENTLEVEL_ATTRIBUTE_ID);
+    getPref_u32_new(key, key, &LEDCurrentLevelValue);
+
+    // Set LED to onoff value
+    led.Set(LEDOnOffValue);
+
+    // Set LED to currentlevel value
+    led.SetBrightness(LEDCurrentLevelValue);
+
+#endif
 
 exit:
     if (err == CHIP_ERROR_INTERNAL)

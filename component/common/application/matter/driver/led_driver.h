@@ -2,6 +2,7 @@
 
 #include <platform_stdlib.h>
 #include "pwmout_api.h"
+#include "pwmout_ex_api.h"
 
 class MatterLED
 {

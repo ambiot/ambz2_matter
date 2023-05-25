@@ -13,19 +13,11 @@
 
 static void example_matter_light_task(void *pvParameters)
 {
-    while(!(wifi_is_up(RTW_STA_INTERFACE) || wifi_is_up(RTW_AP_INTERFACE))) {
-        vTaskDelay(500);
-    }
-
-    ChipLogProgress(DeviceLayer, "Lighting example!\n");
-
     CHIP_ERROR err = CHIP_NO_ERROR;
 
     initPref();     // init NVS
-    //
-    err = matter_core_start();
-    if (err != CHIP_NO_ERROR)
-        ChipLogProgress(DeviceLayer, "matter_core_start failed!\n");
+    registerPref();
+    registerPref2();
 
     err = matter_driver_led_init();
     if (err != CHIP_NO_ERROR)
@@ -34,6 +26,16 @@ static void example_matter_light_task(void *pvParameters)
     err = matter_driver_led_set_startup_value();
     if (err != CHIP_NO_ERROR)
         ChipLogProgress(DeviceLayer, "matter_driver_led_set_startup_value failed!\n");
+
+    while(!(wifi_is_up(RTW_STA_INTERFACE) || wifi_is_up(RTW_AP_INTERFACE))) {
+        vTaskDelay(500);
+    }
+
+    ChipLogProgress(DeviceLayer, "Lighting example!\n");
+
+    err = matter_core_start();
+    if (err != CHIP_NO_ERROR)
+        ChipLogProgress(DeviceLayer, "matter_core_start failed!\n");
 
     err = matter_driver_button_init();
     if (err != CHIP_NO_ERROR)

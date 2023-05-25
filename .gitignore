@@ -2,7 +2,12 @@
 *.ewt
 *.d
 *.o
+*.oo
 *.su
 *.s
+*.i
+*.ii
 tools
 libsrc
+project/realtek_amebaz2_v0_example/GCC-RELEASE/bootloader/
+project/realtek_amebaz2_v0_example/GCC-RELEASE/application_is/
