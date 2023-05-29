@@ -47,7 +47,7 @@ static void example_matter_thermostat_task(void *pvParameters)
     if (err != CHIP_NO_ERROR)
         ChipLogProgress(DeviceLayer, "matter_interaction_start_uplink failed!\n");
 
-    while(1);
+    vTaskDelete(NULL);
 }
 
 extern "C" void example_matter_thermostat(void)
