@@ -129,7 +129,6 @@ void matter_core_device_callback_internal(const ChipDeviceEvent * event, intptr_
 
 void matter_core_init_server(intptr_t context)
 {
-    
     xTaskHandle task_to_notify = reinterpret_cast<xTaskHandle>(context);
     // Init ZCL Data Model and CHIP App Server
     static chip::CommonCaseDeviceServerInitParams initParams;
