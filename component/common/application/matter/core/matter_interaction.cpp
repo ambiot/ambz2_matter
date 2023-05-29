@@ -55,7 +55,7 @@ void DownlinkTask(void * pvParameter)
     // Loop here and keep listening on the queue for Downlink (Firmware application to matter)
     while (true)
     {
-        BaseType_t eventReceived = xQueueReceive(DownlinkEventQueue, &event, pdMS_TO_TICKS(10));
+        BaseType_t eventReceived = xQueueReceive(DownlinkEventQueue, &event, portMAX_DELAY);
         while (eventReceived == pdTRUE)
         {
             DispatchDownlinkEvent(&event);
@@ -117,7 +117,7 @@ void UplinkTask(void * pvParameter)
     // Loop here and keep listening on the queue for Uplink (matter to Firmware application)
     while (true)
     {
-        BaseType_t eventReceived = xQueueReceive(UplinkEventQueue, &event, pdMS_TO_TICKS(10));
+        BaseType_t eventReceived = xQueueReceive(UplinkEventQueue, &event, portMAX_DELAY);
         while (eventReceived == pdTRUE)
         {
             DispatchUplinkEvent(&event);
