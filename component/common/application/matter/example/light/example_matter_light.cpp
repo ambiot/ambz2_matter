@@ -47,7 +47,7 @@ static void example_matter_light_task(void *pvParameters)
     if (err != CHIP_NO_ERROR)
         ChipLogProgress(DeviceLayer, "matter_interaction_start_uplink failed!\n");
 
-    vTaskDelete(NULL);
+    while(1);
 }
 
 extern "C" void example_matter_light(void)
