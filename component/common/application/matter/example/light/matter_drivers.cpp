@@ -50,36 +50,35 @@ CHIP_ERROR matter_driver_led_init()
 
 CHIP_ERROR matter_driver_led_set_startup_value()
 {
-    CHIP_ERROR err = CHIP_NO_ERROR;
-#if 0
-    bool LEDOnOffValue = 0;
-    DataModel::Nullable<uint8_t> LEDCurrentLevelValue;
-    EmberAfStatus getonoffstatus;
-    EmberAfStatus getcurrentlevelstatus;
+    // in order to get the startup value as quickly as possible from bootup
+    // we directly read from DCT instead of waiting for matter to initialize and reading from RAM
 
-    chip::DeviceLayer::PlatformMgr().LockChipStack();
-    getonoffstatus = Clusters::OnOff::Attributes::OnOff::Get(1, &LEDOnOffValue);
-    VerifyOrExit(getonoffstatus == EMBER_ZCL_STATUS_SUCCESS, err = CHIP_ERROR_INTERNAL);
-
-    getcurrentlevelstatus = Clusters::LevelControl::Attributes::CurrentLevel::Get(1, LEDCurrentLevelValue);
-    VerifyOrExit(getcurrentlevelstatus == EMBER_ZCL_STATUS_SUCCESS, err = CHIP_ERROR_INTERNAL);
-    chip::DeviceLayer::PlatformMgr().UnlockChipStack();
-
-    // Set LED to onoff value
-    led.Set(LEDOnOffValue);
-
-    // Set LED to currentlevel value
-    led.SetBrightness(LEDCurrentLevelValue.Value());
-#else
     char key[26];
     uint8_t LEDOnOffValue;
-    uint32_t LEDCurrentLevelValue;
+    uint8_t LEDStartupOnOffValue;
+    uint8_t LEDCurrentLevelValue;
 
-    sprintf(key, "g/a/%x/%ld/%ld", 1 /* endpoint */, MATTER_ONOFF_CLUSTER_ID, MATTER_ONOFF_ONOFF_ATTRIBUTE_ID);
+    sprintf(key, "g/a/%x/%" PRIx32 "/%" PRIx32, 1 /* endpoint */, MATTER_ONOFF_CLUSTER_ID, MATTER_ONOFF_ONOFF_ATTRIBUTE_ID);
     getPref_bool_new(key, key, &LEDOnOffValue);
 
-    sprintf(key, "g/a/%x/%ld/%ld", 1 /* endpoint */, MATTER_LEVELCONTROL_CLUSTER_ID, MATTER_LEVELCONTROL_CURRENTLEVEL_ATTRIBUTE_ID);
-    getPref_u32_new(key, key, &LEDCurrentLevelValue);
+    sprintf(key, "g/a/%x/%" PRIx32 "/%" PRIx32, 1 /* endpoint */, MATTER_LEVELCONTROL_CLUSTER_ID, MATTER_LEVELCONTROL_CURRENTLEVEL_ATTRIBUTE_ID);
+    getPref_bool_new(key, key, &LEDCurrentLevelValue);
+
+    sprintf(key, "g/a/%x/%" PRIx32 "/%" PRIx32, 1 /* endpoint */, MATTER_ONOFF_CLUSTER_ID, MATTER_ONOFF_STARTUPONOFF_ATTRIBUTE_ID);
+    getPref_bool_new(key, key, &LEDStartupOnOffValue);
+
+    switch(LEDStartupOnOffValue)
+    {
+    case 0: // off
+        LEDOnOffValue = 0;
+        break;
+    case 1: // on
+        LEDOnOffValue = 1;
+        break;
+    case 2: // toggle
+        LEDOnOffValue = !LEDOnOffValue;
+        break;
+    }
 
     // Set LED to onoff value
     led.Set(LEDOnOffValue);
@@ -87,14 +86,7 @@ CHIP_ERROR matter_driver_led_set_startup_value()
     // Set LED to currentlevel value
     led.SetBrightness(LEDCurrentLevelValue);
 
-#endif
-
-exit:
-    if (err == CHIP_ERROR_INTERNAL)
-    {
-        chip::DeviceLayer::PlatformMgr().UnlockChipStack();
-    }
-    return err;
+    return CHIP_NO_ERROR;
 }
 
 void matter_driver_on_identify_start(Identify * identify)
