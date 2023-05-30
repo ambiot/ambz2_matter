@@ -53,19 +53,19 @@ CHIP_ERROR matter_driver_led_set_startup_value()
     // in order to get the startup value as quickly as possible from bootup
     // we directly read from DCT instead of waiting for matter to initialize and reading from RAM
 
-    char key[26];
+    char key[26]; // we only need 26 char max
     uint8_t LEDOnOffValue;
     uint8_t LEDStartupOnOffValue;
     uint8_t LEDCurrentLevelValue;
-
-    sprintf(key, "g/a/%x/%" PRIx32 "/%" PRIx32, 1 /* endpoint */, MATTER_ONOFF_CLUSTER_ID, MATTER_ONOFF_ONOFF_ATTRIBUTE_ID);
-    getPref_bool_new(key, key, &LEDOnOffValue);
 
     sprintf(key, "g/a/%x/%" PRIx32 "/%" PRIx32, 1 /* endpoint */, MATTER_LEVELCONTROL_CLUSTER_ID, MATTER_LEVELCONTROL_CURRENTLEVEL_ATTRIBUTE_ID);
     getPref_bool_new(key, key, &LEDCurrentLevelValue);
 
     sprintf(key, "g/a/%x/%" PRIx32 "/%" PRIx32, 1 /* endpoint */, MATTER_ONOFF_CLUSTER_ID, MATTER_ONOFF_STARTUPONOFF_ATTRIBUTE_ID);
     getPref_bool_new(key, key, &LEDStartupOnOffValue);
+
+    sprintf(key, "g/a/%x/%" PRIx32 "/%" PRIx32, 1 /* endpoint */, MATTER_ONOFF_CLUSTER_ID, MATTER_ONOFF_ONOFF_ATTRIBUTE_ID);
+    getPref_bool_new(key, key, &LEDOnOffValue);
 
     switch(LEDStartupOnOffValue)
     {
@@ -77,6 +77,7 @@ CHIP_ERROR matter_driver_led_set_startup_value()
         break;
     case 2: // toggle
         LEDOnOffValue = !LEDOnOffValue;
+        setPref_new(key, key, &LEDOnOffValue, sizeof(LEDOnOffValue)); // update here so when matter initialize, it will have the new value
         break;
     }
 
