@@ -11,13 +11,13 @@
 #include "matter_drivers.h"
 #include "matter_interaction.h"
 
-static void example_matter_light_task(void *pvParameters)
+static void example_matter_aircon_task(void *pvParameters)
 {
     while(!(wifi_is_up(RTW_STA_INTERFACE) || wifi_is_up(RTW_AP_INTERFACE))) {
         vTaskDelay(500);
     }
 
-    ChipLogProgress(DeviceLayer, "Lighting example!\n");
+    ChipLogProgress(DeviceLayer, "Room Air Con example!\n");
 
     CHIP_ERROR err = CHIP_NO_ERROR;
 
@@ -50,8 +50,8 @@ static void example_matter_light_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
-extern "C" void example_matter_light(void)
+extern "C" void example_matter_aircon(void)
 {
-    if(xTaskCreate(example_matter_light_task, ((const char*)"example_matter_task_thread"), 2048, NULL, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
-        ChipLogProgress(DeviceLayer, "\n\r%s xTaskCreate(example_matter_light) failed", __FUNCTION__);
+    if(xTaskCreate(example_matter_aircon_task, ((const char*)"example_matter_task_thread"), 2048, NULL, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
+        ChipLogProgress(DeviceLayer, "\n\r%s xTaskCreate(example_matter_aircon) failed", __FUNCTION__);
 }
