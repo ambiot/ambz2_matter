@@ -22,6 +22,7 @@ struct AppEvent
        uint16_t _u16;
        uint32_t _u32;
        uint64_t _u64;
+       char _str[256];
     } value;
     EventHandler mHandler;
 };
