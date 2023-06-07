@@ -199,7 +199,6 @@ SRC_CPP += $(CHIPDIR)/src/app/util/ClientMonitoringRegistrationTable.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/client-api.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/DataModelHandler.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/ember-compatibility-functions.cpp
-SRC_CPP += $(CHIPDIR)/src/app/util/ember-print.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/generic-callback-stubs.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/message.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/util.cpp
