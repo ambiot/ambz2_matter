@@ -161,7 +161,7 @@ void MatterPostAttributeChangeCallback(const chip::app::ConcreteAttributePath & 
     }
     else if (size <= 8)
     {
-        memcpy(&uplink_event.value._u32, value, size);
+        memcpy(&uplink_event.value._u64, value, size);
     }
     else if (size <= 256) // TODO: check max attribute length
     {
