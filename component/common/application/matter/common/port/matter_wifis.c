@@ -280,16 +280,19 @@ int matter_wifi_is_connected_to_ap(void)
     return wifi_is_connected_to_ap();
 }
 
-void matter_lwip_dhcp(uint8_t idx, uint8_t dhcp_state)
+void matter_lwip_dhcp()
 {
-    if (dhcp_state == DHCP_START)
-    {
-        LwIP_DHCP(0, DHCP_START);
-    }
-    else if (dhcp_state == DHCP6_START)
-    {
-        LwIP_DHCP6(0, DHCP6_START);
-    }
+    LwIP_DHCP(0, DHCP_START);
+}
+
+void matter_lwip_dhcp6(void)
+{
+    LwIP_DHCP6(0, DHCP6_START);
+}
+
+void matter_lwip_releaseip(void)
+{
+    LwIP_ReleaseIP(0);
 }
 
 int matter_wifi_get_ap_bssid(unsigned char *bssid)
