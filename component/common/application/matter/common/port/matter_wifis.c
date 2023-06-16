@@ -280,16 +280,62 @@ int matter_wifi_is_connected_to_ap(void)
     return wifi_is_connected_to_ap();
 }
 
-uint8_t matter_lwip_dhcp(uint8_t idx, uint8_t dhcp_state)
+void matter_lwip_dhcp()
 {
-    if (dhcp_state == DHCP_START)
+    LwIP_DHCP(0, DHCP_START);
+}
+
+void matter_lwip_dhcp6(void)
+{
+    LwIP_DHCP6(0, DHCP6_START);
+}
+
+void matter_lwip_releaseip(void)
+{
+    LwIP_ReleaseIP(0);
+}
+
+int matter_wifi_get_ap_bssid(unsigned char *bssid)
+{
+    return wifi_get_ap_bssid(bssid);
+}
+
+int matter_wifi_get_network_mode(rtw_network_mode_t *pmode)
+{
+    return wifi_get_network_mode(pmode);
+}
+
+int matter_wifi_get_security_type(const char *ifname, uint16_t *alg, uint8_t *key_idx, uint8_t *passphrase)
+{
+    if (wext_get_enc_ext(ifname, alg, key_idx, passphrase) < 0)
     {
-        LwIP_DHCP(0, DHCP_START);
+        return RTW_ERROR;
     }
-    else if (dhcp_state == DHCP6_START)
+    return RTW_SUCCESS;
+}
+
+int matter_wifi_get_wifi_channel_number(const char *ifname, uint8_t *ch)
+{
+    if (wext_get_channel(ifname, ch) < 0)
     {
-        LwIP_DHCP6(0, DHCP6_START);
+        return RTW_ERROR;
     }
+    return RTW_SUCCESS;
+}
+
+int matter_wifi_get_rssi(int *prssi)
+{
+    return wifi_get_rssi(prssi);
+}
+
+int matter_wifi_get_mac_address(char *mac)
+{
+    return wifi_get_mac_address(mac);
+}
+
+int matter_wifi_get_last_error()
+{
+    return wifi_get_last_error();
 }
 
 #ifdef __cplusplus

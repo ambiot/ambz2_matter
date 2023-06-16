@@ -17,6 +17,7 @@ extern "C" {
 #include <stddef.h> /* for size_t */
 #include <stdarg.h>
 #include <platform_opts_bt.h>
+#include <dct.h>
 
 #if defined(CONFIG_BT_MATTER_ADAPTER) && CONFIG_BT_MATTER_ADAPTER
 /** @brief  Config local address type: 0-pulic address, 1-static random address, 2-random resolvable private address */
