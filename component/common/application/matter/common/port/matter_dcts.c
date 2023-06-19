@@ -257,7 +257,7 @@ s32 deleteKey(const char *domain, const char *key)
         }
         ret = dct_delete_variable(&handle, key);
         dct_close_module(&handle);
-        if (ret != DCT_SUCCESS)
+        if (ret == DCT_SUCCESS) // return success once deleted
             return ret;
     }
 
@@ -273,7 +273,7 @@ s32 deleteKey(const char *domain, const char *key)
         }
         ret = dct_delete_variable2(&handle, key);
         dct_close_module2(&handle);
-        if (ret != DCT_SUCCESS)
+        if (ret == DCT_SUCCESS) // return success once deleted
             return ret;
     }
 
