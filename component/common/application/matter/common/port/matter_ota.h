@@ -2,8 +2,6 @@
 extern "C" {
 #endif
 
-#define AMEBA_OTA_FIRMWARE_LENGTH   0x1AC000
-
 uint8_t matter_ota_get_header_size();
 void matter_ota_prepare_partition();
 int8_t matter_ota_store_header(uint8_t *data, uint32_t size);

@@ -17,6 +17,7 @@
 
 #define MATTER_OTA_HEADER_SIZE 32
 #define MATTER_OTA_SECTOR_SIZE 4096
+#define MATTER_OTA_FIRMWARE_LENGTH   0x1AC000
 
 static flash_t matter_ota_flash;
 bool matter_ota_first_sector_written = false;
@@ -145,7 +146,7 @@ void matter_ota_platform_reset()
 
 static void matter_ota_abort_task(void *pvParameters)
 {
-    uint32_t newFWBlkSize = (AMEBA_OTA_FIRMWARE_LENGTH - 1) / 4096 + 1;
+    uint32_t newFWBlkSize = (MATTER_OTA_FIRMWARE_LENGTH - 1) / 4096 + 1;
     printf("Cleaning up aborted OTA\r\n");
     printf("Erasing %d sectors\r\n", newFWBlkSize);
 
