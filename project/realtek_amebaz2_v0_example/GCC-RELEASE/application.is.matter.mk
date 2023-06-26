@@ -387,6 +387,7 @@ SRC_C += ../../../component/common/utilities/gb2unicode.c
 
 #matter - app
 SRC_C += ../../../component/common/application/matter/common/port/matter_dcts.c
+SRC_C += ../../../component/common/application/matter/common/port/matter_ota.c
 SRC_C += ../../../component/common/application/matter/common/port/matter_timers.c
 SRC_C += ../../../component/common/application/matter/common/port/matter_utils.c
 SRC_C += ../../../component/common/application/matter/common/port/matter_wifis.c
