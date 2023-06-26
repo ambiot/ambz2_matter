@@ -1,4 +1,4 @@
-#include "matter_ota.h"
+#include "matter_ota_initializer.h"
 #include "app/clusters/ota-requestor/DefaultOTARequestorStorage.h"
 #include <app/clusters/ota-requestor/BDXDownloader.h>
 #include <app/clusters/ota-requestor/DefaultOTARequestor.h>
@@ -16,7 +16,7 @@ BDXDownloader gDownloader;
 AmebaOTAImageProcessor gImageProcessor;
 } // namespace
 
-void matter_ota_init()
+void matter_ota_initializer()
 {
     SetRequestorInstance(&gRequestorCore);
     gRequestorStorage.Init(chip::Server::GetInstance().GetPersistentStorage());
