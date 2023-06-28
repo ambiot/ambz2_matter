@@ -5,7 +5,7 @@
 #include "platform/platform_stdlib.h"
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
 #include "stdbool.h"
@@ -29,7 +29,12 @@ uint8_t matter_ota_header_size = 0; // variable to track size of ota header
 uint8_t matter_ota_buffer[MATTER_OTA_SECTOR_SIZE]; // 4KB buffer to be written to one sector
 uint16_t matter_ota_buffer_size = 0; // variable to track size of buffer
 
-uint8_t matter_ota_get_header_size()
+uint8_t matter_ota_get_total_header_size()
+{
+    return MATTER_OTA_HEADER_SIZE;
+}
+
+uint8_t matter_ota_get_current_header_size()
 {
     return matter_ota_header_size;
 }
@@ -146,7 +151,7 @@ void matter_ota_platform_reset()
 
 static void matter_ota_abort_task(void *pvParameters)
 {
-    uint32_t newFWBlkSize = (MATTER_OTA_FIRMWARE_LENGTH - 1) / 4096 + 1;
+    uint32_t newFWBlkSize = (MATTER_OTA_FIRMWARE_LENGTH - 1) / MATTER_OTA_SECTOR_SIZE + 1;
     printf("Cleaning up aborted OTA\r\n");
     printf("Erasing %d sectors\r\n", newFWBlkSize);
 
@@ -155,7 +160,7 @@ static void matter_ota_abort_task(void *pvParameters)
         device_mutex_lock(RT_DEV_LOCK_FLASH);
         for (size_t i=0; i<newFWBlkSize; i++)
         {
-            flash_erase_sector(&matter_ota_flash, matter_ota_new_firmware_addr + (i * 4096));
+            flash_erase_sector(&matter_ota_flash, matter_ota_new_firmware_addr + (i * MATTER_OTA_SECTOR_SIZE));
         }
         device_mutex_unlock(RT_DEV_LOCK_FLASH);
     }
