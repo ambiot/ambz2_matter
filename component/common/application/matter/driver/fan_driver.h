@@ -14,6 +14,7 @@ public:
     chip::app::Clusters::FanControl::FanModeType mapPercentToMode(uint8_t percent);
     uint8_t mapModeToPercent(uint8_t mode);
 
+private:
     pwmout_t *mPwm_obj = NULL;
     uint8_t mMode;
     uint8_t mPercent;

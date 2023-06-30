@@ -134,54 +134,53 @@ void matter_driver_uplink_update_handler(AppEvent *aEvent)
     case Clusters::FanControl::Id:
         if (path.mAttributeId == Clusters::FanControl::Attributes::PercentSetting::Id)
         {
-            printf("%s %d percent setting: %d\r\n", __FUNCTION__, __LINE__, aEvent->value._u8);
-            fan.setFanMode((uint8_t) fan.mapPercentToMode(aEvent->value._u8));
+            // fan.setFanMode((uint8_t) fan.mapPercentToMode(aEvent->value._u8));
             fan.setFanSpeedPercent(aEvent->value._u8);
 
-            chip::DeviceLayer::PlatformMgr().LockChipStack();
-            status = Clusters::FanControl::Attributes::FanMode::Get(1, &FanModeValue);
-            if (status != EMBER_ZCL_STATUS_SUCCESS)
-            {
-                ChipLogError(DeviceLayer, "Get fan mode failed: %x", status);
-            }
-            chip::DeviceLayer::PlatformMgr().UnlockChipStack();
-            
-            if ((uint8_t) FanModeValue != fan.mMode)
-            {
-                printf("%s %d \r\n", __FUNCTION__, __LINE__);
-                chip::DeviceLayer::PlatformMgr().LockChipStack();
-                status = Clusters::FanControl::Attributes::FanMode::Set(1, fan.mapPercentToMode(aEvent->value._u8));
-                if (status != EMBER_ZCL_STATUS_SUCCESS)
-                {
-                    ChipLogError(DeviceLayer, "Updating fan mode failed: %x", status);
-                }
-                chip::DeviceLayer::PlatformMgr().UnlockChipStack();
-            }
+            // chip::DeviceLayer::PlatformMgr().LockChipStack();
+            // status = Clusters::FanControl::Attributes::FanMode::Get(1, &FanModeValue);
+            // if (status != EMBER_ZCL_STATUS_SUCCESS)
+            // {
+            //     ChipLogError(DeviceLayer, "Get fan mode failed: %x", status);
+            // }
+            // chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+            // 
+            // if ((uint8_t) FanModeValue != fan.mMode)
+            // {
+            //     printf("%s %d \r\n", __FUNCTION__, __LINE__);
+            //     chip::DeviceLayer::PlatformMgr().LockChipStack();
+            //     status = Clusters::FanControl::Attributes::FanMode::Set(1, fan.mapPercentToMode(aEvent->value._u8));
+            //     if (status != EMBER_ZCL_STATUS_SUCCESS)
+            //     {
+            //         ChipLogError(DeviceLayer, "Updating fan mode failed: %x", status);
+            //     }
+            //     chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+            // }
         }
         else if (path.mAttributeId == Clusters::FanControl::Attributes::FanMode::Id)
         {
             fan.setFanMode(aEvent->value._u8);
-            fan.setFanSpeedPercent(fan.mapModeToPercent(aEvent->value._u8));
+            // fan.setFanSpeedPercent(fan.mapModeToPercent(aEvent->value._u8));
             
-            chip::DeviceLayer::PlatformMgr().LockChipStack();
-            status = Clusters::FanControl::Attributes::PercentSetting::Get(1, FanPercentSettingValue);
-            if (status != EMBER_ZCL_STATUS_SUCCESS)
-            {
-                ChipLogError(DeviceLayer, "Get fan percent failed: %x", status);
-            }
-            chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+            // chip::DeviceLayer::PlatformMgr().LockChipStack();
+            // status = Clusters::FanControl::Attributes::PercentSetting::Get(1, FanPercentSettingValue);
+            // if (status != EMBER_ZCL_STATUS_SUCCESS)
+            // {
+            //     ChipLogError(DeviceLayer, "Get fan percent failed: %x", status);
+            // }
+            // chip::DeviceLayer::PlatformMgr().UnlockChipStack();
 
-            if (FanPercentSettingValue.Value() != fan.mPercent)
-            {
-                printf("%s %d \r\n", __FUNCTION__, __LINE__);
-                chip::DeviceLayer::PlatformMgr().LockChipStack();
-                status = Clusters::FanControl::Attributes::PercentSetting::Set(1, fan.mapModeToPercent(aEvent->value._u8));
-                if (status != EMBER_ZCL_STATUS_SUCCESS)
-                {
-                    ChipLogError(DeviceLayer, "Updating fan percent failed: %x", status);
-                }
-                chip::DeviceLayer::PlatformMgr().UnlockChipStack();
-            }
+            // if (FanPercentSettingValue.Value() != fan.mPercent)
+            // {
+            //     printf("%s %d \r\n", __FUNCTION__, __LINE__);
+            //     chip::DeviceLayer::PlatformMgr().LockChipStack();
+            //     status = Clusters::FanControl::Attributes::PercentSetting::Set(1, fan.mapModeToPercent(aEvent->value._u8));
+            //     if (status != EMBER_ZCL_STATUS_SUCCESS)
+            //     {
+            //         ChipLogError(DeviceLayer, "Updating fan percent failed: %x", status);
+            //     }
+            //     chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+            // }
         }
         break;
     case Clusters::Identify::Id:
