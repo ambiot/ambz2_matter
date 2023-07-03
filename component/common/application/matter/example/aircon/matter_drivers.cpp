@@ -108,6 +108,14 @@ void matter_driver_uplink_update_handler(AppEvent *aEvent)
 
     switch(path.mClusterId)
     {
+    case Clusters::OnOff::Id:
+        if (path.mAttributeId == Clusters::OnOff::Attributes::OnOff::Id)
+        {
+            fan.setFanMode((aEvent->value._u8 == 1) ? 4 /* kOn */ : 0 /* kOff */);
+            chip::DeviceLayer::PlatformMgr().LockChipStack();
+            Clusters::FanControl::Attributes::FanMode::Set(1, (aEvent->value._u8 == 1) ? Clusters::FanControl::FanModeType::kOn : Clusters::FanControl::FanModeType::kOff);
+            chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+        }
     case Clusters::FanControl::Id:
         if (path.mAttributeId == Clusters::FanControl::Attributes::PercentSetting::Id)
         {
