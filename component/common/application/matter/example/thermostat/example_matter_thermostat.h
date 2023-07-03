@@ -1,6 +1,6 @@
-#ifndef EXAMPLE_MATTER_LIGHT_H
-#define EXAMPLE_MATTER_LIGHT_H
+#ifndef EXAMPLE_MATTER_THERMOSTAT_H
+#define EXAMPLE_MATTER_THERMOSTAT_H
 
-void example_matter_task(void);
+void example_matter_thermostat_task(void);
 
 #endif /* EXAMPLE_MATTER_LIGHT_H */

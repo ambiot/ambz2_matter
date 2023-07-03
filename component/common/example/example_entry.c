@@ -360,9 +360,13 @@
 
 #if defined(CONFIG_EXAMPLE_MATTER) && (CONFIG_EXAMPLE_MATTER == 1)
 #if defined(CONFIG_EXAMPLE_MATTER_CHIPTEST) && (CONFIG_EXAMPLE_MATTER_CHIPTEST == 1)
-#include <example_matter.h>
+#include <chiptest/example_matter.h>
 #elif defined(CONFIG_EXAMPLE_MATTER_LIGHT) && (CONFIG_EXAMPLE_MATTER_LIGHT == 1)
-#include <example_matter_light.h>
+#include <light/example_matter_light.h>
+#elif defined(CONFIG_EXAMPLE_MATTER_THERMOSTAT) && (CONFIG_EXAMPLE_MATTER_THERMOSTAT == 1)
+#include <thermostat/example_matter_thermostat.h>
+#elif defined(CONFIG_EXAMPLE_MATTER_AIRCON) && (CONFIG_EXAMPLE_MATTER_AIRCON == 1)
+#include <aircon/example_matter_aircon.h>
 #endif
 #endif
 
@@ -850,6 +854,9 @@ example_hilink();
 #elif defined(CONFIG_EXAMPLE_MATTER_THERMOSTAT) && (CONFIG_EXAMPLE_MATTER_THERMOSTAT == 1)
     extern void example_matter_thermostat();
     example_matter_thermostat();
+#elif defined(CONFIG_EXAMPLE_MATTER_AIRCON) && (CONFIG_EXAMPLE_MATTER_AIRCON == 1)
+    extern void example_matter_aircon();
+    example_matter_aircon();
 #endif
 #endif
 

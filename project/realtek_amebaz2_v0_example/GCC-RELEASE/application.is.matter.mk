@@ -195,8 +195,7 @@ INCLUDES += -I../../../component/common/application/matter/common/port
 INCLUDES += -I../../../component/common/application/matter/common/mbedtls
 INCLUDES += -I../../../component/common/application/matter/common/protobuf
 INCLUDES += -I../../../component/common/application/matter/common/protobuf/nanopb
-INCLUDES += -I../../../component/common/application/matter/example/chiptest
-INCLUDES += -I../../../component/common/application/matter/example/light
+INCLUDES += -I../../../component/common/application/matter/example
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/src/app/hrp/gap
 
 # Source file list
