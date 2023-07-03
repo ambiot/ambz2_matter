@@ -19,9 +19,6 @@ void MatterFan::setFanMode(uint8_t mode)
         return;
 
     mMode = mode;
-    printf("%s %d\r\n", __FUNCTION__, __LINE__);
-    printf("mode: %d\r\n", mMode);
-    printf("percent: %d\r\n", mPercent);
 }
 
 void MatterFan::setFanSpeedPercent(uint8_t percent)
@@ -33,9 +30,6 @@ void MatterFan::setFanSpeedPercent(uint8_t percent)
     mPercent = percent;
     float duty_cycle = (float) (percent) / 100;
     pwmout_write(mPwm_obj, duty_cycle);
-    printf("%s %d\r\n", __FUNCTION__, __LINE__);
-    printf("mode: %d\r\n", mMode);
-    printf("percent: %d\r\n", mPercent);
 }
 
 chip::app::Clusters::FanControl::FanModeType MatterFan::mapPercentToMode(uint8_t percent)

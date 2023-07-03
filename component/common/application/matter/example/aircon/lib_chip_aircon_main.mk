@@ -228,6 +228,7 @@ SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_core.cp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_interaction.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_ota.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/fan_driver.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/temp_hum_sensor_driver.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/aircon/example_matter_aircon.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/aircon/matter_drivers.cpp
 

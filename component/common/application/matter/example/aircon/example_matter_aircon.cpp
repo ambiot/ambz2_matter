@@ -35,13 +35,13 @@ static void example_matter_aircon_task(void *pvParameters)
     if (err != CHIP_NO_ERROR)
         ChipLogProgress(DeviceLayer, "matter_driver_fan_set_startup_value failed!\n");
 
-    // err = matter_driver_button_init();
-    // if (err != CHIP_NO_ERROR)
-    //     ChipLogProgress(DeviceLayer, "matter_driver_button_init failed!\n");
+    err = matter_driver_temphumsensor_init();
+    if (err != CHIP_NO_ERROR)
+        ChipLogProgress(DeviceLayer, "matter_driver_temphumsensor_init failed!\n");
 
-    // err = matter_interaction_start_downlink();
-    // if (err != CHIP_NO_ERROR)
-    //     ChipLogProgress(DeviceLayer, "matter_interaction_start_downlink failed!\n");
+    err = matter_driver_temphumsensor_start();
+    if (err != CHIP_NO_ERROR)
+        ChipLogProgress(DeviceLayer, "matter_driver_temphumsensor_start failed!\n");
 
     err = matter_interaction_start_uplink();
     if (err != CHIP_NO_ERROR)
