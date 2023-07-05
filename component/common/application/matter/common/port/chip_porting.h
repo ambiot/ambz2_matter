@@ -10,6 +10,7 @@ extern "C" {
 #endif
 
 #include <matter_dcts.h>
+#include <matter_ota.h>
 #include <matter_timers.h>
 #include <matter_utils.h>
 #include <matter_wifis.h>

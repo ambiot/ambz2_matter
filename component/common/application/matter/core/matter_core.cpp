@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 #include "matter_core.h"
-#include "matter_ota.h"
+#include "matter_ota_initializer.h"
 #include <DeviceInfoProviderImpl.h>
 
 #include <app-common/zap-generated/attributes/Accessors.h>
@@ -93,7 +93,7 @@ void matter_core_device_callback_internal(const ChipDeviceEvent * event, intptr_
             // Init OTA requestor only when we have gotten IPv6 address
             if (!isOTAInitialized)
             {
-                matter_ota_init();
+                matter_ota_initializer();
                 isOTAInitialized = true;
             }
 #endif
