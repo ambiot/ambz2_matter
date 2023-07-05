@@ -9,6 +9,7 @@
 #include <app-common/zap-generated/ids/Attributes.h>
 #include <app-common/zap-generated/ids/Commands.h>
 #include <app-common/zap-generated/ids/Clusters.h>
+#include <app/DeferredAttributePersistenceProvider.h>
 #include <app/util/af-types.h>
 #include <app/util/attribute-storage.h>
 #include <app/util/basic-types.h>
@@ -40,7 +41,25 @@
 #endif
 
 using namespace ::chip;
+using namespace ::chip::app;
 using namespace ::chip::DeviceLayer;
+
+
+// Define a custom attribute persister which makes actual write of the selected attribute values
+// to the non-volatile storage only when it has remained constant for 5 seconds. This is to reduce
+// the flash wearout when the attribute changes frequently as a result of MoveToLevel command.
+// DeferredAttribute object describes a deferred attribute, but also holds a buffer with a value to
+// be written, so it must live so long as the DeferredAttributePersistenceProvider object.
+
+DeferredAttribute gDeferredAttributeArray[] = {
+    DeferredAttribute(ConcreteAttributePath(1 /* kLightEndpointId */, Clusters::LevelControl::Id, Clusters::LevelControl::Attributes::CurrentLevel::Id)),
+    DeferredAttribute(ConcreteAttributePath(1 /* kLightEndpointId */, Clusters::ColorControl::Id, Clusters::ColorControl::Attributes::CurrentHue::Id)),
+    DeferredAttribute(ConcreteAttributePath(1 /* kLightEndpointId */, Clusters::ColorControl::Id, Clusters::ColorControl::Attributes::CurrentSaturation::Id)),
+    DeferredAttribute(ConcreteAttributePath(1 /* kLightEndpointId */, Clusters::ColorControl::Id, Clusters::ColorControl::Attributes::EnhancedCurrentHue::Id)),
+    DeferredAttribute(ConcreteAttributePath(1 /* kLightEndpointId */, Clusters::ColorControl::Id, Clusters::ColorControl::Attributes::CurrentX::Id)),
+    DeferredAttribute(ConcreteAttributePath(1 /* kLightEndpointId */, Clusters::ColorControl::Id, Clusters::ColorControl::Attributes::CurrentY::Id)),
+};
+DeferredAttributePersistenceProvider gDeferredAttributePersister(Server::GetInstance().GetDefaultAttributePersister(), Span<DeferredAttribute>(gDeferredAttributeArray, 6), System::Clock::Milliseconds32(5000));
 
 app::Clusters::NetworkCommissioning::Instance
     sWiFiNetworkCommissioningInstance(0 /* Endpoint Id */, &(NetworkCommissioning::AmebaWiFiDriver::GetInstance()));
@@ -118,6 +137,7 @@ void matter_core_init_server(intptr_t context)
     gExampleDeviceInfoProvider.SetStorageDelegate(&Server::GetInstance().GetPersistentStorage());
     // TODO: Use our own DeviceInfoProvider
     chip::DeviceLayer::SetDeviceInfoProvider(&gExampleDeviceInfoProvider);
+    SetAttributePersistenceProvider(&gDeferredAttributePersister);
 
     sWiFiNetworkCommissioningInstance.Init();
 
