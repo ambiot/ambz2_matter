@@ -2,6 +2,8 @@
 
 #include "af-types.h"
 #include <variant>
+#include <vector>
+#include <app-common/zap-generated/attribute-type.h>
 
 class Node;
 class Endpoint;
@@ -20,7 +22,7 @@ struct AttributeConfig {
     std::uint8_t dataType; /* EmberAfAttributeType in string format */
     AttributeValue value = std::int32_t(0); /* default value, use ZAP_DEFAULT_EMPTY() */ // this will be default value, but the actual value should we use the one inside metadata?
     std::uint16_t size; /* attributeSize, use ZAP_TYPE(type) */
-    std::uint8_t mask; /* attribute flag */
+    std::uint8_t mask = 0; /* attribute flag */
 };
 
 struct EventConfig {

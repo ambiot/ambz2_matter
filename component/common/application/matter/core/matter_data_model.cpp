@@ -431,73 +431,73 @@ void Node::print() const {
     }
 }
 
-EndpointConfig createEndpointConfig() {
-    // Create Attribute configurations
-    AttributeConfig attributeConfig1;
-    attributeConfig1.attributeId = 0;
-    attributeConfig1.dataType = ZCL_INT8U_ATTRIBUTE_TYPE;
-    attributeConfig1.value = std::uint8_t(10);
-    attributeConfig1.size = 1;
+// EndpointConfig createEndpointConfig() {
+//     // Create Attribute configurations
+//     AttributeConfig attributeConfig1;
+//     attributeConfig1.attributeId = 0;
+//     attributeConfig1.dataType = ZCL_INT8U_ATTRIBUTE_TYPE;
+//     attributeConfig1.value = std::uint8_t(10);
+//     attributeConfig1.size = 1;
 
-    AttributeConfig attributeConfig2;
-    attributeConfig2.attributeId = 1;
-    attributeConfig2.dataType = ZCL_CHAR_STRING_ATTRIBUTE_TYPE;
-    attributeConfig2.value = std::string("Hello");
+//     AttributeConfig attributeConfig2;
+//     attributeConfig2.attributeId = 1;
+//     attributeConfig2.dataType = ZCL_CHAR_STRING_ATTRIBUTE_TYPE;
+//     attributeConfig2.value = std::string("Hello");
 
-    AttributeConfig attributeConfig3;
-    attributeConfig3.attributeId = 2;
-    attributeConfig3.dataType = ZCL_INT32U_ATTRIBUTE_TYPE;
-    attributeConfig3.value = std::uint32_t(1000000);
+//     AttributeConfig attributeConfig3;
+//     attributeConfig3.attributeId = 2;
+//     attributeConfig3.dataType = ZCL_INT32U_ATTRIBUTE_TYPE;
+//     attributeConfig3.value = std::uint32_t(1000000);
 
-    // Create Event configurations
-    EventConfig eventConfig1;
-    eventConfig1.eventId = 0;
-    // Set necessary attributes for eventConfig1
+//     // Create Event configurations
+//     EventConfig eventConfig1;
+//     eventConfig1.eventId = 0;
+//     // Set necessary attributes for eventConfig1
 
-    EventConfig eventConfig2;
-    eventConfig2.eventId = 1;
-    // Set necessary attributes for eventConfig2
+//     EventConfig eventConfig2;
+//     eventConfig2.eventId = 1;
+//     // Set necessary attributes for eventConfig2
 
-    // Create Command configurations
-    CommandConfig commandConfig1;
-    commandConfig1.commandId = 0;
-    commandConfig1.mask = 1;
-    // Set necessary attributes for commandConfig1
+//     // Create Command configurations
+//     CommandConfig commandConfig1;
+//     commandConfig1.commandId = 0;
+//     commandConfig1.mask = 1;
+//     // Set necessary attributes for commandConfig1
 
-    CommandConfig commandConfig2;
-    commandConfig2.commandId = 1;
-    // Set necessary attributes for commandConfig2
+//     CommandConfig commandConfig2;
+//     commandConfig2.commandId = 1;
+//     // Set necessary attributes for commandConfig2
 
-    // Create Cluster configurations
-    ClusterConfig clusterConfig1;
-    clusterConfig1.clusterId = 0;
-    clusterConfig1.attributeConfigs.push_back(attributeConfig1);
-    clusterConfig1.attributeConfigs.push_back(attributeConfig2);
-    clusterConfig1.attributeConfigs.push_back(attributeConfig3);
-    clusterConfig1.eventConfigs.push_back(eventConfig1);
-    clusterConfig1.eventConfigs.push_back(eventConfig2);
-    clusterConfig1.commandConfigs.push_back(commandConfig1);
-    clusterConfig1.commandConfigs.push_back(commandConfig2);
-    clusterConfig1.mask = 0;
+//     // Create Cluster configurations
+//     ClusterConfig clusterConfig1;
+//     clusterConfig1.clusterId = 0;
+//     clusterConfig1.attributeConfigs.push_back(attributeConfig1);
+//     clusterConfig1.attributeConfigs.push_back(attributeConfig2);
+//     clusterConfig1.attributeConfigs.push_back(attributeConfig3);
+//     clusterConfig1.eventConfigs.push_back(eventConfig1);
+//     clusterConfig1.eventConfigs.push_back(eventConfig2);
+//     clusterConfig1.commandConfigs.push_back(commandConfig1);
+//     clusterConfig1.commandConfigs.push_back(commandConfig2);
+//     clusterConfig1.mask = 0;
 
-    // Create another Cluster configuration
-    ClusterConfig clusterConfig2;
-    clusterConfig2.clusterId = 1;
-    clusterConfig2.attributeConfigs.push_back(attributeConfig1);
-    clusterConfig2.attributeConfigs.push_back(attributeConfig2);
-    clusterConfig2.eventConfigs.push_back(eventConfig1);
-    clusterConfig2.eventConfigs.push_back(eventConfig2);
-    clusterConfig2.commandConfigs.push_back(commandConfig1);
-    clusterConfig2.commandConfigs.push_back(commandConfig2);
-    clusterConfig2.mask = 0;
+//     // Create another Cluster configuration
+//     ClusterConfig clusterConfig2;
+//     clusterConfig2.clusterId = 1;
+//     clusterConfig2.attributeConfigs.push_back(attributeConfig1);
+//     clusterConfig2.attributeConfigs.push_back(attributeConfig2);
+//     clusterConfig2.eventConfigs.push_back(eventConfig1);
+//     clusterConfig2.eventConfigs.push_back(eventConfig2);
+//     clusterConfig2.commandConfigs.push_back(commandConfig1);
+//     clusterConfig2.commandConfigs.push_back(commandConfig2);
+//     clusterConfig2.mask = 0;
 
-    // Create Endpoint configuration
-    EndpointConfig endpointConfig;
-    endpointConfig.clusterConfigs.push_back(clusterConfig1);
-    endpointConfig.clusterConfigs.push_back(clusterConfig2);
+//     // Create Endpoint configuration
+//     EndpointConfig endpointConfig;
+//     endpointConfig.clusterConfigs.push_back(clusterConfig1);
+//     endpointConfig.clusterConfigs.push_back(clusterConfig2);
 
-    return endpointConfig;
-}
+//     return endpointConfig;
+// }
 
 // int main() {
 //     Node& node = Node::getInstance();
