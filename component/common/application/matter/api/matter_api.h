@@ -36,5 +36,3 @@ CHIP_ERROR matter_get_hardware_version(uint16_t & hardwareVersion);
 CHIP_ERROR matter_get_hardware_version_string(char *buf, size_t bufSize);
 CHIP_ERROR matter_get_software_version(uint32_t & softwareVersion);
 CHIP_ERROR matter_get_software_version_string(char *buf, size_t bufSize);
-
-extern "C" void matter_test();
