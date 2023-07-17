@@ -5,6 +5,22 @@
 #include "matter_data_model.h"
 
 /*                  Attributes                  */
+chip::AttributeId Attribute::getAttributeId() const {
+    return attributeId;
+}
+
+std::uint16_t Attribute::getAttributeSize() const {
+    return attributeSize;
+}
+
+std::uint8_t Attribute::getAttributeType() const {
+    return attributeType;
+}
+
+std::uint8_t Attribute::getAttributeMask() const {
+    return attributeMask;
+}
+
 template<typename T>
 T Attribute::getValue() const {
     if (std::holds_alternative<T>(value)) {
@@ -20,45 +36,25 @@ void Attribute::setValue(const T& newValue) {
     value = newValue;
 }
 
-EmberAfDefaultOrMinMaxAttributeValue Attribute::getAttributeDefaultValue() const {
-    return metadata->defaultValue;
-}
-
-chip::AttributeId Attribute::getAttributeId() const {
-    return metadata->attributeId;
-}
-
-std::uint16_t Attribute::getAttributeSize() const {
-    return metadata->size;
-}
-
-std::uint8_t Attribute::getAttributeType() const {
-    return metadata->attributeType;
-}
-
-std::uint8_t Attribute::getAttributeMask() const {
-    return metadata->mask;
-}
-
 void Attribute::print(int indent) const {
     std::string indentation(indent, ' ');
-    if (metadata->attributeType == ZCL_INT8U_ATTRIBUTE_TYPE) {
+    if (attributeType == ZCL_INT8U_ATTRIBUTE_TYPE) {
         std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<unsigned int>(getValue<std::uint8_t>()) << std::endl;
-    } else if (metadata->attributeType == ZCL_INT16U_ATTRIBUTE_TYPE) {
+    } else if (attributeType == ZCL_INT16U_ATTRIBUTE_TYPE) {
         std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<unsigned int>(getValue<std::uint16_t>()) << std::endl;
-    } else if (metadata->attributeType == ZCL_INT32U_ATTRIBUTE_TYPE) {
+    } else if (attributeType == ZCL_INT32U_ATTRIBUTE_TYPE) {
         std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<unsigned int>(getValue<std::uint32_t>()) << std::endl;
-    } else if (metadata->attributeType == ZCL_INT64U_ATTRIBUTE_TYPE) {
+    } else if (attributeType == ZCL_INT64U_ATTRIBUTE_TYPE) {
         std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<unsigned int>(getValue<std::uint64_t>()) << std::endl;
-    } else if (metadata->attributeType == ZCL_INT8S_ATTRIBUTE_TYPE) {
+    } else if (attributeType == ZCL_INT8S_ATTRIBUTE_TYPE) {
         std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<int>(getValue<std::int8_t>()) << std::endl;
-    } else if (metadata->attributeType == ZCL_INT16S_ATTRIBUTE_TYPE) {
+    } else if (attributeType == ZCL_INT16S_ATTRIBUTE_TYPE) {
         std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<int>(getValue<std::int16_t>()) << std::endl;
-    } else if (metadata->attributeType == ZCL_INT32S_ATTRIBUTE_TYPE) {
+    } else if (attributeType == ZCL_INT32S_ATTRIBUTE_TYPE) {
         std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<int>(getValue<std::int32_t>()) << std::endl;
-    } else if (metadata->attributeType == ZCL_INT64S_ATTRIBUTE_TYPE) {
+    } else if (attributeType == ZCL_INT64S_ATTRIBUTE_TYPE) {
         std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<int>(getValue<std::int64_t>()) << std::endl;
-    } else if (metadata->attributeType == ZCL_CHAR_STRING_ATTRIBUTE_TYPE) {
+    } else if (attributeType == ZCL_CHAR_STRING_ATTRIBUTE_TYPE) {
         std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << getValue<std::string>() << std::endl;
     } else {
         // Handle the case where the data type doesn't match
@@ -82,7 +78,7 @@ chip::CommandId Command::getCommandId() const {
 }
 
 int Command::getFlag() const {
-    return flag;
+    return commandFlag;
 }
 
 void Command::print(int indent) const {
@@ -91,6 +87,14 @@ void Command::print(int indent) const {
 }
 
 /*                  Cluster                  */
+chip::ClusterId Cluster::getClusterId() const {
+    return clusterId;
+}
+
+EmberAfClusterMask Cluster::getClusterMask() const {
+    return clusterMask;
+}
+
 Attribute *Cluster::getAttribute(chip::AttributeId attributeId) {
     for (auto & att : attributes) {
         if (att.getAttributeId() == attributeId) {
@@ -111,8 +115,8 @@ Event *Cluster::getEvent(chip::EventId eventId) {
     return NULL;
 }
 
-Command *Cluster::getCommand(chip::CommandId commandId) {
-    for (auto & cmd : commands) {
+Command *Cluster::getAcceptedCommand(chip::CommandId commandId) {
+    for (auto & cmd : acceptedCommands) {
         if (cmd.getCommandId() == commandId) {
             return &cmd;
         }
@@ -121,44 +125,14 @@ Command *Cluster::getCommand(chip::CommandId commandId) {
     return NULL;
 }
 
-chip::ClusterId Cluster::getClusterId() const {
-    return metadata->clusterId;
-}
+Command *Cluster::getGeneratedCommand(chip::CommandId commandId) {
+    for (auto & cmd : generatedCommands) {
+        if (cmd.getCommandId() == commandId) {
+            return &cmd;
+        }
+    }
 
-const EmberAfAttributeMetadata *Cluster::getAttributeMetadataList() const {
-    return metadata->attributes;
-}
-
-uint16_t Cluster::getAttributeCount() const {
-    return metadata->attributeCount;
-}
-
-uint16_t Cluster::getClusterSize() const {
-    return metadata->clusterSize;
-}
-
-EmberAfClusterMask Cluster::getClusterMask() const {
-    return metadata->mask;
-}
-
-const EmberAfGenericClusterFunction *Cluster::getGenericClusterFunctionList() const {
-    return metadata->functions;
-}
-
-const chip::CommandId *Cluster::getAcceptedCommandList() const {
-    return metadata->acceptedCommandList;
-}
-
-const chip::CommandId *Cluster::getGeneratedCommandList() const {
-    return metadata->generatedCommandList;
-}
-
-const chip::EventId *Cluster::getEventList() const {
-    return metadata->eventList;
-}
-
-uint16_t Cluster::getEventCount() const {
-    return metadata->eventCount;
+    return NULL;
 }
 
 void Cluster::addAttribute(AttributeConfig attributeConfig) {
@@ -173,72 +147,9 @@ void Cluster::addAttribute(const Attribute& attribute) {
     }
 
     attributes.push_back(attribute);
-
-    // Increment the attribute count
-    ++metadata->attributeCount;
-
-    // Create a new attribute list with the updated attribute count
-    void *tempPtr = new uint8_t[(metadata->attributeCount) * sizeof(EmberAfAttributeMetadata)];
-
-    // Copy the existing attributes to the new attributes list
-    memcpy(tempPtr, metadata->attributes, (metadata->attributeCount) * sizeof(EmberAfAttributeMetadata));
-
-    // Add the new attribute to the attributes list
-    EmberAfAttributeMetadata attributeMetadata = EmberAfAttributeMetadata{
-        static_cast<uint32_t>(0), /* default value */
-        attribute.getAttributeId(),
-        attribute.getAttributeSize(),
-        attribute.getAttributeType(),
-        attribute.getAttributeMask(),
-    };
-    memcpy(tempPtr + (metadata->attributeCount - 1) * sizeof(EmberAfAttributeMetadata), &attributeMetadata, sizeof(EmberAfAttributeMetadata));
-
-    // Cast it to *EmberAfAttributeMetadata
-    EmberAfAttributeMetadata *newAttributes = reinterpret_cast<EmberAfAttributeMetadata*>(tempPtr);
-
-    // Free tempPtr
-    delete[] reinterpret_cast<uint8_t*>(tempPtr);
-
-    // TODO: deallocate metadata if this is the first addAttribute call
-
-    // Assign the updated attributes list to the metadata
-    metadata->attributes = newAttributes;
-
-    // Inform the Endpoint about the change, so it can update its metadata
-    printf("originalAttributeMetadata:\r\n");
-    printf("\tattributeType: %d\r\n", attribute.getAttributeType());
-    printf("attributeMetadata:\r\n");
-    printf("\tattributeType: %d\r\n", attributeMetadata.attributeType);
 }
 
 void Cluster::removeAttribute(chip::AttributeId attributeId) {
-    // const int oldAttributeCount = metadata->attributeCount;
-
-    // // Create a new vector for the updated attribute metadata
-    // std::vector<EmberAfAttributeMetadata> newAttributes;
-    // newAttributes.reserve(oldAttributeCount - 1);  // Reserve space for remaining attributes
-
-    // bool removed = false;
-    // // Copy the existing attribute metadata to the new vector, excluding the one to be removed
-    // for (int i = 0; i < oldAttributeCount; ++i) {
-    //     if (metadata.attributes[i].attributeId != attributeId) {
-    //         newAttributes.push_back(metadata->attributes[i]);
-    //     }
-    //     else {
-    //         removed = true;
-    //     }
-    // }
-
-    // if (!removed) {
-    //     // Attribute with the given attributeId not found
-    //     return;
-    // }
-
-    // // Update the metadata with the new attribute vector
-    // metadata.attributeCount = oldAttributeCount - 1;
-    // metadata.attributes = newAttributes.data();
-
-    // Remove the cluster from the vector
     auto it = std::find_if(attributes.begin(), attributes.end(), [&](const Attribute & attribute) {
         return attribute.getAttributeId() == attributeId;
     });
@@ -246,8 +157,6 @@ void Cluster::removeAttribute(chip::AttributeId attributeId) {
     if (it != attributes.end()) {
         attributes.erase(it);
     }
-
-    // Inform the Endpoint about the change, so it can update its metadata
 }
 
 void Cluster::addEvent(EventConfig eventConfig) {
@@ -262,213 +171,67 @@ void Cluster::addEvent(const Event& event) {
     }
 
     events.push_back(event);
-
-    // Increment the event count
-    ++metadata->eventCount;
-
-    // Create a new event list with the updated event count
-    chip::EventId* newEventList = new chip::EventId[metadata->eventCount];
-
-    // Copy the existing events to the new event list
-    for (int i = 0; i < metadata->eventCount - 1; ++i) {
-        newEventList[i] = metadata->eventList[i];
-    }
-
-    // Add the new event to the event list
-    newEventList[metadata->eventCount - 1] = event.getEventId();
-
-    // Free the previously allocated memory
-    if (metadata->eventList != nullptr) {
-        delete[] metadata->eventList;
-    }
-
-    // Assign the updated event list to the metadata
-    metadata->eventList = newEventList;
-
-    // Inform the Endpoint about the change, so it can update its metadata
 }
 
 void Cluster::removeEvent(chip::EventId eventId) {
-    // Find the index of the event in the event list
-    int eventIndex = -1;
-    for (int i = 0; i < metadata->eventCount; ++i) {
-        if (metadata->eventList[i] == eventId) {
-            eventIndex = i;
-            break;
-        }
-    }
+    auto it = std::find_if(events.begin(), events.end(), [&](const Event & event) {
+        return event.getEventId() == eventId;
+    });
 
-    // If the event was found, remove it from the event list
-    if (eventIndex != -1) {
-        // Decrement the event count
-        --metadata->eventCount;
-
-        // Create a new event list with the updated event count
-        chip::EventId* newEventList = new chip::EventId[metadata->eventCount];
-
-        // Copy the events before the removed event
-        for (int i = 0; i < eventIndex; ++i) {
-            newEventList[i] = metadata->eventList[i];
-        }
-
-        // Copy the events after the removed event
-        for (int i = eventIndex + 1; i < metadata->eventCount + 1; ++i) {
-            newEventList[i - 1] = metadata->eventList[i];
-        }
-
-        // Free the previously allocated memory
-        delete[] metadata->eventList;
-
-        // Assign the updated event list to the metadata
-        metadata->eventList = newEventList;
-
-        // Remove the event from the vector
-        auto it = std::find_if(events.begin(), events.end(), [&](const Event & event) {
-            return event.getEventId() == eventId;
-        });
-
-        if (it != events.end()) {
-            events.erase(it);
-        }
-
-        // Inform the Endpoint about the change, so it can update its metadata
+    if (it != events.end()) {
+        events.erase(it);
     }
 }
 
-void Cluster::addCommand(CommandConfig commandConfig) {
+void Cluster::addAcceptedCommand(CommandConfig commandConfig) {
     Command command(this, commandConfig);
-    addCommand(command);
+    addAcceptedCommand(command);
 }
 
-void Cluster::addCommand(const Command& command) {
+void Cluster::addAcceptedCommand(const Command& command) {
     // Check if command already exist
-    if (getCommand(command.getCommandId()) != NULL) {
+    if (getAcceptedCommand(command.getCommandId()) != NULL) {
         return;
     }
 
-    commands.push_back(command);
-
     if (command.getFlag() & COMMAND_MASK_ACCEPTED) {
-        // Count how many accepted commands
-        int count = 0;
-        const chip::CommandId* ptr = metadata->acceptedCommandList;
-        while (*ptr != 0xFFFFFFFF) {
-            ++ptr;
-            count++;
-        }
+        acceptedCommands.push_back(command);
+    }
+}
 
-        // Increment the command count for new command
-        count += 1;
+void Cluster::addGeneratedCommand(CommandConfig commandConfig) {
+    Command command(this, commandConfig);
+    addGeneratedCommand(command);
+}
 
-        // Create a new accepted command list with updated command count
-        chip::CommandId *newAcceptedCommandList = new chip::CommandId[count];
-
-        // Copy existing accepted commands into the new command list
-        for (int i=0; i<count-1; i++) {
-            newAcceptedCommandList[i] = metadata->acceptedCommandList[i];
-        }
-
-        // Add the new accepted command to the accepted command list
-        newAcceptedCommandList[count - 1] = command.getCommandId();
-
-        // Free the previously allocated memory
-        if (metadata->acceptedCommandList != nullptr) {
-            delete[] metadata->acceptedCommandList;
-        }
-
-        // Assign new metadata
-        metadata->acceptedCommandList = newAcceptedCommandList;
+void Cluster::addGeneratedCommand(const Command& command) {
+    // Check if command already exist
+    if (getGeneratedCommand(command.getCommandId()) != NULL) {
+        return;
     }
 
     if (command.getFlag() & COMMAND_MASK_GENERATED) {
-        int count = 0;
-        const chip::CommandId* ptr = metadata->generatedCommandList;
-        while (*ptr != 0xFFFFFFFF) {
-            ++ptr;
-            count++;
-        }
-
-        // Increment the command count for new command
-        count += 1;
-
-        // Create a new generated command list with updated command count
-        chip::CommandId *newGeneratedCommandList = new chip::CommandId[count];
-
-        // Copy existing generated commands into the new command list
-        for (int i=0; i<count-1; i++) {
-            newGeneratedCommandList[i] = metadata->generatedCommandList[i];
-        }
-
-        // Add the new accepted command to the accepted command list
-        newGeneratedCommandList[count - 1] = command.getCommandId();
-
-        // Free the previously allocated memory
-        if (metadata->generatedCommandList != nullptr) {
-            delete[] metadata->generatedCommandList;
-        }
-
-        // Assign new metadata
-        metadata->acceptedCommandList = newGeneratedCommandList;
+        generatedCommands.push_back(command);
     }
-
-    // Inform the Endpoint about the change, so it can update its metadata
 }
 
-void Cluster::removeCommand(chip::CommandId commandId) {
-    auto it = std::find_if(commands.begin(), commands.end(), [commandId](const Command& command) {
+void Cluster::removeAcceptedCommand(chip::CommandId commandId) {
+    auto it = std::find_if(acceptedCommands.begin(), acceptedCommands.end(), [commandId](const Command& command) {
         return command.getCommandId() == commandId;
     });
 
-    if (it != commands.end()) {
-        commands.erase(it);
+    if (it != acceptedCommands.end()) {
+        acceptedCommands.erase(it);
+    }
+}
 
-        if (it->getFlag() & COMMAND_MASK_ACCEPTED) {
-            // Remove the commandId from the acceptedCommandList
-            std::vector<int> newAcceptedCommands;
-            if (metadata->acceptedCommandList) {
-                // Copy the existing acceptedCommandList except for the removed commandId
-                const chip::CommandId* ptr = metadata->acceptedCommandList;
-                while (*ptr != 0xFFFFFFFF) {
-                    if (*ptr != commandId) {
-                        newAcceptedCommands.push_back(*ptr);
-                    }
-                    ++ptr;
-                }
-            }
+void Cluster::removeGeneratedCommand(chip::CommandId commandId) {
+    auto it = std::find_if(generatedCommands.begin(), generatedCommands.end(), [commandId](const Command& command) {
+        return command.getCommandId() == commandId;
+    });
 
-            // Free the previously allocated memory
-            delete[] metadata->acceptedCommandList;
-
-            // Assign the updated acceptedCommandList
-            metadata->acceptedCommandList = new chip::CommandId[newAcceptedCommands.size()];
-            std::copy(newAcceptedCommands.begin(), newAcceptedCommands.end(), const_cast<chip::CommandId*>(metadata->acceptedCommandList));
-
-            // Inform the Endpoint about the change, so it can update its metadata
-        }
-
-        if (it->getFlag() & COMMAND_MASK_GENERATED) {
-            // Remove the commandId from the generatedCommandList
-            std::vector<int> newGeneratedCommands;
-            if (metadata->generatedCommandList) {
-                // Copy the existing generatedCommandList except for the removed commandId
-                const chip::CommandId* ptr = metadata->generatedCommandList;
-                while (*ptr != 0xFFFFFFFF) {
-                    if (*ptr != commandId) {
-                        newGeneratedCommands.push_back(*ptr);
-                    }
-                    ++ptr;
-                }
-            }
-
-            // Free the previously allocated memory
-            delete[] metadata->generatedCommandList;
-
-            // Assign the updated generatedCommandList
-            metadata->generatedCommandList = new chip::CommandId[newGeneratedCommands.size()];
-            std::copy(newGeneratedCommands.begin(), newGeneratedCommands.end(), const_cast<chip::CommandId*>(metadata->generatedCommandList));
-
-            // Inform the Endpoint about the change, so it can update its metadata
-        }
+    if (it != generatedCommands.end()) {
+        generatedCommands.erase(it);
     }
 }
 
@@ -481,12 +244,19 @@ void Cluster::print(int indent) const {
     for (const Event& event : events) {
         event.print(indent + 2);
     }
-    for (const Command& command : commands) {
+    for (const Command& command : acceptedCommands) {
+        command.print(indent + 2);
+    }
+    for (const Command& command : generatedCommands) {
         command.print(indent + 2);
     }
 }
 
 /*                  Endpoint                  */
+chip::EndpointId Endpoint::getEndpointId() const {
+    return endpointId;
+}
+
 Cluster *Endpoint::getCluster(chip::ClusterId clusterId) {
     for (auto & cls : clusters) {
         if (cls.getClusterId() == clusterId) {
@@ -509,7 +279,12 @@ void Endpoint::addCluster(ClusterConfig & clusterConfig) {
     }
     for (const CommandConfig & commandConfig : clusterConfig.commandConfigs) {
         Command command(&cluster, commandConfig);
-        cluster.addCommand(command);
+        if (command.getFlag() & COMMAND_MASK_ACCEPTED) {
+            cluster.addAcceptedCommand(command);
+        }
+        if (command.getFlag() & COMMAND_MASK_GENERATED) {
+            cluster.addGeneratedCommand(command);
+        }
     }
     addCluster(cluster);
 }
@@ -521,69 +296,9 @@ void Endpoint::addCluster(const Cluster& cluster) {
     }
 
     clusters.push_back(cluster);
-
-    // Increment the cluster count
-    ++metadata->clusterCount;
-
-    // Create a new cluster list with the updated cluster count
-    void *tempPtr = new uint8_t[(metadata->clusterCount) * sizeof(EmberAfCluster)];
-
-    // Copy the existing clusters to the new clusters list
-    memcpy(tempPtr, metadata->cluster, (metadata->clusterCount) * sizeof(EmberAfCluster));
-
-    // Add the new cluster to the clusters list
-    EmberAfCluster clusterMetadata = EmberAfCluster{
-        cluster.getClusterId(),
-        cluster.getAttributeMetadataList(),
-        cluster.getAttributeCount(),
-        cluster.getClusterSize(),
-        cluster.getClusterMask(),
-        cluster.getGenericClusterFunctionList(),
-        cluster.getAcceptedCommandList(),
-        cluster.getGeneratedCommandList(),
-        cluster.getEventList(),
-        cluster.getEventCount(),
-    };
-    memcpy(tempPtr + (metadata->clusterCount - 1) * sizeof(EmberAfCluster), &clusterMetadata, sizeof(EmberAfCluster));
-
-    // Cast it to *EmberAfCluster
-    EmberAfCluster *newClusters = reinterpret_cast<EmberAfCluster*>(tempPtr);
-
-    // Free tempPtr
-    delete[] reinterpret_cast<uint8_t*>(tempPtr);
-
-    // Assign the updated clusters list to the metadata
-    metadata->cluster = newClusters;
 }
 
 void Endpoint::removeCluster(chip::ClusterId clusterId) {
-    const int oldClusterCount = metadata->clusterCount;
-
-    // Create a new vector for the updated attribute metadata
-    std::vector<EmberAfCluster> newClusters;
-    newClusters.reserve(oldClusterCount - 1);   // Reserve space for remaining clusters
-
-    bool removed = false;
-    // Copy the existing cluster metadata to the new vector, excluding the one to be removed
-    for (int i=0; i<oldClusterCount; ++i) {
-        if (metadata->cluster[i].clusterId != clusterId) {
-            newClusters.push_back(metadata->cluster[i]);
-        }
-        else {
-            removed = true;
-        }
-    }
-
-    if (!removed) {
-        // Cluster with the given clusterId not found
-        printf("Cluster not found, cannot remove!\r\n");
-        return;
-    }
-
-    // Update the metadata with the new cluster vector
-    metadata->clusterCount = oldClusterCount - 1;
-    metadata->cluster = newClusters.data();
-
     // Remove the cluster from the vector
     auto it = std::find_if(clusters.begin(), clusters.end(), [&](const Cluster& cluster) {
         return cluster.getClusterId() == clusterId;
@@ -592,22 +307,6 @@ void Endpoint::removeCluster(chip::ClusterId clusterId) {
     if (it != clusters.end()) {
         clusters.erase(it);
     }
-}
-
-chip::EndpointId Endpoint::getEndpointId() const {
-    return endpointId;
-}
-
-const EmberAfCluster *Endpoint::getMetadataClusterList() const {
-    return metadata->cluster;
-}
-
-uint8_t Endpoint::getClusterCount() const {
-    return metadata->clusterCount;
-}
-
-uint16_t Endpoint::getEndpointSize() const {
-    return metadata->endpointSize;
 }
 
 chip::EndpointId Endpoint::getParentEndpointId() const {
@@ -662,7 +361,12 @@ void Node::addEndpoint(const EndpointConfig& endpointConfig) {
         }
         for (const CommandConfig& commandConfig : clusterConfig.commandConfigs) {
             Command command(&cluster, commandConfig);
-            cluster.addCommand(command);
+            if (command.getFlag() & COMMAND_MASK_ACCEPTED) {
+                cluster.addAcceptedCommand(command);
+            }
+            if (command.getFlag() & COMMAND_MASK_GENERATED) {
+                cluster.addGeneratedCommand(command);
+            }
         }
         endpoint.addCluster(cluster);
     }

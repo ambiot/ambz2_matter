@@ -58,21 +58,20 @@ public:
 class Attribute {
 public:
     Attribute(Cluster* cluster, AttributeConfig attributeConfig) : 
-        cluster(cluster),
-        value(attributeConfig.value),
-        metadata(new EmberAfAttributeMetadata {
-            static_cast<uint32_t>(0),
-            attributeConfig.attributeId,
-            attributeConfig.size,
-            attributeConfig.dataType,
-            attributeConfig.mask,
-        }) {}
+        attributeId(attributeConfig.attributeId),
+        attributeSize(attributeConfig.size),
+        attributeType(attributeConfig.dataType),
+        attributeMask(attributeConfig.mask),
+        parentCluster(cluster),
+        value(attributeConfig.value) {};
 
-    // Destructor to release the dynamically allocated memory
-    // ~Attribute() {
-    //     // TODO: after calling addAttribute, might don't need to deallocate
-    //     delete metadata;
-    // }
+    chip::AttributeId getAttributeId() const;
+
+    uint16_t getAttributeSize() const;
+
+    EmberAfAttributeType getAttributeType() const;
+
+    EmberAfAttributeMask getAttributeMask() const;
 
     template<typename T>
     T getValue() const;
@@ -80,37 +79,30 @@ public:
     template<typename T>
     void setValue(const T& newValue);
 
-    EmberAfDefaultOrMinMaxAttributeValue getAttributeDefaultValue() const;
-    chip::AttributeId getAttributeId() const;
-
-    std::uint16_t getAttributeSize() const;
-
-    std::uint8_t getAttributeType() const;
-
-    std::uint8_t getAttributeMask() const;
-
-    // EmberAfAttributeMetadata *getAttributeMetadata() {return metadata;}
-
     void print(int indent = 0) const;
-
-    EmberAfAttributeMetadata *metadata;
 private:
-    Cluster* cluster;
+    chip::AttributeId attributeId;
+    uint16_t attributeSize;
+    EmberAfAttributeType attributeType;
+    EmberAfAttributeMask attributeMask;
+    Cluster* parentCluster;
     AttributeValue value;
 };
 
 // Event class
 class Event {
 public:
-    Event(Cluster* cluster, EventConfig eventConfig) : eventId(eventConfig.eventId) {};
+    Event(Cluster* cluster, EventConfig eventConfig) :
+        eventId(eventConfig.eventId),
+        parentCluster(cluster) {}
 
     chip::EventId getEventId() const;
 
     void print(int indent = 0) const;
 
 private:
-    Cluster* cluster;
     chip::EventId eventId;
+    Cluster* parentCluster;
 };
 
 /** Command flags */
@@ -124,7 +116,10 @@ private:
 // Command class
 class Command {
 public:
-    Command(Cluster* cluster, CommandConfig commandConfig) : commandId(commandConfig.commandId) {};
+    Command(Cluster* cluster, CommandConfig commandConfig) :
+        commandId(commandConfig.commandId),
+        commandFlag(commandConfig.mask),
+        parentCluster(cluster) {}
 
     chip::CommandId getCommandId() const;
 
@@ -133,59 +128,30 @@ public:
     void print(int indent = 0) const;
 
 private:
-    Cluster* cluster;
     chip::CommandId commandId;
-    int flag;
+    int commandFlag;
+    Cluster* parentCluster;
 };
 
 // Cluster class
 class Cluster {
 public:
     Cluster(Endpoint* endpoint, ClusterConfig clusterConfig) :
-        endpoint(endpoint),
-        metadata(new EmberAfCluster {
-                clusterConfig.clusterId,
-                nullptr,
-                0,
-                0,
-                clusterConfig.mask,
-                nullptr,
-                nullptr,
-                nullptr,
-                nullptr,
-                0,
-        }) {}
+        clusterId(clusterConfig.clusterId),
+        clusterMask(clusterConfig.mask),
+        parentEndpoint(endpoint) {};
 
-    // Destructor to release the dynamically allocated memory
-    // ~Cluster() {
-    //     delete metadata;
-    // }
+    chip::ClusterId getClusterId() const;
+
+    EmberAfClusterMask getClusterMask() const;
 
     Attribute *getAttribute(chip::AttributeId attributeId);
 
     Event *getEvent(chip::EventId eventId); 
 
-    Command *getCommand(chip::CommandId commandId);
+    Command *getAcceptedCommand(chip::CommandId commandId);
 
-    chip::ClusterId getClusterId() const;
-
-    const EmberAfAttributeMetadata *getAttributeMetadataList() const;
-
-    uint16_t getAttributeCount() const;
-
-    uint16_t getClusterSize() const;
-
-    EmberAfClusterMask getClusterMask() const;
-
-    const EmberAfGenericClusterFunction *getGenericClusterFunctionList() const;
-
-    const chip::CommandId *getAcceptedCommandList() const;
-
-    const chip::CommandId *getGeneratedCommandList() const;
-
-    const chip::EventId *getEventList() const;
-
-    uint16_t getEventCount() const;
+    Command *getGeneratedCommand(chip::CommandId commandId);
 
     void addAttribute(AttributeConfig attributeConfig);
 
@@ -199,57 +165,41 @@ public:
 
     void removeEvent(chip::EventId eventId);
 
-    void addCommand(CommandConfig commandConfig);
+    void addAcceptedCommand(CommandConfig commandConfig);
 
-    void addCommand(const Command& command);
+    void addAcceptedCommand(const Command& command);
 
-    void removeCommand(chip::CommandId commandId);
+    void addGeneratedCommand(CommandConfig commandConfig);
+
+    void addGeneratedCommand(const Command& command);
+
+    void removeAcceptedCommand(chip::CommandId commandId);
+
+    void removeGeneratedCommand(chip::CommandId commandId);
 
     void print(int indent = 0) const;
 
-    EmberAfCluster *metadata;
 private:
-    Endpoint* endpoint;
+    chip::ClusterId clusterId;
+    EmberAfClusterMask clusterMask;
+    Endpoint* parentEndpoint;
+
     std::vector<Attribute> attributes;
     std::vector<Event> events;
-    std::vector<Command> commands;
+    std::vector<Command> acceptedCommands;
+    std::vector<Command> generatedCommands;
+    std::vector<EmberAfGenericClusterFunction> functions; // TODO
 };
 
 // Endpoint class
 class Endpoint {
 public:
     Endpoint(Node* node, chip::EndpointId endpointId) : 
-        node(node),
         endpointId(endpointId),
         parentEndpointId(0xFFFF /* chip::kInvalidEndpointId */),
-        metadata(new EmberAfEndpointType{NULL, 0, 0}) {}
-        // metadata{NULL, 0, 0} {}
+        parentNode(node) {}
 
-#if 0
-    Endpoint(const Endpoint & other) : node(other.node), endpointId(other.endpointId), parentEndpointId(other.parentEndpointId), metadata(other.metadata) {
-        // Copy metadata values directly
-        metadata.clusterCount = other.metadata.clusterCount;
-        metadata.endpointSize = other.metadata.endpointSize;
-
-        std::vector<EmberAfCluster> newClusters;
-        newClusters.reserve(metadata.clusterCount);    // Reserve space for existing clusters
-
-        // Copy the existing cluster metadata to the new vector
-        if (metadata.clusterCount > 0) {
-            newClusters.assign(metadata.cluster, metadata.cluster + metadata.clusterCount);
-        }
-        printf("\r\n%s %d size: %d\r\n", __FUNCTION__, __LINE__, other.metadata.cluster->attributes->size);
-
-        metadata.cluster = newClusters.data();
-        isDynamicallyAllocated = true;
-        printf("\r\n%s %d size: %d\r\n", __FUNCTION__, __LINE__, metadata.cluster->attributes->size);
-    }
-#endif
-
-    // Destructor TODO: since we don't use new keyword, do we even need this?
-    // ~Endpoint() {
-    //     delete[] metadata;
-    // }
+    chip::EndpointId getEndpointId() const;
 
     Cluster *getCluster(chip::ClusterId clusterId);
 
@@ -259,25 +209,16 @@ public:
 
     void removeCluster(chip::ClusterId clusterId);
 
-    chip::EndpointId getEndpointId() const;
-
-    const EmberAfCluster *getMetadataClusterList() const;
-
-    uint8_t getClusterCount() const;
-
-    uint16_t getEndpointSize() const;
-
     chip::EndpointId getParentEndpointId() const;
 
     void setParentEndpointId(chip::EndpointId parentEndpointId);
 
     void print(int indent = 0) const;
-
-    EmberAfEndpointType *metadata;
 private:
-    Node* node;
     chip::EndpointId endpointId;
     chip::EndpointId parentEndpointId;
+    Node* parentNode;
+
     std::vector<Cluster> clusters;
 };
 
