@@ -213,11 +213,14 @@ public:
 
     void setParentEndpointId(chip::EndpointId parentEndpointId);
 
+    void enableEndpoint(chip::Span<const EmberAfDeviceType> deviceTypeList);
+
     void print(int indent = 0) const;
 private:
     chip::EndpointId endpointId;
     chip::EndpointId parentEndpointId;
     Node* parentNode;
+    chip::DataVersion *dataVersion = nullptr;
 
     std::vector<Cluster> clusters;
 };
@@ -232,6 +235,8 @@ public:
     void addEndpoint(const EndpointConfig& endpointConfig);
 
     void removeEndpoint(chip::EndpointId endpointId);
+
+    void enableAllEndpoints();
 
     void print() const;
 

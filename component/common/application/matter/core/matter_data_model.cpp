@@ -4,6 +4,8 @@
 #include <algorithm>
 #include "matter_data_model.h"
 
+using namespace ::chip;
+
 /*                  Attributes                  */
 chip::AttributeId Attribute::getAttributeId() const {
     return attributeId;
@@ -315,6 +317,17 @@ chip::EndpointId Endpoint::getParentEndpointId() const {
 
 void Endpoint::setParentEndpointId(chip::EndpointId newParentEndpointId) {
     parentEndpointId = newParentEndpointId;
+}
+
+void Endpoint::enableEndpoint(Span<const EmberAfDeviceType> deviceTypeList) {
+    dataVersion = new chip::DataVersion[clusters.size()]; // dataVersion should be as big as the number of clusters in this endpoint
+    // index - to setup a counter
+    // endpointId - member
+    // EmberAfEndpointType - to be created
+    // dataVersionStorage - allocated, member
+    // deviceTypeList - argument
+    // parentEndpointId - member
+
 }
 
 void Endpoint::print(int indent) const {
