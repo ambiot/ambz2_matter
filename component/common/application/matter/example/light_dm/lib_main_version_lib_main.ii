@@ -1,0 +1,6 @@
+# 0 "lib_main_version.c"
+# 1 "/home/stephen/projects/realtek/ambiot/ambz2_matter/component/common/application/matter/example/light_dm//"
+# 0 "<built-in>"
+# 0 "<command-line>"
+# 1 "lib_main_version.c"
+const char lib_main_rev[] = "lib_main_ver_7719c207aa87176bec32dbf1299a4d66fbe0a43a_2023/07/07-17:19:22";

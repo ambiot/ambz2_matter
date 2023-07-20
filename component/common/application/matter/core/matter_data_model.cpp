@@ -2,9 +2,63 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <app/util/attribute-storage.h>
 #include "matter_data_model.h"
 
 using namespace ::chip;
+
+// emberAfExternalAttributeRead/WriteCallback are required for externally stored attributes
+EmberAfStatus emberAfExternalAttributeReadCallback(EndpointId endpoint_id, ClusterId cluster_id,
+                                                   const EmberAfAttributeMetadata *matter_attribute, uint8_t *buffer,
+                                                   uint16_t max_read_length)
+{
+    Node & node = Node::getInstance();
+    Endpoint *endpoint = node.getEndpoint(endpoint_id);
+    Cluster *cluster = endpoint->getCluster(cluster_id);
+    Attribute *attribute = cluster->getAttribute(matter_attribute->attributeId);
+
+    if (attribute->getAttributeSize() > max_read_length)
+    {
+        ChipLogError(DeviceLayer, "Insufficient space to read Attribute 0x%08x from Cluster 0x%08x in Endpoint 0x%04x", matter_attribute->attributeId, cluster_id, endpoint_id);
+        return EMBER_ZCL_STATUS_RESOURCE_EXHAUSTED;
+    }
+
+    switch(attribute->getAttributeBaseType())
+    {
+    case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
+    case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
+    case ZCL_ARRAY_ATTRIBUTE_TYPE:
+    case ZCL_STRUCT_ATTRIBUTE_TYPE:
+        memcpy(buffer, attribute->getValue<uint8_t*>(), attribute->getAttributeSize());
+        break;
+    default:
+        ChipLogError(DeviceLayer, "");
+    }
+
+    return EMBER_ZCL_STATUS_SUCCESS;
+}
+
+EmberAfStatus emberAfExternalAttributeWriteCallback(EndpointId endpoint_id, ClusterId cluster_id, const EmberAfAttributeMetadata *matter_attribute, uint8_t *buffer)
+{
+    Node & node = Node::getInstance();
+    Endpoint *endpoint = node.getEndpoint(endpoint_id);
+    Cluster *cluster = endpoint->getCluster(cluster_id);
+    Attribute *attribute = cluster->getAttribute(matter_attribute->attributeId);
+
+    switch(attribute->getAttributeBaseType())
+    {
+    case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
+    case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
+    case ZCL_ARRAY_ATTRIBUTE_TYPE:
+    case ZCL_STRUCT_ATTRIBUTE_TYPE:
+        memcpy(attribute->getValue<uint8_t*>(), buffer, attribute->getAttributeSize());
+        break;
+    default:
+        ChipLogError(DeviceLayer, "");
+    }
+
+    return EMBER_ZCL_STATUS_SUCCESS;
+}
 
 /*                  Attributes                  */
 chip::AttributeId Attribute::getAttributeId() const {
@@ -23,45 +77,129 @@ std::uint8_t Attribute::getAttributeMask() const {
     return attributeMask;
 }
 
+EmberAfDefaultOrMinMaxAttributeValue Attribute::getAttributeDefaultValue() const {
+    return defaultValue;
+}
+
+EmberAfAttributeType Attribute::getAttributeBaseType() {
+    switch (attributeType)
+    {
+    case ZCL_ACTION_ID_ATTRIBUTE_TYPE:  // Action Id
+    case ZCL_FABRIC_IDX_ATTRIBUTE_TYPE: // Fabric Index
+    case ZCL_BITMAP8_ATTRIBUTE_TYPE:    // 8-bit bitmap
+    case ZCL_ENUM8_ATTRIBUTE_TYPE:      // 8-bit enumeration
+    case ZCL_STATUS_ATTRIBUTE_TYPE:     // Status Code
+    case ZCL_PERCENT_ATTRIBUTE_TYPE:    // Percentage
+        static_assert(std::is_same<chip::Percent, uint8_t>::value,
+                      "chip::Percent is expected to be uint8_t, change this when necessary");
+        return ZCL_INT8U_ATTRIBUTE_TYPE;
+
+    case ZCL_ENDPOINT_NO_ATTRIBUTE_TYPE:   // Endpoint Number
+    case ZCL_GROUP_ID_ATTRIBUTE_TYPE:      // Group Id
+    case ZCL_VENDOR_ID_ATTRIBUTE_TYPE:     // Vendor Id
+    case ZCL_ENUM16_ATTRIBUTE_TYPE:        // 16-bit enumeration
+    case ZCL_BITMAP16_ATTRIBUTE_TYPE:      // 16-bit bitmap
+    case ZCL_PERCENT100THS_ATTRIBUTE_TYPE: // 100ths of a percent
+        static_assert(std::is_same<chip::EndpointId, uint16_t>::value,
+                      "chip::EndpointId is expected to be uint16_t, change this when necessary");
+        static_assert(std::is_same<chip::GroupId, uint16_t>::value,
+                      "chip::GroupId is expected to be uint16_t, change this when necessary");
+        static_assert(std::is_same<chip::Percent100ths, uint16_t>::value,
+                      "chip::Percent100ths is expected to be uint16_t, change this when necessary");
+        return ZCL_INT16U_ATTRIBUTE_TYPE;
+
+    case ZCL_CLUSTER_ID_ATTRIBUTE_TYPE: // Cluster Id
+    case ZCL_ATTRIB_ID_ATTRIBUTE_TYPE:  // Attribute Id
+    case ZCL_FIELD_ID_ATTRIBUTE_TYPE:   // Field Id
+    case ZCL_EVENT_ID_ATTRIBUTE_TYPE:   // Event Id
+    case ZCL_COMMAND_ID_ATTRIBUTE_TYPE: // Command Id
+    case ZCL_TRANS_ID_ATTRIBUTE_TYPE:   // Transaction Id
+    case ZCL_DEVTYPE_ID_ATTRIBUTE_TYPE: // Device Type Id
+    case ZCL_DATA_VER_ATTRIBUTE_TYPE:   // Data Version
+    case ZCL_BITMAP32_ATTRIBUTE_TYPE:   // 32-bit bitmap
+    case ZCL_EPOCH_S_ATTRIBUTE_TYPE:    // Epoch Seconds
+    case ZCL_ELAPSED_S_ATTRIBUTE_TYPE:  // Elapsed Seconds
+        static_assert(std::is_same<chip::ClusterId, uint32_t>::value,
+                      "chip::Cluster is expected to be uint32_t, change this when necessary");
+        static_assert(std::is_same<chip::AttributeId, uint32_t>::value,
+                      "chip::AttributeId is expected to be uint32_t, change this when necessary");
+        static_assert(std::is_same<chip::AttributeId, uint32_t>::value,
+                      "chip::AttributeId is expected to be uint32_t, change this when necessary");
+        static_assert(std::is_same<chip::EventId, uint32_t>::value,
+                      "chip::EventId is expected to be uint32_t, change this when necessary");
+        static_assert(std::is_same<chip::CommandId, uint32_t>::value,
+                      "chip::CommandId is expected to be uint32_t, change this when necessary");
+        static_assert(std::is_same<chip::TransactionId, uint32_t>::value,
+                      "chip::TransactionId is expected to be uint32_t, change this when necessary");
+        static_assert(std::is_same<chip::DeviceTypeId, uint32_t>::value,
+                      "chip::DeviceTypeId is expected to be uint32_t, change this when necessary");
+        static_assert(std::is_same<chip::DataVersion, uint32_t>::value,
+                      "chip::DataVersion is expected to be uint32_t, change this when necessary");
+        return ZCL_INT32U_ATTRIBUTE_TYPE;
+
+    case ZCL_EVENT_NO_ATTRIBUTE_TYPE:   // Event Number
+    case ZCL_FABRIC_ID_ATTRIBUTE_TYPE:  // Fabric Id
+    case ZCL_NODE_ID_ATTRIBUTE_TYPE:    // Node Id
+    case ZCL_BITMAP64_ATTRIBUTE_TYPE:   // 64-bit bitmap
+    case ZCL_EPOCH_US_ATTRIBUTE_TYPE:   // Epoch Microseconds
+    case ZCL_POSIX_MS_ATTRIBUTE_TYPE:   // POSIX Milliseconds
+    case ZCL_SYSTIME_MS_ATTRIBUTE_TYPE: // System time Milliseconds
+    case ZCL_SYSTIME_US_ATTRIBUTE_TYPE: // System time Microseconds
+        static_assert(std::is_same<chip::EventNumber, uint64_t>::value,
+                      "chip::EventNumber is expected to be uint64_t, change this when necessary");
+        static_assert(std::is_same<chip::FabricId, uint64_t>::value,
+                      "chip::FabricId is expected to be uint64_t, change this when necessary");
+        static_assert(std::is_same<chip::NodeId, uint64_t>::value,
+                      "chip::NodeId is expected to be uint64_t, change this when necessary");
+        return ZCL_INT64U_ATTRIBUTE_TYPE;
+
+    case ZCL_TEMPERATURE_ATTRIBUTE_TYPE: // Temperature
+        return ZCL_INT16S_ATTRIBUTE_TYPE;
+
+    default:
+        return attributeType;
+    }
+}
+
 template<typename T>
 T Attribute::getValue() const {
-    if (std::holds_alternative<T>(value)) {
-        return std::get<T>(value);
-    } else {
-        std::cout << "Unknown data type" << std::endl;
-        return T();
-    }
+    // if (std::holds_alternative<T>(value)) {
+    //     return std::get<T>(value);
+    // } else {
+    //     std::cout << "Unknown data type" << std::endl;
+    //     return T();
+    // }
 }
 
 template<typename T>
 void Attribute::setValue(const T& newValue) {
-    value = newValue;
+    // value = newValue;
 }
 
 void Attribute::print(int indent) const {
-    std::string indentation(indent, ' ');
-    if (attributeType == ZCL_INT8U_ATTRIBUTE_TYPE) {
-        std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<unsigned int>(getValue<std::uint8_t>()) << std::endl;
-    } else if (attributeType == ZCL_INT16U_ATTRIBUTE_TYPE) {
-        std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<unsigned int>(getValue<std::uint16_t>()) << std::endl;
-    } else if (attributeType == ZCL_INT32U_ATTRIBUTE_TYPE) {
-        std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<unsigned int>(getValue<std::uint32_t>()) << std::endl;
-    } else if (attributeType == ZCL_INT64U_ATTRIBUTE_TYPE) {
-        std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<unsigned int>(getValue<std::uint64_t>()) << std::endl;
-    } else if (attributeType == ZCL_INT8S_ATTRIBUTE_TYPE) {
-        std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<int>(getValue<std::int8_t>()) << std::endl;
-    } else if (attributeType == ZCL_INT16S_ATTRIBUTE_TYPE) {
-        std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<int>(getValue<std::int16_t>()) << std::endl;
-    } else if (attributeType == ZCL_INT32S_ATTRIBUTE_TYPE) {
-        std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<int>(getValue<std::int32_t>()) << std::endl;
-    } else if (attributeType == ZCL_INT64S_ATTRIBUTE_TYPE) {
-        std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<int>(getValue<std::int64_t>()) << std::endl;
-    } else if (attributeType == ZCL_CHAR_STRING_ATTRIBUTE_TYPE) {
-        std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << getValue<std::string>() << std::endl;
-    } else {
-        // Handle the case where the data type doesn't match
-        std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value type undefined" << std::endl;
-    }
+    // std::string indentation(indent, ' ');
+    // if (attributeType == ZCL_INT8U_ATTRIBUTE_TYPE) {
+    //     std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<unsigned int>(getValue<std::uint8_t>()) << std::endl;
+    // } else if (attributeType == ZCL_INT16U_ATTRIBUTE_TYPE) {
+    //     std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<unsigned int>(getValue<std::uint16_t>()) << std::endl;
+    // } else if (attributeType == ZCL_INT32U_ATTRIBUTE_TYPE) {
+    //     std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<unsigned int>(getValue<std::uint32_t>()) << std::endl;
+    // } else if (attributeType == ZCL_INT64U_ATTRIBUTE_TYPE) {
+    //     std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<unsigned int>(getValue<std::uint64_t>()) << std::endl;
+    // } else if (attributeType == ZCL_INT8S_ATTRIBUTE_TYPE) {
+    //     std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<int>(getValue<std::int8_t>()) << std::endl;
+    // } else if (attributeType == ZCL_INT16S_ATTRIBUTE_TYPE) {
+    //     std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<int>(getValue<std::int16_t>()) << std::endl;
+    // } else if (attributeType == ZCL_INT32S_ATTRIBUTE_TYPE) {
+    //     std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<int>(getValue<std::int32_t>()) << std::endl;
+    // } else if (attributeType == ZCL_INT64S_ATTRIBUTE_TYPE) {
+    //     std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << static_cast<int>(getValue<std::int64_t>()) << std::endl;
+    // } else if (attributeType == ZCL_CHAR_STRING_ATTRIBUTE_TYPE) {
+    //     std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value = " << getValue<std::string>() << std::endl;
+    // } else {
+    //     // Handle the case where the data type doesn't match
+    //     std::cout << indentation << "- Attribute " << getAttributeId() << ": " << " value type undefined" << std::endl;
+    // }
 }
 
 /*                  Events                  */
@@ -320,14 +458,201 @@ void Endpoint::setParentEndpointId(chip::EndpointId newParentEndpointId) {
 }
 
 void Endpoint::enableEndpoint(Span<const EmberAfDeviceType> deviceTypeList) {
-    dataVersion = new chip::DataVersion[clusters.size()]; // dataVersion should be as big as the number of clusters in this endpoint
-    // index - to setup a counter
+    // dataVersion = new chip::DataVersion[clusters.size()]; // dataVersion should be as big as the number of clusters in this endpoint
+    dataVersion = (chip::DataVersion*) calloc(clusters.size(), sizeof(chip::DataVersion));
+    // index - to setup a counter, maybe use nextEndpointId-1?
     // endpointId - member
     // EmberAfEndpointType - to be created
     // dataVersionStorage - allocated, member
     // deviceTypeList - argument
     // parentEndpointId - member
 
+    // Store dynamic allocated objects here, then delete it at the end of this function
+    // TODO: do we need this garbage collectors? Can we loop through the list?
+    // std::vector<EmberAfCluster*> clusterGarbageCollector;
+    // std::vector<EmberAfAttributeMetadata*> attributeGarbageCollector;
+    // std::vector<EmberAfGenericClusterFunction*> functionGarbageCollector;
+    // std::vector<chip::CommandId*> acceptedCommandGarbageCollector;
+    // std::vector<chip::CommandId*> generatedCommandGarbageCollector;
+    // std::vector<chip::EventId*> eventGarbageCollector;
+
+    EmberAfEndpointType *endpointType = nullptr;
+    EmberAfCluster *clusterType = nullptr;
+    EmberAfAttributeMetadata *attributeType = nullptr;
+    EmberAfGenericClusterFunction *functionType = nullptr;
+    chip::CommandId *acceptedCommandType = nullptr;
+    chip::CommandId *generatedCommandType = nullptr;
+    chip::EventId *eventType = nullptr;
+
+    // Setup cluster type
+    if (clusters.size() > 0) {
+        clusterType = (EmberAfCluster*) calloc(clusters.size(), sizeof(EmberAfCluster));
+        clusterGarbageCollector.push_back(clusterType);
+    }
+
+    for (size_t i=0; i<clusters.size(); i++) {
+        Cluster cluster = clusters[i];
+
+        // Setup attributes
+        if (cluster.attributes.size() > 0) {
+            attributeType = (EmberAfAttributeMetadata*) calloc(cluster.attributes.size(), sizeof(EmberAfAttributeMetadata));
+            attributeGarbageCollector.push_back(attributeType);
+        }
+
+        for (size_t j=0; j<cluster.attributes.size(); j++) {
+            attributeType[j].defaultValue = cluster.attributes[j].getAttributeDefaultValue(); 
+            attributeType[j].attributeId = cluster.attributes[j].getAttributeId();
+            attributeType[j].size = cluster.attributes[j].getAttributeSize();
+            attributeType[j].attributeType = cluster.attributes[j].getAttributeType();
+            attributeType[j].mask = cluster.attributes[j].getAttributeMask();
+        }
+
+        // Setup cluster functions
+        if (cluster.functions.size() > 0) {
+            functionType = (EmberAfGenericClusterFunction*) calloc(cluster.functions.size(), sizeof(EmberAfGenericClusterFunction));
+            functionGarbageCollector.push_back(functionType);
+        }
+
+        for (size_t j=0; j<cluster.functions.size(); j++) {
+            functionType[j] = cluster.functions[j];
+        }
+
+        // Setup accepted commands
+        if (cluster.acceptedCommands.size() > 0) {
+            acceptedCommandType = (chip::CommandId*) calloc(cluster.acceptedCommands.size(), sizeof(chip::CommandId));
+            acceptedCommandGarbageCollector.push_back(acceptedCommandType);
+        }
+
+        for (size_t j=0; j<cluster.acceptedCommands.size(); j++) {
+            acceptedCommandType[j] = cluster.acceptedCommands[j].getCommandId();
+        }
+
+        // Setup generated commands
+        if (cluster.generatedCommands.size() > 0) {
+            generatedCommandType = (chip::CommandId*) calloc(cluster.generatedCommands.size(), sizeof(chip::CommandId));
+            generatedCommandGarbageCollector.push_back(generatedCommandType);
+        }
+
+        for (size_t j=0; j<cluster.generatedCommands.size(); j++) {
+            generatedCommandType[j] = cluster.generatedCommands[j].getCommandId();
+        }
+
+        // Setup events
+        if (cluster.events.size() > 0) {
+            eventType = (chip::EventId*) calloc(cluster.events.size(), sizeof(chip::EventId));
+            eventGarbageCollector.push_back(eventType);
+        }
+
+        for (size_t j=0; j<cluster.events.size(); j++) {
+            eventType[j] = cluster.events[j].getEventId();
+        }
+
+        clusterType[i].clusterId = cluster.getClusterId();    
+        clusterType[i].attributeCount = cluster.attributes.size();
+        clusterType[i].clusterSize = 0;   // default value
+        clusterType[i].mask = cluster.getClusterMask();
+        clusterType[i].eventCount = cluster.events.size();
+        clusterType[i].attributes = attributeType;
+        clusterType[i].functions = functionType;
+        clusterType[i].acceptedCommandList = acceptedCommandType;
+        clusterType[i].generatedCommandList = generatedCommandType;
+        clusterType[i].eventList = eventType;
+    }
+
+    // Setup endpoint type
+    endpointType = (EmberAfEndpointType*) calloc(1, sizeof(EmberAfEndpointType));
+    endpointType->clusterCount = clusters.size();
+    endpointType->endpointSize = 0;   // set to 0 as default
+    endpointType->cluster = clusterType;
+
+    // Register endpoint as Matter dynamic endpoint
+    chip::DeviceLayer::PlatformMgr().LockChipStack();
+    EmberAfStatus status = emberAfSetDynamicEndpoint(parentNode->getNextEndpointId() - 1, endpointId, endpointType, chip::Span<chip::DataVersion>(dataVersion, clusters.size()), deviceTypeList, parentEndpointId);
+    chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+
+    if (status == EMBER_ZCL_STATUS_SUCCESS) {
+        ChipLogProgress(DeviceLayer, "Set dynamic endpoint %d success", endpointId);
+        endpointMetadata = endpointType;
+        return;
+    }
+    else {
+        ChipLogError(DeviceLayer, "Failed to create dynamic endpoint %d with status %d", endpointId, status);
+    }
+
+    // free allocated memory if error
+    for (EmberAfCluster *cls : clusterGarbageCollector) {
+        free(cls);
+    }
+
+    for (EmberAfAttributeMetadata *att : attributeGarbageCollector) {
+        free(att);
+    }
+
+    for (EmberAfGenericClusterFunction *fun : functionGarbageCollector) {
+        free(fun);
+    }
+
+    for (chip::CommandId *acmd : acceptedCommandGarbageCollector) {
+        free(acmd);
+    }
+
+    for (chip::CommandId *gcmd : generatedCommandGarbageCollector) {
+        free(gcmd);
+    }
+
+    for (chip::EventId *evt : eventGarbageCollector) {
+        free(evt);
+    }
+
+    free(dataVersion);
+    free(endpointType);
+}
+
+void Endpoint::disableEndpoint() {
+
+    chip::DeviceLayer::PlatformMgr().LockChipStack();
+    int endpointIndex = emberAfGetDynamicIndexFromEndpoint(endpointId);
+    chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+
+    if (endpointIndex == 0xFFFF) {
+        ChipLogError(DeviceLayer, "Could not find endpoint index");
+        return;
+    }
+
+    chip::DeviceLayer::PlatformMgr().LockChipStack();
+    emberAfClearDynamicEndpoint(endpointIndex);
+    chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+
+    // free allocated memory if error
+    for (EmberAfCluster *cls : clusterGarbageCollector) {
+        free(cls);
+    }
+
+    for (EmberAfAttributeMetadata *att : attributeGarbageCollector) {
+        free(att);
+    }
+
+    for (EmberAfGenericClusterFunction *fun : functionGarbageCollector) {
+        free(fun);
+    }
+
+    for (chip::CommandId *acmd : acceptedCommandGarbageCollector) {
+        free(acmd);
+    }
+
+    for (chip::CommandId *gcmd : generatedCommandGarbageCollector) {
+        free(gcmd);
+    }
+
+    for (chip::EventId *evt : eventGarbageCollector) {
+        free(evt);
+    }
+
+    free(dataVersion);
+    free(endpointMetadata);
+
+    // TODO: clear persistent data on this endpoint
+    ChipLogProgress(DeviceLayer, "Successfully disabled dynamic endpoint %d", endpointId);
 }
 
 void Endpoint::print(int indent) const {
@@ -353,6 +678,10 @@ Endpoint *Node::getEndpoint(chip::EndpointId endpointId) {
         i++;
     }
     return NULL;
+}
+
+chip::EndpointId Node::getNextEndpointId() const {
+    return nextEndpointId;
 }
 
 void Node::addEndpoint(const EndpointConfig& endpointConfig) {
@@ -419,54 +748,6 @@ void Node::print() const {
     for (const Endpoint& endpoint : endpoints) {
         endpoint.print(2);
     }
-
-#if 0
-    printf("\r\n=================metadata=============\r\n");
-    for (const Endpoint & endpoint : endpoints) {
-        printf("Endpoint Id: %d\r\n", endpoint.getEndpointId());
-        printf("\tClusterCount: %d\r\n", endpoint.getClusterCount());
-        printf("\tEndpointSize: %d\r\n", endpoint.getEndpointSize());
-
-        const EmberAfCluster *cluster_md = endpoint.getMetadataClusterList();
-        for (size_t i=0; i<endpoint.getClusterCount(); i++) {
-            printf("\tCluster Id: %d\r\n", cluster_md->clusterId);
-            printf("\t\tClusterSize: %d\r\n", cluster_md->clusterSize);
-            printf("\t\tMask: %d\r\n", cluster_md->mask);
-
-            printf("\t\tEventCount: %d\r\n", cluster_md->eventCount);
-            printf("\t\tEventList\r\n");
-            // for (size_t j=0; j<cluster_md->eventCount; j++) {
-            //     printf("\t\t\tEvend Id: %d\r\n", *(cluster_md->eventList + j));
-            // }
-
-            printf("\t\tAcceptedCommandList\r\n");
-            const chip::CommandId* ptr = cluster_md->acceptedCommandList;
-            // while (*ptr != 0xFFFFFFFF) {
-            //     printf("\t\t\tCommand Id: %d\r\n", *(ptr));
-            //     ptr++;
-            //     break;
-            // }
-
-            printf("\t\tGeneratedCommandList\r\n");
-            ptr = cluster_md->generatedCommandList;
-            // while (*ptr != 0xFFFFFFFF) {
-            //     printf("\t\t\tCommand Id: %d\r\n", *(ptr));
-            //     ptr++;
-            //     break;
-            // }
-
-            printf("\t\tAttributeCount: %d\r\n", cluster_md->attributeCount);
-            printf("\t\tAttributeList\r\n");
-            const EmberAfAttributeMetadata *attribute_md = cluster_md->attributes;
-            // for (size_t j=0; j<cluster_md->attributeCount; j++) {
-            //     printf("\t\t\tAttribute Id: %d\r\n", attribute_md->attributeId);
-            //     printf("\t\t\tAttributeSize : %d\r\n", attribute_md->size);
-            //     printf("\t\t\tAttributeType : %d\r\n", attribute_md->attributeType);
-            //     printf("\t\t\tAttributeMask : %d\r\n", attribute_md->mask);
-            // }
-        }
-    }
-#endif
 }
 
 // EndpointConfig createEndpointConfig() {

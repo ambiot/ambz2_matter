@@ -13,22 +13,25 @@ class Attribute;
 class Command;
 class Event;
 
-typedef std::variant<std::uint8_t, std::int8_t, std::uint16_t, std::int16_t,
-                                   std::uint32_t, std::int32_t, std::uint64_t, std::int64_t,
-                                   std::string> AttributeValue;
+typedef std::variant<uint8_t, uint8_t*, int8_t, uint16_t, int16_t, uint32_t, int32_t, uint64_t, int64_t, float> AttributeValue;
 
 // Configurations
 struct AttributeConfig {
     std::uint32_t attributeId;
     std::uint8_t dataType; /* EmberAfAttributeType in string format */
-    AttributeValue value = std::int32_t(0); /* default value, use ZAP_DEFAULT_EMPTY() */ // this will be default value, but the actual value should we use the one inside metadata?
+    // AttributeValue value = std::int32_t(0); /* default value, use ZAP_DEFAULT_EMPTY() */ // this will be default value, but the actual value should we use the one inside metadata?
+    EmberAfDefaultOrMinMaxAttributeValue value;
     std::uint16_t size; /* attributeSize, use ZAP_TYPE(type) */
     std::uint8_t mask = 0; /* attribute flag */
+
+    AttributeConfig(uint32_t attributeId, uint8_t dataType, EmberAfDefaultOrMinMaxAttributeValue value, uint16_t size, uint8_t mask) : attributeId(attributeId), dataType(dataType), value(value), size(size), mask(mask) {}
 };
 
 struct EventConfig {
     // Add necessary attributes and methods for configuration
     std::uint32_t eventId;
+
+    EventConfig(uint32_t eventId) : eventId(eventId) {}
 };
 
 struct CommandConfig {
@@ -36,6 +39,8 @@ struct CommandConfig {
     std::uint32_t commandId;
     std::uint8_t mask = 0; /* command flag */
     // callback?
+
+    CommandConfig(uint32_t commandId, uint8_t mask) : commandId(commandId), mask(mask) {}
 };
 
 struct ClusterConfig {
@@ -63,7 +68,49 @@ public:
         attributeType(attributeConfig.dataType),
         attributeMask(attributeConfig.mask),
         parentCluster(cluster),
-        value(attributeConfig.value) {};
+        defaultValue(attributeConfig.value) {
+            // Change attributeType to base type
+            // Assign value to be of base type with default value
+            // TODO: get value from NVS
+            switch(getAttributeBaseType())
+            {
+            case ZCL_INT8U_ATTRIBUTE_TYPE:
+                value = uint8_t(attributeConfig.value.defaultValue);
+                break;
+            case ZCL_INT16U_ATTRIBUTE_TYPE:
+                value = uint16_t(attributeConfig.value.defaultValue);
+                break;
+            case ZCL_INT32U_ATTRIBUTE_TYPE:
+                value = uint32_t(attributeConfig.value.defaultValue);
+                break;
+            case ZCL_INT64U_ATTRIBUTE_TYPE:
+                value = uint64_t(attributeConfig.value.defaultValue);
+                break;
+            case ZCL_INT8S_ATTRIBUTE_TYPE:
+                value = int8_t(attributeConfig.value.defaultValue);
+                break;
+            case ZCL_INT16S_ATTRIBUTE_TYPE:
+                value = int16_t(attributeConfig.value.defaultValue);
+                break;
+            case ZCL_INT32S_ATTRIBUTE_TYPE:
+                value = int32_t(attributeConfig.value.defaultValue);
+                break;
+            case ZCL_INT64S_ATTRIBUTE_TYPE:
+                value = int64_t(attributeConfig.value.defaultValue);
+                break;
+            case ZCL_SINGLE_ATTRIBUTE_TYPE:
+                value = float(attributeConfig.value.defaultValue);
+                break;
+            case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
+            case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
+            case ZCL_ARRAY_ATTRIBUTE_TYPE:
+            case ZCL_STRUCT_ATTRIBUTE_TYPE:
+                value = (uint8_t*)(attributeConfig.value.ptrToDefaultValue);
+                break;
+            default:
+                ChipLogError(DeviceLayer, "Unknown device type, unable to assign value");
+            }
+        }
 
     chip::AttributeId getAttributeId() const;
 
@@ -72,6 +119,10 @@ public:
     EmberAfAttributeType getAttributeType() const;
 
     EmberAfAttributeMask getAttributeMask() const;
+
+    EmberAfDefaultOrMinMaxAttributeValue getAttributeDefaultValue() const;
+
+    EmberAfAttributeType getAttributeBaseType();
 
     template<typename T>
     T getValue() const;
@@ -86,6 +137,7 @@ private:
     EmberAfAttributeType attributeType;
     EmberAfAttributeMask attributeMask;
     Cluster* parentCluster;
+    EmberAfDefaultOrMinMaxAttributeValue defaultValue;
     AttributeValue value;
 };
 
@@ -136,6 +188,8 @@ private:
 // Cluster class
 class Cluster {
 public:
+    friend class Endpoint;
+
     Cluster(Endpoint* endpoint, ClusterConfig clusterConfig) :
         clusterId(clusterConfig.clusterId),
         clusterMask(clusterConfig.mask),
@@ -147,11 +201,21 @@ public:
 
     Attribute *getAttribute(chip::AttributeId attributeId);
 
+    uint32_t getAttributeCount() const;
+
     Event *getEvent(chip::EventId eventId); 
+
+    uint32_t getEventCount() const;
 
     Command *getAcceptedCommand(chip::CommandId commandId);
 
+    uint32_t getAcceptedCommandCount() const;
+
     Command *getGeneratedCommand(chip::CommandId commandId);
+
+    uint32_t getGeneratedCommandCount() const;
+
+    uint32_t getFunctionCount() const;
 
     void addAttribute(AttributeConfig attributeConfig);
 
@@ -215,14 +279,25 @@ public:
 
     void enableEndpoint(chip::Span<const EmberAfDeviceType> deviceTypeList);
 
+    void disableEndpoint();
+
     void print(int indent = 0) const;
 private:
     chip::EndpointId endpointId;
     chip::EndpointId parentEndpointId;
     Node* parentNode;
     chip::DataVersion *dataVersion = nullptr;
-
     std::vector<Cluster> clusters;
+    EmberAfEndpointType *endpointMetadata;
+
+    // Garbage collectors
+    // Store dynamic allocated objects here when endpoint is enabled, then delete it when disabled
+    std::vector<EmberAfCluster*> clusterGarbageCollector;
+    std::vector<EmberAfAttributeMetadata*> attributeGarbageCollector;
+    std::vector<EmberAfGenericClusterFunction*> functionGarbageCollector;
+    std::vector<chip::CommandId*> acceptedCommandGarbageCollector;
+    std::vector<chip::CommandId*> generatedCommandGarbageCollector;
+    std::vector<chip::EventId*> eventGarbageCollector;
 };
 
 // Node class
@@ -231,6 +306,8 @@ public:
     static Node& getInstance();
 
     Endpoint *getEndpoint(chip::EndpointId endpointId);
+
+    chip::EndpointId getNextEndpointId() const;
 
     void addEndpoint(const EndpointConfig& endpointConfig);
 
