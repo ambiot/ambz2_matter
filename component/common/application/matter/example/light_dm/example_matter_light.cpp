@@ -73,29 +73,16 @@ static void example_matter_light_task(void *pvParameters)
     EndpointConfig rootNodeEndpointConfig;
     Presets::Endpoints::matter_root_node_preset(&rootNodeEndpointConfig);
 
-    // AttributeConfig attributeConfig1(1, ZCL_INT8U_ATTRIBUTE_TYPE, std::uint8_t(10), 1 ,0);
-
-    // EventConfig eventConfig1(1);
-
-    // CommandConfig commandConfig1(1, COMMAND_MASK_ACCEPTED);
-
-    // ClusterConfig clusterConfig1;
-    // clusterConfig1.clusterId = 1;
-    // clusterConfig1.attributeConfigs.push_back(attributeConfig1);
-    // clusterConfig1.eventConfigs.push_back(eventConfig1);
-    // clusterConfig1.commandConfigs.push_back(commandConfig1);
-
-    // EndpointConfig endpointConfig1;
-    // endpointConfig1.clusterConfigs.push_back(clusterConfig1);
-
     // Initial
-    // node.addEndpoint(endpointConfig1);
     node.addEndpoint(rootNodeEndpointConfig);
 
+    // Enable root node endpoint
     node.getEndpoint(0)->enableEndpoint(Span<const EmberAfDeviceType>(deviceTypes));
-    node.print();
-    node.getEndpoint(0)->disableEndpoint();
-    node.print();
+    // node.print();
+
+    // Disable root node endpoint
+    // node.getEndpoint(0)->disableEndpoint();
+    // node.print();
 
     vTaskDelete(NULL);
 }

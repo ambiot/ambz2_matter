@@ -7,7 +7,7 @@
 
 using namespace ::chip;
 
-// emberAfExternalAttributeRead/WriteCallback are required for externally stored attributes
+/* emberAfExternalAttributeRead/WriteCallback are required for externally stored attributes */
 EmberAfStatus emberAfExternalAttributeReadCallback(EndpointId endpoint_id, ClusterId cluster_id,
                                                    const EmberAfAttributeMetadata *matter_attribute, uint8_t *buffer,
                                                    uint16_t max_read_length)
@@ -29,7 +29,8 @@ EmberAfStatus emberAfExternalAttributeReadCallback(EndpointId endpoint_id, Clust
     case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
     case ZCL_ARRAY_ATTRIBUTE_TYPE:
     case ZCL_STRUCT_ATTRIBUTE_TYPE:
-        memcpy(buffer, attribute->getValue<uint8_t*>(), attribute->getAttributeSize());
+        // memcpy(buffer, attribute->getValue<uint8_t*>(), attribute->getAttributeSize());
+        memcpy(buffer, std::get<uint8_t*>(attribute->getValue()), attribute->getAttributeSize());
         break;
     default:
         ChipLogError(DeviceLayer, "");
@@ -51,7 +52,8 @@ EmberAfStatus emberAfExternalAttributeWriteCallback(EndpointId endpoint_id, Clus
     case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
     case ZCL_ARRAY_ATTRIBUTE_TYPE:
     case ZCL_STRUCT_ATTRIBUTE_TYPE:
-        memcpy(attribute->getValue<uint8_t*>(), buffer, attribute->getAttributeSize());
+        // memcpy(attribute->getValue<uint8_t*>(), buffer, attribute->getAttributeSize());
+        memcpy(std::get<uint8_t*>(attribute->getValue()), buffer, attribute->getAttributeSize());
         break;
     default:
         ChipLogError(DeviceLayer, "");
@@ -161,19 +163,49 @@ EmberAfAttributeType Attribute::getAttributeBaseType() {
     }
 }
 
-template<typename T>
-T Attribute::getValue() const {
-    // if (std::holds_alternative<T>(value)) {
-    //     return std::get<T>(value);
-    // } else {
-    //     std::cout << "Unknown data type" << std::endl;
-    //     return T();
-    // }
+AttributeValue Attribute::getValue() const {
+    return value;
 }
 
-template<typename T>
-void Attribute::setValue(const T& newValue) {
-    // value = newValue;
+void Attribute::setValue(AttributeValue & newValue) {
+    switch(getAttributeBaseType())
+    {
+    case ZCL_INT8U_ATTRIBUTE_TYPE:
+        value = std::get<uint8_t>(newValue);
+        break;
+    case ZCL_INT16U_ATTRIBUTE_TYPE:
+        value = std::get<uint16_t>(newValue);
+        break;
+    case ZCL_INT32U_ATTRIBUTE_TYPE:
+        value = std::get<uint32_t>(newValue);
+        break;
+    case ZCL_INT64U_ATTRIBUTE_TYPE:
+        value = std::get<uint64_t>(newValue);
+        break;
+    case ZCL_INT8S_ATTRIBUTE_TYPE:
+        value = std::get<int8_t>(newValue);
+        break;
+    case ZCL_INT16S_ATTRIBUTE_TYPE:
+        value = std::get<int16_t>(newValue);
+        break;
+    case ZCL_INT32S_ATTRIBUTE_TYPE:
+        value = std::get<int32_t>(newValue);
+        break;
+    case ZCL_INT64S_ATTRIBUTE_TYPE:
+        value = std::get<int64_t>(newValue);
+        break;
+    case ZCL_SINGLE_ATTRIBUTE_TYPE:
+        value = std::get<float>(newValue);
+        break;
+    case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
+    case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
+    case ZCL_ARRAY_ATTRIBUTE_TYPE:
+    case ZCL_STRUCT_ATTRIBUTE_TYPE:
+        value = std::get<uint8_t*>(newValue);
+        break;
+    default:
+        ChipLogError(DeviceLayer, "Unknown attribute type, unable to assign value");
+    }
 }
 
 void Attribute::print(int indent) const {

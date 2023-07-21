@@ -115,6 +115,7 @@ void matter_cluster_ota_requestor_server(ClusterConfig *clusterConfig) {
     AttributeConfig otarClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(1), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
 
     CommandConfig otarAnnounceOtaProvider(0x00000000, COMMAND_MASK_ACCEPTED);
+    CommandConfig otarEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
 
     EventConfig otarStateTransition(0x00000000);
     EventConfig otarVersionApplied(0x00000001);
@@ -129,6 +130,7 @@ void matter_cluster_ota_requestor_server(ClusterConfig *clusterConfig) {
     clusterConfig->attributeConfigs.push_back(otarFeatureMap);
     clusterConfig->attributeConfigs.push_back(otarClusterRevision);
     clusterConfig->commandConfigs.push_back(otarAnnounceOtaProvider);
+    clusterConfig->commandConfigs.push_back(otarEndOfAcceptedCommandList);
     clusterConfig->eventConfigs.push_back(otarStateTransition);
     clusterConfig->eventConfigs.push_back(otarVersionApplied);
     clusterConfig->eventConfigs.push_back(otarDownloadError);
@@ -183,6 +185,7 @@ void matter_cluster_network_commissioning_server(ClusterConfig *clusterConfig) {
 
     CommandConfig netcomScanNetworks(0x00000000, COMMAND_MASK_ACCEPTED);
     CommandConfig netcomAddOrUpdateWiFiNetwork(0x00000002, COMMAND_MASK_ACCEPTED);
+    CommandConfig netcomEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
 
     clusterConfig->clusterId = 0x00000031;
     clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER);
@@ -197,6 +200,7 @@ void matter_cluster_network_commissioning_server(ClusterConfig *clusterConfig) {
     clusterConfig->attributeConfigs.push_back(netcomClusterRevision);
     clusterConfig->commandConfigs.push_back(netcomScanNetworks);
     clusterConfig->commandConfigs.push_back(netcomAddOrUpdateWiFiNetwork);
+    clusterConfig->commandConfigs.push_back(netcomEndOfAcceptedCommandList);
 }
 
 void matter_cluster_general_diagnostics_server(ClusterConfig *clusterConfig) {
@@ -337,6 +341,27 @@ void matter_cluster_group_key_management_server(ClusterConfig *clusterConfig) {
     clusterConfig->attributeConfigs.push_back(gkmClusterRevision);
 }
 
+void matter_cluster_identify_server(ClusterConfig *clusterConfig) {
+    AttributeConfig identifyIdentifyTime(0x00000000, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(0x0000), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig identifyIdentifyType(0x00000001, ZAP_TYPE(ENUM8), ZAP_SIMPLE_DEFAULT(0x0), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig identifyFeatureMap(0x0000FFFC, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(0), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig identifyClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(4), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    CommandConfig identifyIdentify(0x00000000, COMMAND_MASK_ACCEPTED);
+    CommandConfig identifyTriggerEffect(0x00000040, COMMAND_MASK_ACCEPTED);
+    CommandConfig identifyEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
+
+    clusterConfig->clusterId = 0x00000003;
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER);
+    clusterConfig->attributeConfigs.push_back(identifyIdentifyTime);
+    clusterConfig->attributeConfigs.push_back(identifyIdentifyType);
+    clusterConfig->attributeConfigs.push_back(identifyFeatureMap);
+    clusterConfig->attributeConfigs.push_back(identifyClusterRevision);
+    clusterConfig->commandConfigs.push_back(identifyIdentify);
+    clusterConfig->commandConfigs.push_back(identifyTriggerEffect);
+    clusterConfig->commandConfigs.push_back(identifyEndOfAcceptedCommandList);
+}
+
 } // Clusters
 
 namespace Endpoints {
@@ -380,6 +405,10 @@ void matter_root_node_preset(EndpointConfig *rootNodeEndpointConfig) {
     rootNodeEndpointConfig->clusterConfigs.push_back(administratorCommissioningServerCluster);
     rootNodeEndpointConfig->clusterConfigs.push_back(operationalCredentialsServerCluster);
     rootNodeEndpointConfig->clusterConfigs.push_back(groupKeyManagementServerCluster);
+}
+
+void matter_dimmable_light_preset(EndpointConfig *dimmableLightEndpointConfig) {
+
 }
 
 }

@@ -108,7 +108,7 @@ public:
                 value = (uint8_t*)(attributeConfig.value.ptrToDefaultValue);
                 break;
             default:
-                ChipLogError(DeviceLayer, "Unknown device type, unable to assign value");
+                ChipLogError(DeviceLayer, "Unknown attribute type, unable to assign value");
             }
         }
 
@@ -124,11 +124,9 @@ public:
 
     EmberAfAttributeType getAttributeBaseType();
 
-    template<typename T>
-    T getValue() const;
+    AttributeValue getValue() const;
 
-    template<typename T>
-    void setValue(const T& newValue);
+    void setValue(AttributeValue & newValue);
 
     void print(int indent = 0) const;
 private:
