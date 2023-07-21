@@ -1,7 +1,9 @@
+#include <app/PluginApplicationCallbacks.h>
 #include <app/util/endpoint-config-defines.h>
 #include <app/att-storage.h>
 #include <app-common/zap-generated/ids/Attributes.h>
 #include <app-common/zap-generated/ids/Clusters.h>
+#include <app-common/zap-generated/callback.h>
 #include "matter_data_model.h"
 
 using namespace chip::app::Clusters;
@@ -149,6 +151,7 @@ void matter_cluster_general_commissioning_server(ClusterConfig *clusterConfig) {
     CommandConfig gencomSetRegulatoryConfig(0x00000002, COMMAND_MASK_ACCEPTED);
     CommandConfig gencomCommissioningComplete(0x00000004, COMMAND_MASK_ACCEPTED);
     CommandConfig gencomEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
+
     CommandConfig gencomArmFailSafeResponse(0x00000001, COMMAND_MASK_GENERATED);
     CommandConfig gencomSetRegulatoryConfigResponse(0x00000003, COMMAND_MASK_GENERATED);
     CommandConfig gencomCommissioningCompleteResponse(0x00000005, COMMAND_MASK_GENERATED);
@@ -166,9 +169,11 @@ void matter_cluster_general_commissioning_server(ClusterConfig *clusterConfig) {
     clusterConfig->commandConfigs.push_back(gencomArmFailSafe);
     clusterConfig->commandConfigs.push_back(gencomSetRegulatoryConfig);
     clusterConfig->commandConfigs.push_back(gencomCommissioningComplete);
+    clusterConfig->commandConfigs.push_back(gencomEndOfAcceptedCommandList);
     clusterConfig->commandConfigs.push_back(gencomArmFailSafeResponse);
     clusterConfig->commandConfigs.push_back(gencomSetRegulatoryConfigResponse);
     clusterConfig->commandConfigs.push_back(gencomCommissioningCompleteResponse);
+    clusterConfig->commandConfigs.push_back(gencomEndOfGeneratedCommandList);
 }
 
 void matter_cluster_network_commissioning_server(ClusterConfig *clusterConfig) {
@@ -352,7 +357,7 @@ void matter_cluster_identify_server(ClusterConfig *clusterConfig) {
     CommandConfig identifyEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
 
     clusterConfig->clusterId = 0x00000003;
-    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER);
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER) | ZAP_CLUSTER_MASK(INIT_FUNCTION) | ZAP_CLUSTER_MASK(ATTRIBUTE_CHANGED_FUNCTION);
     clusterConfig->attributeConfigs.push_back(identifyIdentifyTime);
     clusterConfig->attributeConfigs.push_back(identifyIdentifyType);
     clusterConfig->attributeConfigs.push_back(identifyFeatureMap);
@@ -360,6 +365,103 @@ void matter_cluster_identify_server(ClusterConfig *clusterConfig) {
     clusterConfig->commandConfigs.push_back(identifyIdentify);
     clusterConfig->commandConfigs.push_back(identifyTriggerEffect);
     clusterConfig->commandConfigs.push_back(identifyEndOfAcceptedCommandList);
+    clusterConfig->functionConfigs.push_back((EmberAfGenericClusterFunction) emberAfIdentifyClusterServerInitCallback);
+    clusterConfig->functionConfigs.push_back((EmberAfGenericClusterFunction) MatterIdentifyClusterServerAttributeChangedCallback);
+}
+
+void matter_cluster_groups_server(ClusterConfig *clusterConfig) {
+    AttributeConfig groupsNameSupport(0x00000000, ZAP_TYPE(BITMAP8), ZAP_EMPTY_DEFAULT(), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig groupsFeatureMap(0x0000FFFC, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(0), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig groupsClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(4), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    CommandConfig groupsAddGroup(0x00000000, COMMAND_MASK_ACCEPTED);
+    CommandConfig groupsViewGroup(0x00000001, COMMAND_MASK_ACCEPTED);
+    CommandConfig groupsGetGroupMembership(0x00000002, COMMAND_MASK_ACCEPTED);
+    CommandConfig groupsRemoveGroup(0x00000003, COMMAND_MASK_ACCEPTED);
+    CommandConfig groupsRemoveAllGroups(0x00000004, COMMAND_MASK_ACCEPTED);
+    CommandConfig groupsAddGroupIfIdentifying(0x00000005, COMMAND_MASK_ACCEPTED);
+    CommandConfig groupsEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
+
+    CommandConfig groupsAddGroupResponse(0x00000000, COMMAND_MASK_GENERATED);
+    CommandConfig groupsViewGroupResponse(0x00000001, COMMAND_MASK_GENERATED);
+    CommandConfig groupsGetGroupMembershipResponse(0x00000002, COMMAND_MASK_GENERATED);
+    CommandConfig groupsRemoveGroupResponse(0x00000003, COMMAND_MASK_GENERATED);
+    CommandConfig groupsEndOfGeneratedCommandList(chip::kInvalidCommandId, COMMAND_MASK_GENERATED);
+
+    clusterConfig->clusterId = 0x00000004;
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER) | ZAP_CLUSTER_MASK(INIT_FUNCTION);
+    clusterConfig->attributeConfigs.push_back(groupsNameSupport);
+    clusterConfig->attributeConfigs.push_back(groupsFeatureMap);
+    clusterConfig->attributeConfigs.push_back(groupsClusterRevision);
+    clusterConfig->commandConfigs.push_back(groupsAddGroup);
+    clusterConfig->commandConfigs.push_back(groupsViewGroup);
+    clusterConfig->commandConfigs.push_back(groupsGetGroupMembership);
+    clusterConfig->commandConfigs.push_back(groupsRemoveGroup);
+    clusterConfig->commandConfigs.push_back(groupsRemoveAllGroups);
+    clusterConfig->commandConfigs.push_back(groupsAddGroupIfIdentifying);
+    clusterConfig->commandConfigs.push_back(groupsEndOfAcceptedCommandList);
+    clusterConfig->commandConfigs.push_back(groupsAddGroupResponse);
+    clusterConfig->commandConfigs.push_back(groupsViewGroupResponse);
+    clusterConfig->commandConfigs.push_back(groupsGetGroupMembershipResponse);
+    clusterConfig->commandConfigs.push_back(groupsRemoveGroupResponse);
+    clusterConfig->commandConfigs.push_back(groupsEndOfGeneratedCommandList);
+    clusterConfig->functionConfigs.push_back((EmberAfGenericClusterFunction) emberAfGroupsClusterServerInitCallback);
+}
+
+void matter_cluster_onoff_server(ClusterConfig *clusterConfig) {
+    AttributeConfig onoffOnOff(0x00000000, ZAP_TYPE(BOOLEAN), ZAP_SIMPLE_DEFAULT(0x00), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(TOKENIZE));
+    AttributeConfig onoffGlobalSceneControl(0x00004000, ZAP_TYPE(BOOLEAN), ZAP_SIMPLE_DEFAULT(0x01), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig onoffOnTime(0x00004001, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(0x0000), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig onoffOffWaitTime(0x00004002, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(0x0000), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig onoffStartUpOnOff(0x00004003, ZAP_TYPE(ENUM8), 1, 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(TOKENIZE) | ZAP_ATTRIBUTE_MASK(WRITABLE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig onoffFeatureMap(0x0000FFFC, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(1), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig onoffClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(4), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    CommandConfig onoffOff(0x00000000, COMMAND_MASK_ACCEPTED);
+    CommandConfig onoffOn(0x00000001, COMMAND_MASK_ACCEPTED);
+    CommandConfig onoffToggle(0x00000002, COMMAND_MASK_ACCEPTED);
+    CommandConfig onoffOffWithEffect(0x00000040, COMMAND_MASK_ACCEPTED);
+    CommandConfig onoffOnWithRecallGlobalScene(0x00000041, COMMAND_MASK_ACCEPTED);
+    CommandConfig onoffOnWithTimedOff(0x00000042, COMMAND_MASK_ACCEPTED);
+    CommandConfig onoffEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
+
+    CommandConfig onoffMoveToLevel(0x00000000, COMMAND_MASK_GENERATED);
+    CommandConfig onoffMove(0x00000001, COMMAND_MASK_GENERATED);
+    CommandConfig onoffStep(0x00000002, COMMAND_MASK_GENERATED);
+    CommandConfig onoffStop(0x00000003, COMMAND_MASK_GENERATED);
+    CommandConfig onoffMoveToLevelWithOnOff(0x00000004, COMMAND_MASK_GENERATED);
+    CommandConfig onoffMoveWithOnOff(0x00000005, COMMAND_MASK_GENERATED);
+    CommandConfig onoffStepWithOnOff(0x00000006, COMMAND_MASK_GENERATED);
+    CommandConfig onoffStopWithOnOff(0x00000007, COMMAND_MASK_GENERATED);
+    CommandConfig onoffEndOfGeneratedCommandList(chip::kInvalidCommandId, COMMAND_MASK_GENERATED);
+
+    clusterConfig->clusterId = 0x00000006;
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER) | ZAP_CLUSTER_MASK(INIT_FUNCTION) | ZAP_CLUSTER_MASK(SHUTDOWN_FUNCTION);
+    clusterConfig->attributeConfigs.push_back(onoffOnOff);
+    clusterConfig->attributeConfigs.push_back(onoffGlobalSceneControl);
+    clusterConfig->attributeConfigs.push_back(onoffOnTime);
+    clusterConfig->attributeConfigs.push_back(onoffOffWaitTime);
+    clusterConfig->attributeConfigs.push_back(onoffStartUpOnOff);
+    clusterConfig->attributeConfigs.push_back(onoffFeatureMap);
+    clusterConfig->attributeConfigs.push_back(onoffClusterRevision);
+    clusterConfig->commandConfigs.push_back(onoffOff);
+    clusterConfig->commandConfigs.push_back(onoffOn);
+    clusterConfig->commandConfigs.push_back(onoffToggle);
+    clusterConfig->commandConfigs.push_back(onoffOffWithEffect);
+    clusterConfig->commandConfigs.push_back(onoffOnWithRecallGlobalScene);
+    clusterConfig->commandConfigs.push_back(onoffOnWithTimedOff);
+    clusterConfig->commandConfigs.push_back(onoffEndOfAcceptedCommandList);
+    clusterConfig->commandConfigs.push_back(onoffMoveToLevel);
+    clusterConfig->commandConfigs.push_back(onoffMove);
+    clusterConfig->commandConfigs.push_back(onoffStep);
+    clusterConfig->commandConfigs.push_back(onoffStop);
+    clusterConfig->commandConfigs.push_back(onoffMoveToLevelWithOnOff);
+    clusterConfig->commandConfigs.push_back(onoffStepWithOnOff);
+    clusterConfig->commandConfigs.push_back(onoffStopWithOnOff);
+    clusterConfig->commandConfigs.push_back(onoffEndOfGeneratedCommandList);
+}
+
+void matter_cluster_level_control_server(ClusterConfig *clusterConfig) {
 }
 
 } // Clusters

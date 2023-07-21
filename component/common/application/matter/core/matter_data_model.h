@@ -50,6 +50,7 @@ public:
     std::vector<AttributeConfig> attributeConfigs;
     std::vector<EventConfig> eventConfigs;
     std::vector<CommandConfig> commandConfigs;
+    std::vector<EmberAfGenericClusterFunction> functionConfigs;
     std::uint8_t mask = 0; /* cluster flag */
 };
 
