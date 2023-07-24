@@ -76,6 +76,7 @@ public:
             switch(getAttributeBaseType())
             {
             case ZCL_INT8U_ATTRIBUTE_TYPE:
+            case ZCL_BOOLEAN_ATTRIBUTE_TYPE:
                 value = uint8_t(attributeConfig.value.defaultValue);
                 break;
             case ZCL_INT16U_ATTRIBUTE_TYPE:
@@ -104,12 +105,13 @@ public:
                 break;
             case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
             case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
+            case ZCL_LONG_CHAR_STRING_ATTRIBUTE_TYPE:
             case ZCL_ARRAY_ATTRIBUTE_TYPE:
             case ZCL_STRUCT_ATTRIBUTE_TYPE:
                 value = (uint8_t*)(attributeConfig.value.ptrToDefaultValue);
                 break;
             default:
-                ChipLogError(DeviceLayer, "Unknown attribute type, unable to assign value");
+                ChipLogError(DeviceLayer, "Unknown attribute type, unable to assign value for attributeId: %d", attributeId);
             }
         }
 
@@ -240,6 +242,10 @@ public:
 
     void removeGeneratedCommand(chip::CommandId commandId);
 
+    void addFunction(const EmberAfGenericClusterFunction function);
+
+    void removeFunction();
+
     void print(int indent = 0) const;
 
 private:
@@ -257,8 +263,9 @@ private:
 // Endpoint class
 class Endpoint {
 public:
-    Endpoint(Node* node, chip::EndpointId endpointId) : 
+    Endpoint(Node* node, chip::EndpointId endpointId, uint16_t endpointCount) : 
         endpointId(endpointId),
+        endpointIndex(endpointCount),
         parentEndpointId(0xFFFF /* chip::kInvalidEndpointId */),
         parentNode(node) {}
 
@@ -283,6 +290,7 @@ public:
     void print(int indent = 0) const;
 private:
     chip::EndpointId endpointId;
+    uint16_t endpointIndex;
     chip::EndpointId parentEndpointId;
     Node* parentNode;
     chip::DataVersion *dataVersion = nullptr;

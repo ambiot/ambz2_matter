@@ -313,8 +313,23 @@ void matter_cluster_operational_credentials_server(ClusterConfig *clusterConfig)
     AttributeConfig opcredsCommissionedFabrics(0x00000003, ZAP_TYPE(INT8U), ZAP_EMPTY_DEFAULT(), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
     AttributeConfig opcredsTrustedRootCertificates(0x00000004, ZAP_TYPE(ARRAY), ZAP_EMPTY_DEFAULT(), 0, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
     AttributeConfig opcredsCurrentFabricIndex(0x00000005, ZAP_TYPE(INT8U), ZAP_EMPTY_DEFAULT(), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
-    AttributeConfig opcredsFeatureMap(0x00000006, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(0), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
-    AttributeConfig opcredsClusterRevision(0x00000007, ZAP_TYPE(INT8U), ZAP_SIMPLE_DEFAULT(1), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig opcredsFeatureMap(0x0000FFFC, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(0), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig opcredsClusterRevision(0x0000FFFD, ZAP_TYPE(INT8U), ZAP_SIMPLE_DEFAULT(1), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    CommandConfig opcredsAttestationRequest(0x00000000, COMMAND_MASK_ACCEPTED);
+    CommandConfig opcredsCertificateChainRequest(0x00000002, COMMAND_MASK_ACCEPTED);
+    CommandConfig opcredsCSRRequest(0x00000004, COMMAND_MASK_ACCEPTED);
+    CommandConfig opcredsAddNOC(0x00000006, COMMAND_MASK_ACCEPTED);
+    CommandConfig opcredsUpdateNOC(0x00000007, COMMAND_MASK_ACCEPTED);
+    CommandConfig opcredsRemoveFabric(0x0000000A, COMMAND_MASK_ACCEPTED);
+    CommandConfig opcredsAddTrustedRootCertificate(0x0000000B, COMMAND_MASK_ACCEPTED);
+    CommandConfig opcredsEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
+
+    CommandConfig opcredsAttestationResponse(0x00000001, COMMAND_MASK_GENERATED);
+    CommandConfig opcredsCertificateChainResponse(0x00000003, COMMAND_MASK_GENERATED);
+    CommandConfig opcredsCSRResponse(0x00000005, COMMAND_MASK_GENERATED);
+    CommandConfig opcredsNOCResponse(0x00000008, COMMAND_MASK_GENERATED);
+    CommandConfig opcredsEndOfGeneratedCommandList(chip::kInvalidCommandId, COMMAND_MASK_GENERATED);
 
     clusterConfig->clusterId = 0x0000003E;
     clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER);
@@ -326,6 +341,19 @@ void matter_cluster_operational_credentials_server(ClusterConfig *clusterConfig)
     clusterConfig->attributeConfigs.push_back(opcredsCurrentFabricIndex);
     clusterConfig->attributeConfigs.push_back(opcredsFeatureMap);
     clusterConfig->attributeConfigs.push_back(opcredsClusterRevision);
+    clusterConfig->commandConfigs.push_back(opcredsAttestationRequest);
+    clusterConfig->commandConfigs.push_back(opcredsCertificateChainRequest);
+    clusterConfig->commandConfigs.push_back(opcredsCSRRequest);
+    clusterConfig->commandConfigs.push_back(opcredsAddNOC);
+    clusterConfig->commandConfigs.push_back(opcredsUpdateNOC);
+    clusterConfig->commandConfigs.push_back(opcredsRemoveFabric);
+    clusterConfig->commandConfigs.push_back(opcredsAddTrustedRootCertificate);
+    clusterConfig->commandConfigs.push_back(opcredsEndOfAcceptedCommandList);
+    clusterConfig->commandConfigs.push_back(opcredsAttestationResponse);
+    clusterConfig->commandConfigs.push_back(opcredsCertificateChainResponse);
+    clusterConfig->commandConfigs.push_back(opcredsCSRResponse);
+    clusterConfig->commandConfigs.push_back(opcredsNOCResponse);
+    clusterConfig->commandConfigs.push_back(opcredsEndOfGeneratedCommandList);
 }
 
 void matter_cluster_group_key_management_server(ClusterConfig *clusterConfig) {
@@ -408,6 +436,64 @@ void matter_cluster_groups_server(ClusterConfig *clusterConfig) {
     clusterConfig->functionConfigs.push_back((EmberAfGenericClusterFunction) emberAfGroupsClusterServerInitCallback);
 }
 
+void matter_cluster_scenes_server(ClusterConfig *clusterConfig) {
+    AttributeConfig scenesSceneCount(0x00000000, ZAP_TYPE(INT8U), ZAP_EMPTY_DEFAULT(), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig scenesCurrentScene(0x00000001, ZAP_TYPE(INT8U), ZAP_SIMPLE_DEFAULT(0x00), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig scenesCurrentGroup(0x00000002, ZAP_TYPE(GROUP_ID), ZAP_SIMPLE_DEFAULT(0x0000), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig scenesSceneValid(0x00000003, ZAP_TYPE(BOOLEAN), ZAP_SIMPLE_DEFAULT(0x00), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig scenesNameSupport(0x00000004, ZAP_TYPE(BITMAP8), ZAP_EMPTY_DEFAULT(), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig scenesLastConfiguredBy(0x00000005, ZAP_TYPE(NODE_ID), uint32_t(0), 8, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig scenesSceneTableSize(0x00000006, ZAP_TYPE(INT16U), ZAP_EMPTY_DEFAULT(), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig scenesRemainingCapacity(0x00000007, ZAP_TYPE(INT8U), ZAP_EMPTY_DEFAULT(), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig scenesFeatureMap(0x0000FFFC, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(0), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig scenesClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(5), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    CommandConfig scenesAddScene(0x00000000, COMMAND_MASK_ACCEPTED);
+    CommandConfig scenesViewScene(0x00000001, COMMAND_MASK_ACCEPTED);
+    CommandConfig scenesRemoveScene(0x00000002, COMMAND_MASK_ACCEPTED);
+    CommandConfig scenesRemoveAllScenes(0x00000003, COMMAND_MASK_ACCEPTED);
+    CommandConfig scenesStoreScene(0x00000004, COMMAND_MASK_ACCEPTED);
+    CommandConfig scenesRecallScene(0x00000005, COMMAND_MASK_ACCEPTED);
+    CommandConfig scenesGetSceneMembership(0x00000006, COMMAND_MASK_ACCEPTED);
+    CommandConfig scenesEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
+    
+    CommandConfig scenesAddSceneResponse(0x00000000, COMMAND_MASK_GENERATED);
+    CommandConfig scenesViewSceneResponse(0x00000001, COMMAND_MASK_GENERATED);
+    CommandConfig scenesRemoveSceneResponse(0x00000002, COMMAND_MASK_GENERATED);
+    CommandConfig scenesRemoveAllScenesResponse(0x00000003, COMMAND_MASK_GENERATED);
+    CommandConfig scenesStoreSceneResponse(0x00000004, COMMAND_MASK_GENERATED);
+    CommandConfig scenesGetSceneMembershipResponse(0x00000006, COMMAND_MASK_GENERATED);
+    CommandConfig scenesEndOfGeneratedCommandList(chip::kInvalidCommandId, COMMAND_MASK_GENERATED);
+
+    clusterConfig->clusterId = 0x00000005;
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER);
+    clusterConfig->attributeConfigs.push_back(scenesSceneCount);
+    clusterConfig->attributeConfigs.push_back(scenesCurrentScene);
+    clusterConfig->attributeConfigs.push_back(scenesCurrentGroup);
+    clusterConfig->attributeConfigs.push_back(scenesSceneValid);
+    clusterConfig->attributeConfigs.push_back(scenesNameSupport);
+    clusterConfig->attributeConfigs.push_back(scenesLastConfiguredBy);
+    clusterConfig->attributeConfigs.push_back(scenesSceneTableSize);
+    clusterConfig->attributeConfigs.push_back(scenesRemainingCapacity);
+    clusterConfig->attributeConfigs.push_back(scenesFeatureMap);
+    clusterConfig->attributeConfigs.push_back(scenesClusterRevision);
+    clusterConfig->commandConfigs.push_back(scenesAddScene);
+    clusterConfig->commandConfigs.push_back(scenesViewScene);
+    clusterConfig->commandConfigs.push_back(scenesRemoveScene);
+    clusterConfig->commandConfigs.push_back(scenesRemoveAllScenes);
+    clusterConfig->commandConfigs.push_back(scenesStoreScene);
+    clusterConfig->commandConfigs.push_back(scenesRecallScene);
+    clusterConfig->commandConfigs.push_back(scenesGetSceneMembership);
+    clusterConfig->commandConfigs.push_back(scenesEndOfAcceptedCommandList);
+    clusterConfig->commandConfigs.push_back(scenesAddSceneResponse);
+    clusterConfig->commandConfigs.push_back(scenesViewSceneResponse);
+    clusterConfig->commandConfigs.push_back(scenesRemoveSceneResponse);
+    clusterConfig->commandConfigs.push_back(scenesRemoveAllScenesResponse);
+    clusterConfig->commandConfigs.push_back(scenesStoreSceneResponse);
+    clusterConfig->commandConfigs.push_back(scenesGetSceneMembershipResponse);
+    clusterConfig->commandConfigs.push_back(scenesEndOfGeneratedCommandList);
+}
+
 void matter_cluster_onoff_server(ClusterConfig *clusterConfig) {
     AttributeConfig onoffOnOff(0x00000000, ZAP_TYPE(BOOLEAN), ZAP_SIMPLE_DEFAULT(0x00), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(TOKENIZE));
     AttributeConfig onoffGlobalSceneControl(0x00004000, ZAP_TYPE(BOOLEAN), ZAP_SIMPLE_DEFAULT(0x01), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
@@ -459,9 +545,69 @@ void matter_cluster_onoff_server(ClusterConfig *clusterConfig) {
     clusterConfig->commandConfigs.push_back(onoffStepWithOnOff);
     clusterConfig->commandConfigs.push_back(onoffStopWithOnOff);
     clusterConfig->commandConfigs.push_back(onoffEndOfGeneratedCommandList);
+    clusterConfig->functionConfigs.push_back((EmberAfGenericClusterFunction) emberAfOnOffClusterServerInitCallback);
+    clusterConfig->functionConfigs.push_back((EmberAfGenericClusterFunction) MatterOnOffClusterServerShutdownCallback);
 }
 
+EmberAfAttributeMinMaxValue levelcontrolOptionsMinMaxValue = {(uint16_t)0x0, (uint16_t)0x0, (uint16_t)0x3};
+
 void matter_cluster_level_control_server(ClusterConfig *clusterConfig) {
+    AttributeConfig levelcontrolCurrentLevel(0x00000000, ZAP_TYPE(INT8U), ZAP_SIMPLE_DEFAULT(0x01), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(TOKENIZE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig levelcontrolRemainingTime(0x00000001, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(0x0000), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig levelcontrolMinLevel(0x00000002, ZAP_TYPE(INT8U), ZAP_SIMPLE_DEFAULT(0x01), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig levelcontrolMaxLevel(0x00000003, ZAP_TYPE(INT8U), ZAP_SIMPLE_DEFAULT(0xFE), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig levelcontrolCurrentFrequency(0x00000004, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(0x0000), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig levelcontrolMinFrequency(0x00000005, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(0x0000), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig levelcontrolMaxFrequency(0x00000006, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(0x0000), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig levelcontrolOptions(0x0000000F, ZAP_TYPE(BITMAP8), &levelcontrolOptionsMinMaxValue, 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(MIN_MAX) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig levelcontrolOnOffTransitionTime(0x00000010, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(0x0000), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig levelcontrolOnLevel(0x00000011, ZAP_TYPE(INT8U), ZAP_SIMPLE_DEFAULT(0xFF), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(WRITABLE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig levelcontrolOnTransitionTime(0x00000012, ZAP_TYPE(INT16U), ZAP_EMPTY_DEFAULT(), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(WRITABLE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig levelcontrolOffTransitionTime(0x00000013, ZAP_TYPE(INT16U), ZAP_EMPTY_DEFAULT(), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(WRITABLE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig levelcontrolDefaultMoveRate(0x00000014, ZAP_TYPE(INT8U), ZAP_SIMPLE_DEFAULT(50), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(WRITABLE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig levelcontrolStartUpCurrentLevel(0x00004000, ZAP_TYPE(INT8U), ZAP_SIMPLE_DEFAULT(255), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(TOKENIZE) | ZAP_ATTRIBUTE_MASK(WRITABLE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig levelcontrolFeatureMap(0x0000FFFC, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(3), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig levelcontrolClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(5), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    CommandConfig levelcontrolMoveToLevel(0x00000000, COMMAND_MASK_ACCEPTED);
+    CommandConfig levelcontrolMove(0x00000001, COMMAND_MASK_ACCEPTED);
+    CommandConfig levelcontrolStep(0x00000002, COMMAND_MASK_ACCEPTED);
+    CommandConfig levelcontrolStop(0x00000003, COMMAND_MASK_ACCEPTED);
+    CommandConfig levelcontrolMoveToLevelWithOnOff(0x00000004, COMMAND_MASK_ACCEPTED);
+    CommandConfig levelcontrolMoveWithOnOff(0x00000005, COMMAND_MASK_ACCEPTED);
+    CommandConfig levelcontrolStepWithOnOff(0x00000006, COMMAND_MASK_ACCEPTED);
+    CommandConfig levelcontrolStopWithOnOff(0x00000007, COMMAND_MASK_ACCEPTED);
+    CommandConfig levelcontrolEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
+
+    clusterConfig->clusterId = 0x00000008;
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER) | ZAP_CLUSTER_MASK(INIT_FUNCTION) | ZAP_CLUSTER_MASK(SHUTDOWN_FUNCTION);
+    clusterConfig->attributeConfigs.push_back(levelcontrolCurrentLevel);
+    clusterConfig->attributeConfigs.push_back(levelcontrolRemainingTime);
+    clusterConfig->attributeConfigs.push_back(levelcontrolMinLevel);
+    clusterConfig->attributeConfigs.push_back(levelcontrolMaxLevel);
+    clusterConfig->attributeConfigs.push_back(levelcontrolCurrentFrequency);
+    clusterConfig->attributeConfigs.push_back(levelcontrolMinFrequency);
+    clusterConfig->attributeConfigs.push_back(levelcontrolMaxFrequency);
+    clusterConfig->attributeConfigs.push_back(levelcontrolOptions);
+    clusterConfig->attributeConfigs.push_back(levelcontrolOnOffTransitionTime);
+    clusterConfig->attributeConfigs.push_back(levelcontrolOnLevel);
+    clusterConfig->attributeConfigs.push_back(levelcontrolOnTransitionTime);
+    clusterConfig->attributeConfigs.push_back(levelcontrolOffTransitionTime);
+    clusterConfig->attributeConfigs.push_back(levelcontrolDefaultMoveRate);
+    clusterConfig->attributeConfigs.push_back(levelcontrolStartUpCurrentLevel);
+    clusterConfig->attributeConfigs.push_back(levelcontrolFeatureMap);
+    clusterConfig->attributeConfigs.push_back(levelcontrolClusterRevision);
+    clusterConfig->commandConfigs.push_back(levelcontrolMoveToLevel);
+    clusterConfig->commandConfigs.push_back(levelcontrolMove);
+    clusterConfig->commandConfigs.push_back(levelcontrolStep);
+    clusterConfig->commandConfigs.push_back(levelcontrolStop);
+    clusterConfig->commandConfigs.push_back(levelcontrolMoveToLevelWithOnOff);
+    clusterConfig->commandConfigs.push_back(levelcontrolMoveWithOnOff);
+    clusterConfig->commandConfigs.push_back(levelcontrolStepWithOnOff);
+    clusterConfig->commandConfigs.push_back(levelcontrolStopWithOnOff);
+    clusterConfig->commandConfigs.push_back(levelcontrolEndOfAcceptedCommandList);
+    clusterConfig->functionConfigs.push_back((EmberAfGenericClusterFunction) emberAfLevelControlClusterServerInitCallback);
+    clusterConfig->functionConfigs.push_back((EmberAfGenericClusterFunction) MatterLevelControlClusterServerShutdownCallback);
 }
 
 } // Clusters
@@ -510,7 +656,23 @@ void matter_root_node_preset(EndpointConfig *rootNodeEndpointConfig) {
 }
 
 void matter_dimmable_light_preset(EndpointConfig *dimmableLightEndpointConfig) {
+    ClusterConfig identifyServerCluster;
+    ClusterConfig groupsServerCluster;
+    ClusterConfig scenesServerCluster;
+    ClusterConfig onOffServerCluster;
+    ClusterConfig levelControlServerCluster;
 
+    Presets::Clusters::matter_cluster_identify_server(&identifyServerCluster);
+    Presets::Clusters::matter_cluster_groups_server(&groupsServerCluster);
+    Presets::Clusters::matter_cluster_scenes_server(&scenesServerCluster);
+    Presets::Clusters::matter_cluster_onoff_server(&onOffServerCluster);
+    Presets::Clusters::matter_cluster_level_control_server(&levelControlServerCluster);
+
+    dimmableLightEndpointConfig->clusterConfigs.push_back(identifyServerCluster);
+    dimmableLightEndpointConfig->clusterConfigs.push_back(groupsServerCluster);
+    dimmableLightEndpointConfig->clusterConfigs.push_back(scenesServerCluster);
+    dimmableLightEndpointConfig->clusterConfigs.push_back(onOffServerCluster);
+    dimmableLightEndpointConfig->clusterConfigs.push_back(levelControlServerCluster);
 }
 
 }

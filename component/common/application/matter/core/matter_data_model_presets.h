@@ -15,12 +15,19 @@ void matter_cluster_wifi_diagnostics_server(ClusterConfig *clusterConfig);
 void matter_cluster_administrator_commissioning_server(ClusterConfig *clusterConfig);
 void matter_cluster_operational_credentials_server(ClusterConfig *clusterConfig);
 void matter_cluster_group_key_management_server(ClusterConfig *clusterConfig);
+void matter_cluster_identify_server(ClusterConfig *clusterConfig);
+void matter_cluster_groups_server(ClusterConfig *clusterConfig);
+void matter_cluster_scenes_server(ClusterConfig *clusterConfig);
+void matter_cluster_onoff_server(ClusterConfig *clusterConfig);
+void matter_cluster_level_control_server(ClusterConfig *clusterConfig);
+void matter_cluster_level_control_server(ClusterConfig *clusterConfig);
 
 } // Clusters
   //
 namespace Endpoints {
 
 void matter_root_node_preset(EndpointConfig *rootNodeEndpointConfig);
+void matter_dimmable_light_preset(EndpointConfig *dimmableLightEndpointConfig);
 
 } // Endpoints
 } // Presets

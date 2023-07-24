@@ -54,6 +54,18 @@ EmberAfDeviceType deviceTypes[] = {
 const EmberAfDeviceType gBridgedOnOffDeviceTypes[] = { { DEVICE_TYPE_LO_ON_OFF_LIGHT, DEVICE_VERSION_DEFAULT },
                                                        { DEVICE_TYPE_BRIDGED_NODE, DEVICE_VERSION_DEFAULT } };
 
+extern "C" void addLightEndpoint(int count) {
+    EndpointConfig dimmableLightEndpointConfig;
+    Presets::Endpoints::matter_dimmable_light_preset(&dimmableLightEndpointConfig);
+    node.addEndpoint(dimmableLightEndpointConfig);
+    node.getEndpoint(count)->enableEndpoint(Span<const EmberAfDeviceType>(deviceTypes));
+}
+
+extern "C" void removeLightEndpoint(int count) {
+    node.getEndpoint(count)->disableEndpoint();
+    node.removeEndpoint(count);
+}
+
 static void example_matter_light_task(void *pvParameters)
 {
     while(!(wifi_is_up(RTW_STA_INTERFACE) || wifi_is_up(RTW_AP_INTERFACE))) {
@@ -71,13 +83,31 @@ static void example_matter_light_task(void *pvParameters)
         ChipLogProgress(DeviceLayer, "matter_core_start failed!\n");
 
     EndpointConfig rootNodeEndpointConfig;
+    EndpointConfig dimmableLightEndpointConfig;
     Presets::Endpoints::matter_root_node_preset(&rootNodeEndpointConfig);
+    Presets::Endpoints::matter_dimmable_light_preset(&dimmableLightEndpointConfig);
 
     // Initial
     node.addEndpoint(rootNodeEndpointConfig);
+    node.addEndpoint(dimmableLightEndpointConfig);
 
-    // Enable root node endpoint
+    // Enable endpoints
+    // TODO: use enable all endpoints?
     node.getEndpoint(0)->enableEndpoint(Span<const EmberAfDeviceType>(deviceTypes));
+    node.getEndpoint(1)->enableEndpoint(Span<const EmberAfDeviceType>(deviceTypes));
+
+    // vTaskDelay(100000);
+    // node.addEndpoint(dimmableLightEndpointConfig);
+    // node.getEndpoint(2)->enableEndpoint(Span<const EmberAfDeviceType>(deviceTypes));
+
+    // vTaskDelay(30000);
+    // node.getEndpoint(2)->disableEndpoint();
+    // node.removeEndpoint(2);
+
+
+
+
+
     // node.print();
 
     // Disable root node endpoint

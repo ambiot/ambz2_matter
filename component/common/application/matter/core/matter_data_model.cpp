@@ -19,21 +19,51 @@ EmberAfStatus emberAfExternalAttributeReadCallback(EndpointId endpoint_id, Clust
 
     if (attribute->getAttributeSize() > max_read_length)
     {
-        ChipLogError(DeviceLayer, "Insufficient space to read Attribute 0x%08x from Cluster 0x%08x in Endpoint 0x%04x", matter_attribute->attributeId, cluster_id, endpoint_id);
+        ChipLogError(DeviceLayer, "[%s] Insufficient space to read Attribute 0x%08x from Cluster 0x%08x in Endpoint 0x%04x", __FUNCTION__, matter_attribute->attributeId, cluster_id, endpoint_id);
         return EMBER_ZCL_STATUS_RESOURCE_EXHAUSTED;
     }
 
+    AttributeValue value = attribute->getValue();
+
     switch(attribute->getAttributeBaseType())
     {
+    case ZCL_INT8U_ATTRIBUTE_TYPE:
+    case ZCL_BOOLEAN_ATTRIBUTE_TYPE:
+        memcpy(buffer, &(std::get<uint8_t>(value)), sizeof(uint8_t));
+        break;
+    case ZCL_INT16U_ATTRIBUTE_TYPE:
+        memcpy(buffer, &(std::get<uint16_t>(value)), sizeof(uint16_t));
+        break;
+    case ZCL_INT32U_ATTRIBUTE_TYPE:
+        memcpy(buffer, &(std::get<uint32_t>(value)), sizeof(uint32_t));
+        break;
+    case ZCL_INT64U_ATTRIBUTE_TYPE:
+        memcpy(buffer, &(std::get<uint64_t>(value)), sizeof(uint64_t));
+        break;
+    case ZCL_INT8S_ATTRIBUTE_TYPE:
+        memcpy(buffer, &(std::get<int8_t>(value)), sizeof(int8_t));
+        break;
+    case ZCL_INT16S_ATTRIBUTE_TYPE:
+        memcpy(buffer, &(std::get<int16_t>(value)), sizeof(int16_t));
+        break;
+    case ZCL_INT32S_ATTRIBUTE_TYPE:
+        memcpy(buffer, &(std::get<int32_t>(value)), sizeof(int32_t));
+        break;
+    case ZCL_INT64S_ATTRIBUTE_TYPE:
+        memcpy(buffer, &(std::get<int64_t>(value)), sizeof(int64_t));
+        break;
+    case ZCL_SINGLE_ATTRIBUTE_TYPE:
+        memcpy(buffer, &(std::get<float>(value)), sizeof(float));
+        break;
     case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
     case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
+    case ZCL_LONG_CHAR_STRING_ATTRIBUTE_TYPE:
     case ZCL_ARRAY_ATTRIBUTE_TYPE:
     case ZCL_STRUCT_ATTRIBUTE_TYPE:
-        // memcpy(buffer, attribute->getValue<uint8_t*>(), attribute->getAttributeSize());
-        memcpy(buffer, std::get<uint8_t*>(attribute->getValue()), attribute->getAttributeSize());
+        memcpy(buffer, std::get<uint8_t*>(value), attribute->getAttributeSize());
         break;
     default:
-        ChipLogError(DeviceLayer, "");
+        ChipLogError(DeviceLayer, "[%s] Unknown data type for attributeId: %d from clusterId: 0x%x", __FUNCTION__, attribute->getAttributeId(), cluster->getClusterId());
     }
 
     return EMBER_ZCL_STATUS_SUCCESS;
@@ -46,17 +76,56 @@ EmberAfStatus emberAfExternalAttributeWriteCallback(EndpointId endpoint_id, Clus
     Cluster *cluster = endpoint->getCluster(cluster_id);
     Attribute *attribute = cluster->getAttribute(matter_attribute->attributeId);
 
+    AttributeValue value;
+
     switch(attribute->getAttributeBaseType())
     {
+    case ZCL_INT8U_ATTRIBUTE_TYPE:
+    case ZCL_BOOLEAN_ATTRIBUTE_TYPE:
+        memcpy(&value, buffer, sizeof(uint8_t));
+        attribute->setValue(value);
+        break;
+    case ZCL_INT16U_ATTRIBUTE_TYPE:
+        memcpy(&value, buffer, sizeof(uint16_t));
+        attribute->setValue(value);
+        break;
+    case ZCL_INT32U_ATTRIBUTE_TYPE:
+        memcpy(&value, buffer, sizeof(uint32_t));
+        attribute->setValue(value);
+        break;
+    case ZCL_INT64U_ATTRIBUTE_TYPE:
+        memcpy(&value, buffer, sizeof(uint64_t));
+        attribute->setValue(value);
+        break;
+    case ZCL_INT8S_ATTRIBUTE_TYPE:
+        memcpy(&value, buffer, sizeof(int8_t));
+        attribute->setValue(value);
+        break;
+    case ZCL_INT16S_ATTRIBUTE_TYPE:
+        memcpy(&value, buffer, sizeof(int16_t));
+        attribute->setValue(value);
+        break;
+    case ZCL_INT32S_ATTRIBUTE_TYPE:
+        memcpy(&value, buffer, sizeof(int32_t));
+        attribute->setValue(value);
+        break;
+    case ZCL_INT64S_ATTRIBUTE_TYPE:
+        memcpy(&value, buffer, sizeof(int64_t));
+        attribute->setValue(value);
+        break;
+    case ZCL_SINGLE_ATTRIBUTE_TYPE:
+        memcpy(&value, buffer, sizeof(float));
+        attribute->setValue(value);
+        break;
     case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
     case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
+    case ZCL_LONG_CHAR_STRING_ATTRIBUTE_TYPE:
     case ZCL_ARRAY_ATTRIBUTE_TYPE:
     case ZCL_STRUCT_ATTRIBUTE_TYPE:
-        // memcpy(attribute->getValue<uint8_t*>(), buffer, attribute->getAttributeSize());
         memcpy(std::get<uint8_t*>(attribute->getValue()), buffer, attribute->getAttributeSize());
         break;
     default:
-        ChipLogError(DeviceLayer, "");
+        ChipLogError(DeviceLayer, "[%s] Unknown data type for attributeId: %d from clusterId: 0x%x", __FUNCTION__, attribute->getAttributeId(), cluster->getClusterId());
     }
 
     return EMBER_ZCL_STATUS_SUCCESS;
@@ -168,44 +237,47 @@ AttributeValue Attribute::getValue() const {
 }
 
 void Attribute::setValue(AttributeValue & newValue) {
-    switch(getAttributeBaseType())
-    {
-    case ZCL_INT8U_ATTRIBUTE_TYPE:
-        value = std::get<uint8_t>(newValue);
-        break;
-    case ZCL_INT16U_ATTRIBUTE_TYPE:
-        value = std::get<uint16_t>(newValue);
-        break;
-    case ZCL_INT32U_ATTRIBUTE_TYPE:
-        value = std::get<uint32_t>(newValue);
-        break;
-    case ZCL_INT64U_ATTRIBUTE_TYPE:
-        value = std::get<uint64_t>(newValue);
-        break;
-    case ZCL_INT8S_ATTRIBUTE_TYPE:
-        value = std::get<int8_t>(newValue);
-        break;
-    case ZCL_INT16S_ATTRIBUTE_TYPE:
-        value = std::get<int16_t>(newValue);
-        break;
-    case ZCL_INT32S_ATTRIBUTE_TYPE:
-        value = std::get<int32_t>(newValue);
-        break;
-    case ZCL_INT64S_ATTRIBUTE_TYPE:
-        value = std::get<int64_t>(newValue);
-        break;
-    case ZCL_SINGLE_ATTRIBUTE_TYPE:
-        value = std::get<float>(newValue);
-        break;
-    case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
-    case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
-    case ZCL_ARRAY_ATTRIBUTE_TYPE:
-    case ZCL_STRUCT_ATTRIBUTE_TYPE:
-        value = std::get<uint8_t*>(newValue);
-        break;
-    default:
-        ChipLogError(DeviceLayer, "Unknown attribute type, unable to assign value");
-    }
+    value = newValue;
+    // switch(getAttributeBaseType())
+    // {
+    // case ZCL_INT8U_ATTRIBUTE_TYPE:
+    // case ZCL_BOOLEAN_ATTRIBUTE_TYPE:
+    //     value = std::get<uint8_t>(newValue);
+    //     break;
+    // case ZCL_INT16U_ATTRIBUTE_TYPE:
+    //     value = std::get<uint16_t>(newValue);
+    //     break;
+    // case ZCL_INT32U_ATTRIBUTE_TYPE:
+    //     value = std::get<uint32_t>(newValue);
+    //     break;
+    // case ZCL_INT64U_ATTRIBUTE_TYPE:
+    //     value = std::get<uint64_t>(newValue);
+    //     break;
+    // case ZCL_INT8S_ATTRIBUTE_TYPE:
+    //     value = std::get<int8_t>(newValue);
+    //     break;
+    // case ZCL_INT16S_ATTRIBUTE_TYPE:
+    //     value = std::get<int16_t>(newValue);
+    //     break;
+    // case ZCL_INT32S_ATTRIBUTE_TYPE:
+    //     value = std::get<int32_t>(newValue);
+    //     break;
+    // case ZCL_INT64S_ATTRIBUTE_TYPE:
+    //     value = std::get<int64_t>(newValue);
+    //     break;
+    // case ZCL_SINGLE_ATTRIBUTE_TYPE:
+    //     value = std::get<float>(newValue);
+    //     break;
+    // case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
+    // case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
+    // case ZCL_LONG_CHAR_STRING_ATTRIBUTE_TYPE:
+    // case ZCL_ARRAY_ATTRIBUTE_TYPE:
+    // case ZCL_STRUCT_ATTRIBUTE_TYPE:
+    //     value = std::get<uint8_t*>(newValue);
+    //     break;
+    // default:
+    //     ChipLogError(DeviceLayer, "Unknown attribute type, unable to set value for attributeId: %d from clusterId: %x", attributeId, parentCluster->getClusterId());
+    // }
 }
 
 void Attribute::print(int indent) const {
@@ -407,6 +479,14 @@ void Cluster::removeGeneratedCommand(chip::CommandId commandId) {
     }
 }
 
+void Cluster::addFunction(const EmberAfGenericClusterFunction function) {
+    functions.push_back(function);
+}
+
+void Cluster::removeFunction() {
+    // not implemented
+}
+
 void Cluster::print(int indent) const {
     std::string indentation(indent, ' ');
     std::cout << indentation << "Cluster " << getClusterId() << ": " << std::endl;
@@ -457,6 +537,9 @@ void Endpoint::addCluster(ClusterConfig & clusterConfig) {
         if (command.getFlag() & COMMAND_MASK_GENERATED) {
             cluster.addGeneratedCommand(command);
         }
+    }
+    for (const EmberAfGenericClusterFunction & functionConfig : clusterConfig.functionConfigs) {
+        cluster.addFunction(functionConfig);
     }
     addCluster(cluster);
 }
@@ -599,7 +682,7 @@ void Endpoint::enableEndpoint(Span<const EmberAfDeviceType> deviceTypeList) {
 
     // Register endpoint as Matter dynamic endpoint
     chip::DeviceLayer::PlatformMgr().LockChipStack();
-    EmberAfStatus status = emberAfSetDynamicEndpoint(parentNode->getNextEndpointId() - 1, endpointId, endpointType, chip::Span<chip::DataVersion>(dataVersion, clusters.size()), deviceTypeList, parentEndpointId);
+    EmberAfStatus status = emberAfSetDynamicEndpoint(endpointIndex, endpointId, endpointType, chip::Span<chip::DataVersion>(dataVersion, clusters.size()), deviceTypeList, parentEndpointId);
     chip::DeviceLayer::PlatformMgr().UnlockChipStack();
 
     if (status == EMBER_ZCL_STATUS_SUCCESS) {
@@ -717,7 +800,7 @@ chip::EndpointId Node::getNextEndpointId() const {
 }
 
 void Node::addEndpoint(const EndpointConfig& endpointConfig) {
-    Endpoint endpoint(this, nextEndpointId);
+    Endpoint endpoint(this, nextEndpointId, endpointCount);
     // Set parentEndpointId based on the previous endpoint's endpointId
     if (!endpoints.empty()) {
         endpoint.setParentEndpointId(endpoints.back().getEndpointId());
@@ -741,6 +824,9 @@ void Node::addEndpoint(const EndpointConfig& endpointConfig) {
             if (command.getFlag() & COMMAND_MASK_GENERATED) {
                 cluster.addGeneratedCommand(command);
             }
+        }
+        for (const EmberAfGenericClusterFunction & functionConfig : clusterConfig.functionConfigs) {
+            cluster.addFunction(functionConfig);
         }
         endpoint.addCluster(cluster);
     }
