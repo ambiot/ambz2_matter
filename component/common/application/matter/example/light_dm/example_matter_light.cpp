@@ -91,10 +91,52 @@ static void example_matter_light_task(void *pvParameters)
     node.addEndpoint(rootNodeEndpointConfig);
     node.addEndpoint(dimmableLightEndpointConfig);
 
+
     // Enable endpoints
     // TODO: use enable all endpoints?
     node.getEndpoint(0)->enableEndpoint(Span<const EmberAfDeviceType>(deviceTypes));
     node.getEndpoint(1)->enableEndpoint(Span<const EmberAfDeviceType>(deviceTypes));
+
+    // for (auto & clusterConfig : dimmableLightEndpointConfig.clusterConfigs)
+    // {
+    //     printf("clusterId %d\r\n", clusterConfig.clusterId);
+    // }
+
+    Endpoint *ep0 = node.getEndpoint(0);
+    // for (auto & cluster : ep0->clusters)
+    // {
+    //     printf("parent endpointId: %d\r\n", cluster.getParentEndpointId());
+    //     printf("clusterId: %d\r\n", cluster.getClusterId());
+
+    //     for (auto & attribute : cluster.attributes)
+    //     {
+    //         printf("\t\tparent clusterId: %d\r\n", attribute.getParentClusterId());
+    //         printf("\t\tattributeId: %d\r\n", attribute.getAttributeId());
+    //     }
+    // }
+    Cluster *cls = ep0->getCluster(0x30);
+    Attribute *att = cls->getAttribute(0);
+    uint64_t breadcrumb;
+    att->getValue((uint8_t*)&breadcrumb);
+    printf("breadcrumb: %d\r\n\r\n", breadcrumb);
+    uint8_t *ptr = (uint8_t*) breadcrumb;
+    printf("*breadcrumb: %d\r\n\r\n", *ptr);
+
+    // for (auto & clusterConfig : rootNodeEndpointConfig.clusterConfigs)
+    // {
+    //     if (clusterConfig.clusterId == 0x30)
+    //     {
+    //         for (auto & attributeConfig : clusterConfig.attributeConfigs)
+    //         {
+    //             if (attributeConfig.attributeId == 0)
+    //             {
+    //                 printf("attributeConfig breadcrumb: %d\r\n", attributeConfig.value.defaultValue);
+    //                 printf("attributeConfig breadcrumb ptr: %d\r\n", attributeConfig.value.ptrToDefaultValue);
+    //                 printf("type: 0x%x\r\n", attributeConfig.dataType);
+    //             }
+    //         }
+    //     }
+    // }
 
     // vTaskDelay(100000);
     // node.addEndpoint(dimmableLightEndpointConfig);
