@@ -197,11 +197,11 @@ SRC_CPP += $(CHIPDIR)/src/app/server/OnboardingCodesUtil.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/Server.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/CommissioningWindowManager.cpp
 
+SRC_CPP += $(CHIPDIR)/src/app/icd/IcdMonitoringTable.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-size-util.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-storage.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-table.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/binding-table.cpp
-SRC_CPP += $(CHIPDIR)/src/app/util/IcdMonitoringTable.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/DataModelHandler.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/ember-compatibility-functions.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/generic-callback-stubs.cpp
