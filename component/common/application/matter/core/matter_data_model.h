@@ -7,6 +7,8 @@
 #include <app-common/zap-generated/attribute-type.h>
 #include <app/util/attribute-metadata.h>
 
+using namespace ::chip;
+
 class Node;
 class Endpoint;
 class Cluster;
@@ -216,6 +218,7 @@ public:
 
     chip::AttributeId getAttributeId() const;
     chip::ClusterId getParentClusterId() const;
+    chip::ClusterId getParentEndpointId() const;
     uint16_t getAttributeSize() const;
     EmberAfAttributeType getAttributeType() const;
     EmberAfAttributeMask getAttributeMask() const;
@@ -229,11 +232,11 @@ public:
 
 private:
     chip::AttributeId attributeId;
-    chip::ClusterId parentClusterId;
-    chip::EndpointId parentEndpointId;
     uint16_t attributeSize;
     EmberAfAttributeType attributeType;
     EmberAfAttributeMask attributeMask;
+    chip::ClusterId parentClusterId;
+    chip::EndpointId parentEndpointId;
     EmberAfDefaultOrMinMaxAttributeValue defaultValue;
     AttributeValue value;
     uint8_t valueBuffer[ATTRIBUTE_LARGEST];
@@ -383,7 +386,7 @@ public:
     chip::EndpointId getNextEndpointId() const;
     void addEndpoint(const EndpointConfig& endpointConfig);
     void removeEndpoint(chip::EndpointId endpointId);
-    void enableAllEndpoints();
+    void enableAllEndpoints(Span<const EmberAfDeviceType> deviceTypeList);
     void print() const;
 
 private:

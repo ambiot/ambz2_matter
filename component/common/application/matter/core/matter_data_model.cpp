@@ -54,6 +54,11 @@ chip::ClusterId Attribute::getParentClusterId() const
     return parentClusterId;
 }
 
+chip::ClusterId Attribute::getParentEndpointId() const
+{
+    return parentEndpointId;
+}
+
 std::uint16_t Attribute::getAttributeSize() const
 {
     return attributeSize;
@@ -271,20 +276,17 @@ void Attribute::setValue(uint8_t *buffer)
         break;
     default:
         break;
-        // ChipLogError(DeviceLayer, "[%s] Unknown data type for attributeId: %d from clusterId: 0x%x", __FUNCTION__, attribute->getAttributeId(), cluster->getClusterId());
     }
 }
 
 void Attribute::persistValue(uint8_t *buffer, size_t size)
 {
-    if (!(getAttributeMask() & ATTRIBUTE_MASK_TOKENIZE))
+    if (getAttributeMask() & ATTRIBUTE_MASK_TOKENIZE)
     {
-        return;
+        char key[64];
+        sprintf(key, "g/a/%x/%x/%x", parentEndpointId, parentClusterId, attributeId); // g/a/endpoint_id/cluster_id/attribute_id
+        setPref_new(key, key, buffer, size);
     }
-
-    char key[64];
-    sprintf(key, "g/a/%x/%x/%x", parentEndpointId, parentClusterId, attributeId); // g/a/endpoint_id/cluster_id/attribute_id
-    setPref_new(key, key, buffer, size);
 }
 
 CHIP_ERROR Attribute::retrieveValue(uint8_t *buffer, size_t size)
@@ -864,7 +866,22 @@ void Endpoint::disableEndpoint()
     free(dataVersion);
     free(endpointMetadata);
 
-    // TODO: clear persistent data on this endpoint
+    char key[64];
+
+    // Clear persistent data on this endpoint
+    for (size_t i=0; i<clusters.size(); i++)
+    {
+        Cluster cluster = clusters[i];
+        for (size_t j=0; j<cluster.attributes.size(); j++)
+        {
+            Attribute attribute = cluster.attributes[j];
+            if (cluster.attributes[j].getAttributeMask() & ATTRIBUTE_MASK_TOKENIZE)
+            {
+                sprintf(key, "g/a/%x/%x/%x", attribute.getParentEndpointId(), attribute.getParentClusterId(), attribute.getAttributeId());
+                deleteKey(key, key);
+            }
+        }
+    }
     ChipLogProgress(DeviceLayer, "Successfully disabled dynamic endpoint %d", endpointId);
 }
 
@@ -979,6 +996,14 @@ void Node::removeEndpoint(chip::EndpointId endpointId)
         }
     }
     endpointCount--;
+}
+
+void Node::enableAllEndpoints(Span<const EmberAfDeviceType> deviceTypeList)
+{
+    for (Endpoint & endpoint: endpoints)
+    {
+        endpoint.enableEndpoint(deviceTypeList);
+    }
 }
 
 void Node::print() const

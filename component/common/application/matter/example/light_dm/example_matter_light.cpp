@@ -27,44 +27,20 @@ using namespace ::chip::DeviceLayer;
 using namespace ::chip::Platform;
 using namespace ::chip::app::Clusters;
 
-#define MATTER_MAX_BRIDGED_DEVICES  20
-#define MATTER_MAX_CLUSTERS_PER_ENDPOINT 20
-
-// (taken from chip-devices.xml)
-#define DEVICE_TYPE_BRIDGED_NODE 0x0013
-// (taken from lo-devices.xml)
-#define DEVICE_TYPE_LO_ON_OFF_LIGHT 0x0100
 // (taken from chip-devices.xml)
 #define DEVICE_TYPE_ROOT_NODE 0x0016
+#define DEVICE_TYPE_LO_ON_OFF_LIGHT 0x0100
+
 // Device Version for dynamic endpoints:
 #define DEVICE_VERSION_DEFAULT 1
 
-Node& node = Node::getInstance();
-
-// TODO: maybe this dataversion can be a member of Endpoint class
-// lifetime of this dataversion should be same as the Endpoint class
-DataVersion dataVersions[MATTER_MAX_BRIDGED_DEVICES][MATTER_MAX_CLUSTERS_PER_ENDPOINT];
 EmberAfDeviceType deviceTypes[] = {
-    // fill up with all the possible device types that you want to bridge
-    // TODO: Should this be dynamic as well?
-    { DEVICE_TYPE_BRIDGED_NODE, DEVICE_VERSION_DEFAULT },
+    // fill up with all the possible device types that you want to use
+    { DEVICE_TYPE_ROOT_NODE, DEVICE_VERSION_DEFAULT },
     { DEVICE_TYPE_LO_ON_OFF_LIGHT, DEVICE_VERSION_DEFAULT },
 };
 
-const EmberAfDeviceType gBridgedOnOffDeviceTypes[] = { { DEVICE_TYPE_LO_ON_OFF_LIGHT, DEVICE_VERSION_DEFAULT },
-                                                       { DEVICE_TYPE_BRIDGED_NODE, DEVICE_VERSION_DEFAULT } };
-
-extern "C" void addLightEndpoint(int count) {
-    EndpointConfig dimmableLightEndpointConfig;
-    Presets::Endpoints::matter_dimmable_light_preset(&dimmableLightEndpointConfig);
-    node.addEndpoint(dimmableLightEndpointConfig);
-    node.getEndpoint(count)->enableEndpoint(Span<const EmberAfDeviceType>(deviceTypes));
-}
-
-extern "C" void removeLightEndpoint(int count) {
-    node.getEndpoint(count)->disableEndpoint();
-    node.removeEndpoint(count);
-}
+Node& node = Node::getInstance();
 
 static void example_matter_light_task(void *pvParameters)
 {
@@ -77,10 +53,12 @@ static void example_matter_light_task(void *pvParameters)
     CHIP_ERROR err = CHIP_NO_ERROR;
 
     initPref();     // init NVS
-    //
+
     err = matter_core_start();
     if (err != CHIP_NO_ERROR)
+    {
         ChipLogProgress(DeviceLayer, "matter_core_start failed!\n");
+    }
 
     EndpointConfig rootNodeEndpointConfig;
     EndpointConfig dimmableLightEndpointConfig;
@@ -92,17 +70,12 @@ static void example_matter_light_task(void *pvParameters)
     node.addEndpoint(dimmableLightEndpointConfig);
 
     // Enable endpoints
-    // TODO: use enable all endpoints?
-    node.getEndpoint(0)->enableEndpoint(Span<const EmberAfDeviceType>(deviceTypes));
-    node.getEndpoint(1)->enableEndpoint(Span<const EmberAfDeviceType>(deviceTypes));
+    node.enableAllEndpoints(Span<const EmberAfDeviceType>(deviceTypes));
 
-    // vTaskDelay(100000);
-    // node.addEndpoint(dimmableLightEndpointConfig);
-    // node.getEndpoint(2)->enableEndpoint(Span<const EmberAfDeviceType>(deviceTypes));
-
-    // vTaskDelay(30000);
-    // node.getEndpoint(2)->disableEndpoint();
-    // node.removeEndpoint(2);
+    // Test disable and remove endpoints
+    vTaskDelay(10000);
+    node.getEndpoint(1)->disableEndpoint();
+    node.removeEndpoint(1);
 
     vTaskDelete(NULL);
 }
