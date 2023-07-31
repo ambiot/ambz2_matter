@@ -1,6 +1,7 @@
 #pragma once
 
 #include "af-types.h"
+#include "endpoint_config.h"
 #include <variant>
 #include <vector>
 #include <app-common/zap-generated/attribute-type.h>
@@ -69,9 +70,8 @@ public:
         parentEndpointId(endpointId),
         defaultValue(attributeConfig.value)
     {
-        // Change attributeType to base type
-        // Assign value to be of base type with default value
-        // TODO: get value from NVS
+        // Retrieve value from NVS if available, else
+        // assign value to be of base type with default value from config
         switch(getAttributeBaseType())
         {
         case ZCL_INT8U_ATTRIBUTE_TYPE:
@@ -177,17 +177,11 @@ public:
         case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
         case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
         case ZCL_LONG_CHAR_STRING_ATTRIBUTE_TYPE:
-            printf("%s %d\r\n", __FUNCTION__, __LINE__);
-        printf("attributeId: %d, clusterId: %d\r\n", attributeId, parentClusterId);
-            uint8_t *value_buffer;
-            value_buffer = (uint8_t*) malloc(attributeSize);
-            printf("[%s] attributeSize: %d\r\n", __FUNCTION__, attributeSize);
-            if (retrieveValue(value_buffer, attributeSize) != CHIP_NO_ERROR)
+            if (retrieveValue(valueBuffer, attributeSize) != CHIP_NO_ERROR)
             {
-                memset(value_buffer, 0, attributeSize);
-                memcpy(value_buffer, attributeConfig.value.ptrToDefaultValue, attributeSize);
+                memset(valueBuffer, 0, ATTRIBUTE_LARGEST);
+                memcpy(valueBuffer, attributeConfig.value.ptrToDefaultValue, attributeSize);
             }
-            value = value_buffer;
             break;
         case ZCL_ARRAY_ATTRIBUTE_TYPE:
         case ZCL_STRUCT_ATTRIBUTE_TYPE:
@@ -205,36 +199,15 @@ public:
         attributeMask(other.attributeMask),
         parentClusterId(other.parentClusterId),
         parentEndpointId(other.parentEndpointId),
-        defaultValue(other.defaultValue)
+        defaultValue(other.defaultValue),
+        value(other.value)
     {
         switch (getAttributeBaseType())
         {
         case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
         case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
         case ZCL_LONG_CHAR_STRING_ATTRIBUTE_TYPE:
-            uint8_t *value_buffer;
-            value_buffer = (uint8_t*) malloc(attributeSize);
-            other.getValue(value_buffer);
-            value = value_buffer;
-            break;
-        default:
-            break;
-        }
-    }
-
-    ~Attribute()
-    {
-        switch (getAttributeBaseType())
-        {
-        case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
-        case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
-        case ZCL_LONG_CHAR_STRING_ATTRIBUTE_TYPE:
-            if (std::holds_alternative<uint8_t*>(value))
-            {
-        printf("%s %d\r\n", __FUNCTION__, __LINE__);
-        printf("attributeId: %d, clusterId: %d\r\n", attributeId, parentClusterId);
-                free(std::get<uint8_t*>(value));
-            }
+            memcpy(valueBuffer, other.valueBuffer, ATTRIBUTE_LARGEST);
             break;
         default:
             break;
@@ -263,6 +236,7 @@ private:
     EmberAfAttributeMask attributeMask;
     EmberAfDefaultOrMinMaxAttributeValue defaultValue;
     AttributeValue value;
+    uint8_t valueBuffer[ATTRIBUTE_LARGEST];
 };
 
 // Event class
@@ -358,7 +332,7 @@ private:
     std::vector<Event> events;
     std::vector<Command> acceptedCommands;
     std::vector<Command> generatedCommands;
-    std::vector<EmberAfGenericClusterFunction> functions; // TODO
+    std::vector<EmberAfGenericClusterFunction> functions;
 };
 
 // Endpoint class

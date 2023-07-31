@@ -157,9 +157,6 @@ EmberAfAttributeType Attribute::getAttributeBaseType() const
 
 void Attribute::getValue(uint8_t *buffer) const
 {
-    printf("%s %d\r\n", __FUNCTION__, __LINE__);
-    printf("attributeId: %d\r\n", attributeId);
-    printf("clusterId: %d\r\n", parentClusterId);
     switch(getAttributeBaseType())
     {
     case ZCL_INT8U_ATTRIBUTE_TYPE:
@@ -193,13 +190,11 @@ void Attribute::getValue(uint8_t *buffer) const
     case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
     case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
     case ZCL_LONG_CHAR_STRING_ATTRIBUTE_TYPE:
-        memcpy(buffer, std::get<uint8_t*>(value), attributeSize);
-        printf("[%s] attributeSize: %d\r\n", __FUNCTION__, attributeSize);
-        printf("[%s] %s\r\n", __FUNCTION__, (char*) buffer);
+        memcpy(buffer, valueBuffer, attributeSize);
         break;
     case ZCL_ARRAY_ATTRIBUTE_TYPE:
     case ZCL_STRUCT_ATTRIBUTE_TYPE:
-        // TODO: this one do nothing? shouldn't have any variables with this type entering here
+        // Do nothing here, these types of attributes won't be handled here
         break;
     default:
         ChipLogError(DeviceLayer, "[%s] Unknown data type for attributeId: %d from clusterId: 0x%x", __FUNCTION__, getAttributeId(), getParentClusterId());
@@ -268,21 +263,11 @@ void Attribute::setValue(uint8_t *buffer)
     case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
     case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
     case ZCL_LONG_CHAR_STRING_ATTRIBUTE_TYPE:
-        printf("%s %d\r\n", __FUNCTION__, __LINE__);
-        // uint8_t *value_buffer;
-        // free(std::get<uint8_t*>(value));
-        // value_buffer = (uint8_t*) malloc(attributeSize);
-        memcpy(std::get<uint8_t*>(value), buffer, attributeSize);
-        // memcpy(value_buffer, buffer, attributeSize);
-        // value = value_buffer;
-        persistValue(std::get<uint8_t*>(value), attributeSize);
-            printf("[%s] attributeSize: %d\r\n", __FUNCTION__, attributeSize);
-            printf("[%s] %s\r\n", __FUNCTION__, (char*) buffer);
+        memcpy(valueBuffer, buffer, attributeSize);
+        persistValue(valueBuffer, attributeSize);
         break;
     case ZCL_ARRAY_ATTRIBUTE_TYPE:
     case ZCL_STRUCT_ATTRIBUTE_TYPE:
-        // memcpy(std::get<uint8_t*>(getValue()), buffer, getAttributeSize());
-        // persistValue(std::get<uint8_t*>(getValue()), getAttributeSize());
         break;
     default:
         break;
@@ -299,7 +284,6 @@ void Attribute::persistValue(uint8_t *buffer, size_t size)
 
     char key[64];
     sprintf(key, "g/a/%x/%x/%x", parentEndpointId, parentClusterId, attributeId); // g/a/endpoint_id/cluster_id/attribute_id
-    printf("persist key: %s\r\n", key);
     setPref_new(key, key, buffer, size);
 }
 
@@ -315,69 +299,7 @@ CHIP_ERROR Attribute::retrieveValue(uint8_t *buffer, size_t size)
     char key[64];
     size_t len;
     sprintf(key, "g/a/%x/%x/%x", parentEndpointId, parentClusterId, attributeId); // g/a/endpoint_id/cluster_id/attribute_id
-    printf("retrieve key: %s\r\n", key);
     return AmebaUtils::MapError(getPref_bin_new(key, key, buffer, size, &len), AmebaErrorType::kDctError);
-
-    switch(getAttributeBaseType())
-    {
-    case ZCL_INT8U_ATTRIBUTE_TYPE:
-    case ZCL_BOOLEAN_ATTRIBUTE_TYPE:
-        uint8_t value_uint8_t;
-        error = getPref_bin_new(key, key, &value_uint8_t, sizeof(value_uint8_t), &len);
-        value = value_uint8_t;
-        break;
-    case ZCL_INT16U_ATTRIBUTE_TYPE:
-        uint16_t value_uint16_t;
-        error = getPref_bin_new(key, key, (uint8_t*) &value_uint16_t, sizeof(value_uint16_t), &len);
-        value = value_uint16_t;
-        break;
-    case ZCL_INT32U_ATTRIBUTE_TYPE:
-        uint32_t value_uint32_t;
-        error = getPref_bin_new(key, key, (uint8_t*) &value_uint32_t, sizeof(value_uint32_t), &len);
-        value = value_uint32_t;
-        break;
-    case ZCL_INT64U_ATTRIBUTE_TYPE:
-        uint64_t value_uint64_t;
-        error = getPref_bin_new(key, key, (uint8_t*) &value_uint64_t, sizeof(value_uint64_t), &len);
-        value = value_uint64_t;
-        break;
-    case ZCL_INT8S_ATTRIBUTE_TYPE:
-        int8_t value_int8_t;
-        error = getPref_bin_new(key, key, (uint8_t*) &value_int8_t, sizeof(value_int8_t), &len);
-        value = value_int8_t;
-        break;
-    case ZCL_INT16S_ATTRIBUTE_TYPE:
-        int16_t value_int16_t;
-        error = getPref_bin_new(key, key, (uint8_t*) &value_int16_t, sizeof(value_int16_t), &len);
-        value = value_int16_t;
-        break;
-    case ZCL_INT32S_ATTRIBUTE_TYPE:
-        int32_t value_int32_t;
-        error = getPref_bin_new(key, key, (uint8_t*) &value_int32_t, sizeof(value_int32_t), &len);
-        value = value_int32_t;
-        break;
-    case ZCL_INT64S_ATTRIBUTE_TYPE:
-        int64_t value_int64_t;
-        error = getPref_bin_new(key, key, (uint8_t*) &value_int64_t, sizeof(value_int64_t), &len);
-        value = value_int64_t;
-        break;
-    case ZCL_SINGLE_ATTRIBUTE_TYPE:
-        float value_float;
-        error = getPref_bin_new(key, key, (uint8_t*) &value_float, sizeof(value_float), &len);
-        value = value_float;
-        break;
-    case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
-    case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
-    case ZCL_LONG_CHAR_STRING_ATTRIBUTE_TYPE:
-    case ZCL_ARRAY_ATTRIBUTE_TYPE:
-    case ZCL_STRUCT_ATTRIBUTE_TYPE:
-        // error = getPref_bin_new(key, key, std::get<uint8_t*>(getValue()), sizeof(getAttributeSize()), &len);
-        break;
-    default:
-        break;
-        // ChipLogError(DeviceLayer, "[%s] Unknown data type for attributeId: %d from clusterId: 0x%x", __FUNCTION__, attribute->getAttributeId(), cluster->getClusterId());
-    }
-    return AmebaUtils::MapError(error, AmebaErrorType::kDctError);
 }
 
 void Attribute::print(int indent) const
@@ -843,7 +765,6 @@ void Endpoint::enableEndpoint(Span<const EmberAfDeviceType> deviceTypeList)
 
     // Register endpoint as Matter dynamic endpoint
     chip::DeviceLayer::PlatformMgr().LockChipStack();
-    printf("parentEndpointId: %d\r\n", parentEndpointId);
     EmberAfStatus status = emberAfSetDynamicEndpoint(endpointIndex, endpointId, endpointType, chip::Span<chip::DataVersion>(dataVersion, clusters.size()), deviceTypeList, parentEndpointId);
     chip::DeviceLayer::PlatformMgr().UnlockChipStack();
 
