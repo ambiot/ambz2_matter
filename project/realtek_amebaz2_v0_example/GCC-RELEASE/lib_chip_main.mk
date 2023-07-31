@@ -195,11 +195,11 @@ SRC_CPP += $(CHIPDIR)/src/app/server/OnboardingCodesUtil.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/Server.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/CommissioningWindowManager.cpp
 
+SRC_CPP += $(CHIPDIR)/src/app/icd/IcdMonitoringTable.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-size-util.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-storage.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-table.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/binding-table.cpp
-SRC_CPP += $(CHIPDIR)/src/app/util/IcdMonitoringTable.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/DataModelHandler.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/ember-compatibility-functions.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/generic-callback-stubs.cpp
@@ -219,7 +219,9 @@ SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/attribut
 SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/cluster-objects.cpp
 
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/bridged-actions-stub.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/smco-stub.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/static-supported-modes-manager.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/static-supported-temperature-levels.cpp
 
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/chipinterface.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/BindingHandler.cpp
