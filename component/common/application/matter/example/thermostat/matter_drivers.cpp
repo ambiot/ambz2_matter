@@ -14,6 +14,43 @@ using namespace ::chip::app;
 MatterThermostatUI ui;
 MatterThermostat thermostat;
 
+// Set identify cluster and its callback on ep1
+static Identify gIdentify1 = {
+    chip::EndpointId{ 1 }, matter_driver_on_identify_start, matter_driver_on_identify_stop, Clusters::Identify::IdentifyTypeEnum::kVisibleIndicator, matter_driver_on_trigger_effect,
+};
+
+void matter_driver_on_identify_start(Identify * identify)
+{
+    ChipLogProgress(Zcl, "OnIdentifyStart");
+}
+
+void matter_driver_on_identify_stop(Identify * identify)
+{
+    ChipLogProgress(Zcl, "OnIdentifyStop");
+}
+
+void matter_driver_on_trigger_effect(Identify * identify)
+{
+    switch (identify->mCurrentEffectIdentifier)
+    {
+    case Clusters::Identify::EffectIdentifierEnum::kBlink:
+        ChipLogProgress(Zcl, "Clusters::Identify::EffectIdentifierEnum::kBlink");
+        break;
+    case Clusters::Identify::EffectIdentifierEnum::kBreathe:
+        ChipLogProgress(Zcl, "Clusters::Identify::EffectIdentifierEnum::kBreathe");
+        break;
+    case Clusters::Identify::EffectIdentifierEnum::kOkay:
+        ChipLogProgress(Zcl, "Clusters::Identify::EffectIdentifierEnum::kOkay");
+        break;
+    case Clusters::Identify::EffectIdentifierEnum::kChannelChange:
+        ChipLogProgress(Zcl, "Clusters::Identify::EffectIdentifierEnum::kChannelChange");
+        break;
+    default:
+        ChipLogProgress(Zcl, "No identifier effect");
+        return;
+    }
+}
+
 CHIP_ERROR matter_driver_thermostat_init()
 {
     thermostat.Init();
