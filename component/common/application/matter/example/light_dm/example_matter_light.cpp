@@ -65,17 +65,26 @@ static void example_matter_light_task(void *pvParameters)
     Presets::Endpoints::matter_root_node_preset(&rootNodeEndpointConfig);
     Presets::Endpoints::matter_dimmable_light_preset(&dimmableLightEndpointConfig);
 
-    // Initial
+    chip::EndpointId testEndpointId;
+
+    // Initial, root node on ep0, dimmable light on ep1
     node.addEndpoint(rootNodeEndpointConfig);
     node.addEndpoint(dimmableLightEndpointConfig);
 
     // Enable endpoints
     node.enableAllEndpoints(Span<const EmberAfDeviceType>(deviceTypes));
 
-    // Test disable and remove endpoints
-    vTaskDelay(10000);
-    node.getEndpoint(1)->disableEndpoint();
-    node.removeEndpoint(1);
+    vTaskDelay(20000);
+
+    // Test add another dimmable light on ep2
+    testEndpointId = node.addEndpoint(dimmableLightEndpointConfig);
+    node.enableAllEndpoints(Span<const EmberAfDeviceType>(deviceTypes));
+
+    vTaskDelay(20000);
+
+    // Test remove ep2
+    node.getEndpoint(testEndpointId)->disableEndpoint();
+    node.removeEndpoint(testEndpointId);
 
     vTaskDelete(NULL);
 }

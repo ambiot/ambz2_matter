@@ -342,6 +342,8 @@ private:
 class Endpoint
 {
 public:
+    friend class Node;
+
     Endpoint(Node* node, chip::EndpointId endpointId, uint16_t endpointCount) : 
         endpointId(endpointId),
         endpointIndex(endpointCount),
@@ -366,6 +368,7 @@ private:
     Node* parentNode;
     chip::DataVersion *dataVersion = nullptr;
     EmberAfEndpointType *endpointMetadata;
+    bool enabled = false;
 
     // Garbage collectors
     // Store dynamic allocated objects here when endpoint is enabled, then delete it when disabled
@@ -384,7 +387,7 @@ public:
     static Node& getInstance();
     Endpoint *getEndpoint(chip::EndpointId endpointId);
     chip::EndpointId getNextEndpointId() const;
-    void addEndpoint(const EndpointConfig& endpointConfig);
+    chip::EndpointId addEndpoint(const EndpointConfig& endpointConfig);
     void removeEndpoint(chip::EndpointId endpointId);
     void enableAllEndpoints(Span<const EmberAfDeviceType> deviceTypeList);
     void print() const;

@@ -662,6 +662,12 @@ void Endpoint::setParentEndpointId(chip::EndpointId newParentEndpointId)
 
 void Endpoint::enableEndpoint(Span<const EmberAfDeviceType> deviceTypeList)
 {
+    if (enabled)
+    {
+        ChipLogDetail(DeviceLayer, "Endpoint %d already enabled", endpointId);
+        return;
+    }
+
     dataVersion = (chip::DataVersion*) calloc(clusters.size(), sizeof(chip::DataVersion));
 
     EmberAfEndpointType *endpointType = nullptr;
@@ -774,11 +780,12 @@ void Endpoint::enableEndpoint(Span<const EmberAfDeviceType> deviceTypeList)
     {
         ChipLogProgress(DeviceLayer, "Set dynamic endpoint %d success", endpointId);
         endpointMetadata = endpointType;
+        enabled = true;
         return;
     }
     else
     {
-        ChipLogError(DeviceLayer, "Failed to create dynamic endpoint %d with status %d", endpointId, status);
+        ChipLogError(DeviceLayer, "Failed to set dynamic endpoint %d with status %d", endpointId, status);
     }
 
     // free allocated memory if error
@@ -831,6 +838,8 @@ void Endpoint::disableEndpoint()
     chip::DeviceLayer::PlatformMgr().LockChipStack();
     emberAfClearDynamicEndpoint(endpointIndex);
     chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+
+    enabled = false;
 
     // free allocated memory
     for (EmberAfCluster *cls : clusterGarbageCollector)
@@ -921,7 +930,7 @@ chip::EndpointId Node::getNextEndpointId() const
     return nextEndpointId;
 }
 
-void Node::addEndpoint(const EndpointConfig& endpointConfig)
+chip::EndpointId Node::addEndpoint(const EndpointConfig& endpointConfig)
 {
     Endpoint endpoint(this, nextEndpointId, endpointCount);
     // Set parentEndpointId based on the previous endpoint's endpointId
@@ -964,6 +973,8 @@ void Node::addEndpoint(const EndpointConfig& endpointConfig)
     endpoints.push_back(endpoint);
     endpointCount++;
     nextEndpointId++;
+
+    return endpoint.getEndpointId();
 }
 
 void Node::removeEndpoint(chip::EndpointId endpointId)
@@ -977,6 +988,12 @@ void Node::removeEndpoint(chip::EndpointId endpointId)
     {
         // Get the index of the endpoint in the vector
         int index = std::distance(endpoints.begin(), it);
+
+        if (it->enabled)
+        {
+            ChipLogError(DeviceLayer, "Endpoint not yet disabled!");
+            return;
+        }
 
         // Remove the endpoint from the vector
         endpoints.erase(it);
