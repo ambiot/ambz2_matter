@@ -204,7 +204,6 @@ SRC_CPP += $(CHIPDIR)/src/app/util/ember-compatibility-functions.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/generic-callback-stubs.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/message.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/util.cpp
-SRC_CPP += $(CHIPDIR)/src/app/util/error-mapping.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/privilege-storage.cpp
 
 SRC_CPP += $(CHIPDIR)/src/app/reporting/Engine.cpp
@@ -296,8 +295,7 @@ CPPFLAGS += -Wno-deprecated-declarations
 CPPFLAGS += -Wno-unused-parameter
 CPPFLAGS += -Wno-format
 
-CPPFLAGS += -std=gnu++14
-#CPPFLAGS += -std=c++14
+CPPFLAGS += -std=gnu++17
 CPPFLAGS += -fno-rtti
 
 include toolchain.mk
