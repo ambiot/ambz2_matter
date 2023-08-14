@@ -194,6 +194,7 @@ public:
         }
     }
 
+    // Copy constructor to perform a deep copy of string values
     Attribute(const Attribute & other) :
         attributeId(other.attributeId),
         attributeSize(other.attributeSize),
@@ -228,7 +229,6 @@ public:
     void setValue(uint8_t *buffer);
     void persistValue(uint8_t *buffer, size_t size);
     CHIP_ERROR retrieveValue(uint8_t *buffer, size_t size);
-    void print(int indent = 0) const;
 
 private:
     chip::AttributeId attributeId;
@@ -252,7 +252,6 @@ public:
         parentEndpointId(endpointId) {}
     chip::EventId getEventId() const;
     chip::ClusterId getParentClusterId() const;
-    void print(int indent = 0) const;
 
 private:
     chip::EventId eventId;
@@ -279,12 +278,11 @@ public:
         parentEndpointId(endpointId) {}
     chip::CommandId getCommandId() const;
     chip::ClusterId getParentClusterId() const;
-    int getFlag() const;
-    void print(int indent = 0) const;
+    uint8_t getFlag() const;
 
 private:
     chip::CommandId commandId;
-    int commandFlag;
+    uint8_t commandFlag;
     chip::ClusterId parentClusterId;
     chip::EndpointId parentEndpointId;
 };
@@ -325,7 +323,6 @@ public:
     void removeGeneratedCommand(chip::CommandId commandId);
     void addFunction(const EmberAfGenericClusterFunction function);
     void removeFunction();
-    void print(int indent = 0) const;
     std::vector<Attribute> attributes;
 
 private:
@@ -358,7 +355,6 @@ public:
     void setParentEndpointId(chip::EndpointId parentEndpointId);
     void enableEndpoint(chip::Span<const EmberAfDeviceType> deviceTypeList);
     void disableEndpoint();
-    void print(int indent = 0) const;
     std::vector<Cluster> clusters;
 
 private:
@@ -390,7 +386,6 @@ public:
     chip::EndpointId addEndpoint(const EndpointConfig& endpointConfig);
     void removeEndpoint(chip::EndpointId endpointId);
     void enableAllEndpoints(Span<const EmberAfDeviceType> deviceTypeList);
-    void print() const;
 
 private:
     Node() {} /* singleton instance */

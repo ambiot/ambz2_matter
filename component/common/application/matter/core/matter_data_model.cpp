@@ -281,6 +281,7 @@ void Attribute::setValue(uint8_t *buffer)
 
 void Attribute::persistValue(uint8_t *buffer, size_t size)
 {
+    // Only store if value is set to be stored in NVS
     if (getAttributeMask() & ATTRIBUTE_MASK_TOKENIZE)
     {
         char key[64];
@@ -293,6 +294,7 @@ CHIP_ERROR Attribute::retrieveValue(uint8_t *buffer, size_t size)
 {
     int32_t error = -1;
 
+    // Only retrieved if value is set to be stored in NVS
     if (!(getAttributeMask() & ATTRIBUTE_MASK_TOKENIZE))
     {
         return CHIP_ERROR_INTERNAL;
@@ -302,11 +304,6 @@ CHIP_ERROR Attribute::retrieveValue(uint8_t *buffer, size_t size)
     size_t len;
     sprintf(key, "g/a/%x/%x/%x", parentEndpointId, parentClusterId, attributeId); // g/a/endpoint_id/cluster_id/attribute_id
     return AmebaUtils::MapError(getPref_bin_new(key, key, buffer, size, &len), AmebaErrorType::kDctError);
-}
-
-void Attribute::print(int indent) const
-{
-
 }
 
 /*                  Events                  */
@@ -320,12 +317,6 @@ chip::ClusterId Event::getParentClusterId() const
     return parentClusterId;
 }
 
-void Event::print(int indent) const
-{
-    std::string indentation(indent, ' ');
-    std::cout << indentation << "- Event " << eventId << std::endl;
-}
-
 /*                  Commands                  */
 chip::CommandId Command::getCommandId() const
 {
@@ -337,15 +328,9 @@ chip::ClusterId Command::getParentClusterId() const
     return parentClusterId;
 }
 
-int Command::getFlag() const
+uint8_t Command::getFlag() const
 {
     return commandFlag;
-}
-
-void Command::print(int indent) const
-{
-    std::string indentation(indent, ' ');
-    std::cout << indentation << "- Command " << commandId << std::endl;
 }
 
 /*                  Cluster                  */
@@ -550,28 +535,6 @@ void Cluster::addFunction(const EmberAfGenericClusterFunction function)
 void Cluster::removeFunction()
 {
     // not implemented
-}
-
-void Cluster::print(int indent) const
-{
-    std::string indentation(indent, ' ');
-    std::cout << indentation << "Cluster " << getClusterId() << ": " << std::endl;
-    for (const Attribute& attribute : attributes)
-    {
-        attribute.print(indent + 2);
-    }
-    for (const Event& event : events)
-    {
-        event.print(indent + 2);
-    }
-    for (const Command& command : acceptedCommands)
-    {
-        command.print(indent + 2);
-    }
-    for (const Command& command : generatedCommands)
-    {
-        command.print(indent + 2);
-    }
 }
 
 /*                  Endpoint                  */
@@ -894,16 +857,6 @@ void Endpoint::disableEndpoint()
     ChipLogProgress(DeviceLayer, "Successfully disabled dynamic endpoint %d", endpointId);
 }
 
-void Endpoint::print(int indent) const
-{
-    std::string indentation(indent, ' ');
-    std::cout << indentation << "Endpoint_" << endpointId << " parentEndpoint: " << getParentEndpointId() << std::endl;
-    for (const Cluster& cluster : clusters)
-    {
-        cluster.print(indent + 2);
-    }
-}
-
 /*                  Node                  */
 Node& Node::getInstance()
 {
@@ -1020,14 +973,5 @@ void Node::enableAllEndpoints(Span<const EmberAfDeviceType> deviceTypeList)
     for (Endpoint & endpoint: endpoints)
     {
         endpoint.enableEndpoint(deviceTypeList);
-    }
-}
-
-void Node::print() const
-{
-    std::cout << "Node" << std::endl;
-    for (const Endpoint& endpoint : endpoints)
-    {
-        endpoint.print(2);
     }
 }
