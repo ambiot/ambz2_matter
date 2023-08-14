@@ -694,12 +694,14 @@ void matter_root_node_preset(EndpointConfig *rootNodeEndpointConfig)
 
 void matter_dimmable_light_preset(EndpointConfig *dimmableLightEndpointConfig)
 {
+    ClusterConfig descriptorServerCluster;
     ClusterConfig identifyServerCluster;
     ClusterConfig groupsServerCluster;
     ClusterConfig scenesServerCluster;
     ClusterConfig onOffServerCluster;
     ClusterConfig levelControlServerCluster;
 
+    Presets::Clusters::matter_cluster_descriptor_server(&descriptorServerCluster);
     Presets::Clusters::matter_cluster_identify_server(&identifyServerCluster);
     Presets::Clusters::matter_cluster_groups_server(&groupsServerCluster);
     Presets::Clusters::matter_cluster_scenes_server(&scenesServerCluster);
