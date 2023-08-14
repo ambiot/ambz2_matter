@@ -217,8 +217,7 @@ CXXFLAGS += -Wno-format
 CXXFLAGS += -Wno-format-nonliteral
 CXXFLAGS += -Wno-format-security
 
-CXXFLAGS += -std=gnu++11
-CXXFLAGS += -std=c++14
+CXXFLAGS += -std=gnu++17
 CXXFLAGS += -fno-rtti
 
 CHIP_CFLAGS = $(CFLAGS)

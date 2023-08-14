@@ -307,8 +307,7 @@ CPPFLAGS += -Wno-deprecated-declarations
 CPPFLAGS += -Wno-unused-parameter
 CPPFLAGS += -Wno-format
 
-CPPFLAGS += -std=gnu++14
-#CPPFLAGS += -std=c++14
+CPPFLAGS += -std=gnu++17
 CPPFLAGS += -fno-rtti
 
 include toolchain.mk
