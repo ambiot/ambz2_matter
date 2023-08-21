@@ -23,11 +23,12 @@ void matter_cluster_level_control_server(ClusterConfig *clusterConfig);
 void matter_cluster_level_control_server(ClusterConfig *clusterConfig);
 
 } // Clusters
-  //
+
 namespace Endpoints {
 
 void matter_root_node_preset(EndpointConfig *rootNodeEndpointConfig);
 void matter_dimmable_light_preset(EndpointConfig *dimmableLightEndpointConfig);
+void matter_aggregator_preset(EndpointConfig *aggregatorEndpointConfig);
 
 } // Endpoints
 } // Presets

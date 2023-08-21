@@ -716,6 +716,15 @@ void matter_dimmable_light_preset(EndpointConfig *dimmableLightEndpointConfig)
     dimmableLightEndpointConfig->clusterConfigs.push_back(levelControlServerCluster);
 }
 
+void matter_aggregator_preset(EndpointConfig *aggregatorEndpointConfig)
+{
+    ClusterConfig descriptorServerCluster;
+
+    Presets::Clusters::matter_cluster_descriptor_server(&descriptorServerCluster);
+
+    aggregatorEndpointConfig->clusterConfigs.push_back(descriptorServerCluster);
 }
+
+} // Endpoints
 
 } // Presets
