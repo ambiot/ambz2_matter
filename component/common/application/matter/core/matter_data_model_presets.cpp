@@ -708,6 +708,7 @@ void matter_dimmable_light_preset(EndpointConfig *dimmableLightEndpointConfig)
     Presets::Clusters::matter_cluster_onoff_server(&onOffServerCluster);
     Presets::Clusters::matter_cluster_level_control_server(&levelControlServerCluster);
 
+    dimmableLightEndpointConfig->clusterConfigs.push_back(descriptorServerCluster);
     dimmableLightEndpointConfig->clusterConfigs.push_back(identifyServerCluster);
     dimmableLightEndpointConfig->clusterConfigs.push_back(groupsServerCluster);
     dimmableLightEndpointConfig->clusterConfigs.push_back(scenesServerCluster);
