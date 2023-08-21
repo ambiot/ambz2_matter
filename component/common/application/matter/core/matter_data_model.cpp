@@ -623,7 +623,7 @@ void Endpoint::setParentEndpointId(chip::EndpointId newParentEndpointId)
     parentEndpointId = newParentEndpointId;
 }
 
-void Endpoint::enableEndpoint(Span<const EmberAfDeviceType> deviceTypeList)
+void Endpoint::enableEndpoint()
 {
     if (enabled)
     {
@@ -883,9 +883,9 @@ chip::EndpointId Node::getNextEndpointId() const
     return nextEndpointId;
 }
 
-chip::EndpointId Node::addEndpoint(const EndpointConfig& endpointConfig)
+chip::EndpointId Node::addEndpoint(const EndpointConfig& endpointConfig, Span<const EmberAfDeviceType> deviceTypeList)
 {
-    Endpoint endpoint(this, nextEndpointId, endpointCount);
+    Endpoint endpoint(this, nextEndpointId, endpointCount, deviceTypeList);
     // Set parentEndpointId based on the previous endpoint's endpointId
     if (!endpoints.empty())
     {
@@ -968,10 +968,10 @@ void Node::removeEndpoint(chip::EndpointId endpointId)
     endpointCount--;
 }
 
-void Node::enableAllEndpoints(Span<const EmberAfDeviceType> deviceTypeList)
+void Node::enableAllEndpoints()
 {
     for (Endpoint & endpoint: endpoints)
     {
-        endpoint.enableEndpoint(deviceTypeList);
+        endpoint.enableEndpoint();
     }
 }

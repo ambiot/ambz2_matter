@@ -34,9 +34,11 @@ using namespace ::chip::app::Clusters;
 // Device Version for dynamic endpoints:
 #define DEVICE_VERSION_DEFAULT 1
 
-EmberAfDeviceType deviceTypes[] = {
-    // fill up with all the possible device types that you want to use
+EmberAfDeviceType rootNodeDeviceTypes[] = {
     { DEVICE_TYPE_ROOT_NODE, DEVICE_VERSION_DEFAULT },
+};
+
+EmberAfDeviceType dimmableLightDeviceTypes[] = {
     { DEVICE_TYPE_LO_ON_OFF_LIGHT, DEVICE_VERSION_DEFAULT },
 };
 
@@ -65,20 +67,19 @@ static void example_matter_light_task(void *pvParameters)
     Presets::Endpoints::matter_root_node_preset(&rootNodeEndpointConfig);
     Presets::Endpoints::matter_dimmable_light_preset(&dimmableLightEndpointConfig);
 
-    chip::EndpointId testEndpointId;
-
     // Initial, root node on ep0, dimmable light on ep1
-    node.addEndpoint(rootNodeEndpointConfig);
-    node.addEndpoint(dimmableLightEndpointConfig);
+    node.addEndpoint(rootNodeEndpointConfig, Span<const EmberAfDeviceType>(rootNodeDeviceTypes));
+    node.addEndpoint(dimmableLightEndpointConfig, Span<const EmberAfDeviceType>(dimmableLightDeviceTypes));
 
     // Enable endpoints
-    node.enableAllEndpoints(Span<const EmberAfDeviceType>(deviceTypes));
+    node.enableAllEndpoints();
 
     vTaskDelay(20000);
 
     // Test add another dimmable light on ep2
-    testEndpointId = node.addEndpoint(dimmableLightEndpointConfig);
-    node.enableAllEndpoints(Span<const EmberAfDeviceType>(deviceTypes));
+    chip::EndpointId testEndpointId;
+    testEndpointId = node.addEndpoint(dimmableLightEndpointConfig, Span<const EmberAfDeviceType>(dimmableLightDeviceTypes));
+    node.enableAllEndpoints();
 
     vTaskDelay(20000);
 

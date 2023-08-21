@@ -323,12 +323,12 @@ public:
     void removeGeneratedCommand(chip::CommandId commandId);
     void addFunction(const EmberAfGenericClusterFunction function);
     void removeFunction();
-    std::vector<Attribute> attributes;
 
 private:
     chip::ClusterId clusterId;
     EmberAfClusterMask clusterMask;
     chip::EndpointId parentEndpointId;
+    std::vector<Attribute> attributes;
     std::vector<Event> events;
     std::vector<Command> acceptedCommands;
     std::vector<Command> generatedCommands;
@@ -341,11 +341,12 @@ class Endpoint
 public:
     friend class Node;
 
-    Endpoint(Node* node, chip::EndpointId endpointId, uint16_t endpointCount) : 
+    Endpoint(Node* node, chip::EndpointId endpointId, uint16_t endpointCount, Span<const EmberAfDeviceType> deviceTypeList) :
         endpointId(endpointId),
         endpointIndex(endpointCount),
         parentEndpointId(0xFFFF /* chip::kInvalidEndpointId */),
-        parentNode(node) {}
+        parentNode(node),
+        deviceTypeList(deviceTypeList) {}
     chip::EndpointId getEndpointId() const;
     Cluster *getCluster(chip::ClusterId clusterId);
     void addCluster(ClusterConfig & clusterConfig);
@@ -353,9 +354,8 @@ public:
     void removeCluster(chip::ClusterId clusterId);
     chip::EndpointId getParentEndpointId() const;   // This returns the endpointId of the previous endpoint, not to be confused with Cluster::getParentEndpointId
     void setParentEndpointId(chip::EndpointId parentEndpointId);
-    void enableEndpoint(chip::Span<const EmberAfDeviceType> deviceTypeList);
+    void enableEndpoint();
     void disableEndpoint();
-    std::vector<Cluster> clusters;
 
 private:
     chip::EndpointId endpointId;
@@ -363,7 +363,9 @@ private:
     chip::EndpointId parentEndpointId;
     Node* parentNode;
     chip::DataVersion *dataVersion = nullptr;
+    Span<const EmberAfDeviceType> deviceTypeList;
     EmberAfEndpointType *endpointMetadata;
+    std::vector<Cluster> clusters;
     bool enabled = false;
 
     // Garbage collectors
@@ -383,9 +385,9 @@ public:
     static Node& getInstance();
     Endpoint *getEndpoint(chip::EndpointId endpointId);
     chip::EndpointId getNextEndpointId() const;
-    chip::EndpointId addEndpoint(const EndpointConfig& endpointConfig);
+    chip::EndpointId addEndpoint(const EndpointConfig& endpointConfig, Span<const EmberAfDeviceType> deviceTypeList);
     void removeEndpoint(chip::EndpointId endpointId);
-    void enableAllEndpoints(Span<const EmberAfDeviceType> deviceTypeList);
+    void enableAllEndpoints();
 
 private:
     Node() {} /* singleton instance */
