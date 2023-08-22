@@ -390,7 +390,7 @@ void matter_cluster_operational_credentials_server(ClusterConfig *clusterConfig)
 
 void matter_cluster_group_key_management_server(ClusterConfig *clusterConfig)
 {
-    AttributeConfig gkmGroupKeyMap(0x00000000, ZAP_TYPE(ARRAY), ZAP_EMPTY_DEFAULT(), 0, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig gkmGroupKeyMap(0x00000000, ZAP_TYPE(ARRAY), ZAP_EMPTY_DEFAULT(), 0, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(WRITABLE));
     AttributeConfig gkmGroupTable(0x00000001, ZAP_TYPE(ARRAY), ZAP_EMPTY_DEFAULT(), 0, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
     AttributeConfig gkmMaxGroupsPerFabric(0x00000002, ZAP_TYPE(INT16U), ZAP_EMPTY_DEFAULT(), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
     AttributeConfig gkmMaxGroupKeysPerFabric(0x00000003, ZAP_TYPE(INT16U), ZAP_EMPTY_DEFAULT(), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
