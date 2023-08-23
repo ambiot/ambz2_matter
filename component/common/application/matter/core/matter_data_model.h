@@ -16,15 +16,16 @@ class Attribute;
 class Command;
 class Event;
 
+// Use variant to represent the different data types supported
 typedef std::variant<uint8_t, uint8_t*, int8_t, uint16_t, int16_t, uint32_t, int32_t, uint64_t, int64_t, float> AttributeValue;
 
 // Configurations
 struct AttributeConfig
 {
     std::uint32_t attributeId;
-    std::uint8_t dataType; /* EmberAfAttributeType in string format */
-    EmberAfDefaultOrMinMaxAttributeValue value;
-    std::uint16_t size; /* attributeSize, use ZAP_TYPE(type) */
+    std::uint8_t dataType; /* use ZAP_TYPE(type) */
+    EmberAfDefaultOrMinMaxAttributeValue value; /* use ZAP_EMPTY(), ZAP_SIMPLE(), etc */
+    std::uint16_t size;
     std::uint8_t mask = 0; /* attribute flag */
     AttributeConfig(uint32_t attributeId, uint8_t dataType, EmberAfDefaultOrMinMaxAttributeValue value, uint16_t size, uint8_t mask) : attributeId(attributeId), dataType(dataType), value(value), size(size), mask(mask) {}
 };

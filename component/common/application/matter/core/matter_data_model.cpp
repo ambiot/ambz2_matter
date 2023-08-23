@@ -281,7 +281,7 @@ void Attribute::setValue(uint8_t *buffer)
 
 void Attribute::persistValue(uint8_t *buffer, size_t size)
 {
-    // Only store if value is set to be stored in NVS
+    // Only store if value is set to be stored in NVS (represented by ATTRIBUTE_MASK_TOKENIZE flag)
     if (getAttributeMask() & ATTRIBUTE_MASK_TOKENIZE)
     {
         char key[64];
@@ -294,7 +294,7 @@ CHIP_ERROR Attribute::retrieveValue(uint8_t *buffer, size_t size)
 {
     int32_t error = -1;
 
-    // Only retrieved if value is set to be stored in NVS
+    // Only retrieved if value is set to be stored in NVS (represented by ATTRIBUTE_MASK_TOKENIZE flag)
     if (!(getAttributeMask() & ATTRIBUTE_MASK_TOKENIZE))
     {
         return CHIP_ERROR_INTERNAL;
@@ -734,7 +734,7 @@ void Endpoint::enableEndpoint()
     endpointType->endpointSize = 0;   // set to 0 as default
     endpointType->cluster = clusterType;
 
-    // Register endpoint as Matter dynamic endpoint
+    // Register endpoint as dynamic endpoint in matter stack
     chip::DeviceLayer::PlatformMgr().LockChipStack();
     EmberAfStatus status = emberAfSetDynamicEndpoint(endpointIndex, endpointId, endpointType, chip::Span<chip::DataVersion>(dataVersion, clusters.size()), deviceTypeList, parentEndpointId);
     chip::DeviceLayer::PlatformMgr().UnlockChipStack();
@@ -798,6 +798,7 @@ void Endpoint::disableEndpoint()
         return;
     }
 
+    // clear dynamic endpoint on matter stack
     chip::DeviceLayer::PlatformMgr().LockChipStack();
     emberAfClearDynamicEndpoint(endpointIndex);
     chip::DeviceLayer::PlatformMgr().UnlockChipStack();
