@@ -12,6 +12,11 @@ struct AppEvent
         kEventType_Uplink = 0,
         kEventType_Downlink_OnOff,
         kEventType_Downlink_Identify,
+        kEventType_Downlink_Opstate_State,
+        kEventType_Downlink_Opstate_Error_State,
+        kEventType_Downlink_LW_SpinSpeed,
+        kEventType_Downlink_LW_NumberOfRinses,
+        kEventType_Downlink_LW_Mode,
     };
 
     uint16_t Type;
