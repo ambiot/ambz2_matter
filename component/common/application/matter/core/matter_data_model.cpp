@@ -645,7 +645,7 @@ void Endpoint::enableEndpoint()
     if (clusters.size() > 0)
     {
         clusterType = (EmberAfCluster*) calloc(clusters.size(), sizeof(EmberAfCluster));
-        clusterGarbageCollector.push_back(clusterType);
+        clusterCollector.push_back(clusterType);
     }
 
     for (size_t i=0; i<clusters.size(); i++)
@@ -656,7 +656,7 @@ void Endpoint::enableEndpoint()
         if (cluster.attributes.size() > 0)
         {
             attributeType = (EmberAfAttributeMetadata*) calloc(cluster.attributes.size(), sizeof(EmberAfAttributeMetadata));
-            attributeGarbageCollector.push_back(attributeType);
+            attributeCollector.push_back(attributeType);
         }
 
         for (size_t j=0; j<cluster.attributes.size(); j++)
@@ -672,7 +672,7 @@ void Endpoint::enableEndpoint()
         if (cluster.functions.size() > 0)
         {
             functionType = (EmberAfGenericClusterFunction*) calloc(cluster.functions.size(), sizeof(EmberAfGenericClusterFunction));
-            functionGarbageCollector.push_back(functionType);
+            functionCollector.push_back(functionType);
         }
 
         for (size_t j=0; j<cluster.functions.size(); j++)
@@ -684,7 +684,7 @@ void Endpoint::enableEndpoint()
         if (cluster.acceptedCommands.size() > 0)
         {
             acceptedCommandType = (chip::CommandId*) calloc(cluster.acceptedCommands.size(), sizeof(chip::CommandId));
-            acceptedCommandGarbageCollector.push_back(acceptedCommandType);
+            acceptedCommandCollector.push_back(acceptedCommandType);
         }
 
         for (size_t j=0; j<cluster.acceptedCommands.size(); j++)
@@ -696,7 +696,7 @@ void Endpoint::enableEndpoint()
         if (cluster.generatedCommands.size() > 0)
         {
             generatedCommandType = (chip::CommandId*) calloc(cluster.generatedCommands.size(), sizeof(chip::CommandId));
-            generatedCommandGarbageCollector.push_back(generatedCommandType);
+            generatedCommandCollector.push_back(generatedCommandType);
         }
 
         for (size_t j=0; j<cluster.generatedCommands.size(); j++)
@@ -708,7 +708,7 @@ void Endpoint::enableEndpoint()
         if (cluster.events.size() > 0)
         {
             eventType = (chip::EventId*) calloc(cluster.events.size(), sizeof(chip::EventId));
-            eventGarbageCollector.push_back(eventType);
+            eventCollector.push_back(eventType);
         }
 
         for (size_t j=0; j<cluster.events.size(); j++)
@@ -752,32 +752,32 @@ void Endpoint::enableEndpoint()
     }
 
     // free allocated memory if error
-    for (EmberAfCluster *cls : clusterGarbageCollector)
+    for (EmberAfCluster *cls : clusterCollector)
     {
         free(cls);
     }
 
-    for (EmberAfAttributeMetadata *att : attributeGarbageCollector)
+    for (EmberAfAttributeMetadata *att : attributeCollector)
     {
         free(att);
     }
 
-    for (EmberAfGenericClusterFunction *fun : functionGarbageCollector)
+    for (EmberAfGenericClusterFunction *fun : functionCollector)
     {
         free(fun);
     }
 
-    for (chip::CommandId *acmd : acceptedCommandGarbageCollector)
+    for (chip::CommandId *acmd : acceptedCommandCollector)
     {
         free(acmd);
     }
 
-    for (chip::CommandId *gcmd : generatedCommandGarbageCollector)
+    for (chip::CommandId *gcmd : generatedCommandCollector)
     {
         free(gcmd);
     }
 
-    for (chip::EventId *evt : eventGarbageCollector)
+    for (chip::EventId *evt : eventCollector)
     {
         free(evt);
     }
@@ -806,32 +806,32 @@ void Endpoint::disableEndpoint()
     enabled = false;
 
     // free allocated memory
-    for (EmberAfCluster *cls : clusterGarbageCollector)
+    for (EmberAfCluster *cls : clusterCollector)
     {
         free(cls);
     }
 
-    for (EmberAfAttributeMetadata *att : attributeGarbageCollector)
+    for (EmberAfAttributeMetadata *att : attributeCollector)
     {
         free(att);
     }
 
-    for (EmberAfGenericClusterFunction *fun : functionGarbageCollector)
+    for (EmberAfGenericClusterFunction *fun : functionCollector)
     {
         free(fun);
     }
 
-    for (chip::CommandId *acmd : acceptedCommandGarbageCollector)
+    for (chip::CommandId *acmd : acceptedCommandCollector)
     {
         free(acmd);
     }
 
-    for (chip::CommandId *gcmd : generatedCommandGarbageCollector)
+    for (chip::CommandId *gcmd : generatedCommandCollector)
     {
         free(gcmd);
     }
 
-    for (chip::EventId *evt : eventGarbageCollector)
+    for (chip::EventId *evt : eventCollector)
     {
         free(evt);
     }

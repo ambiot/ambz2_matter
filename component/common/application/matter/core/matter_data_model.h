@@ -369,14 +369,14 @@ private:
     std::vector<Cluster> clusters;
     bool enabled = false;
 
-    // Garbage collectors
+    // Metadata collectors
     // Store dynamic allocated objects here when endpoint is enabled, then delete it when disabled
-    std::vector<EmberAfCluster*> clusterGarbageCollector;
-    std::vector<EmberAfAttributeMetadata*> attributeGarbageCollector;
-    std::vector<EmberAfGenericClusterFunction*> functionGarbageCollector;
-    std::vector<chip::CommandId*> acceptedCommandGarbageCollector;
-    std::vector<chip::CommandId*> generatedCommandGarbageCollector;
-    std::vector<chip::EventId*> eventGarbageCollector;
+    std::vector<EmberAfCluster*> clusterCollector;
+    std::vector<EmberAfAttributeMetadata*> attributeCollector;
+    std::vector<EmberAfGenericClusterFunction*> functionCollector;
+    std::vector<chip::CommandId*> acceptedCommandCollector;
+    std::vector<chip::CommandId*> generatedCommandCollector;
+    std::vector<chip::EventId*> eventCollector;
 };
 
 // Node class
