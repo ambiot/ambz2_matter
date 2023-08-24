@@ -251,6 +251,10 @@ GENERATE_NINJA:
 	echo chip_inet_config_enable_ipv4 = "false" >> $(OUTPUT_DIR)/args.gn && \
 	echo chip_support_enable_storage_api_audit = "false" >> $(OUTPUT_DIR)/args.gn && \
 	echo chip_use_transitional_commissionable_data_provider = "false" >> $(OUTPUT_DIR)/args.gn && \
+	echo chip_logging = "true" >> $(OUTPUT_DIR)/args.gn && \
+	echo chip_error_logging  = "true" >> $(OUTPUT_DIR)/args.gn && \
+	echo chip_progress_logging  = "true" >> $(OUTPUT_DIR)/args.gn && \
+	echo chip_detail_logging = "false" >> $(OUTPUT_DIR)/args.gn && \
 	sed -i 's/chip_build_tests\ =\ true/chip_build_tests\ =\ false/g' $(CHIPDIR)/config/ameba/args.gni && \
 	mkdir -p $(CHIPDIR)/config/ameba/components/chip && \
 	cd $(CHIPDIR)/config/ameba/components/chip && gn gen --check --fail-on-unused-args $(CHIPDIR)/examples/lighting-app/ameba/build/chip && \
