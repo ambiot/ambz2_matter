@@ -22,6 +22,8 @@
 #include <app-common/zap-generated/ids/Attributes.h>
 #include <app-common/zap-generated/ids/Clusters.h>
 
+#if defined(CONFIG_EXAMPLE_MATTER_LIGHT) && CONFIG_EXAMPLE_MATTER_LIGHT
+
 using namespace ::chip;
 using namespace ::chip::DeviceLayer;
 using namespace ::chip::Platform;
@@ -95,3 +97,5 @@ extern "C" void example_matter_light(void)
     if(xTaskCreate(example_matter_light_task, ((const char*)"example_matter_task_thread"), 2048, NULL, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
         ChipLogProgress(DeviceLayer, "\n\r%s xTaskCreate(example_matter_light) failed", __FUNCTION__);
 }
+
+#endif /* CONFIG_EXAMPLE_MATTER_LIGHT */
