@@ -11,6 +11,8 @@
 #include "matter_drivers.h"
 #include "matter_interaction.h"
 
+#if defined(CONFIG_EXAMPLE_MATTER_LAUNDRY_WASHER) && CONFIG_EXAMPLE_MATTER_LAUNDRY_WASHER
+
 static void example_matter_laundrywasher_task(void *pvParameters)
 {
     while(!(wifi_is_up(RTW_STA_INTERFACE) || wifi_is_up(RTW_AP_INTERFACE))) {
@@ -51,3 +53,5 @@ extern "C" void example_matter_laundrywasher(void)
     if(xTaskCreate(example_matter_laundrywasher_task, ((const char*)"example_matter_laundrywasher_task"), 2048, NULL, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
         ChipLogProgress(DeviceLayer, "\n\r%s xTaskCreate(example_matter_laundrywasher) failed", __FUNCTION__);
 }
+
+#endif /* CONFIG_EXAMPLE_MATTER_LAUNDRY_WASHER */
