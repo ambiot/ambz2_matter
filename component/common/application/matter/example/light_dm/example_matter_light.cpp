@@ -44,7 +44,7 @@ EmberAfDeviceType dimmableLightDeviceTypes[] = {
     { DEVICE_TYPE_LO_ON_OFF_LIGHT, DEVICE_VERSION_DEFAULT },
 };
 
-Node& node = Node::getInstance();
+Node &node = Node::getInstance();
 
 static void example_matter_light_task(void *pvParameters)
 {

@@ -12,7 +12,6 @@ TOOLCHAINDIR = $(SDKROOTDIR)/tools/arm-none-eabi-gcc/asdk/linux/newlib/bin/
 
 OS := $(shell uname)
 
-# CROSS_COMPILE = $(ARM_GCC_TOOLCHAIN)/arm-none-eabi-
 CROSS_COMPILE = ${TOOLCHAINDIR}/arm-none-eabi-
 
 # Compilation tools
@@ -74,7 +73,6 @@ INCLUDES += -I$(SDKROOTDIR)/component/common/network/lwip/lwip_v2.1.2/port/realt
 INCLUDES += -I$(SDKROOTDIR)/component/common/network/lwip/lwip_v2.1.2/port/realtek/freertos
 INCLUDES += -I$(SDKROOTDIR)/component/common/network/ssl/mbedtls-matter/include
 INCLUDES += -I$(SDKROOTDIR)/component/common/network/ssl/mbedtls-matter/include/mbedtls
-#INCLUDES += -I$(SDKROOTDIR)/component/common/network/ssl/ssl_ram_map/rom
 INCLUDES += -I$(SDKROOTDIR)/component/common/drivers/wlan/realtek/include
 INCLUDES += -I$(SDKROOTDIR)/component/common/drivers/wlan/realtek/src/osdep
 INCLUDES += -I$(SDKROOTDIR)/component/common/drivers/wlan/realtek/src/core/option
@@ -260,7 +258,6 @@ CFLAGS =
 CFLAGS += -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=soft -D__thumb2__ -g -gdwarf-3 -Os
 CFLAGS += -D__ARM_ARCH_8M_MAIN__=1 -gdwarf-3 -fstack-usage -fdata-sections -ffunction-sections 
 CFLAGS += -fdiagnostics-color=always -Wall -Wpointer-arith -Wno-write-strings 
-# CFLAGS += -Wno-maybe-uninitialized --save-temps -c -MMD
 CFLAGS += -Wno-maybe-uninitialized -c -MMD
 CFLAGS += -DCONFIG_PLATFORM_8710C -DCONFIG_BUILD_RAM=1
 CFLAGS += -DV8M_STKOVF
@@ -305,7 +302,6 @@ CPPFLAGS += -Wno-unused-parameter
 CPPFLAGS += -Wno-format
 
 CPPFLAGS += -std=gnu++17
-#CPPFLAGS += -std=c++14
 CPPFLAGS += -fno-rtti
 
 # Compile
@@ -350,16 +346,12 @@ $(SRC_OO): %_$(TARGET).oo : %.cpp | prerequirement
 	$(CC) $(CPPFLAGS) $(INCLUDES) -c $< -o $@
 	$(CC) $(CPPFLAGS) $(INCLUDES) -c $< -MM -MT $@ -MF $(OBJ_DIR)/$(notdir $(patsubst %.oo,%.d,$@))
 	cp $@ $(OBJ_DIR)/$(notdir $@)
-	# cp $*_$(TARGET).ii $(INFO_DIR)
-	# cp $*_$(TARGET).s $(INFO_DIR)
 	chmod 777 $(OBJ_DIR)/$(notdir $@)
 
 $(SRC_O): %_$(TARGET).o : %.c | prerequirement
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -MM -MT $@ -MF $(OBJ_DIR)/$(notdir $(patsubst %.o,%.d,$@))
 	cp $@ $(OBJ_DIR)/$(notdir $@)
-	# cp $*_$(TARGET).ii $(INFO_DIR)
-	# cp $*_$(TARGET).s $(INFO_DIR)
 	chmod 777 $(OBJ_DIR)/$(notdir $@)
 
 -include $(DEPENDENCY_LIST)
