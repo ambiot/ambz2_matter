@@ -60,7 +60,7 @@ certificate_id="ZIG20142ZB330003-24"
 security_level=0
 security_info=0
 version_num=0x2694
-certification_type=0
+certification_type=1
 # dac_origin_vendor_id=1316
 # dac_origin_product_id=1A01
 
