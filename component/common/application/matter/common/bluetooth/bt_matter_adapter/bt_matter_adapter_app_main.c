@@ -516,7 +516,6 @@ int bt_matter_adapter_adv(void)
 
 uint16_t ble_att_mtu_z2(uint16_t conn_id)
 {
-	printf("ble_att_mtu_z2 called here============\r\n");
 	int ret;
 	uint16_t mtu_size;
 
