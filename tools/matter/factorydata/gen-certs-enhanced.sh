@@ -41,7 +41,7 @@ endproduct_pid=$8
 
 if [ $# -le 3 ]; then
 	printf "Please specify input arguments\n"
-	printf "./gen-certs.sh chip_dir chip_cert_tool vid pid paa_cert paa_key <endproduct_vid> <endproduct_pid>\n"
+	printf "./gen-certs.sh chip_dir chip_cert_tool vid pid <paa_cert> <paa_key> <endproduct_vid> <endproduct_pid>\n"
 	exit
 fi
 
