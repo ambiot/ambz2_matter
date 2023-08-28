@@ -84,7 +84,6 @@ certification_type=1
 		paa_key_file="$dest_dir/Chip-Test-PAA-$vid-Key"
 		paa_cert_file="$dest_dir/Chip-Test-PAA-$vid-Cert"
 
-		# If you want to use an existing PAA, don't need to generate it, comment below line
 		"$chip_cert_tool" gen-att-cert --type a --subject-cn "Matter Test PAA" --subject-vid "$vid" --valid-from "$cert_valid_from" --lifetime "$cert_lifetime" --out-key "$paa_key_file".pem --out "$paa_cert_file".pem
 	else
 		printf "Using existing PAA\n\n"
