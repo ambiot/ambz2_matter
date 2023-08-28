@@ -234,11 +234,6 @@ int bt_matter_adapter_app_init(void)
 
 	set_bt_matter_adapter_state(BC_DEV_INIT); // BT Config on
 
-#if CONFIG_AUTO_RECONNECT
-	/* disable auto reconnect */
-	wifi_set_autoreconnect(0);
-#endif
-
 	wifi_disconnect();
 #if CONFIG_LWIP_LAYER
 	LwIP_ReleaseIP(WLAN0_IDX);
@@ -458,11 +453,6 @@ int bt_matter_adapter_init(void)
 
 #if CONFIG_BT_MATTER_ADAPTER
 	set_bt_matter_adapter_state(BC_DEV_INIT); // BT Config on
-#endif
-
-#if CONFIG_AUTO_RECONNECT
-	/* disable auto reconnect */
-	wifi_set_autoreconnect(0);
 #endif
 
 	wifi_disconnect();
