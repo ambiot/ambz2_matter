@@ -598,7 +598,9 @@ uint8_t LwIP_DHCP6(uint8_t idx, uint8_t dhcp6_state)
 
 					/*Todo: error_flag for DHCPv6*/
 
+#if CHIP_PROJECT
                     wifi_indication(WIFI_EVENT_DHCP6_DONE, NULL, 0, 0);
+#endif
 					return DHCP6_ADDRESS_ASSIGNED;
 				}
 
@@ -617,7 +619,9 @@ uint8_t LwIP_DHCP6(uint8_t idx, uint8_t dhcp6_state)
 						if(idx == NET_IF_NUM -1) // This is the ethernet interface, set it up for static ip address
 							netif_set_up(pnetif);
 #endif
+#if CHIP_PROJECT
                         wifi_indication(WIFI_EVENT_DHCP6_DONE, NULL, 0, 0);
+#endif
 						return DHCP6_TIMEOUT;
 					}
 				}

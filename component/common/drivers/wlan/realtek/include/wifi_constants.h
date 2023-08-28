@@ -626,7 +626,9 @@ enum _WIFI_EVENT_INDICATE{
 	WIFI_EVENT_TARGET_SSID_RSSI = 26,
 	WIFI_EVENT_DHCP_RENEW = 27,
 	WIFI_EVENT_SWITCH_CHANNE = 28,	
+#if CHIP_PROJECT
     WIFI_EVENT_DHCP6_DONE = 29,
+#endif
 	WIFI_EVENT_MAX,
 };
 typedef unsigned long rtw_event_indicate_t;
