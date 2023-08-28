@@ -29,6 +29,11 @@ struct matter_wifi_autoreconnect_param {
        int key_id;
 };
 
+#if CONFIG_ENABLE_WPS
+extern char wps_profile_ssid[33];
+extern char wps_profile_password[65];
+#endif
+
 chip_connmgr_callback chip_connmgr_callback_func = NULL;
 void *chip_connmgr_callback_data = NULL;
 void chip_connmgr_set_callback_func(chip_connmgr_callback p, void *data)
