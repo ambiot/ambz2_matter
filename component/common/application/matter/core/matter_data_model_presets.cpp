@@ -109,6 +109,7 @@ void matter_cluster_basic_information_server(ClusterConfig *clusterConfig)
     clusterConfig->attributeConfigs.push_back(basicinfoSerialNumber);
     clusterConfig->attributeConfigs.push_back(basicinfoLocalConfigDisabled);
     clusterConfig->attributeConfigs.push_back(basicinfoUniqueId);
+    clusterConfig->attributeConfigs.push_back(basicinfoCapabilityMinima);
     clusterConfig->attributeConfigs.push_back(basicinfoFeatureMap);
     clusterConfig->attributeConfigs.push_back(basicinfoClusterRevision);
     clusterConfig->eventConfigs.push_back(basicinfoStartUp);
