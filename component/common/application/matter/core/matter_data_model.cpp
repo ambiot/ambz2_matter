@@ -33,7 +33,7 @@ EmberAfStatus emberAfExternalAttributeReadCallback(EndpointId endpoint_id, Clust
 
 EmberAfStatus emberAfExternalAttributeWriteCallback(EndpointId endpoint_id, ClusterId cluster_id, const EmberAfAttributeMetadata *matter_attribute, uint8_t *buffer)
 {
-    Node & node = Node::getInstance();
+    Node &node = Node::getInstance();
     Endpoint *endpoint = node.getEndpoint(endpoint_id);
     Cluster *cluster = endpoint->getCluster(cluster_id);
     Attribute *attribute = cluster->getAttribute(matter_attribute->attributeId);
@@ -351,7 +351,7 @@ chip::EndpointId Cluster::getParentEndpointId() const
 
 Attribute *Cluster::getAttribute(chip::AttributeId attributeId)
 {
-    for (auto & att : attributes)
+    for (auto &att : attributes)
     {
         if (att.getAttributeId() == attributeId)
         {
@@ -364,7 +364,7 @@ Attribute *Cluster::getAttribute(chip::AttributeId attributeId)
 
 Event *Cluster::getEvent(chip::EventId eventId)
 {
-    for (auto & evt : events)
+    for (auto &evt : events)
     {
         if (evt.getEventId() == eventId)
         {
@@ -377,7 +377,7 @@ Event *Cluster::getEvent(chip::EventId eventId)
 
 Command *Cluster::getAcceptedCommand(chip::CommandId commandId)
 {
-    for (auto & cmd : acceptedCommands)
+    for (auto &cmd : acceptedCommands)
     {
         if (cmd.getCommandId() == commandId)
         {
@@ -390,7 +390,7 @@ Command *Cluster::getAcceptedCommand(chip::CommandId commandId)
 
 Command *Cluster::getGeneratedCommand(chip::CommandId commandId)
 {
-    for (auto & cmd : generatedCommands)
+    for (auto &cmd : generatedCommands)
     {
         if (cmd.getCommandId() == commandId)
         {
@@ -407,7 +407,7 @@ void Cluster::addAttribute(AttributeConfig attributeConfig)
     addAttribute(attribute);
 }
 
-void Cluster::addAttribute(const Attribute& attribute)
+void Cluster::addAttribute(const Attribute &attribute)
 {
     // Check if attribute already exist
     if (getAttribute(attribute.getAttributeId()) != NULL)
@@ -420,7 +420,7 @@ void Cluster::addAttribute(const Attribute& attribute)
 
 void Cluster::removeAttribute(chip::AttributeId attributeId)
 {
-    auto it = std::find_if(attributes.begin(), attributes.end(), [&](const Attribute & attribute)
+    auto it = std::find_if(attributes.begin(), attributes.end(), [&](const Attribute &attribute)
     {
         return attribute.getAttributeId() == attributeId;
     });
@@ -437,7 +437,7 @@ void Cluster::addEvent(EventConfig eventConfig)
     addEvent(event);
 }
 
-void Cluster::addEvent(const Event& event)
+void Cluster::addEvent(const Event &event)
 {
     // Check if event already exist
     if (getEvent(event.getEventId()) != NULL)
@@ -450,7 +450,7 @@ void Cluster::addEvent(const Event& event)
 
 void Cluster::removeEvent(chip::EventId eventId)
 {
-    auto it = std::find_if(events.begin(), events.end(), [&](const Event & event)
+    auto it = std::find_if(events.begin(), events.end(), [&](const Event &event)
     {
         return event.getEventId() == eventId;
     });
@@ -467,7 +467,7 @@ void Cluster::addAcceptedCommand(CommandConfig commandConfig)
     addAcceptedCommand(command);
 }
 
-void Cluster::addAcceptedCommand(const Command& command)
+void Cluster::addAcceptedCommand(const Command &command)
 {
     // Check if command already exist
     if (getAcceptedCommand(command.getCommandId()) != NULL)
@@ -487,7 +487,7 @@ void Cluster::addGeneratedCommand(CommandConfig commandConfig)
     addGeneratedCommand(command);
 }
 
-void Cluster::addGeneratedCommand(const Command& command)
+void Cluster::addGeneratedCommand(const Command &command)
 {
     // Check if command already exist
     if (getGeneratedCommand(command.getCommandId()) != NULL)
@@ -503,7 +503,7 @@ void Cluster::addGeneratedCommand(const Command& command)
 
 void Cluster::removeAcceptedCommand(chip::CommandId commandId)
 {
-    auto it = std::find_if(acceptedCommands.begin(), acceptedCommands.end(), [commandId](const Command& command)
+    auto it = std::find_if(acceptedCommands.begin(), acceptedCommands.end(), [commandId](const Command &command)
     {
         return command.getCommandId() == commandId;
     });
@@ -516,7 +516,7 @@ void Cluster::removeAcceptedCommand(chip::CommandId commandId)
 
 void Cluster::removeGeneratedCommand(chip::CommandId commandId)
 {
-    auto it = std::find_if(generatedCommands.begin(), generatedCommands.end(), [commandId](const Command& command)
+    auto it = std::find_if(generatedCommands.begin(), generatedCommands.end(), [commandId](const Command &command)
     {
         return command.getCommandId() == commandId;
     });
@@ -545,7 +545,7 @@ chip::EndpointId Endpoint::getEndpointId() const
 
 Cluster *Endpoint::getCluster(chip::ClusterId clusterId)
 {
-    for (auto & cls : clusters)
+    for (auto &cls : clusters)
     {
         if (cls.getClusterId() == clusterId)
         {
@@ -556,10 +556,10 @@ Cluster *Endpoint::getCluster(chip::ClusterId clusterId)
     return NULL;
 }
 
-void Endpoint::addCluster(ClusterConfig & clusterConfig)
+void Endpoint::addCluster(ClusterConfig &clusterConfig)
 {
     Cluster cluster(endpointId, clusterConfig);
-    for (const AttributeConfig & attributeConfig : clusterConfig.attributeConfigs)
+    for (const AttributeConfig &attributeConfig : clusterConfig.attributeConfigs)
     {
         Attribute attribute(cluster.getClusterId(), endpointId, attributeConfig);
         cluster.addAttribute(attribute);
@@ -569,7 +569,7 @@ void Endpoint::addCluster(ClusterConfig & clusterConfig)
         Event event(cluster.getClusterId(), endpointId, eventConfig);
         cluster.addEvent(event);
     }
-    for (const CommandConfig & commandConfig : clusterConfig.commandConfigs)
+    for (const CommandConfig &commandConfig : clusterConfig.commandConfigs)
     {
         Command command(cluster.getClusterId(), endpointId, commandConfig);
         if (command.getFlag() & COMMAND_MASK_ACCEPTED)
@@ -581,14 +581,14 @@ void Endpoint::addCluster(ClusterConfig & clusterConfig)
             cluster.addGeneratedCommand(command);
         }
     }
-    for (const EmberAfGenericClusterFunction & functionConfig : clusterConfig.functionConfigs)
+    for (const EmberAfGenericClusterFunction &functionConfig : clusterConfig.functionConfigs)
     {
         cluster.addFunction(functionConfig);
     }
     addCluster(cluster);
 }
 
-void Endpoint::addCluster(const Cluster& cluster)
+void Endpoint::addCluster(const Cluster &cluster)
 {
     // Check if cluster already exist
     if (getCluster(cluster.getClusterId()) != NULL)
@@ -602,7 +602,7 @@ void Endpoint::addCluster(const Cluster& cluster)
 void Endpoint::removeCluster(chip::ClusterId clusterId)
 {
     // Remove the cluster from the vector
-    auto it = std::find_if(clusters.begin(), clusters.end(), [&](const Cluster& cluster)
+    auto it = std::find_if(clusters.begin(), clusters.end(), [&](const Cluster &cluster)
     {
         return cluster.getClusterId() == clusterId;
     });
@@ -859,7 +859,7 @@ void Endpoint::disableEndpoint()
 }
 
 /*                  Node                  */
-Node& Node::getInstance()
+Node &Node::getInstance()
 {
     static Node instance;
     return instance;
@@ -868,7 +868,7 @@ Node& Node::getInstance()
 Endpoint *Node::getEndpoint(chip::EndpointId endpointId)
 {
     int i=0;
-    for (auto & ep : endpoints)
+    for (auto &ep : endpoints)
     {
         if (ep.getEndpointId() == endpointId)
         {
@@ -884,7 +884,7 @@ chip::EndpointId Node::getNextEndpointId() const
     return nextEndpointId;
 }
 
-chip::EndpointId Node::addEndpoint(const EndpointConfig& endpointConfig, Span<const EmberAfDeviceType> deviceTypeList)
+chip::EndpointId Node::addEndpoint(const EndpointConfig &endpointConfig, Span<const EmberAfDeviceType> deviceTypeList)
 {
     Endpoint endpoint(this, nextEndpointId, endpointCount, deviceTypeList);
     // Set parentEndpointId based on the previous endpoint's endpointId
@@ -893,20 +893,20 @@ chip::EndpointId Node::addEndpoint(const EndpointConfig& endpointConfig, Span<co
         endpoint.setParentEndpointId(endpoints.back().getEndpointId());
     }
 
-    for (const ClusterConfig& clusterConfig : endpointConfig.clusterConfigs)
+    for (const ClusterConfig &clusterConfig : endpointConfig.clusterConfigs)
     {
         Cluster cluster(endpoint.getEndpointId(), clusterConfig);
-        for (const AttributeConfig& attributeConfig : clusterConfig.attributeConfigs)
+        for (const AttributeConfig &attributeConfig : clusterConfig.attributeConfigs)
         {
             Attribute attribute(cluster.getClusterId(), endpoint.getEndpointId(), attributeConfig);
             cluster.addAttribute(attribute);
         }
-        for (const EventConfig& eventConfig : clusterConfig.eventConfigs)
+        for (const EventConfig &eventConfig : clusterConfig.eventConfigs)
         {
             Event event(cluster.getClusterId(), endpoint.getEndpointId(), eventConfig);
             cluster.addEvent(event);
         }
-        for (const CommandConfig& commandConfig : clusterConfig.commandConfigs)
+        for (const CommandConfig &commandConfig : clusterConfig.commandConfigs)
         {
             Command command(cluster.getClusterId(), endpoint.getEndpointId(), commandConfig);
             if (command.getFlag() & COMMAND_MASK_ACCEPTED)
@@ -918,7 +918,7 @@ chip::EndpointId Node::addEndpoint(const EndpointConfig& endpointConfig, Span<co
                 cluster.addGeneratedCommand(command);
             }
         }
-        for (const EmberAfGenericClusterFunction & functionConfig : clusterConfig.functionConfigs)
+        for (const EmberAfGenericClusterFunction &functionConfig : clusterConfig.functionConfigs)
         {
             cluster.addFunction(functionConfig);
         }
@@ -933,7 +933,7 @@ chip::EndpointId Node::addEndpoint(const EndpointConfig& endpointConfig, Span<co
 
 void Node::removeEndpoint(chip::EndpointId endpointId)
 {
-    auto it = std::find_if(endpoints.begin(), endpoints.end(), [&](const Endpoint& endpoint)
+    auto it = std::find_if(endpoints.begin(), endpoints.end(), [&](const Endpoint &endpoint)
     {
         return endpoint.getEndpointId() == endpointId;
     });
@@ -971,7 +971,7 @@ void Node::removeEndpoint(chip::EndpointId endpointId)
 
 void Node::enableAllEndpoints()
 {
-    for (Endpoint & endpoint: endpoints)
+    for (Endpoint &endpoint: endpoints)
     {
         endpoint.enableEndpoint();
     }

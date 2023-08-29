@@ -139,7 +139,7 @@ exit:
     return;
 }
 
-void matter_driver_downlink_update_handler(AppEvent * event)
+void matter_driver_downlink_update_handler(AppEvent *event)
 {
     chip::DeviceLayer::PlatformMgr().LockChipStack();
     switch (event->Type)
