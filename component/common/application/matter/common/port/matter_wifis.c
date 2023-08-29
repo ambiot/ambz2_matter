@@ -12,10 +12,27 @@
 #include "string.h"
 #include "wifi_conf.h"
 #include "chip_porting.h"
+#include "osdep_service.h"
 
 u32 apNum = 0; // no of total AP scanned
+u8 matter_wifi_trigger = 0;
 static rtw_scan_result_t matter_userdata[65] = {0};
 static char *matter_ssid;
+void* matter_param_indicator;
+struct task_struct matter_wifi_autoreconnect_task;
+struct matter_wifi_autoreconnect_param {
+       rtw_security_t security_type;
+       char *ssid;
+       int ssid_len;
+       char *password;
+       int password_len;
+       int key_id;
+};
+
+#if CONFIG_ENABLE_WPS
+extern char wps_profile_ssid[33];
+extern char wps_profile_password[65];
+#endif
 
 chip_connmgr_callback chip_connmgr_callback_func = NULL;
 void *chip_connmgr_callback_data = NULL;
@@ -211,6 +228,82 @@ static int matter_get_ap_security_mode(IN char * ssid, OUT rtw_security_t *secur
     return 0;
 }
 
+static void matter_wifi_autoreconnect_thread(void *param)
+{
+    int ret = RTW_ERROR;
+    struct matter_wifi_autoreconnect_param *reconnect_param = (struct matter_wifi_autoreconnect_param *) param;
+    RTW_API_INFO("\n\rmatter auto reconnect ...\n");
+    char empty_bssid[6] = {0}, assoc_by_bssid = 0;
+    extern unsigned char* rltk_wlan_get_saved_bssid(void);
+    unsigned char* saved_bssid = rltk_wlan_get_saved_bssid();
+
+    if(memcmp(saved_bssid, empty_bssid, ETH_ALEN)){
+        assoc_by_bssid = 1;
+    }
+
+#if defined(CONFIG_SAE_SUPPORT) && (CONFIG_ENABLE_WPS==1)
+    unsigned char is_wpa3_disable=0;
+    if((strncmp(wps_profile_ssid, reconnect_param->ssid, reconnect_param->ssid_len) == 0) &&
+        (strncmp(wps_profile_password, reconnect_param->password, reconnect_param->password_len) == 0) &&
+        (wext_get_support_wpa3() == 1)){
+        wext_set_support_wpa3(DISABLE);
+        is_wpa3_disable=1;
+    }
+#endif
+
+    if(assoc_by_bssid){
+        ret = wifi_connect_bssid(saved_bssid, reconnect_param->ssid, reconnect_param->security_type,
+                                    reconnect_param->password, ETH_ALEN, reconnect_param->ssid_len, reconnect_param->password_len, reconnect_param->key_id, NULL);
+    }
+    else{
+        ret = wifi_connect(reconnect_param->ssid, reconnect_param->security_type, reconnect_param->password,
+                            reconnect_param->ssid_len, reconnect_param->password_len, reconnect_param->key_id, NULL);
+    }
+
+#if defined(CONFIG_SAE_SUPPORT) && (CONFIG_ENABLE_WPS==1)
+    if(is_wpa3_disable)
+        wext_set_support_wpa3(ENABLE);
+#endif
+
+    matter_param_indicator = NULL;
+    rtw_delete_task(&matter_wifi_autoreconnect_task);
+}
+
+void matter_wifi_autoreconnect_hdl(rtw_security_t security_type,
+                            char *ssid, int ssid_len,
+                            char *password, int password_len,
+                            int key_id)
+{
+    static struct matter_wifi_autoreconnect_param param;
+    matter_param_indicator = &param;
+    param.security_type = security_type;
+    param.ssid = ssid;
+    param.ssid_len = ssid_len;
+    param.password = password;
+    param.password_len = password_len;
+    param.key_id = key_id;
+
+    if(matter_wifi_autoreconnect_task.task != NULL){
+        dhcp_stop(&xnetif[0]);
+        u32 start_tick = rtw_get_current_time();
+        while(1){
+            rtw_msleep_os(2);
+            u32 passing_tick = rtw_get_current_time() - start_tick;
+            if(rtw_systime_to_sec(passing_tick) >= 2){
+                RTW_API_INFO("\r\n Create matter_wifi_autoreconnect_task timeout \r\n");
+                return;
+            }
+
+            if(matter_wifi_autoreconnect_task.task == NULL){
+                break;
+            }
+        }
+    }
+
+    rtw_create_task(&matter_wifi_autoreconnect_task, (const char *)"matter_wifi_autoreconnect", 512, tskIDLE_PRIORITY + 1, matter_wifi_autoreconnect_thread, &param);
+
+}
+
 int matter_wifi_connect(
     char              *ssid,
     rtw_security_t    security_type,
@@ -239,9 +332,9 @@ int matter_wifi_connect(
             }
             security_retry_count++;
             if(security_retry_count >= 3) {
-                printf("Can't get AP security mode and channel.\n");
-                ret = RTW_NOTFOUND;
-                return RTW_ERROR;
+                printf("Can't get AP security mode and channel. Use RTW_SECURITY_WPA_WPA2_MIXED\n");
+                security_type = RTW_SECURITY_WPA_WPA2_MIXED;
+                break;
             }
         }
         /* Don't set WEP Key ID, default use key_id = 0 for connection
@@ -250,6 +343,8 @@ int matter_wifi_connect(
          * */
     }
 
+    matter_wifi_trigger = 1;
+    matter_set_autoreconnect(1);
     err = wifi_connect(ssid, security_type, password, strlen(ssid), strlen(password), key_id, NULL);
 
     return err;
@@ -280,8 +375,30 @@ int matter_wifi_is_connected_to_ap(void)
     return wifi_is_connected_to_ap();
 }
 
+int matter_wifi_is_ready_to_transceive(rtw_interface_t interface)
+{
+    return wifi_is_ready_to_transceive(interface);
+}
+
+int matter_wifi_is_up(rtw_interface_t interface)
+{
+    return wifi_is_up(interface);
+}
+
+int matter_wifi_is_open_security (void)
+{
+    if(wifi_get_sta_security_type() == RTW_SECURITY_OPEN)
+    {
+        return 1;
+    }
+    return 0;
+}
+
 void matter_lwip_dhcp()
 {
+    netif_set_link_up(&xnetif[0]);
+    matter_set_autoreconnect(0);
+
     LwIP_DHCP(0, DHCP_START);
 }
 
@@ -336,6 +453,11 @@ int matter_wifi_get_mac_address(char *mac)
 int matter_wifi_get_last_error()
 {
     return wifi_get_last_error();
+}
+
+void matter_set_autoreconnect(u8 mode)
+{
+    wifi_set_autoreconnect(mode);
 }
 
 #ifdef __cplusplus

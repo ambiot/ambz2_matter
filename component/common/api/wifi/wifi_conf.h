@@ -1176,6 +1176,12 @@ int mailbox_to_wifi(u8 *data, u8 len);
 #define mailbox_to_wifi(data, len)
 #endif
 
+/**
+ * @brief  Get station security type
+ * @return  Station security type
+ */
+int wifi_get_sta_security_type(void);
+
 #ifdef CONFIG_WOWLAN_TCP_KEEP_ALIVE
 /**
  * @brief  construct a tcp packet that offload to wlan. wlan would keep sending this packet to tcp server.

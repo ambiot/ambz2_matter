@@ -26,6 +26,12 @@ void chip_connmgr_set_callback_func(chip_connmgr_callback p, void *data);
 void matter_scan_networks(void);
 void matter_scan_networks_with_ssid(const unsigned char *ssid, size_t length);
 rtw_scan_result_t *matter_get_scan_results(void);
+void matter_wifi_autoreconnect_hdl(
+    rtw_security_t security_type,
+    char *ssid, int ssid_len,
+    char *password, int password_len,
+    int key_id);
+void matter_set_autoreconnect(u8 mode);
 int matter_wifi_connect(
     char              *ssid,
     rtw_security_t    security_type,
@@ -39,6 +45,9 @@ int matter_wifi_disconnect(void);
 int matter_wifi_on(rtw_mode_t mode);
 int matter_wifi_set_mode(rtw_mode_t mode);
 int matter_wifi_is_connected_to_ap(void);
+int matter_wifi_is_open_security (void);
+int matter_wifi_is_ready_to_transceive(rtw_interface_t interface);
+int matter_wifi_is_up(rtw_interface_t interface);
 void matter_lwip_dhcp(void);
 void matter_lwip_dhcp6(void);
 void matter_lwip_releaseip(void);

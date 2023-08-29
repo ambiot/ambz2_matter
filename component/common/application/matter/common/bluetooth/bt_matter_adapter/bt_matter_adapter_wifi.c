@@ -140,11 +140,6 @@ int BC_req_connect_hdl(uint8_t *ssid, uint8_t *password, uint8_t *bssid, rtw_sec
 	BC_DBG("[Connect] SSID: [%s], password: [%s]\r\n",
 			   ssid, password);
 	
-#if CONFIG_AUTO_RECONNECT
-	/* disable auto reconnect */
-	wifi_set_autoreconnect(0);
-#endif
-	
 	wifi.ssid.len = strlen((char const*)ssid);
 	memcpy(wifi.ssid.val, ssid, wifi.ssid.len);
 	wifi.password_len = strlen((char const*)password);
