@@ -67,7 +67,6 @@ INCLUDES += -I$(SDKROOTDIR)/component/common/network/lwip/lwip_v2.1.2/port/realt
 INCLUDES += -I$(SDKROOTDIR)/component/common/network/lwip/lwip_v2.1.2/port/realtek/freertos
 INCLUDES += -I$(SDKROOTDIR)/component/common/network/ssl/mbedtls-matter/include
 INCLUDES += -I$(SDKROOTDIR)/component/common/network/ssl/mbedtls-matter/include/mbedtls
-#INCLUDES += -I$(SDKROOTDIR)/component/common/network/ssl/ssl_ram_map/rom
 INCLUDES += -I$(SDKROOTDIR)/component/common/drivers/wlan/realtek/include
 INCLUDES += -I$(SDKROOTDIR)/component/common/drivers/wlan/realtek/src/osdep
 INCLUDES += -I$(SDKROOTDIR)/component/common/drivers/wlan/realtek/src/core/option
