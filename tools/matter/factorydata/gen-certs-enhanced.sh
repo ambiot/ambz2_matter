@@ -104,12 +104,12 @@ certification_type=1
 	
 	if [ $scoped == 1 ]; then
 		printf "\nGenerating vid-scoped PAI of vid $vid\n\n"
-		pai_key_file="$dest_dir/Chip-Test-PAI-$vid-NoPID-Key"
-		pai_cert_file="$dest_dir/Chip-Test-PAI-$vid-NoPID-Cert"
-	else
-		printf "\nGenerating non-vid-scoped PAI of vid $vid and pid $pid\n\n"
 		pai_key_file="$dest_dir/Chip-Test-PAI-$vid-$pid-Key"
 		pai_cert_file="$dest_dir/Chip-Test-PAI-$vid-$pid-Cert"
+	else
+		printf "\nGenerating non-vid-scoped PAI of vid $vid and pid $pid\n\n"
+		pai_key_file="$dest_dir/Chip-Test-PAI-$vid-NoPID-Key"
+		pai_cert_file="$dest_dir/Chip-Test-PAI-$vid-NoPID-Cert"
 	fi
 
 	"$chip_cert_tool" gen-att-cert --type i --subject-cn "Matter Test PAI" --subject-vid "$vid" --valid-from "$cert_valid_from" --lifetime "$cert_lifetime" --ca-key "$paa_key_file".pem --ca-cert "$paa_cert_file".pem --out-key "$pai_key_file".pem --out "$pai_cert_file".pem
