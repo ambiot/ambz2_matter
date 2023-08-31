@@ -183,7 +183,10 @@ public:
             if (retrieveValue(valueBuffer, attributeSize) != CHIP_NO_ERROR)
             {
                 memset(valueBuffer, 0, ATTRIBUTE_LARGEST);
-                memcpy(valueBuffer, attributeConfig.value.ptrToDefaultValue, attributeSize);
+                if (attributeConfig.value.ptrToDefaultValue != nullptr)
+                {
+                    memcpy(valueBuffer, attributeConfig.value.ptrToDefaultValue, attributeSize);
+                }
             }
             break;
         case ZCL_ARRAY_ATTRIBUTE_TYPE:
@@ -211,7 +214,10 @@ public:
         case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:
         case ZCL_CHAR_STRING_ATTRIBUTE_TYPE:
         case ZCL_LONG_CHAR_STRING_ATTRIBUTE_TYPE:
-            memcpy(valueBuffer, other.valueBuffer, ATTRIBUTE_LARGEST);
+            if (other.valueBuffer != nullptr)
+            {
+                memcpy(valueBuffer, other.valueBuffer, other.attributeSize);
+            }
             break;
         default:
             break;
@@ -297,7 +303,7 @@ public:
     Cluster(chip::EndpointId endpointId, ClusterConfig clusterConfig) :
         clusterId(clusterConfig.clusterId),
         clusterMask(clusterConfig.mask),
-        parentEndpointId(endpointId) {};
+        parentEndpointId(endpointId) {}
     chip::ClusterId getClusterId() const;
     EmberAfClusterMask getClusterMask() const;
     chip::EndpointId getParentEndpointId() const;
