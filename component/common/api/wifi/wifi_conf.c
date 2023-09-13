@@ -189,7 +189,7 @@ extern int rltk_set_mode_posthandle(rtw_mode_t curr_mode, rtw_mode_t next_mode, 
 #ifdef CONFIG_PMKSA_CACHING
 extern int wifi_set_pmk_cache_enable(unsigned char value);
 #endif
-#if CHIP_PROJECT
+#ifdef CHIP_PROJECT
 extern u8 matter_wifi_trigger;
 extern void matter_wifi_autoreconnect_hdl(rtw_security_t security_type, char *ssid, int ssid_len, char *password, int password_len, int key_id);
 #endif
@@ -694,7 +694,7 @@ static void wifi_disconn_hdl( char* buf, int buf_len, int flags, void* userdata)
 	}
 #endif
 
-#if CHIP_PROJECT
+#ifdef CHIP_PROJECT
     if(matter_wifi_trigger) {
 		join_user_data = NULL;
 
@@ -3365,7 +3365,7 @@ int wifi_config_autoreconnect(__u8 mode, __u8 retry_times, __u16 timeout)
 {
 	if(mode == RTW_AUTORECONNECT_DISABLE)
 		p_wlan_autoreconnect_hdl = NULL;
-#if CHIP_PROJECT
+#ifdef CHIP_PROJECT
     else if (matter_wifi_trigger)
 		p_wlan_autoreconnect_hdl = matter_wifi_autoreconnect_hdl;
 #endif
