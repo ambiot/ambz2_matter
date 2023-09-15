@@ -44,7 +44,7 @@ void matter_driver_set_state_value_callback(uint32_t id)
 {
     AppEvent downlink_event;
     downlink_event.Type     = AppEvent::kEventType_Downlink_Refrigerator_Alarm_SetStateValue;
-    downlink_event.value._u8 = (uint8_t) id; // 0: Stop; 1:Running ,2:Paused; 3: Error
+    downlink_event.value._u8 = (uint8_t) id;
     downlink_event.mHandler = matter_driver_downlink_update_handler;
     PostDownlinkEvent(&downlink_event);
 }
@@ -53,7 +53,7 @@ void matter_driver_set_supported_value_callback(uint32_t id)
 {
     AppEvent downlink_event;
     downlink_event.Type     = AppEvent::kEventType_Downlink_Refrigerator_Alarm_SetSupportedValue;
-    downlink_event.value._u8 = (uint8_t) id; // 0: Stop; 1:Running ,2:Paused; 3: Error
+    downlink_event.value._u8 = (uint8_t) id;
     downlink_event.mHandler = matter_driver_downlink_update_handler;
     PostDownlinkEvent(&downlink_event);
 }

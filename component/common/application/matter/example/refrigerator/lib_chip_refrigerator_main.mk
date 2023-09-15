@@ -223,9 +223,10 @@ SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_api.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_core.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_interaction.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_ota_initializer.cpp
-SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/refrigerator/example_matter_refrigerator.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/refrigerator_driver.cpp
 # SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/opstate_driver.cpp
 # SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/washer_driver.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/refrigerator/example_matter_refrigerator.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/refrigerator/matter_drivers.cpp
 
 #lib_version
