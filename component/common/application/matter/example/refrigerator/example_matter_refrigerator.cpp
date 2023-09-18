@@ -45,6 +45,20 @@ static void example_matter_refrigerator_task(void *pvParameters)
     if (err != CHIP_NO_ERROR)
         ChipLogProgress(DeviceLayer, "matter_interaction_start_uplink failed!\n");
 
+    vTaskDelay(20000);
+    matter_driver_set_temperature_callback((uint32_t) 0);
+    vTaskDelay(20000);
+    matter_driver_set_temperature_callback((uint32_t) 2);
+    vTaskDelay(20000);
+    matter_driver_set_temperature_callback((uint32_t) 4);
+    vTaskDelay(20000);
+    matter_driver_set_temperature_callback((uint32_t) 6);
+
+    vTaskDelay(20000);
+    matter_driver_set_door_callback((uint32_t) 0);
+    vTaskDelay(20000);
+    matter_driver_set_door_callback((uint32_t) 0);
+
     vTaskDelete(NULL);
 }
 

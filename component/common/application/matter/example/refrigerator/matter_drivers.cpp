@@ -1,12 +1,13 @@
 #include "matter_drivers.h"
 #include "matter_interaction.h"
 #include "refrigerator_driver.h"
+// #include "gpio_irq_api.h"
 
 #include <app-common/zap-generated/attribute-type.h>
 #include <app-common/zap-generated/attributes/Accessors.h>
 #include <app-common/zap-generated/ids/Attributes.h>
 #include <app-common/zap-generated/ids/Clusters.h>
-#include <clusters/refrigerator-alarm-server/refrigerator-alarm-server.h>
+// #include <clusters/refrigerator-alarm-server/refrigerator-alarm-server.h>
 
 using namespace ::chip::app;
 using namespace chip;
@@ -14,33 +15,80 @@ using namespace chip::app;
 using namespace chip::app::Clusters;
 using namespace chip::app::Clusters::RefrigeratorAlarm;
 using namespace chip::app::Clusters::RefrigeratorAndTemperatureControlledCabinetMode;
+using namespace chip::app::Clusters::TemperatureControl;
+using namespace chip::app::Clusters::TemperatureMeasurement;
 
 #define PWM_PIN         PA_23
+#define GPIO_IRQ_PIN    PA_17
 
 MatterRefrigerator refrigerator;
+// gpio_irq_t gpio_btn;
+
+// void matter_driver_button_trigger_fall()
+// {
+//     gpio_irq_free(&gpio_btn);
+//     gpio_irq_init(&gpio_btn, GPIO_IRQ_PIN, matter_driver_button_fall_callback, 0);
+//     gpio_irq_set(&gpio_btn, IRQ_FALL, 1);   // Falling Edge Trigger
+//     gpio_irq_enable(&gpio_btn);
+//     ChipLogProgress(DeviceLayer, "Set Fall Trigger to GPIO\n");
+// }
+
+// void matter_driver_button_trigger_rise()
+// {
+//     gpio_irq_free(&gpio_btn);
+//     gpio_irq_init(&gpio_btn, GPIO_IRQ_PIN, matter_driver_button_rise_callback, 1);
+//     gpio_irq_set(&gpio_btn, IRQ_RISE, 1);   // Rising Edge Trigger
+//     gpio_irq_enable(&gpio_btn);
+//     ChipLogProgress(DeviceLayer, "Set Rise Trigger to GPIO\n");
+// }
+
+// void matter_driver_button_fall_callback(uint32_t id, gpio_irq_event event)
+// {
+//     AppEvent downlink_event;
+//     downlink_event.Type     = AppEvent::kEventType_Downlink_Refrigerator_Alarm_SetStateValue;
+//     downlink_event.value._u8 = (uint8_t) id;
+//     downlink_event.mHandler = matter_driver_downlink_update_handler;
+//     PostDownlinkEvent(&downlink_event);
+//     matter_driver_button_trigger_rise();
+// }
+
+// void matter_driver_button_rise_callback(uint32_t id, gpio_irq_event event)
+// {
+//     AppEvent downlink_event;
+//     downlink_event.Type     = AppEvent::kEventType_Downlink_Refrigerator_Alarm_SetStateValue;
+//     downlink_event.value._u8 = (uint8_t) id;
+//     downlink_event.mHandler = matter_driver_downlink_update_handler;
+//     PostDownlinkEvent(&downlink_event);
+//     matter_driver_button_trigger_fall();
+// }
 
 CHIP_ERROR matter_driver_refrigerator_init()
 {
     refrigerator.Init(PWM_PIN);
+
+    // matter_driver_button_trigger_rise();
+
     return CHIP_NO_ERROR;
 }
 
 CHIP_ERROR matter_driver_refrigerator_set_startup_value()
 {
     CHIP_ERROR err = CHIP_NO_ERROR;
+
+    // BitMask<AlarmMap> value;
+
+    // value.SetField(AlarmMap::kDoorOpen, 0);
+    // RefrigeratorAlarmServer::Instance().SetSupportedValue(1, value);
+    // ChipLogProgress(DeviceLayer, "SetSupportedValue to 0\n");
+
+    // value.SetField(AlarmMap::kDoorOpen, 1);
+    // RefrigeratorAlarmServer::Instance().SetSupportedValue(1, value);
+    // ChipLogProgress(DeviceLayer, "SetSupportedValue to 1\n");
+
     return err;
 }
 
-void matter_driver_set_mask_value_callback(uint32_t id)
-{
-    AppEvent downlink_event;
-    downlink_event.Type     = AppEvent::kEventType_Downlink_Refrigerator_Alarm_SetMaskValue;
-    downlink_event.value._u8 = (uint8_t) id;
-    downlink_event.mHandler = matter_driver_downlink_update_handler;
-    PostDownlinkEvent(&downlink_event);
-}
-
-void matter_driver_set_state_value_callback(uint32_t id)
+void matter_driver_set_door_callback(uint32_t id)
 {
     AppEvent downlink_event;
     downlink_event.Type     = AppEvent::kEventType_Downlink_Refrigerator_Alarm_SetStateValue;
@@ -49,10 +97,10 @@ void matter_driver_set_state_value_callback(uint32_t id)
     PostDownlinkEvent(&downlink_event);
 }
 
-void matter_driver_set_supported_value_callback(uint32_t id)
+void matter_driver_set_temperature_callback(uint32_t id)
 {
     AppEvent downlink_event;
-    downlink_event.Type     = AppEvent::kEventType_Downlink_Refrigerator_Alarm_SetSupportedValue;
+    downlink_event.Type     = AppEvent::kEventType_Downlink_Refrigerator_Set_Temperature;
     downlink_event.value._u8 = (uint8_t) id;
     downlink_event.mHandler = matter_driver_downlink_update_handler;
     PostDownlinkEvent(&downlink_event);
@@ -79,6 +127,25 @@ void matter_driver_uplink_update_handler(AppEvent *aEvent)
             ChipLogProgress(DeviceLayer, "RefrigeratorAlarm(ClusterId=0x%x) at Endpoint%x: change AttributeId=0x%x\n", path.mEndpointId, path.mClusterId, path.mAttributeId);
         }
         break;
+    case Clusters::TemperatureControl::Id:
+        {
+            ChipLogProgress(DeviceLayer, "TemperatureControl(ClusterId=0x%x) at Endpoint%x: change AttributeId=0x%x\n", path.mEndpointId, path.mClusterId, path.mAttributeId);
+            status = Clusters::TemperatureMeasurement::Attributes::MeasuredValue::Set(1, aEvent->value._u8);
+            if (status != EMBER_ZCL_STATUS_SUCCESS)
+            {
+                ChipLogProgress(DeviceLayer, "Failed to set door status!\n");
+            }
+            else
+            {
+                refrigerator.SetTemperature(aEvent->value._u8);
+            }        
+        }
+        break;
+    case Clusters::TemperatureMeasurement::Id:
+        {
+            ChipLogProgress(DeviceLayer, "TemperatureMeasurement(ClusterId=0x%x) at Endpoint%x: change AttributeId=0x%x\n", path.mEndpointId, path.mClusterId, path.mAttributeId);
+        }
+        break;
     default:
         break;
     }
@@ -88,31 +155,40 @@ exit:
 
 void matter_driver_downlink_update_handler(AppEvent *event)
 {
+    EmberAfStatus status;
     chip::DeviceLayer::PlatformMgr().LockChipStack();
     switch (event->Type)
     {
-    case AppEvent::kEventType_Downlink_Refrigerator_Alarm_SetMaskValue:
-        {
-            BitMask<AlarmMap> value;
-            value.SetField(AlarmMap::kDoorOpen, event->value._u8);
-            ChipLogProgress(DeviceLayer, "Set Mask Value 0x%x", event->value._u8);
-            RefrigeratorAlarmServer::Instance().SetMaskValue(1, value);
-        }
-        break;
-   case AppEvent::kEventType_Downlink_Refrigerator_Alarm_SetStateValue:
+    case AppEvent::kEventType_Downlink_Refrigerator_Alarm_SetStateValue:
         {
             BitMask<AlarmMap> value;
             value.SetField(AlarmMap::kDoorOpen, event->value._u8);
             ChipLogProgress(DeviceLayer, "Set State Value 0x%x", event->value._u8);
-            RefrigeratorAlarmServer::Instance().SetStateValue(1, value);
+            // RefrigeratorAlarmServer::Instance().SetStateValue(1, value);
+            status = Clusters::RefrigeratorAlarm::Attributes::State::Set(1,value);
+            if (status != EMBER_ZCL_STATUS_SUCCESS)
+            {
+                ChipLogProgress(DeviceLayer, "Failed to set door status!\n");
+            }
+            else
+            {
+                refrigerator.SetDoorStatus(event->value._u8);
+            }
         }
         break;
-   case AppEvent::kEventType_Downlink_Refrigerator_Alarm_SetSupportedValue:
+    case AppEvent::kEventType_Downlink_Refrigerator_Set_Temperature:
         {
-            BitMask<AlarmMap> value;
-            value.SetField(AlarmMap::kDoorOpen, event->value._u8);
-            ChipLogProgress(DeviceLayer, "Set Supported Value 0x%x", event->value._u8);
-            RefrigeratorAlarmServer::Instance().SetSupportedValue(1, value);
+            if ((event->value._u8 >= 0) && (event->value._u8 <= 4))
+            {
+                ChipLogProgress(DeviceLayer, "Set Temperature 0x%x", event->value._u8);
+                status = Clusters::TemperatureControl::Attributes::SelectedTemperatureLevel::Set(1, event->value._u8);
+                if (status != EMBER_ZCL_STATUS_SUCCESS)
+                {
+                    ChipLogProgress(DeviceLayer, "Failed to set temperature!\n");
+                }
+            }
+            else
+                ChipLogProgress(DeviceLayer, "Temperature must be set between 0 and 4");
         }
         break;
     default:
