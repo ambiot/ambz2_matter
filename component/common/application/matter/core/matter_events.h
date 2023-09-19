@@ -25,6 +25,10 @@ struct AppEvent
     chip::app::ConcreteAttributePath path;
     union
     {
+       int8_t _i8;
+       int16_t _i16;
+       int32_t _i32;
+       int64_t _i64;
        uint8_t _u8;
        uint16_t _u16;
        uint32_t _u32;
