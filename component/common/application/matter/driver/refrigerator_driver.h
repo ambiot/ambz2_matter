@@ -1,13 +1,13 @@
 #pragma once
 
 #include <platform_stdlib.h>
-#include "pwmout_api.h"
 #include "gpio_api.h"
+#include "gpio_irq_api.h"
 
 class MatterRefrigerator
 {
 public:
-    void Init(PinName pwmPin, PinName gpioLight);
+    void Init(PinName gpioLight);
     void deInit(void);
     uint8_t GetDoorStatus(void);
     int8_t GetTemperature(void);
@@ -19,7 +19,6 @@ public:
     void SetTemperatureRange(int8_t minTemp, int8_t maxTemp);
     
 private:
-    pwmout_t *mPwm_obj = NULL;
     gpio_t innerLight;
     uint8_t doorStatus;
     int8_t measuredTemperature;

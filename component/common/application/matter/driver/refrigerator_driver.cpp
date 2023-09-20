@@ -1,11 +1,8 @@
 #include <refrigerator_driver.h>
 #include <support/logging/CHIPLogging.h>
 
-void MatterRefrigerator::Init(PinName pwmPin, PinName gpioLight)
+void MatterRefrigerator::Init(PinName gpioLight)
 {
-    mPwm_obj                        = (pwmout_t*) pvPortMalloc(sizeof(pwmout_t));
-    pwmout_init(mPwm_obj, pwmPin);
-
     gpio_init(&innerLight, gpioLight);
     gpio_dir(&innerLight, PIN_OUTPUT);        // Direction: Output
     gpio_mode(&innerLight, PullNone);         // No pull
@@ -16,7 +13,7 @@ void MatterRefrigerator::Init(PinName pwmPin, PinName gpioLight)
 
 void MatterRefrigerator::deInit(void)
 {
-    vPortFree(mPwm_obj);
+    
 }
 
 uint8_t MatterRefrigerator::GetDoorStatus(void)

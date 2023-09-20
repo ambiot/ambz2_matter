@@ -17,7 +17,6 @@ using namespace chip::app::Clusters::RefrigeratorAndTemperatureControlledCabinet
 using namespace chip::app::Clusters::TemperatureControl;
 using namespace chip::app::Clusters::TemperatureMeasurement;
 
-#define PWM_PIN         PA_23
 #define GPIO_IRQ_LEVEL_PIN    PA_17
 #define GPIO_LED_PIN PA_19
 
@@ -54,8 +53,7 @@ void matter_driver_gpio_level_irq_handler(uint32_t id, gpio_irq_event event)
 
 CHIP_ERROR matter_driver_refrigerator_init()
 {
-    refrigerator.Init(PWM_PIN, GPIO_LED_PIN);
-
+    refrigerator.Init(GPIO_LED_PIN);
 
     gpio_irq_init(&gpio_level, GPIO_IRQ_LEVEL_PIN, matter_driver_gpio_level_irq_handler, (uint32_t)(&current_level));
     gpio_irq_set(&gpio_level, (gpio_irq_event)IRQ_LOW, 1);
@@ -115,7 +113,7 @@ void matter_driver_uplink_update_handler(AppEvent *event)
     case Clusters::RefrigeratorAlarm::Id:
         {
             ChipLogProgress(DeviceLayer, "RefrigeratorAlarm(ClusterId=0x%x) at Endpoint%x: change AttributeId=0x%x\n", path.mEndpointId, path.mClusterId, path.mAttributeId);
-            refrigerator.SetInnerLight();
+            refrigerator.SetInnerLight(); // Turn on Light when alarm is on
         }
         break;
     case Clusters::TemperatureControl::Id:
