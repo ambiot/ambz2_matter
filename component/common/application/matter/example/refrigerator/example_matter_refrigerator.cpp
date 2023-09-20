@@ -24,7 +24,7 @@ static void example_matter_refrigerator_task(void *pvParameters)
     CHIP_ERROR err = CHIP_NO_ERROR;
 
     initPref();     // init NVS
-    //
+    
     err = matter_core_start();
     if (err != CHIP_NO_ERROR)
         ChipLogProgress(DeviceLayer, "matter_core_start failed!\n");

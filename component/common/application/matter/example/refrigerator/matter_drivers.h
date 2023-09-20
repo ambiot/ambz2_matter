@@ -8,10 +8,6 @@
 #include <platform/CHIPDeviceLayer.h>
 #include <app/clusters/identify-server/identify-server.h>
 
-// void matter_driver_button_trigger_fall();
-// void matter_driver_button_trigger_rise();
-// void matter_driver_button_fall_callback(uint32_t id, gpio_irq_event event);
-// void matter_driver_button_rise_callback(uint32_t id, gpio_irq_event event);
 void matter_driver_gpio_level_irq_handler(uint32_t id, gpio_irq_event event);
 CHIP_ERROR matter_driver_refrigerator_init(void);
 CHIP_ERROR matter_driver_refrigerator_set_startup_value(void);

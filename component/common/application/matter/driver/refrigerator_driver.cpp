@@ -1,16 +1,14 @@
 #include <refrigerator_driver.h>
 #include <support/logging/CHIPLogging.h>
 
-void MatterRefrigerator::Init(PinName pwmPin)
+void MatterRefrigerator::Init(PinName pwmPin, PinName gpioLight)
 {
     mPwm_obj                        = (pwmout_t*) pvPortMalloc(sizeof(pwmout_t));
     pwmout_init(mPwm_obj, pwmPin);
 
-    // gpio_irq_init(&gpio_level, gpioLevelPin, this->gpio_level_irq_handler, (uint32_t)(&current_level));
-    // gpio_irq_set(&gpio_level, (gpio_irq_event)IRQ_LOW, 1);
-    // gpio_irq_enable(&gpio_level);
-
-    // gpio_init(&gpio_level, gpioLevelPin);
+    gpio_init(&innerLight, gpioLight);
+    gpio_dir(&innerLight, PIN_OUTPUT);        // Direction: Output
+    gpio_mode(&innerLight, PullNone);         // No pull
 
     doorStatus = 0;
     measuredTemperature = 0;
@@ -23,10 +21,6 @@ void MatterRefrigerator::deInit(void)
 
 uint8_t MatterRefrigerator::GetDoorStatus(void)
 {
-    if (doorStatus == 0)
-        ChipLogProgress(DeviceLayer, "Refrigerator door is closed\n")
-    else if (doorStatus == 1)
-        ChipLogProgress(DeviceLayer, "Refrigerator door is opened\n");
     return doorStatus;
 }
 
@@ -47,7 +41,27 @@ int8_t MatterRefrigerator::GetMinTemperature(void)
 
 void MatterRefrigerator::SetDoorStatus(uint8_t status)
 {
-    doorStatus = status;
+    if ((status != 0) && (status != 1))
+    {
+        ChipLogProgress(DeviceLayer, "Compatible refrigerator door status are only 0 (closed) and 1 (opened)\n");
+    }
+    else
+    {
+        doorStatus = status;
+        if (doorStatus == 1)
+        {
+            ChipLogProgress(DeviceLayer, "Refrigerator door is opened\n");
+        }
+        else
+        {
+            ChipLogProgress(DeviceLayer, "Refrigerator door is closed\n");
+        }
+    } 
+}
+
+void MatterRefrigerator::SetInnerLight(void)
+{
+    gpio_write(&innerLight, doorStatus);
 }
 
 void MatterRefrigerator::SetTemperature(int8_t temp)
@@ -63,37 +77,3 @@ void MatterRefrigerator::SetTemperatureRange(int8_t minTemp, int8_t maxTemp)
     minTemperature = minTemp;
     maxTemperature = maxTemp;
 }
-
-// void gpio_level_irq_handler(uint32_t id, gpio_irq_event event) 
-// {
-//     MatterRefrigerator* instance = reinterpret_cast<MatterRefrigerator*>(id);
-//     instance->gpio_level_irq_handler_impl(event);
-// }
-
-// void gpio_level_irq_handler_impl(uint32_t id, gpio_irq_event event)
-// {
-//     uint32_t *level = (uint32_t *) id;
-
-//     // Disable level irq because the irq will keep triggered when it keeps in same level.
-//     gpio_irq_disable(&gpio_level);
-
-//     // make some software de-bounce here if the signal source is not stable.
-
-//     if (*level == IRQ_LOW) {
-//         dbg_printf("low level event \r\n");
-//         this->SetDoorStatus((uint8_t) 0);
-
-//         // Change to listen to high level event
-//         *level = IRQ_HIGH;
-//         gpio_irq_set(&gpio_level, (gpio_irq_event)IRQ_HIGH, 1);
-//         gpio_irq_enable(&gpio_level);
-//     } else if (*level == IRQ_HIGH) {
-//         dbg_printf("high level event \r\n");
-//         this->SetDoorStatus((uint8_t) 1);
-
-//         // Change to listen to low level event
-//         *level = IRQ_LOW;
-//         gpio_irq_set(&gpio_level, (gpio_irq_event)IRQ_LOW, 1);
-//         gpio_irq_enable(&gpio_level);
-//     }
-// }
