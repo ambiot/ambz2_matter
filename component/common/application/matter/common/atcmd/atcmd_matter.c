@@ -33,7 +33,9 @@ void fATchipapp(void *arg)
 	Erase_Fastconnect_data();
 	printf("Erased Fast Connect data\r\n");
 #endif
-	AT_PRINTK("[ATS#]: _AT_SYSTEM_TEST_");
+	AT_PRINTK("[ATM$]: _AT_SYSTEM_TEST_");
+	wifi_disconnect();
+	sys_reset();
 }
 
 void fATchipapp1(void *arg)
