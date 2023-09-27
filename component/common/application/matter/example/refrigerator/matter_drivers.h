@@ -10,7 +10,7 @@
 
 void matter_driver_gpio_level_irq_handler(uint32_t id, gpio_irq_event event);
 CHIP_ERROR matter_driver_refrigerator_init(void);
-CHIP_ERROR matter_driver_refrigerator_set_startup_value(void);
+CHIP_ERROR matter_driver_refrigerator_set_startup_value(int8_t minTemp, int8_t maxTemp);
 void matter_driver_set_door_callback(uint32_t id);
 void matter_driver_set_temperature_callback(int32_t id);
 void matter_driver_refrigerator_status(void);

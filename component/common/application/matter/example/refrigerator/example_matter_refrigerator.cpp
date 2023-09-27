@@ -33,10 +33,6 @@ static void example_matter_refrigerator_task(void *pvParameters)
     if (err != CHIP_NO_ERROR)
         ChipLogProgress(DeviceLayer, "matter_driver_refrigerator_init failed!\n");
 
-    err = matter_driver_refrigerator_set_startup_value();
-    if (err != CHIP_NO_ERROR)
-        ChipLogProgress(DeviceLayer, "matter_driver_refrigerator_set_startup_value failed!\n");
-
     err = matter_interaction_start_downlink();
     if (err != CHIP_NO_ERROR)
         ChipLogProgress(DeviceLayer, "matter_interaction_start_downlink failed!\n");
@@ -45,7 +41,11 @@ static void example_matter_refrigerator_task(void *pvParameters)
     if (err != CHIP_NO_ERROR)
         ChipLogProgress(DeviceLayer, "matter_interaction_start_uplink failed!\n");
 
-    for(int i = -5; i <= 5; i++)
+    err = matter_driver_refrigerator_set_startup_value(-1, 3); //call this in the last part because it will call matter_driver_set_temperature_callback
+    if (err != CHIP_NO_ERROR)
+        ChipLogProgress(DeviceLayer, "matter_driver_refrigerator_set_startup_value failed!\n");
+
+    for(int i = -2; i <= 4; i++) // Update the temperature gradually from -2 to 4, but fail when update to -2 and 4 (out of range)
     {
         vTaskDelay(19000);
         matter_driver_set_temperature_callback((int32_t) i);

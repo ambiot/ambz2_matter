@@ -13,7 +13,7 @@ void MatterRefrigerator::Init(PinName gpioLight)
 
 void MatterRefrigerator::deInit(void)
 {
-    
+    return;
 }
 
 uint8_t MatterRefrigerator::GetDoorStatus(void)
@@ -73,4 +73,5 @@ void MatterRefrigerator::SetTemperatureRange(int8_t minTemp, int8_t maxTemp)
 {
     minTemperature = minTemp;
     maxTemperature = maxTemp;
+    SetTemperature((int8_t) (minTemperature + maxTemperature)/2); //Set the temperature to be in the middle point of the range
 }

@@ -18,7 +18,7 @@ struct AppEvent
         kEventType_Downlink_LW_NumberOfRinses,
         kEventType_Downlink_LW_Mode,
         kEventType_Downlink_Refrigerator_Alarm_SetStateValue,
-        kEventType_Downlink_Refrigerator_Set_Temperature,
+        kEventType_Downlink_Refrigerator_SetTemperaturePoint,
     };
 
     uint16_t Type;
