@@ -11274,7 +11274,7 @@
               "storageOption": "External",
               "singleton": 0,
               "bounded": 0,
-              "defaultValue": "COOLING",
+              "defaultValue": "\"COOLING\"",
               "reportable": 1,
               "minInterval": 1,
               "maxInterval": 65534,
