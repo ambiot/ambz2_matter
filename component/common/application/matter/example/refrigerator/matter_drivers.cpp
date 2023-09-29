@@ -83,7 +83,7 @@ CHIP_ERROR matter_driver_refrigerator_set_startup_value(int8_t minTemp, int8_t m
 
     BitMask<AlarmMap> supported; // Set refrigerator alarm supported value
     supported.SetField(AlarmMap::kDoorOpen, 1);
-    refrigeratorAlarmObject.SetMaskValue(1, supported);
+    refrigeratorAlarmObject.SetSupportedValue(1, supported);
     if (status != EMBER_ZCL_STATUS_SUCCESS)
     {
         ChipLogProgress(DeviceLayer, "Failed to set Refrigerator Alarm Supported Value!\n");
