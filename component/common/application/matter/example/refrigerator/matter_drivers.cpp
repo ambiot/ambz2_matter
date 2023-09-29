@@ -75,7 +75,7 @@ CHIP_ERROR matter_driver_refrigerator_set_startup_value(int8_t minTemp, int8_t m
 void matter_driver_set_door_callback(uint32_t id)
 {
     AppEvent downlink_event;
-    downlink_event.Type     = AppEvent::kEventType_Downlink_Refrigerator_Alarm_SetStateValue;
+    downlink_event.Type     = AppEvent::kEventType_Downlink_Refrigerator_Alarm_State;
     downlink_event.value._u8 = (uint8_t) id;
     downlink_event.mHandler = matter_driver_downlink_update_handler;
     PostDownlinkEvent(&downlink_event);
@@ -84,7 +84,7 @@ void matter_driver_set_door_callback(uint32_t id)
 void matter_driver_set_temperature_callback(int32_t id)
 {
     AppEvent downlink_event;
-    downlink_event.Type     = AppEvent::kEventType_Downlink_Refrigerator_SetTemperaturePoint;
+    downlink_event.Type     = AppEvent::kEventType_Downlink_TempControl_SetPoint;
     downlink_event.value._i8 = (int8_t) id;
     downlink_event.mHandler = matter_driver_downlink_update_handler;
     PostDownlinkEvent(&downlink_event);
@@ -143,7 +143,7 @@ void matter_driver_downlink_update_handler(AppEvent *event)
     chip::DeviceLayer::PlatformMgr().LockChipStack();
     switch (event->Type)
     {
-    case AppEvent::kEventType_Downlink_Refrigerator_Alarm_SetStateValue:
+    case AppEvent::kEventType_Downlink_Refrigerator_Alarm_State:
         {
             BitMask<AlarmMap> value;
             value.SetField(AlarmMap::kDoorOpen, event->value._u8);
@@ -155,7 +155,7 @@ void matter_driver_downlink_update_handler(AppEvent *event)
             }
         }
         break;
-    case AppEvent::kEventType_Downlink_Refrigerator_SetTemperaturePoint:
+    case AppEvent::kEventType_Downlink_TempControl_SetPoint:
         {
             if ((event->value._i8 >= refrigerator.GetMinTemperature()) && (event->value._i8 <= refrigerator.GetMaxTemperature()))
             {

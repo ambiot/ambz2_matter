@@ -12,13 +12,13 @@ struct AppEvent
         kEventType_Uplink = 0,
         kEventType_Downlink_OnOff,
         kEventType_Downlink_Identify,
+        kEventType_Downlink_TempControl_SetPoint,
         kEventType_Downlink_Opstate_State,
         kEventType_Downlink_Opstate_Error_State,
         kEventType_Downlink_LW_SpinSpeed,
         kEventType_Downlink_LW_NumberOfRinses,
         kEventType_Downlink_LW_Mode,
-        kEventType_Downlink_Refrigerator_Alarm_SetStateValue,
-        kEventType_Downlink_Refrigerator_SetTemperaturePoint,
+        kEventType_Downlink_Refrigerator_Alarm_State,
     };
 
     uint16_t Type;
