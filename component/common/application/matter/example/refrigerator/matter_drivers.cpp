@@ -65,10 +65,39 @@ CHIP_ERROR matter_driver_refrigerator_init()
 CHIP_ERROR matter_driver_refrigerator_set_startup_value(int8_t minTemp, int8_t maxTemp)
 {
     CHIP_ERROR err = CHIP_NO_ERROR;
+    EmberAfStatus status;
+    chip::DeviceLayer::PlatformMgr().LockChipStack();
 
     refrigerator.SetTemperatureRange(minTemp, maxTemp); // Set fridge temperature range
-    matter_driver_set_temperature_callback(refrigerator.GetTemperature()); // Update the matter layer
+    status = Clusters::TemperatureControl::Attributes::TemperatureSetpoint::Set(1, refrigerator.GetTemperature());
+    if (status != EMBER_ZCL_STATUS_SUCCESS)
+    {
+        ChipLogProgress(DeviceLayer, "Failed to set TemperatureSetpoint!\n");
+    }
 
+    status = Clusters::TemperatureMeasurement::Attributes::MeasuredValue::Set(1, refrigerator.GetTemperature());
+    if (status != EMBER_ZCL_STATUS_SUCCESS)
+    {
+        ChipLogProgress(DeviceLayer, "Failed to set MeasuredValue!\n");
+    }
+
+    BitMask<AlarmMap> supported; // Set refrigerator alarm supported value
+    supported.SetField(AlarmMap::kDoorOpen, 1);
+    refrigeratorAlarmObject.SetMaskValue(1, supported);
+    if (status != EMBER_ZCL_STATUS_SUCCESS)
+    {
+        ChipLogProgress(DeviceLayer, "Failed to set Refrigerator Alarm Supported Value!\n");
+    }
+
+    BitMask<AlarmMap> mask; // Set refrigerator alarm mask value
+    mask.SetField(AlarmMap::kDoorOpen, 1);
+    refrigeratorAlarmObject.SetMaskValue(1, mask);
+    if (status != EMBER_ZCL_STATUS_SUCCESS)
+    {
+        ChipLogProgress(DeviceLayer, "Failed to set Refrigerator Alarm Mask Value!\n");
+    }
+
+    chip::DeviceLayer::PlatformMgr().UnlockChipStack();
     return err;
 }
 
