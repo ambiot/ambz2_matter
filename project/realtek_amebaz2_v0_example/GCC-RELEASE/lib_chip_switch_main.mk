@@ -195,8 +195,8 @@ SRC_CPP += $(CHIPDIR)/src/app/server/OnboardingCodesUtil.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/Server.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/CommissioningWindowManager.cpp
 
-SRC_CPP += $(CHIPDIR)/src/app/icd/IcdManagementServer.cpp
-SRC_CPP += $(CHIPDIR)/src/app/icd/IcdMonitoringTable.cpp
+SRC_CPP += $(CHIPDIR)/src/app/icd/ICDManagementServer.cpp
+SRC_CPP += $(CHIPDIR)/src/app/icd/ICDMonitoringTable.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-size-util.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-storage.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-table.cpp
