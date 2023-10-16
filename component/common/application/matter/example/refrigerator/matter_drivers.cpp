@@ -58,7 +58,7 @@ CHIP_ERROR matter_driver_refrigerator_init(void)
     gpio_irq_enable(&gpio_level);
 
     return CHIP_NO_ERROR;
-}component/common/application/matter/example/refrigerator/matter_drivers.cpp
+}
 
 CHIP_ERROR matter_driver_refrigerator_set_startup_value(void)
 {
