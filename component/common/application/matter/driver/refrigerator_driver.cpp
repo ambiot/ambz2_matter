@@ -8,7 +8,6 @@ void MatterRefrigerator::Init(PinName gpioLight)
     gpio_mode(&innerLight, PullNone);         // No pull
 
     doorStatus = 0;
-    measuredTemperature = 0;
 }
 
 void MatterRefrigerator::deInit(void)
@@ -16,24 +15,19 @@ void MatterRefrigerator::deInit(void)
     return;
 }
 
+uint16_t MatterRefrigerator::GetMode(void)
+{
+    return mode;
+}
+
+void MatterRefrigerator::SetMode(uint16_t newMode)
+{
+    mode = newMode;
+}
+
 uint8_t MatterRefrigerator::GetDoorStatus(void)
 {
     return doorStatus;
-}
-
-int8_t MatterRefrigerator::GetTemperature(void)
-{
-    return measuredTemperature;
-}
-
-int8_t MatterRefrigerator::GetMaxTemperature(void)
-{
-    return maxTemperature;
-}
-
-int8_t MatterRefrigerator::GetMinTemperature(void)
-{
-    return minTemperature;
 }
 
 void MatterRefrigerator::SetDoorStatus(uint8_t status)
@@ -59,19 +53,4 @@ void MatterRefrigerator::SetDoorStatus(uint8_t status)
 void MatterRefrigerator::SetInnerLight(void)
 {
     gpio_write(&innerLight, doorStatus);
-}
-
-void MatterRefrigerator::SetTemperature(int8_t temp)
-{
-    if ((temp >= minTemperature) && (temp <= maxTemperature))
-        measuredTemperature = temp;
-    else
-        ChipLogProgress(DeviceLayer, "Temperature must be set between %i and %i", minTemperature, maxTemperature);
-}
-
-void MatterRefrigerator::SetTemperatureRange(int8_t minTemp, int8_t maxTemp)
-{
-    minTemperature = minTemp;
-    maxTemperature = maxTemp;
-    SetTemperature((int8_t) (minTemperature + maxTemperature)/2); //Set the temperature to be in the middle point of the range
 }

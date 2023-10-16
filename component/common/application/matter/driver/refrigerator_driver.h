@@ -9,20 +9,14 @@ class MatterRefrigerator
 public:
     void Init(PinName gpioLight);
     void deInit(void);
+    uint16_t GetMode();
+    void SetMode(uint16_t newMode);
     uint8_t GetDoorStatus(void);
-    int8_t GetTemperature(void);
-    int8_t GetMaxTemperature(void);
-    int8_t GetMinTemperature(void);
     void SetDoorStatus(uint8_t temp);
     void SetInnerLight(void);
-    void SetTemperature(int8_t temp);
-    void SetTemperatureRange(int8_t minTemp, int8_t maxTemp);
     
 private:
     gpio_t innerLight;
+    uint16_t mode;
     uint8_t doorStatus;
-    int8_t measuredTemperature;
-    int8_t maxTemperature = 4;
-    int8_t minTemperature = 0;
-    uint8_t pollingFrequency = 10;     // Poll every 10 seconds
 };

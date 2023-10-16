@@ -193,8 +193,8 @@ SRC_CPP += $(CHIPDIR)/src/app/server/OnboardingCodesUtil.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/Server.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/CommissioningWindowManager.cpp
 
-SRC_CPP += $(CHIPDIR)/src/app/icd/IcdManagementServer.cpp
-SRC_CPP += $(CHIPDIR)/src/app/icd/IcdMonitoringTable.cpp
+SRC_CPP += $(CHIPDIR)/src/app/icd/ICDManagementServer.cpp
+SRC_CPP += $(CHIPDIR)/src/app/icd/ICDMonitoringTable.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-size-util.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-storage.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-table.cpp
@@ -206,8 +206,6 @@ SRC_CPP += $(CHIPDIR)/src/app/util/message.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/util.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/privilege-storage.cpp
 SRC_CPP += $(CHIPDIR)/src/app/reporting/Engine.cpp
-# SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/laundry-washer-mode.cpp
-# SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/laundry-washer-controls-delegate-impl.cpp
 
 SRC_CPP += $(shell cat $(CODEGENDIR)/cluster-file.txt)
 
@@ -224,8 +222,7 @@ SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_core.cp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_interaction.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_ota_initializer.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/refrigerator_driver.cpp
-# SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/opstate_driver.cpp
-# SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/washer_driver.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/tcc_driver.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/refrigerator/example_matter_refrigerator.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/refrigerator/matter_drivers.cpp
 
