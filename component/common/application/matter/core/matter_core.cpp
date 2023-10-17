@@ -34,7 +34,7 @@
 
 #include <support/CHIPMem.h>
 #include <support/CodeUtils.h>
-#include <support/ErrorStr.h>
+#include <core/ErrorStr.h>
 
 #if CONFIG_ENABLE_CHIP_SHELL
 #include <shell/launch_shell.h>
