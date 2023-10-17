@@ -1,11 +1,10 @@
 # Refrigerator Example
-This example is an implementation of the *Refrigerator* device type. Peripherals consists of a LED, button, and temperature sensor. You can initialize any GPIO if necessary.
+This example is an implementation of the *Refrigerator* device type. Peripherals consists of a LED, and button. You can initialize any GPIO if necessary.
 
 | Peripheral | Pin |
 | ----------- | ----------- |
 | LED | PA_19 |
 | Button | PA_17 |
-| Temp Sensor | Depends on type of sensor |
 
 Note that these driver codes are meant to be just the skeleton, you should replace them and implement your own.
 
