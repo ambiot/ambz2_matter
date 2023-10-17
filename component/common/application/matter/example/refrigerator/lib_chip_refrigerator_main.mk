@@ -222,7 +222,7 @@ SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_core.cp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_interaction.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_ota_initializer.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/refrigerator_driver.cpp
-SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/tcc_driver.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/tcc_mode.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/refrigerator/example_matter_refrigerator.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/refrigerator/matter_drivers.cpp
 

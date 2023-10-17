@@ -1,11 +1,11 @@
 #include <refrigerator_driver.h>
 #include <support/logging/CHIPLogging.h>
 
-void MatterRefrigerator::Init(PinName gpioLight)
+void MatterRefrigerator::Init(PinName outputGpio)
 {
-    gpio_init(&innerLight, gpioLight);
-    gpio_dir(&innerLight, PIN_OUTPUT);        // Direction: Output
-    gpio_mode(&innerLight, PullNone);         // No pull
+    gpio_init(&alarmGpio, outputGpio);
+    gpio_dir(&alarmGpio, PIN_OUTPUT);        // Direction: Output
+    gpio_mode(&alarmGpio, PullNone);         // No pull
 
     doorStatus = 0;
 }
@@ -50,7 +50,8 @@ void MatterRefrigerator::SetDoorStatus(uint8_t status)
     } 
 }
 
-void MatterRefrigerator::SetInnerLight(void)
+void MatterRefrigerator::SetAlarm(void)
 {
-    gpio_write(&innerLight, doorStatus);
+    // depends on the customer implementation, in this examples it turns on/off the alarm gpio based on door status
+    gpio_write(&alarmGpio, doorStatus);
 }

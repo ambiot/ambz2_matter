@@ -45,14 +45,6 @@ static void example_matter_refrigerator_task(void *pvParameters)
     if (err != CHIP_NO_ERROR)
         ChipLogProgress(DeviceLayer, "matter_interaction_start_uplink failed!\n");
 
-    vTaskDelay(15000);
-    ChipLogProgress(DeviceLayer, "Set Refrigerator Mode to 1\n");
-    matter_driver_set_mode_callback(1);
-
-    vTaskDelay(15000);
-    ChipLogProgress(DeviceLayer, "Set Refrigerator Mode to 0\n");
-    matter_driver_set_mode_callback(0);
-
     vTaskDelete(NULL);
 }
 

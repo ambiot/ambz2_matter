@@ -1,7 +1,7 @@
 #include "matter_drivers.h"
 #include "matter_interaction.h"
 #include "refrigerator_driver.h"
-#include "tcc_driver.h"
+#include "tcc_mode.h"
 
 #include <app-common/zap-generated/attribute-type.h>
 #include <app-common/zap-generated/attributes/Accessors.h>
@@ -27,25 +27,20 @@ void matter_driver_gpio_level_irq_handler(uint32_t id, gpio_irq_event event)
 {
     uint32_t *level = (uint32_t *) id;
 
-    // Disable level irq because the irq will keep triggered when it keeps in same level.
-    gpio_irq_disable(&gpio_level);
-
-    if (*level == IRQ_LOW) { // Door closed
+    if ((current_level == IRQ_LOW) && (*level == IRQ_LOW)) { // Door closed
         refrigerator.SetDoorStatus((uint8_t) 0);
         matter_driver_set_door_callback((uint32_t) 0);
 
         // Change to listen to high level event
         *level = IRQ_HIGH;
         gpio_irq_set(&gpio_level, (gpio_irq_event)IRQ_HIGH, 1);
-        gpio_irq_enable(&gpio_level);
-    } else if (*level == IRQ_HIGH) { // Door opened
+    } else if ((current_level == IRQ_HIGH) && (*level == IRQ_HIGH)) { // Door opened
         refrigerator.SetDoorStatus((uint8_t) 1);
         matter_driver_set_door_callback((uint32_t) 1);
 
         // Change to listen to low level event
         *level = IRQ_LOW;
         gpio_irq_set(&gpio_level, (gpio_irq_event)IRQ_LOW, 1);
-        gpio_irq_enable(&gpio_level);
     }
 }
 
@@ -63,9 +58,19 @@ CHIP_ERROR matter_driver_refrigerator_init(void)
 CHIP_ERROR matter_driver_refrigerator_set_startup_value(void)
 {
     CHIP_ERROR err = CHIP_NO_ERROR;
+
+    ModeBase::Commands::ChangeToModeResponse::Type modeChangedResponse;
     EmberAfStatus status;
+    ModeBase::Instance & refrigeratorObject = RefrigeratorAndTemperatureControlledCabinetMode::Instance();
     RefrigeratorAlarmServer & refrigeratorAlarmObject = RefrigeratorAlarmServer::Instance();
     chip::DeviceLayer::PlatformMgr().LockChipStack();
+
+    modeChangedResponse.status = to_underlying(refrigeratorObject.UpdateCurrentMode(to_underlying(ModeTag::kRapidCool))); // Set refrigerator mode
+    if (modeChangedResponse.status != to_underlying(ModeBase::StatusCode::kSuccess))
+    {
+        ChipLogProgress(DeviceLayer, "Failed to set Refrigerator Mode!\n");
+        err = CHIP_ERROR_INTERNAL;
+    }
 
     BitMask<AlarmMap> supported; // Set refrigerator alarm supported value
     supported.SetField(AlarmMap::kDoorOpen, 1);
@@ -73,6 +78,7 @@ CHIP_ERROR matter_driver_refrigerator_set_startup_value(void)
     if (status != EMBER_ZCL_STATUS_SUCCESS)
     {
         ChipLogProgress(DeviceLayer, "Failed to set Refrigerator Alarm Supported Value!\n");
+        err = CHIP_ERROR_INTERNAL;
     }
 
     BitMask<AlarmMap> mask; // Set refrigerator alarm mask value
@@ -81,6 +87,7 @@ CHIP_ERROR matter_driver_refrigerator_set_startup_value(void)
     if (status != EMBER_ZCL_STATUS_SUCCESS)
     {
         ChipLogProgress(DeviceLayer, "Failed to set Refrigerator Alarm Mask Value!\n");
+        err = CHIP_ERROR_INTERNAL;
     }
 
     chip::DeviceLayer::PlatformMgr().UnlockChipStack();
@@ -127,7 +134,7 @@ void matter_driver_uplink_update_handler(AppEvent *event)
         {
             ChipLogProgress(DeviceLayer, "RefrigeratorAlarm(ClusterId=0x%x) at Endpoint%x: change AttributeId=0x%x\n", path.mEndpointId, path.mClusterId, path.mAttributeId);
             if (path.mAttributeId == Clusters::RefrigeratorAlarm::Attributes::State::Id)
-                refrigerator.SetInnerLight(); // Turn on Light when alarm is on
+                refrigerator.SetAlarm();
         }
         break;
     default:
