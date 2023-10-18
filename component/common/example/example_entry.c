@@ -369,6 +369,8 @@
 #include <aircon/example_matter_aircon.h>
 #elif defined(CONFIG_EXAMPLE_MATTER_LAUNDRY_WASHER) && (CONFIG_EXAMPLE_MATTER_LAUNDRY_WASHER == 1)
 #include <laundrywasher/example_matter_laundrywasher.h>
+#elif defined(CONFIG_EXAMPLE_MATTER_REFRIGERATOR) && (CONFIG_EXAMPLE_MATTER_REFRIGERATOR == 1)
+#include <refrigerator/example_matter_refrigerator.h>
 #endif
 #endif
 
@@ -862,6 +864,9 @@ example_hilink();
 #elif defined(CONFIG_EXAMPLE_MATTER_LAUNDRY_WASHER) && (CONFIG_EXAMPLE_MATTER_LAUNDRY_WASHER == 1)
     extern void example_matter_laundrywasher();
     example_matter_laundrywasher();
+#elif defined(CONFIG_EXAMPLE_MATTER_REFRIGERATOR) && (CONFIG_EXAMPLE_MATTER_REFRIGERATOR == 1)
+    extern void example_matter_refrigerator();
+    example_matter_refrigerator();
 #endif
 #endif
 

@@ -17,6 +17,8 @@ struct AppEvent
         kEventType_Downlink_LW_SpinSpeed,
         kEventType_Downlink_LW_NumberOfRinses,
         kEventType_Downlink_LW_Mode,
+        kEventType_Downlink_Refrigerator_Mode,
+        kEventType_Downlink_Refrigerator_Alarm_State,
     };
 
     uint16_t Type;
