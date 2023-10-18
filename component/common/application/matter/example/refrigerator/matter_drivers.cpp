@@ -26,15 +26,14 @@ uint32_t current_level = IRQ_LOW;
 void matter_driver_gpio_level_irq_handler(uint32_t id, gpio_irq_event event)
 {
     uint32_t *level = (uint32_t *) id;
-
-    if ((current_level == IRQ_LOW) && (*level == IRQ_LOW)) { // Door closed
+    if (*level == IRQ_LOW) { // Door closed
         refrigerator.SetDoorStatus((uint8_t) 0);
         matter_driver_set_door_callback((uint32_t) 0);
 
         // Change to listen to high level event
         *level = IRQ_HIGH;
         gpio_irq_set(&gpio_level, (gpio_irq_event)IRQ_HIGH, 1);
-    } else if ((current_level == IRQ_HIGH) && (*level == IRQ_HIGH)) { // Door opened
+    } else if (*level == IRQ_HIGH) { // Door opened
         refrigerator.SetDoorStatus((uint8_t) 1);
         matter_driver_set_door_callback((uint32_t) 1);
 
