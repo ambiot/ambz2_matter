@@ -9,6 +9,8 @@ CHIPDIR = $(SDKROOTDIR)/third_party/connectedhomeip
 OUTPUT_DIR = $(CHIPDIR)/examples/thermostat/ameba/build/chip
 CODEGENDIR = $(OUTPUT_DIR)/codegen
 
+CHIP_ENABLE_OTA_REQUESTOR = $(shell grep 'chip_enable_ota_requestor' $(OUTPUT_DIR)/args.gn | cut -d' ' -f3)
+
 OS := $(shell uname)
 
 #CROSS_COMPILE = $(ARM_GCC_TOOLCHAIN)/arm-none-eabi-
@@ -227,7 +229,9 @@ SRC_CPP += $(CHIPDIR)/examples/providers/DeviceInfoProviderImpl.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_api.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_core.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_interaction.cpp
+ifeq ($(CHIP_ENABLE_OTA_REQUESTOR), true)
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_ota_initializer.cpp
+endif
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/thermostat.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/thermostat_ui.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/thermostat/example_matter_thermostat.cpp
