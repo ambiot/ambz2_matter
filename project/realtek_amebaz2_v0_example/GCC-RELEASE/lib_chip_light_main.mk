@@ -9,6 +9,8 @@ CHIPDIR = $(BASEDIR)/../../../third_party/connectedhomeip
 OUTPUT_DIR = $(CHIPDIR)/examples/lighting-app/ameba/build/chip
 CODEGENDIR = $(OUTPUT_DIR)/codegen
 
+CHIP_ENABLE_OTA_REQUESTOR = $(shell grep 'chip_enable_ota_requestor' $(OUTPUT_DIR)/args.gn | cut -d' ' -f3)
+
 OS := $(shell uname)
 
 #CROSS_COMPILE = $(ARM_GCC_TOOLCHAIN)/arm-none-eabi-
@@ -222,7 +224,9 @@ SRC_CPP += $(CHIPDIR)/examples/lighting-app/ameba/main/CHIPDeviceManager.cpp
 SRC_CPP += $(CHIPDIR)/examples/lighting-app/ameba/main/Globals.cpp
 SRC_CPP += $(CHIPDIR)/examples/lighting-app/ameba/main/LEDWidget.cpp
 
+ifeq ($(CHIP_ENABLE_OTA_REQUESTOR), true)
 SRC_CPP += $(CHIPDIR)/examples/platform/ameba/ota/OTAInitializer.cpp
+endif
 SRC_CPP += $(CHIPDIR)/examples/providers/DeviceInfoProviderImpl.cpp
 
 SRC_CPP += $(BASEDIR)/../../../component/common/application/matter/api/matter_api.cpp
