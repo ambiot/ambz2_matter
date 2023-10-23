@@ -8,7 +8,9 @@
 #include <sys_api.h>
 #include "log_service.h"
 extern void ChipTest(void);
+#if CHIP_ALL_CLUSTERS_APP
 extern void ChipTestShutdown(void);
+#endif
 extern u32 deinitPref(void);
 #if CONFIG_ENABLE_OTA_REQUESTOR
 #if CONFIG_EXAMPLE_MATTER_CHIPTEST
@@ -75,7 +77,9 @@ void fATmattershell(void *arg)
 
 void fATreboot(void *arg)
 {
-    ChipTestShutdown();
+#if CHIP_ALL_CLUSTERS_APP
+	ChipTestShutdown();
+#endif
     sys_reset();
 }
 
