@@ -226,7 +226,7 @@ SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/laundry-
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/dishwasher-alarm-stub.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/dishwasher-mode.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/fan-stub.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/operational-state-delegate-impl.cpp
+# SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/operational-state-delegate-impl.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/resource-monitoring-delegates.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/rvc-modes.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/smco-stub.cpp
@@ -235,7 +235,10 @@ SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/static-s
 
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/chipinterface.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/BindingHandler.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/ManualOperationCommand.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/OperationalStateManager.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/DeviceCallbacks.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/SmokeCOAlarmManager.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/CHIPDeviceManager.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/Globals.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/LEDWidget.cpp
@@ -245,6 +248,7 @@ SRC_CPP += $(CHIPDIR)/examples/platform/ameba/ota/OTAInitializer.cpp
 endif
 SRC_CPP += $(CHIPDIR)/examples/providers/DeviceInfoProviderImpl.cpp
 SRC_CPP += $(CHIPDIR)/examples/platform/ameba/shell/launch_shell.cpp
+SRC_CPP += $(CHIPDIR)/examples/platform/ameba/test_event_trigger/AmebaTestEventTriggerDelegate.cpp
 
 SRC_CPP += $(BASEDIR)/../../../component/common/application/matter/api/matter_api.cpp
 
@@ -283,6 +287,7 @@ CFLAGS += -DCHIP_PROJECT=1
 CFLAGS += -DCONFIG_ENABLE_OTA_REQUESTOR=1
 CFLAGS += -DCONFIG_ENABLE_CHIP_SHELL=1
 CFLAGS += -DCONFIG_ENABLE_AMEBA_FACTORY_DATA=0
+CFLAGS += -DCONFIG_ENABLE_AMEBA_TEST_EVENT_TRIGGER=0
 CFLAGS += -DCHIP_DEVICE_LAYER_TARGET=Ameba
 CFLAGS += -DMBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"
 CFLAGS += -DCHIP_ADDRESS_RESOLVE_IMPL_INCLUDE_HEADER=\"lib/address_resolve/AddressResolve_DefaultImpl.h\"
