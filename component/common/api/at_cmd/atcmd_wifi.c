@@ -265,7 +265,7 @@ static void print_scan_result( rtw_scan_result_t* record )
                                  ( record->security == RTW_SECURITY_WPA_WPA2_AES_ENTERPRISE ) ? "WPA/WPA2 AES Enterprise" :
                                  ( record->security == RTW_SECURITY_WPA_WPA2_MIXED_ENTERPRISE ) ? "WPA/WPA2 Mixed Enterprise" :
 #ifdef CONFIG_SAE_SUPPORT
-								 ( record->security == RTW_SECURITY_WPA3_AES_PSK) ? "WP3-SAE AES" :
+								 ( record->security == RTW_SECURITY_WPA3_AES_PSK) ? "WPA3-SAE AES" :
 								 ( record->security == RTW_SECURITY_WPA2_WPA3_MIXED) ? "WPA2/WPA3-SAE AES" :
 #endif
                                  "Unknown");
@@ -3029,11 +3029,20 @@ void atcmd_wifi_write_info_to_flash(rtw_wifi_setting_t *setting, int enable)
 						memcpy(psk_passphrase[index], setting->password, sizeof(psk_passphrase[index]));
 						reconn.security_type = RTW_SECURITY_WEP_PSK;
 						break;
+					case RTW_SECURITY_WPA_AES_PSK:
 					case RTW_SECURITY_WPA_TKIP_PSK:
-						reconn.security_type = RTW_SECURITY_WPA_TKIP_PSK;
-						break;
+					case RTW_SECURITY_WPA_MIXED_PSK:
 					case RTW_SECURITY_WPA2_AES_PSK:
-						reconn.security_type = RTW_SECURITY_WPA2_AES_PSK;
+					case RTW_SECURITY_WPA2_TKIP_PSK:
+					case RTW_SECURITY_WPA2_MIXED_PSK:
+					case RTW_SECURITY_WPA_WPA2_AES_PSK:
+					case RTW_SECURITY_WPA_WPA2_TKIP_PSK:
+					case RTW_SECURITY_WPA_WPA2_MIXED_PSK:
+#ifdef CONFIG_SAE_SUPPORT
+					case RTW_SECURITY_WPA3_AES_PSK:
+					case RTW_SECURITY_WPA2_WPA3_MIXED:
+#endif
+						reconn.security_type = setting->security_type;
 						break;
 					default:
 						break;
@@ -3170,8 +3179,19 @@ int atcmd_wifi_restore_from_flash(void)
 					wifi.password_len = strlen((char*)psk_passphrase);
 					wifi.key_id = atoi((const char *)key_id);
 					break;
+				case RTW_SECURITY_WPA_AES_PSK:
 				case RTW_SECURITY_WPA_TKIP_PSK:
+				case RTW_SECURITY_WPA_MIXED_PSK:
 				case RTW_SECURITY_WPA2_AES_PSK:
+				case RTW_SECURITY_WPA2_TKIP_PSK:
+				case RTW_SECURITY_WPA2_MIXED_PSK:
+				case RTW_SECURITY_WPA_WPA2_AES_PSK:
+				case RTW_SECURITY_WPA_WPA2_TKIP_PSK:
+				case RTW_SECURITY_WPA_WPA2_MIXED_PSK:
+#ifdef CONFIG_SAE_SUPPORT
+				case RTW_SECURITY_WPA3_AES_PSK:
+				case RTW_SECURITY_WPA2_WPA3_MIXED:
+#endif
 					wifi.password = (unsigned char*) psk_passphrase;
 					wifi.password_len = strlen((char*)psk_passphrase);
 					break;

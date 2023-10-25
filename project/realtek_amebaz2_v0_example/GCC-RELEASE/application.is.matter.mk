@@ -233,6 +233,8 @@ SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/server/
 #SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/server/hids_rmc.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/client/simple_ble_client.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/server/simple_ble_service.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/client/ota_client.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/src/ble/profile/client/dfu_client.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/board/common/src/trace_task.c
 
 #bluetooth - example - ble_central
@@ -250,6 +252,28 @@ SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral/
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral/ble_app_main.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral/ble_peripheral_at_cmd.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_peripheral/peripheral_app.c
+
+#bluetooth - example - ble_scatternet
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_app.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_app_main.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_app_task.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/ble_scatternet/ble_scatternet_link_mgr.c
+
+#bluetooth - example - bt_fuzz_test
+#SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_fuzz_test/bt_fuzz_test_app.c \
+	../../../component/common/bluetooth/realtek/sdk/example/bt_fuzz_test/bt_fuzz_test_app_main.c \
+	../../../component/common/bluetooth/realtek/sdk/example/bt_fuzz_test/bt_fuzz_test_app_task.c \
+	../../../component/common/bluetooth/realtek/sdk/example/bt_fuzz_test/bt_fuzz_test_at_cmd.c \
+	../../../component/common/bluetooth/realtek/sdk/example/bt_fuzz_test/bt_fuzz_test_link_mgr.c \
+	../../../component/common/bluetooth/realtek/sdk/example/bt_fuzz_test/bt_fuzz_test_simple_ble_service.c \
+	../../../component/common/bluetooth/realtek/sdk/src/ble/profile/server/gls.c \
+	../../../component/common/bluetooth/realtek/sdk/src/ble/profile/server/hrs.c \
+	../../../component/common/bluetooth/realtek/sdk/src/ble/profile/server/ias.c
+
+#bluetooth - example - bt_beacon
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_beacon/bt_beacon_app.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_beacon/bt_beacon_app_main.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_beacon/bt_beacon_app_task.c
 
 #bluetooth - example - bt_config
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_config_app_main.c
@@ -327,7 +351,7 @@ SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_app_task.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_peripheral_app.c
 SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_service.c
-SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_wifi.c
+#SRC_C += ../../../component/common/application/matter/common/bluetooth/bt_matter_adapter/bt_matter_adapter_wifi.c
 endif
 endif
 

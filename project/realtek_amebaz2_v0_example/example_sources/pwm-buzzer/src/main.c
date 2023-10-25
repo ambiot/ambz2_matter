@@ -45,6 +45,7 @@ int main (void)
         for (i = 0; i < 8; i++) {
             pwmout_period(&pwm_led[0], period[i]);
             pwmout_pulsewidth(&pwm_led[0], (period[i]/2));
+            pwmout_start(&pwm_led[0]);
             hal_delay_ms(1000);
         }
 //        wait_ms(20);

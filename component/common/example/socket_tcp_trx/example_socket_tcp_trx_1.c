@@ -111,14 +111,14 @@ static void example_socket_tcp_trx_thread(void *param)
 			//RtlInitSema(&tcp_tx_rx_sema, 1);			
 			rtw_init_sema(&tcp_tx_rx_sema, 1);
 
-			if(xTaskCreate(tx_thread, ((const char*)"tx_thread"), 512, &client_fd, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
+			if(xTaskCreate(tx_thread, ((const char*)"tx_thread"), 1024, &client_fd, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
 				printf("\n\r%s xTaskCreate(tx_thread) failed", __FUNCTION__);
 			else
 				tx_exit = 0;
 
 			vTaskDelay(10);
 
-			if(xTaskCreate(rx_thread, ((const char*)"rx_thread"), 512, &client_fd, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
+			if(xTaskCreate(rx_thread, ((const char*)"rx_thread"), 1024, &client_fd, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
 				printf("\n\r%s xTaskCreate(rx_thread) failed", __FUNCTION__);
 			else
 				rx_exit = 0;

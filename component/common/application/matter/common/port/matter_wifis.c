@@ -404,7 +404,9 @@ void matter_lwip_dhcp()
 
 void matter_lwip_dhcp6(void)
 {
+#if defined(LWIP_IPV6) && LWIP_IPV6
     LwIP_DHCP6(0, DHCP6_START);
+#endif
 }
 
 void matter_lwip_releaseip(void)

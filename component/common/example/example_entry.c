@@ -291,7 +291,7 @@
 #endif
 
 #if defined(CONFIG_EXAMPLE_CJSON) && CONFIG_EXAMPLE_CJSON
-#include <cjson/example_cJSON.h>
+#include <cJSON/example_cJSON.h>
 #endif
 	
 #if defined(CONFIG_MEDIA_H264_TO_SDCARD) && CONFIG_MEDIA_H264_TO_SDCARD
