@@ -133,8 +133,15 @@ WIFI_RETRY_LOOP:
 				wifi.password_len = strlen((char*)psk_passphrase);
 				wifi.key_id = atoi((const char *)key_id);
 				break;
+			case RTW_SECURITY_WPA_AES_PSK:
 			case RTW_SECURITY_WPA_TKIP_PSK:
+			case RTW_SECURITY_WPA_MIXED_PSK:
 			case RTW_SECURITY_WPA2_AES_PSK:
+			case RTW_SECURITY_WPA2_TKIP_PSK:
+			case RTW_SECURITY_WPA2_MIXED_PSK:
+			case RTW_SECURITY_WPA_WPA2_AES_PSK:
+			case RTW_SECURITY_WPA_WPA2_TKIP_PSK:
+			case RTW_SECURITY_WPA_WPA2_MIXED_PSK:
 #ifdef CONFIG_SAE_SUPPORT
 			case RTW_SECURITY_WPA3_AES_PSK:
 			case RTW_SECURITY_WPA2_WPA3_MIXED:
@@ -291,8 +298,15 @@ int wlan_init_done_callback(void)
 					wifi.password_len = strlen((char*)psk_passphrase);
 					wifi.key_id = atoi((const char *)key_id);
 					break;
+				case RTW_SECURITY_WPA_AES_PSK:
 				case RTW_SECURITY_WPA_TKIP_PSK:
+				case RTW_SECURITY_WPA_MIXED_PSK:
 				case RTW_SECURITY_WPA2_AES_PSK:
+				case RTW_SECURITY_WPA2_TKIP_PSK:
+				case RTW_SECURITY_WPA2_MIXED_PSK:
+				case RTW_SECURITY_WPA_WPA2_AES_PSK:
+				case RTW_SECURITY_WPA_WPA2_TKIP_PSK:
+				case RTW_SECURITY_WPA_WPA2_MIXED_PSK:
 #ifdef CONFIG_SAE_SUPPORT
 				case RTW_SECURITY_WPA3_AES_PSK:
 				case RTW_SECURITY_WPA2_WPA3_MIXED:

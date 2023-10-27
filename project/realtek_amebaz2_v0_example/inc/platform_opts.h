@@ -433,6 +433,7 @@
 #define CONFIG_FAST_DHCP 0
 #endif
 
+#ifdef CHIP_PROJECT
 #if defined(CONFIG_EXAMPLE_MATTER) && (CONFIG_EXAMPLE_MATTER == 1)
 #undef CONFIG_EXAMPLE_WLAN_FAST_CONNECT
 #define CONFIG_EXAMPLE_WLAN_FAST_CONNECT	0
@@ -442,6 +443,7 @@
 #else
 #define CONFIG_FAST_DHCP 0
 #endif /* CONFIG_EXAMPLE_WLAN_FAST_CONNECT */
+#endif /* CONFIG_EXAMPLE_MATTER */
 
 // Matter layout
 #undef FAST_RECONNECT_DATA
@@ -460,4 +462,4 @@
 #define DCT_BEGIN_ADDR			(0x400000 - 0x13000) // 0x3ED000 ~ 0x3FB000 : 56K 
 #define DCT_BEGIN_ADDR2 		(0x400000 - 0x1A000) // 0x3E6000 ~ 0x3ED000 : 24K
 #define MATTER_FACTORY_DATA     (0x3FF000)           // last 4KB of external flash - write protection is supported in this region
-#endif /* defined(CONFIG_EXAMPLE_MATTER) && CONFIG_EXAMPLE_MATTER */
+#endif /* CHIP_PROJECT */

@@ -773,20 +773,21 @@ void restore_wifi_info_to_flash(uint32_t offer_ip, uint32_t server_ip)
 			    rtw_memcpy(psk_passphrase[index], setting.password, sizeof(psk_passphrase[index]));
 			    wifi_data_to_flash.security_type = RTW_SECURITY_WEP_PSK;
 			    break;
+			case RTW_SECURITY_WPA_AES_PSK:
 			case RTW_SECURITY_WPA_TKIP_PSK:
-				wifi_data_to_flash.security_type = RTW_SECURITY_WPA_TKIP_PSK;
-                break;
+			case RTW_SECURITY_WPA_MIXED_PSK:
 			case RTW_SECURITY_WPA2_AES_PSK:
-				wifi_data_to_flash.security_type = RTW_SECURITY_WPA2_AES_PSK;
-			    break;
+			case RTW_SECURITY_WPA2_TKIP_PSK:
+			case RTW_SECURITY_WPA2_MIXED_PSK:
+			case RTW_SECURITY_WPA_WPA2_AES_PSK:
+			case RTW_SECURITY_WPA_WPA2_TKIP_PSK:
+			case RTW_SECURITY_WPA_WPA2_MIXED_PSK:
 #ifdef CONFIG_SAE_SUPPORT
 			case RTW_SECURITY_WPA3_AES_PSK:
-				 wifi_data_to_flash.security_type = RTW_SECURITY_WPA3_AES_PSK;
-				break;
 			case RTW_SECURITY_WPA2_WPA3_MIXED:
-				 wifi_data_to_flash.security_type = RTW_SECURITY_WPA2_WPA3_MIXED;
-				break;
 #endif
+				wifi_data_to_flash.security_type = setting.security_type;
+				break;
 			default:
 			    break;
 		}
