@@ -455,6 +455,6 @@
 #define BT_FTL_BKUP_ADDR		(0x400000 - 0x4000)  // 0x3FC000
 #define UART_SETTING_SECTOR		(0x400000 - 0x5000)  // 0x3FB000
 #define DCT_BEGIN_ADDR			(0x400000 - 0x13000) // 0x3ED000 ~ 0x3FB000 : 56K 
-#define DCT_BEGIN_ADDR2 		(0x400000 - 0x1A000) // 0x3E6000 ~ 0x3ED000 : 24K
+#define DCT_BEGIN_ADDR2 		(0x400000 - 0x1C000) // 0x3E6000 ~ 0x3ED000 : 24K
 #define MATTER_FACTORY_DATA     (0x3FF000)           // last 4KB of external flash - write protection is supported in this region
 #endif /* defined(CONFIG_EXAMPLE_MATTER) && CONFIG_EXAMPLE_MATTER */

@@ -3,6 +3,8 @@
 **************************/
 #include "platform_opts.h"
 #include "platform/platform_stdlib.h"
+#include <flash_api.h>
+#include <device_lock.h>
 
 #ifdef __cplusplus
  extern "C" {
@@ -29,13 +31,143 @@
                                                   /*!< max number of variable in module = floor (4024 / (32 + 64)) = 41 */
 
 #define DCT_BEGIN_ADDR_MATTER2  DCT_BEGIN_ADDR2
-#define MODULE_NUM2             6 
+#define MODULE_NUM2             8
 #define VARIABLE_NAME_SIZE2     32
 #define VARIABLE_VALUE_SIZE2    400 + 4           /* +4 is required, else the max variable size we can store is 396 */
                                                   /*!< max number of variable in module = floor (4024 / (32 + 400)) = 9 */
 
 #define ENABLE_BACKUP           0
 #define ENABLE_WEAR_LEVELING    0
+
+#define MODULE_NAME_OFFSET      8
+#define MODULE_NUM_OFFSET       44
+#define MODULE_INFO_SIZE        32
+
+/* if upgrading from v1.0 firmware to v1.1 firmware through Matter OTA, Matter OTA will failed as unable to obtain Fabric information from DCT
+ * This is because the DCT Module name has changed from "chip-xxx" to "matter_kvsx_x"
+ * Thus, it requires a manual change on the DCT module name
+ * */
+#define DCT_UPDRADE 1
+
+#if DCT_UPDRADE
+const char *matter_domain[19] =
+{
+    "chip-factory",
+    "chip-config",
+    "chip-counters",
+    "chip-fabric-1",
+    "chip-fabric-2",
+    "chip-fabric-3",
+    "chip-fabric-4",
+    "chip-fabric-5",
+    "chip-acl",
+    "chip-groupmsgcounters",
+    "chip-attributes",
+    "chip-bindingtable",
+    "chip-ota",
+    "chip-failsafe",
+    "chip-sessionresumption",
+    "chip-deviceinfoprovider",
+    "chip-groupdataprovider",
+    "chip-others2",
+    "chip-others"
+};
+
+void dct_check_swap()
+{
+    flash_t flash;
+    int count, value, i;
+    uint8_t *buffer;
+    uint32_t buffer_size = 0x1000;
+    uint8_t new_module_name[15];
+    int differ_dct1 = 0, differ_dct2 = 0;
+    int flash_module_num = 0, write_needed = 0;;
+
+    buffer = rtw_malloc(buffer_size);
+    if (!buffer) {
+        printf("dct_check_swap: malloc error\n");
+        goto exit;
+    }
+
+    for (i=0; i<MODULE_NUM; i++) {
+        device_mutex_lock(RT_DEV_LOCK_FLASH);
+        flash_stream_read(&flash, DCT_BEGIN_ADDR_MATTER+(i*buffer_size), buffer_size, buffer);
+        device_mutex_unlock(RT_DEV_LOCK_FLASH);
+
+        flash_module_num = buffer[MODULE_NUM_OFFSET];
+        differ_dct1 = MODULE_NUM - flash_module_num;
+
+        if(buffer[0] != 0xFF){
+            if (strncmp(buffer+MODULE_NAME_OFFSET, "chip", 4) == 0)
+            {
+                value = i + 1 - differ_dct1;
+                snprintf(new_module_name, 15, "matter_kvs1_%d", value);
+                for (count=0; count<sizeof(new_module_name); count++){
+                    buffer[MODULE_NAME_OFFSET+count] = new_module_name[count];
+                }
+                memset(buffer+MODULE_NAME_OFFSET+count, 0, MODULE_INFO_SIZE-MODULE_NAME_OFFSET-count);
+                write_needed = 1;
+            }
+
+            if (differ_dct1 != 0)
+            {
+                memset(buffer+MODULE_NUM_OFFSET, MODULE_NUM, 1);
+                write_needed = 1;
+            }
+
+            if (write_needed) {
+                device_mutex_lock(RT_DEV_LOCK_FLASH);
+                flash_erase_sector(&flash, DCT_BEGIN_ADDR_MATTER+(i*buffer_size));
+                flash_stream_write(&flash, DCT_BEGIN_ADDR_MATTER+((i-differ_dct1)*buffer_size), buffer_size, buffer);
+                device_mutex_unlock(RT_DEV_LOCK_FLASH);
+                write_needed = 0;
+            }
+        }
+
+    }
+
+    for (i=0; i<MODULE_NUM2; i++) {
+        device_mutex_lock(RT_DEV_LOCK_FLASH);
+        flash_stream_read(&flash, DCT_BEGIN_ADDR_MATTER2+(i*buffer_size), buffer_size, buffer);
+        device_mutex_unlock(RT_DEV_LOCK_FLASH);
+
+        flash_module_num = buffer[MODULE_NUM_OFFSET];
+        differ_dct2 = MODULE_NUM2 - flash_module_num;
+
+        if(buffer[0] != 0xFF)
+        {
+            if (strncmp(buffer+MODULE_NAME_OFFSET, "chip", 4) == 0)
+            {
+                value = i + 1 - differ_dct2;
+                snprintf(new_module_name, 15, "matter_kvs2_%d", value);
+                for (count=0; count<sizeof(new_module_name); count++){
+                    buffer[MODULE_NAME_OFFSET+count] = new_module_name[count];
+                }
+                memset(buffer+MODULE_NAME_OFFSET+count, 0, MODULE_INFO_SIZE-MODULE_NAME_OFFSET-count);
+                write_needed = 1;
+            }
+            if (differ_dct2 != 0)
+            {
+                memset(buffer+MODULE_NUM_OFFSET, MODULE_NUM2, 1);
+                write_needed = 1;
+            }
+
+            if (write_needed) {
+                device_mutex_lock(RT_DEV_LOCK_FLASH);
+                flash_erase_sector(&flash, DCT_BEGIN_ADDR_MATTER2+(i*buffer_size));
+                flash_stream_write(&flash, DCT_BEGIN_ADDR_MATTER2+((i-differ_dct2)*buffer_size), buffer_size, buffer);
+                device_mutex_unlock(RT_DEV_LOCK_FLASH);
+            }
+        }
+    }
+
+exit:
+    if(buffer)
+        rtw_free(buffer);
+
+    return;
+}
+#endif
 
 #if CONFIG_ENABLE_DCT_ENCRYPTION
 #if defined(MBEDTLS_CIPHER_MODE_CTR)
@@ -111,12 +243,17 @@
 s32 initPref(void)
 {
     s32 ret;
+
+#if DCT_UPDRADE
+    dct_check_swap();
+#endif
+
     ret = dct_init(DCT_BEGIN_ADDR_MATTER, MODULE_NUM, VARIABLE_NAME_SIZE, VARIABLE_VALUE_SIZE, ENABLE_BACKUP, ENABLE_WEAR_LEVELING);
     if (ret != 0)
         printf("dct_init failed with error: %d\n", ret);
     else
         printf("dct_init success\n");
-
+ 
     ret = dct_init2(DCT_BEGIN_ADDR_MATTER2, MODULE_NUM2, VARIABLE_NAME_SIZE2, VARIABLE_VALUE_SIZE2, ENABLE_BACKUP, ENABLE_WEAR_LEVELING);
     if (ret != 0)
         printf("dct_init2 failed with error: %d\n", ret);
