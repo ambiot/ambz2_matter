@@ -7,7 +7,6 @@ SDKROOTDIR := $(BASEDIR)/../../../../../..
 AMEBAZ2_TOOLDIR	= $(SDKROOTDIR)/component/soc/realtek/8710c/misc/iar_utility
 CHIPDIR = $(SDKROOTDIR)/third_party/connectedhomeip
 OUTPUT_DIR = $(BASEDIR)/build/chip
-# OUTPUT_DIR = $(CHIPDIR)/examples/bridge-app/ameba/build/chip
 MATTER_TOOLDIR = $(SDKROOTDIR)/tools/matter
 
 OS := $(shell uname)

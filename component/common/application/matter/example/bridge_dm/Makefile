@@ -4,12 +4,10 @@ AMEBAZ2_TOOLDIR	= $(SDKROOTDIR)/component/soc/realtek/8710c/misc/iar_utility
 CHIPDIR = $(SDKROOTDIR)/third_party/connectedhomeip
 BUILDDIR = $(BASEDIR)/build
 OUTPUT_DIR = $(BUILDDIR)/chip
-# OUTPUT_DIR = $(CHIPDIR)/examples/bridge-app/ameba/build/chip
 MATTER_TOOLDIR = $(SDKROOTDIR)/tools/matter
 
 BRIDGE_FILE = $(OUTPUT_DIR)/codegen/cluster-file.txt
 BRIDGE_ZAP = $(BASEDIR)/bridge-app.zap
-# BRIDGE_ZAP = $(CHIPDIR)/examples/bridge-app/bridge-common/bridge-app.zap
 
 OS := $(shell uname)
 LBITS := $(shell getconf LONG_BIT)
@@ -49,7 +47,6 @@ $(BRIDGE_FILE): $(BRIDGE_ZAP)
 	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl-server.json -z $(CHIPDIR)/src/app/zap-templates/zcl/zcl.json --output-dir $(OUTPUT_DIR)/codegen/zap-generated  $^
 	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json -z $(CHIPDIR)/src/app/zap-templates/zcl/zcl.json --output-dir $(OUTPUT_DIR)/codegen/zap-generated $^
 	@python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(OUTPUT_DIR)/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(BASEDIR)/bridge-app.matter
-# @python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(OUTPUT_DIR)/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(CHIPDIR)/examples/bridge-app/bridge-common/bridge-app.matter
 	@python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $^ > $(OUTPUT_DIR)/codegen/cluster-file.txt
 	@python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $@ --chip_path $(CHIPDIR)
 	@cp endpoint_config.h $(OUTPUT_DIR)/codegen/zap-generated

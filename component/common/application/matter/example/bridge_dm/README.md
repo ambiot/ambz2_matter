@@ -2,6 +2,9 @@
 This example is an implementation of the *Bridge* device type. The Bridge will be communicating with the other non-Matter peripherals via TCP sockets.
 You will need 2 non-Matter peripherals running TCP client socket.
 
+## ZAP
+We will use `bridge-app.zap` instead of the zap file within the connectedhomeip example.
+
 ## Ameba Data Model
 This example demonstrates adding and removing endpoints dynamically using the *Ameba Data Model*.
 A `Root Node` device type will be created on Endpoint0, a `Aggregator` device type on Endpoint1 and a `Dimmable Light` device type on Endpoint2.
