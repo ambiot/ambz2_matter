@@ -31,7 +31,7 @@ CHIP_ERROR matter_driver_fan_set_startup_value()
     CHIP_ERROR err = CHIP_NO_ERROR;
     EmberAfStatus status;
     DataModel::Nullable<uint8_t> FanPercentSettingValue;
-    chip::app::Clusters::FanControl::FanModeType FanModeValue;
+    chip::app::Clusters::FanControl::FanModeEnum FanModeValue;
 
     chip::DeviceLayer::PlatformMgr().LockChipStack();
     status = Clusters::FanControl::Attributes::PercentSetting::Get(1, FanPercentSettingValue);
@@ -113,7 +113,7 @@ void matter_driver_uplink_update_handler(AppEvent *aEvent)
         {
             fan.setFanMode((aEvent->value._u8 == 1) ? 4 /* kOn */ : 0 /* kOff */);
             chip::DeviceLayer::PlatformMgr().LockChipStack();
-            Clusters::FanControl::Attributes::FanMode::Set(1, (aEvent->value._u8 == 1) ? Clusters::FanControl::FanModeType::kOn : Clusters::FanControl::FanModeType::kOff);
+            Clusters::FanControl::Attributes::FanMode::Set(1, (aEvent->value._u8 == 1) ? Clusters::FanControl::FanModeEnum::kOn : Clusters::FanControl::FanModeEnum::kOff);
             chip::DeviceLayer::PlatformMgr().UnlockChipStack();
         }
     case Clusters::FanControl::Id:

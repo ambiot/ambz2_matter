@@ -193,6 +193,8 @@ SRC_C += $(CHIPDIR)/examples/platform/ameba/route_hook/ameba_route_table.c
 
 SRC_CPP = 
 
+SRC_CPP += $(CHIPDIR)/src/app/server/AclStorage.cpp
+SRC_CPP += $(CHIPDIR)/src/app/server/DefaultAclStorage.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/EchoHandler.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/Dnssd.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/OnboardingCodesUtil.cpp

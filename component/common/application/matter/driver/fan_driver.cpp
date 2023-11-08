@@ -32,16 +32,16 @@ void MatterFan::setFanSpeedPercent(uint8_t percent)
     pwmout_write(mPwm_obj, duty_cycle);
 }
 
-chip::app::Clusters::FanControl::FanModeType MatterFan::mapPercentToMode(uint8_t percent)
+chip::app::Clusters::FanControl::FanModeEnum MatterFan::mapPercentToMode(uint8_t percent)
 {
     if (percent >= 80) // high
-        return chip::app::Clusters::FanControl::FanModeType::kHigh;
+        return chip::app::Clusters::FanControl::FanModeEnum::kHigh;
     else if (percent >= 40) // medium
-        return chip::app::Clusters::FanControl::FanModeType::kMedium;
+        return chip::app::Clusters::FanControl::FanModeEnum::kMedium;
     else if (percent >= 10) // low
-        return chip::app::Clusters::FanControl::FanModeType::kLow;
+        return chip::app::Clusters::FanControl::FanModeEnum::kLow;
     else // off
-        return chip::app::Clusters::FanControl::FanModeType::kOff;
+        return chip::app::Clusters::FanControl::FanModeEnum::kOff;
 }
 
 uint8_t MatterFan::mapModeToPercent(uint8_t mode)
