@@ -86,7 +86,14 @@ public:
             }
             else
             {
-                value = uint8_t(attributeConfig.value.defaultValue);
+                if ((attributeConfig.mask & ATTRIBUTE_MASK_MIN_MAX) != 0U)
+                {
+                    value = uint8_t(attributeConfig.value.ptrToMinMaxValue->defaultValue.defaultValue);
+                } 
+                else
+                {
+                    value = uint8_t(attributeConfig.value.defaultValue);
+                }
             }
             break;
         case ZCL_INT16U_ATTRIBUTE_TYPE:
@@ -97,7 +104,14 @@ public:
             }
             else
             {
-                value = uint16_t(attributeConfig.value.defaultValue);
+                if ((attributeConfig.mask & ATTRIBUTE_MASK_MIN_MAX) != 0U)
+                {
+                    value = uint16_t(attributeConfig.value.ptrToMinMaxValue->defaultValue.defaultValue);
+                } 
+                else
+                {
+                    value = uint16_t(attributeConfig.value.defaultValue);
+                }
             }
             break;
         case ZCL_INT32U_ATTRIBUTE_TYPE:
@@ -108,7 +122,14 @@ public:
             }
             else
             {
-                value = uint32_t(attributeConfig.value.defaultValue);
+                if ((attributeConfig.mask & ATTRIBUTE_MASK_MIN_MAX) != 0U)
+                {
+                    value = uint32_t(attributeConfig.value.ptrToMinMaxValue->defaultValue.defaultValue);
+                } 
+                else
+                {
+                    value = uint32_t(attributeConfig.value.defaultValue);
+                }
             }
             break;
         case ZCL_INT64U_ATTRIBUTE_TYPE:
@@ -119,7 +140,14 @@ public:
             }
             else
             {
-                value = uint64_t(attributeConfig.value.defaultValue);
+                if ((attributeConfig.mask & ATTRIBUTE_MASK_MIN_MAX) != 0U)
+                {
+                    value = uint64_t(attributeConfig.value.ptrToMinMaxValue->defaultValue.defaultValue);
+                } 
+                else
+                {
+                    value = uint64_t(attributeConfig.value.defaultValue);
+                }
             }
             break;
         case ZCL_INT8S_ATTRIBUTE_TYPE:
@@ -130,7 +158,14 @@ public:
             }
             else
             {
-                value = int8_t(attributeConfig.value.defaultValue);
+                if ((attributeConfig.mask & ATTRIBUTE_MASK_MIN_MAX) != 0U)
+                {
+                    value = int8_t(attributeConfig.value.ptrToMinMaxValue->defaultValue.defaultValue);
+                } 
+                else
+                {
+                    value = int8_t(attributeConfig.value.defaultValue);
+                }
             }
             break;
         case ZCL_INT16S_ATTRIBUTE_TYPE:
@@ -141,7 +176,14 @@ public:
             }
             else
             {
-                value = int16_t(attributeConfig.value.defaultValue);
+                if ((attributeConfig.mask & ATTRIBUTE_MASK_MIN_MAX) != 0U)
+                {
+                    value = int16_t(attributeConfig.value.ptrToMinMaxValue->defaultValue.defaultValue);
+                } 
+                else
+                {
+                    value = int16_t(attributeConfig.value.defaultValue);
+                }
             }
             break;
         case ZCL_INT32S_ATTRIBUTE_TYPE:
@@ -152,7 +194,14 @@ public:
             }
             else
             {
-                value = int32_t(attributeConfig.value.defaultValue);
+                if ((attributeConfig.mask & ATTRIBUTE_MASK_MIN_MAX) != 0U)
+                {
+                    value = int32_t(attributeConfig.value.ptrToMinMaxValue->defaultValue.defaultValue);
+                } 
+                else
+                {
+                    value = int32_t(attributeConfig.value.defaultValue);
+                }
             }
             break;
         case ZCL_INT64S_ATTRIBUTE_TYPE:
@@ -163,7 +212,14 @@ public:
             }
             else
             {
-                value = int64_t(attributeConfig.value.defaultValue);
+                if ((attributeConfig.mask & ATTRIBUTE_MASK_MIN_MAX) != 0U)
+                {
+                    value = int64_t(attributeConfig.value.ptrToMinMaxValue->defaultValue.defaultValue);
+                } 
+                else
+                {
+                    value = int64_t(attributeConfig.value.defaultValue);
+                }
             }
             break;
         case ZCL_SINGLE_ATTRIBUTE_TYPE:
@@ -174,7 +230,14 @@ public:
             }
             else
             {
-                value = float(attributeConfig.value.defaultValue);
+                if ((attributeConfig.mask & ATTRIBUTE_MASK_MIN_MAX) != 0U)
+                {
+                    value = float(attributeConfig.value.ptrToMinMaxValue->defaultValue.defaultValue);
+                } 
+                else
+                {
+                    value = float(attributeConfig.value.defaultValue);
+                }
             }
             break;
         case ZCL_OCTET_STRING_ATTRIBUTE_TYPE:

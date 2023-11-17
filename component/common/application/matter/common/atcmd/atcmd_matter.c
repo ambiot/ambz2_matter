@@ -71,7 +71,29 @@ void fATmattershell(void *arg)
         printf("No arguments provided for matter shell\r\n");
     } 
 }
-
+#if defined(CONFIG_EXAMPLE_MATTER_CUSTOMIZED) && CONFIG_EXAMPLE_MATTER_CUSTOMIZED
+void fATmatterApp(void *arg)
+{
+	if(!arg)
+	{
+		printf("[ATMA]Usage: ATMA=0/1/2 (0: aircon, 1: laundrywasher, 2: refrigerator\n\r");
+		return;
+	}
+	uint8_t select = atoi((const char *)(arg));
+	switch(select)
+	{
+	case 0:
+		example_matter_aircon_dm();
+		break;
+	case 1:
+		example_matter_laundrywasher_dm();
+		break;
+	case 2:
+		example_matter_refrigerator_dm();
+		break;
+	}
+}
+#endif
 log_item_t at_matter_items[] = {
 #ifndef CONFIG_INIC_NO_FLASH
 #if ATCMD_VER == ATVER_1
@@ -79,6 +101,9 @@ log_item_t at_matter_items[] = {
     {"ATM%", fATchipapp1, {NULL, NULL}},
     {"ATM^", fATchipapp2, {NULL, NULL}},
     {"ATMS", fATmattershell, {NULL, NULL}},
+#if defined(CONFIG_EXAMPLE_MATTER_CUSTOMIZED) && CONFIG_EXAMPLE_MATTER_CUSTOMIZED
+	{"ATMA", fATmatterApp, {NULL, NULL}},
+#endif
 #endif // end of #if ATCMD_VER == ATVER_1
 #endif
 };

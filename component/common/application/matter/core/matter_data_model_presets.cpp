@@ -647,6 +647,312 @@ void matter_cluster_level_control_server(ClusterConfig *clusterConfig)
     clusterConfig->functionConfigs.push_back((EmberAfGenericClusterFunction) MatterLevelControlClusterServerShutdownCallback);
 }
 
+EmberAfAttributeMinMaxValue thermostatminMaxDefaults[] =
+{
+  { (uint16_t)0xA28, (uint16_t)-0x6AB3, (uint16_t)0x7FFF }, /* OccupiedCoolingSetpoint */ \
+  { (uint16_t)0x7D0, (uint16_t)-0x6AB3, (uint16_t)0x7FFF }, /* OccupiedHeatingSetpoint */ \
+  { (uint16_t)0x2BC, (uint16_t)-0x6AB3, (uint16_t)0x7FFF }, /* MinHeatSetpointLimit */ \
+  { (uint16_t)0xBB8, (uint16_t)-0x6AB3, (uint16_t)0x7FFF }, /* MaxHeatSetpointLimit */ \
+  { (uint16_t)0x640, (uint16_t)-0x6AB3, (uint16_t)0x7FFF }, /* MinCoolSetpointLimit */ \
+  { (uint16_t)0xC80, (uint16_t)-0x6AB3, (uint16_t)0x7FFF }, /* MaxCoolSetpointLimit */ \
+  { (uint16_t)0x4, (uint16_t)0x0, (uint16_t)0x5 },          /* ControlSequenceOfOperation */ \
+  { (uint16_t)0x1, (uint16_t)0x0, (uint16_t)0x7 },          /* SystemMode */ \
+};
+
+void matter_cluster_thermostat_server(ClusterConfig *clusterConfig)
+{
+    AttributeConfig thermostatLocalTemperature(0x00000000, ZAP_TYPE(INT16S), ZAP_EMPTY_DEFAULT(), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig thermostatAbsMinHeatSetpointLimit(0x00000003, ZAP_TYPE(INT16S), ZAP_SIMPLE_DEFAULT(700), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig thermostatAbsMaxHeatSetpointLimit(0x00000004, ZAP_TYPE(INT16S), ZAP_SIMPLE_DEFAULT(3000), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig thermostatAbsMinCoolSetpointLimit(0x00000005, ZAP_TYPE(INT16S), ZAP_SIMPLE_DEFAULT(1600), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig thermostatAbsMaxCoolSetpointLimit(0x00000006, ZAP_TYPE(INT16S), ZAP_SIMPLE_DEFAULT(3200), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig thermostatPICoolingDemand(0x00000007, ZAP_TYPE(INT8U), ZAP_EMPTY_DEFAULT(), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig thermostatPIHeatingDemand(0x00000008, ZAP_TYPE(INT8U), ZAP_EMPTY_DEFAULT(), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig thermostatOccupiedCoolingSetpoint(0x00000011, ZAP_TYPE(INT16S), &thermostatminMaxDefaults[0], 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(MIN_MAX) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig thermostatOccupiedHeatingSetpoint(0x00000012, ZAP_TYPE(INT16S), &thermostatminMaxDefaults[1], 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(MIN_MAX) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig thermostatMinHeatSetpointLimit(0x00000015, ZAP_TYPE(INT16S), &thermostatminMaxDefaults[2], 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(MIN_MAX) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig thermostatMaxHeatSetpointLimit(0x00000016, ZAP_TYPE(INT16S), &thermostatminMaxDefaults[3], 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(MIN_MAX) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig thermostatMinCoolSetpointLimit(0x00000017, ZAP_TYPE(INT16S), &thermostatminMaxDefaults[4], 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(MIN_MAX) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig thermostatMaxCoolSetpointLimit(0x00000018, ZAP_TYPE(INT16S), &thermostatminMaxDefaults[5], 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(MIN_MAX) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig thermostatControlSeqOfOperation(0x0000001B, ZAP_TYPE(ENUM8), &thermostatminMaxDefaults[6], 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(MIN_MAX) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig thermostatSystemMode(0x0000001C, ZAP_TYPE(ENUM8), &thermostatminMaxDefaults[7], 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(MIN_MAX) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig thermostatFeatureMap(0x0000FFFC, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(3), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig thermostatClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(6), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    CommandConfig thermostatSetpointRaseLower(0x00000000, COMMAND_MASK_ACCEPTED);
+    CommandConfig thermostatEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
+
+    clusterConfig->clusterId = 0x00000201;
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER) | ZAP_CLUSTER_MASK(INIT_FUNCTION) | ZAP_CLUSTER_MASK(PRE_ATTRIBUTE_CHANGED_FUNCTION);
+    clusterConfig->attributeConfigs.push_back(thermostatLocalTemperature);
+    clusterConfig->attributeConfigs.push_back(thermostatAbsMinHeatSetpointLimit);
+    clusterConfig->attributeConfigs.push_back(thermostatAbsMaxHeatSetpointLimit);
+    clusterConfig->attributeConfigs.push_back(thermostatAbsMinCoolSetpointLimit);
+    clusterConfig->attributeConfigs.push_back(thermostatAbsMaxCoolSetpointLimit);
+    clusterConfig->attributeConfigs.push_back(thermostatPICoolingDemand);
+    clusterConfig->attributeConfigs.push_back(thermostatPIHeatingDemand);
+    clusterConfig->attributeConfigs.push_back(thermostatOccupiedCoolingSetpoint);
+    clusterConfig->attributeConfigs.push_back(thermostatOccupiedHeatingSetpoint);
+    clusterConfig->attributeConfigs.push_back(thermostatMinHeatSetpointLimit);
+    clusterConfig->attributeConfigs.push_back(thermostatMaxHeatSetpointLimit);
+    clusterConfig->attributeConfigs.push_back(thermostatMinCoolSetpointLimit);
+    clusterConfig->attributeConfigs.push_back(thermostatMaxCoolSetpointLimit);
+    clusterConfig->attributeConfigs.push_back(thermostatControlSeqOfOperation);
+    clusterConfig->attributeConfigs.push_back(thermostatSystemMode);
+    clusterConfig->attributeConfigs.push_back(thermostatFeatureMap);
+    clusterConfig->attributeConfigs.push_back(thermostatClusterRevision);
+    clusterConfig->commandConfigs.push_back(thermostatSetpointRaseLower);
+    clusterConfig->commandConfigs.push_back(thermostatEndOfAcceptedCommandList);
+    clusterConfig->functionConfigs.push_back((EmberAfGenericClusterFunction) emberAfThermostatClusterServerInitCallback);
+    clusterConfig->functionConfigs.push_back((EmberAfGenericClusterFunction) MatterThermostatClusterServerPreAttributeChangedCallback);
+}
+
+EmberAfAttributeMinMaxValue fancontrolminMaxDefaults[] =
+{
+  { (uint16_t)0x0, (uint16_t)0x0, (uint16_t)0x6 },  /* FanMode */
+  { (uint16_t)0x2, (uint16_t)0x0, (uint16_t)0x5 },  /* FanModeSequence */
+  { (uint16_t)0x0, (uint16_t)0x0, (uint16_t)0x64 }, /* PercentSetting */
+  { (uint16_t)0x0, (uint16_t)0x0, (uint16_t)0x64 }, /* SpeedSetting */
+};
+
+void matter_cluster_fan_control_server(ClusterConfig *clusterConfig)
+{
+    AttributeConfig fancontrolFanMode(0x00000000, ZAP_TYPE(ENUM8),&fancontrolminMaxDefaults[0], 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(MIN_MAX) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig fancontrolFanModeSequence(0x00000001, ZAP_TYPE(ENUM8), &fancontrolminMaxDefaults[1], 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(MIN_MAX) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig fancontrolPercentSetting(0x00000002, ZAP_TYPE(PERCENT), &fancontrolminMaxDefaults[2], 1,  ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) |ZAP_ATTRIBUTE_MASK(MIN_MAX) | ZAP_ATTRIBUTE_MASK(WRITABLE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig fancontrolPercentCurrent(0x00000003, ZAP_TYPE(PERCENT), ZAP_SIMPLE_DEFAULT(0), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig fancontrolSpeedMax(0x00000004, ZAP_TYPE(INT8U), ZAP_SIMPLE_DEFAULT(1), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig fancontrolSpeedSetting(0x00000005, ZAP_TYPE(INT8U), &fancontrolminMaxDefaults[3],  1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(MIN_MAX) | ZAP_ATTRIBUTE_MASK(WRITABLE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig fancontrolSpeedCurrent(0x00000006, ZAP_TYPE(INT8U), ZAP_SIMPLE_DEFAULT(0x00), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig fancontrolRockSupport(0x00000007, ZAP_TYPE(BITMAP8), ZAP_SIMPLE_DEFAULT(0x00), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig fancontrolRockSetting(0x00000008, ZAP_TYPE(BITMAP8), ZAP_SIMPLE_DEFAULT(0x00), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig fancontrolWindSupport(0x00000009, ZAP_TYPE(BITMAP8), ZAP_SIMPLE_DEFAULT(0x00), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig fancontrolWindSetting(0x0000000A, ZAP_TYPE(BITMAP8), ZAP_SIMPLE_DEFAULT(0x00), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig fancontrolAirFlowDirection(0x0000000B, ZAP_TYPE(ENUM8), ZAP_SIMPLE_DEFAULT(0x00), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig fancontrolFeatureMap(0x0000FFFC, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(0x3F), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig fancontrolClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(2), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    CommandConfig fancontrolStep(0x00000000, COMMAND_MASK_ACCEPTED);
+    CommandConfig fancontrolEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
+
+    clusterConfig->clusterId = 0x00000202;
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER) | ZAP_CLUSTER_MASK(ATTRIBUTE_CHANGED_FUNCTION) | ZAP_CLUSTER_MASK(PRE_ATTRIBUTE_CHANGED_FUNCTION);
+    clusterConfig->attributeConfigs.push_back(fancontrolFanMode);
+    clusterConfig->attributeConfigs.push_back(fancontrolFanModeSequence);
+    clusterConfig->attributeConfigs.push_back(fancontrolPercentSetting);
+    clusterConfig->attributeConfigs.push_back(fancontrolPercentCurrent);
+    clusterConfig->attributeConfigs.push_back(fancontrolSpeedMax);
+    clusterConfig->attributeConfigs.push_back(fancontrolSpeedSetting);
+    clusterConfig->attributeConfigs.push_back(fancontrolSpeedCurrent);
+    clusterConfig->attributeConfigs.push_back(fancontrolRockSupport);
+    clusterConfig->attributeConfigs.push_back(fancontrolRockSetting);
+    clusterConfig->attributeConfigs.push_back(fancontrolWindSupport);
+    clusterConfig->attributeConfigs.push_back(fancontrolWindSetting);
+    clusterConfig->attributeConfigs.push_back(fancontrolAirFlowDirection);
+    clusterConfig->attributeConfigs.push_back(fancontrolFeatureMap);
+    clusterConfig->attributeConfigs.push_back(fancontrolClusterRevision);
+    clusterConfig->commandConfigs.push_back(fancontrolStep);
+    clusterConfig->commandConfigs.push_back(fancontrolEndOfAcceptedCommandList);
+}
+
+void matter_cluster_temperature_measurement_server(ClusterConfig *clusterConfig)
+{
+    AttributeConfig temperaturemeasurementMeasuredValue(0x00000000, ZAP_TYPE(INT16S), ZAP_EMPTY_DEFAULT(), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig temperaturemeasurementMinMeasuredValue(0x00000001, ZAP_TYPE(INT16S), ZAP_SIMPLE_DEFAULT(0x8000), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig temperaturemeasurementMaxMeasuredValue(0x00000002, ZAP_TYPE(INT16S), ZAP_SIMPLE_DEFAULT(0x8000), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig temperaturemeasurementTolerance(0x00000003, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(0), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig temperaturemeasurementFeatureMap(0x0000FFFC, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(0x00), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig temperaturemeasurementClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(0x04), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    clusterConfig->clusterId = 0x00000402;
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER);
+    clusterConfig->attributeConfigs.push_back(temperaturemeasurementMeasuredValue);
+    clusterConfig->attributeConfigs.push_back(temperaturemeasurementMinMeasuredValue);
+    clusterConfig->attributeConfigs.push_back(temperaturemeasurementMaxMeasuredValue);
+    clusterConfig->attributeConfigs.push_back(temperaturemeasurementTolerance);
+    clusterConfig->attributeConfigs.push_back(temperaturemeasurementFeatureMap);
+    clusterConfig->attributeConfigs.push_back(temperaturemeasurementClusterRevision);
+}
+
+void matter_cluster_relative_humidity_measurement_server(ClusterConfig *clusterConfig)
+{
+    AttributeConfig relativehumiditymeasurementMeasuredValue(0x00000000, ZAP_TYPE(INT16U), ZAP_EMPTY_DEFAULT(), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig relativehumiditymeasurementMinMeasuredValue(0x00000001, ZAP_TYPE(INT16U), ZAP_EMPTY_DEFAULT(), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig relativehumiditymeasurementMaxMeasuredValue(0x00000002, ZAP_TYPE(INT16U), ZAP_EMPTY_DEFAULT(), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig relativehumiditymeasurementTolerance(0x00000003, ZAP_TYPE(INT16U), ZAP_EMPTY_DEFAULT(), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig relativehumiditymeasurementFeatureMap(0x0000FFFC, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(0x00), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig relativehumiditymeasurementClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(0x03), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    clusterConfig->clusterId = 0x00000405;
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER);
+    clusterConfig->attributeConfigs.push_back(relativehumiditymeasurementMeasuredValue);
+    clusterConfig->attributeConfigs.push_back(relativehumiditymeasurementMinMeasuredValue);
+    clusterConfig->attributeConfigs.push_back(relativehumiditymeasurementMaxMeasuredValue);
+    clusterConfig->attributeConfigs.push_back(relativehumiditymeasurementTolerance);
+    clusterConfig->attributeConfigs.push_back(relativehumiditymeasurementFeatureMap);
+    clusterConfig->attributeConfigs.push_back(relativehumiditymeasurementClusterRevision);
+}
+
+void matter_cluster_laundrymode_server(ClusterConfig *clusterConfig)
+{
+    AttributeConfig laundrymodeSupportedModes(0x00000000, ZAP_TYPE(ARRAY), ZAP_EMPTY_DEFAULT(), 0, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig laundrymodeCurrentMode(0x00000001, ZAP_TYPE(INT8U), ZAP_EMPTY_DEFAULT(), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig laundrymodeStartUpMode(0x00000002, ZAP_TYPE(INT8U), ZAP_EMPTY_DEFAULT(), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(WRITABLE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig laundrymodeFeatureMap(0x0000FFFC, ZAP_TYPE(BITMAP32), ZAP_EMPTY_DEFAULT(), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig laundrymodeClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(1), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    CommandConfig laundrymodeChangeToMode(0x00000000, COMMAND_MASK_ACCEPTED);
+    CommandConfig laundrymodeEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
+
+    CommandConfig laundrymodeChangeToModeResponse(0x00000001, COMMAND_MASK_GENERATED);
+    CommandConfig laundrymodeEndOfGeneratedCommandList(chip::kInvalidCommandId, COMMAND_MASK_GENERATED);
+
+    clusterConfig->clusterId = 0x00000051;
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER);
+    clusterConfig->attributeConfigs.push_back(laundrymodeSupportedModes);
+    clusterConfig->attributeConfigs.push_back(laundrymodeCurrentMode);
+    clusterConfig->attributeConfigs.push_back(laundrymodeStartUpMode);
+    clusterConfig->attributeConfigs.push_back(laundrymodeFeatureMap);
+    clusterConfig->attributeConfigs.push_back(laundrymodeClusterRevision);
+    clusterConfig->commandConfigs.push_back(laundrymodeChangeToMode);
+    clusterConfig->commandConfigs.push_back(laundrymodeEndOfAcceptedCommandList);
+    clusterConfig->commandConfigs.push_back(laundrymodeChangeToModeResponse);
+    clusterConfig->commandConfigs.push_back(laundrymodeEndOfGeneratedCommandList);
+
+}
+
+EmberAfAttributeMinMaxValue laundrywashercontrolminMaxDefaults[] = 
+{ 
+    { (uint16_t)0x0, (uint16_t)0x0, (uint16_t)0x1F },
+};
+
+void matter_cluster_laundrywasher_control_server(ClusterConfig *clusterConfig)
+{
+    AttributeConfig laundrywashercontrolSpinSpeeds(0x00000000, ZAP_TYPE(ARRAY), ZAP_EMPTY_DEFAULT(), 0, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig laundrywashercontrolSpinSpeedCurrent(0x00000001, ZAP_TYPE(INT8U), &laundrywashercontrolminMaxDefaults[0], 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(MIN_MAX) | ZAP_ATTRIBUTE_MASK(WRITABLE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig laundrywashercontrolNumberOfRinses(0x00000002, ZAP_TYPE(ENUM8), ZAP_EMPTY_DEFAULT(), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(WRITABLE));
+    AttributeConfig laundrywashercontrolSupportedRinses(0x00000003, ZAP_TYPE(ARRAY), ZAP_EMPTY_DEFAULT(), 0, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig laundrywashercontrolFeatureMap(0x0000FFFC, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(3), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig laundrywashercontrolClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(1), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    clusterConfig->clusterId = 0x00000053;
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER) | ZAP_CLUSTER_MASK(PRE_ATTRIBUTE_CHANGED_FUNCTION);
+    clusterConfig->attributeConfigs.push_back(laundrywashercontrolSpinSpeeds);
+    clusterConfig->attributeConfigs.push_back(laundrywashercontrolSpinSpeedCurrent);
+    clusterConfig->attributeConfigs.push_back(laundrywashercontrolNumberOfRinses);
+    clusterConfig->attributeConfigs.push_back(laundrywashercontrolSupportedRinses);
+    clusterConfig->attributeConfigs.push_back(laundrywashercontrolFeatureMap);
+    clusterConfig->attributeConfigs.push_back(laundrywashercontrolClusterRevision);
+}
+
+void matter_cluster_temperature_control_server(ClusterConfig *clusterConfig)
+{
+    AttributeConfig temperaturecontrolTemperatureSetpoint(0x00000000, ZAP_TYPE(TEMPERATURE), ZAP_EMPTY_DEFAULT(), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig temperaturecontrolMinTemperature(0x00000001, ZAP_TYPE(TEMPERATURE), ZAP_EMPTY_DEFAULT(), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig temperaturecontrolMaxTemperature(0x00000002, ZAP_TYPE(TEMPERATURE), ZAP_EMPTY_DEFAULT(), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig temperaturecontrolStep(0x00000003, ZAP_TYPE(TEMPERATURE), ZAP_EMPTY_DEFAULT(), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig temperaturecontrolFeatureMap(0x0000FFFC, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(5), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig temperaturecontrolClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(1), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    CommandConfig temperaturecontrolSetTemperatureCommand(0x00000000, COMMAND_MASK_ACCEPTED);
+    CommandConfig temperaturecontrolEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
+
+    clusterConfig->clusterId = 0x00000056;
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER) | ZAP_CLUSTER_MASK(PRE_ATTRIBUTE_CHANGED_FUNCTION);
+    clusterConfig->attributeConfigs.push_back(temperaturecontrolTemperatureSetpoint);
+    clusterConfig->attributeConfigs.push_back(temperaturecontrolMinTemperature);
+    clusterConfig->attributeConfigs.push_back(temperaturecontrolMaxTemperature);
+    clusterConfig->attributeConfigs.push_back(temperaturecontrolStep);
+    clusterConfig->attributeConfigs.push_back(temperaturecontrolFeatureMap);
+    clusterConfig->attributeConfigs.push_back(temperaturecontrolClusterRevision);
+    clusterConfig->commandConfigs.push_back(temperaturecontrolSetTemperatureCommand);
+    clusterConfig->commandConfigs.push_back(temperaturecontrolEndOfAcceptedCommandList);
+}
+
+void matter_cluster_operational_state_server(ClusterConfig *clusterConfig)
+{
+    AttributeConfig operationalstatePhaseList(0x00000000, ZAP_TYPE(ARRAY), ZAP_EMPTY_DEFAULT(), 0, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig operationalstateCurrentPhase(0x00000001, ZAP_TYPE(INT8U), ZAP_EMPTY_DEFAULT(), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig operationalstateOperationalStateList(0x00000003, ZAP_TYPE(ARRAY), ZAP_EMPTY_DEFAULT(), 0, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig operationalstateOperationalState(0x00000004, ZAP_TYPE(INT8U), ZAP_EMPTY_DEFAULT(), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig operationalstateOperationalError(0x00000005, ZAP_TYPE(STRUCT), ZAP_EMPTY_DEFAULT(), 0, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig operationalstateFeatureMap(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(0), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig operationalstateClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(1), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    CommandConfig operationalstatePause(0x00000000, COMMAND_MASK_ACCEPTED);
+    CommandConfig operationalstateStop(0x00000001, COMMAND_MASK_ACCEPTED);
+    CommandConfig operationalstateStart(0x00000002, COMMAND_MASK_ACCEPTED);
+    CommandConfig operationalstateResume(0x00000003, COMMAND_MASK_ACCEPTED);
+    CommandConfig operationalstateEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
+
+    CommandConfig operationalstateOperationalCommandResponse(0x00000004, COMMAND_MASK_GENERATED);
+    CommandConfig operationalstateEndOfGeneratedCommandList(chip::kInvalidCommandId, COMMAND_MASK_GENERATED);
+
+    EventConfig operationalstateOpError(0x00000000);
+
+    clusterConfig->clusterId = 0x00000060;
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER);
+    clusterConfig->attributeConfigs.push_back(operationalstatePhaseList);
+    clusterConfig->attributeConfigs.push_back(operationalstateCurrentPhase);
+    clusterConfig->attributeConfigs.push_back(operationalstateOperationalStateList);
+    clusterConfig->attributeConfigs.push_back(operationalstateOperationalState);
+    clusterConfig->attributeConfigs.push_back(operationalstateOperationalError);
+    clusterConfig->attributeConfigs.push_back(operationalstateFeatureMap);
+    clusterConfig->attributeConfigs.push_back(operationalstateClusterRevision);
+    clusterConfig->commandConfigs.push_back(operationalstatePause);
+    clusterConfig->commandConfigs.push_back(operationalstateStop);
+    clusterConfig->commandConfigs.push_back(operationalstateStart);
+    clusterConfig->commandConfigs.push_back(operationalstateResume);
+    clusterConfig->commandConfigs.push_back(operationalstateEndOfAcceptedCommandList);
+    clusterConfig->commandConfigs.push_back(operationalstateOperationalCommandResponse);
+    clusterConfig->commandConfigs.push_back(operationalstateEndOfGeneratedCommandList);
+    clusterConfig->eventConfigs.push_back(operationalstateOpError);
+}
+
+void matter_cluster_refrigerator_and_temperature_controlled_cabinet_mode_server(ClusterConfig *clusterConfig)
+{
+    AttributeConfig tccmSupportedModes(0x00000000, ZAP_TYPE(ARRAY), ZAP_EMPTY_DEFAULT(), 0, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig tccmCurrentMode(0x00000001, ZAP_TYPE(INT8U), ZAP_EMPTY_DEFAULT(), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig tccmStartUpMode(0x00000002, ZAP_TYPE(INT8U), ZAP_EMPTY_DEFAULT(), 1, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE) | ZAP_ATTRIBUTE_MASK(WRITABLE) | ZAP_ATTRIBUTE_MASK(NULLABLE));
+    AttributeConfig tccmFeatureMap(0x0000FFFC, ZAP_TYPE(BITMAP32), ZAP_EMPTY_DEFAULT(), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig tccmClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(1), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    CommandConfig tccmChangeToMode(0x00000000, COMMAND_MASK_ACCEPTED);
+    CommandConfig tccmEndOfAcceptedCommandList(chip::kInvalidCommandId, COMMAND_MASK_ACCEPTED);
+
+    CommandConfig tccmChangeToModeResponse(0x00000001, COMMAND_MASK_GENERATED);
+    CommandConfig tccmEndOfGeneratedCommandList(chip::kInvalidCommandId, COMMAND_MASK_GENERATED);
+
+    clusterConfig->clusterId = 0x00000052;
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER);
+    clusterConfig->attributeConfigs.push_back(tccmSupportedModes);
+    clusterConfig->attributeConfigs.push_back(tccmCurrentMode);
+    clusterConfig->attributeConfigs.push_back(tccmStartUpMode);
+    clusterConfig->attributeConfigs.push_back(tccmFeatureMap);
+    clusterConfig->attributeConfigs.push_back(tccmClusterRevision);
+    clusterConfig->commandConfigs.push_back(tccmChangeToMode);
+    clusterConfig->commandConfigs.push_back(tccmEndOfAcceptedCommandList);
+    clusterConfig->commandConfigs.push_back(tccmChangeToModeResponse);
+    clusterConfig->commandConfigs.push_back(tccmEndOfGeneratedCommandList);
+}
+
+void matter_cluster_refrigerator_alarm_server(ClusterConfig *clusterConfig)
+{
+    AttributeConfig refrigeratoralarmMask(0x00000000, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(0), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig refrigeratoralarmState(0x00000002, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(0), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig refrigeratoralarmSupported(0x00000003, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(0), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig refrigeratoralarmFeatureMap(0x0000FFFC, ZAP_TYPE(BITMAP32), ZAP_SIMPLE_DEFAULT(0), 4, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+    AttributeConfig refrigeratoralarmClusterRevision(0x0000FFFD, ZAP_TYPE(INT16U), ZAP_SIMPLE_DEFAULT(1), 2, ZAP_ATTRIBUTE_MASK(EXTERNAL_STORAGE));
+
+    clusterConfig->clusterId = 0x00000057;
+    clusterConfig->mask = ZAP_CLUSTER_MASK(SERVER);
+    clusterConfig->attributeConfigs.push_back(refrigeratoralarmMask);
+    clusterConfig->attributeConfigs.push_back(refrigeratoralarmState);
+    clusterConfig->attributeConfigs.push_back(refrigeratoralarmSupported);
+    clusterConfig->attributeConfigs.push_back(refrigeratoralarmFeatureMap);
+    clusterConfig->attributeConfigs.push_back(refrigeratoralarmClusterRevision);
+}
+
 } // Clusters
 
 namespace Endpoints {
@@ -716,6 +1022,79 @@ void matter_dimmable_light_preset(EndpointConfig *dimmableLightEndpointConfig)
     dimmableLightEndpointConfig->clusterConfigs.push_back(onOffServerCluster);
     dimmableLightEndpointConfig->clusterConfigs.push_back(levelControlServerCluster);
 }
+
+void matter_room_air_conditioner_preset(EndpointConfig *RoomAirConEndpointConfig)
+{
+    ClusterConfig descriptorServerCluster;
+    ClusterConfig identifyServerCluster;
+    ClusterConfig onOffServerCluster;
+    ClusterConfig thermostatServerCluster;
+    ClusterConfig fancontrolServerCluster;
+    ClusterConfig temperaturemeasurementServerCluster;
+    ClusterConfig relativehumiditymeasurementServerCluster;
+
+    Presets::Clusters::matter_cluster_descriptor_server(&descriptorServerCluster);
+    Presets::Clusters::matter_cluster_identify_server(&identifyServerCluster);
+    Presets::Clusters::matter_cluster_onoff_server(&onOffServerCluster);
+    Presets::Clusters::matter_cluster_thermostat_server(&thermostatServerCluster);
+    Presets::Clusters::matter_cluster_fan_control_server(&fancontrolServerCluster);
+    Presets::Clusters::matter_cluster_temperature_measurement_server(&temperaturemeasurementServerCluster);
+    Presets::Clusters::matter_cluster_relative_humidity_measurement_server(&relativehumiditymeasurementServerCluster);
+
+    RoomAirConEndpointConfig->clusterConfigs.push_back(descriptorServerCluster);
+    RoomAirConEndpointConfig->clusterConfigs.push_back(identifyServerCluster);
+    RoomAirConEndpointConfig->clusterConfigs.push_back(onOffServerCluster);
+    RoomAirConEndpointConfig->clusterConfigs.push_back(thermostatServerCluster);
+    RoomAirConEndpointConfig->clusterConfigs.push_back(fancontrolServerCluster);
+    RoomAirConEndpointConfig->clusterConfigs.push_back(temperaturemeasurementServerCluster);
+    RoomAirConEndpointConfig->clusterConfigs.push_back(relativehumiditymeasurementServerCluster);
+}
+
+void matter_laundrywasher_preset(EndpointConfig *RefrigeratorEndpointConfig)
+{
+    ClusterConfig descriptorServerCluster;
+    ClusterConfig identifyServerCluster;
+    ClusterConfig laundrymodeServerCluster;
+    ClusterConfig onOffServerCluster;
+    ClusterConfig laundrywashercontrolsServerCluster;
+    ClusterConfig temperaturecontrolServerCluster;
+    ClusterConfig operationalstateServerCluster;
+
+    Presets::Clusters::matter_cluster_descriptor_server(&descriptorServerCluster);
+    Presets::Clusters::matter_cluster_identify_server(&identifyServerCluster);
+    Presets::Clusters::matter_cluster_laundrymode_server(&laundrymodeServerCluster);
+    Presets::Clusters::matter_cluster_onoff_server(&onOffServerCluster);
+    Presets::Clusters::matter_cluster_laundrywasher_control_server(&laundrywashercontrolsServerCluster);
+    Presets::Clusters::matter_cluster_temperature_control_server(&temperaturecontrolServerCluster);
+    Presets::Clusters::matter_cluster_operational_state_server(&operationalstateServerCluster);
+
+    RefrigeratorEndpointConfig->clusterConfigs.push_back(descriptorServerCluster);
+    RefrigeratorEndpointConfig->clusterConfigs.push_back(identifyServerCluster);
+    RefrigeratorEndpointConfig->clusterConfigs.push_back(laundrymodeServerCluster);
+    RefrigeratorEndpointConfig->clusterConfigs.push_back(onOffServerCluster);
+    RefrigeratorEndpointConfig->clusterConfigs.push_back(laundrywashercontrolsServerCluster);
+    RefrigeratorEndpointConfig->clusterConfigs.push_back(temperaturecontrolServerCluster);
+    RefrigeratorEndpointConfig->clusterConfigs.push_back(operationalstateServerCluster);
+}
+
+void matter_refrigerator_preset(EndpointConfig *RefrigeratorEndpointConfig)
+{
+    ClusterConfig descriptorServerCluster;
+    ClusterConfig identifyServerCluster;
+    ClusterConfig refrigeratorcabinetServerCluster;
+    ClusterConfig refrigeratoralarmServerCluster;
+
+    Presets::Clusters::matter_cluster_descriptor_server(&descriptorServerCluster);
+    Presets::Clusters::matter_cluster_identify_server(&identifyServerCluster);
+    Presets::Clusters::matter_cluster_refrigerator_and_temperature_controlled_cabinet_mode_server(&refrigeratorcabinetServerCluster);
+    Presets::Clusters::matter_cluster_refrigerator_alarm_server(&refrigeratoralarmServerCluster);
+
+    RefrigeratorEndpointConfig->clusterConfigs.push_back(descriptorServerCluster);
+    RefrigeratorEndpointConfig->clusterConfigs.push_back(identifyServerCluster);
+    RefrigeratorEndpointConfig->clusterConfigs.push_back(refrigeratorcabinetServerCluster);
+    RefrigeratorEndpointConfig->clusterConfigs.push_back(refrigeratoralarmServerCluster);
+}
+
 
 void matter_aggregator_preset(EndpointConfig *aggregatorEndpointConfig)
 {
