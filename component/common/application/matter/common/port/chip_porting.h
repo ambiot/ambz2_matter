@@ -32,6 +32,10 @@ extern "C" {
 #define F_BT_LE_USE_STATIC_RANDOM_ADDR      1
 #endif
 
+/* For Matter MDNS Filter to prevent insufficient PBUF */
+#define AMEBA_MATTER_MDNS_FILTER_ENABLED        1
+#define DEFAULT_MATTER_MDNS_FILTER_ENABLED      0
+
 #ifdef __cplusplus
 }
 #endif

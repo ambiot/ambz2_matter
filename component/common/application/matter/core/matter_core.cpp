@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include "chip_porting.h"
 
 #include "matter_core.h"
 #include "matter_ota_initializer.h"
@@ -36,6 +37,15 @@
 #include <support/CodeUtils.h>
 #include <core/ErrorStr.h>
 
+#include <inet/UDPEndPointImpl.h>
+#include <inet/UDPEndPointImplLwIP.h>
+
+#if AMEBA_MATTER_MDNS_FILTER_ENABLED
+#include <matter_mdns_filter.h>
+#elif DEFAULT_MATTER_MDNS_FILTER_ENABLED
+#include <inet/BasicPacketFilters.h>
+#endif
+
 #if CONFIG_ENABLE_CHIP_SHELL
 #include <shell/launch_shell.h>
 #endif
@@ -44,6 +54,10 @@ using namespace ::chip;
 using namespace ::chip::app;
 using namespace ::chip::DeviceLayer;
 
+#if AMEBA_MATTER_MDNS_FILTER_ENABLED || DEFAULT_MATTER_MDNS_FILTER_ENABLED
+constexpr size_t kMaxPendingMdnsPackets = 10u;
+chip::Inet::DropIfTooManyQueuedPacketsFilter sMdnsPacketFilter(kMaxPendingMdnsPackets);
+#endif
 
 // Define a custom attribute persister which makes actual write of the selected attribute values
 // to the non-volatile storage only when it has remained constant for 5 seconds. This is to reduce
@@ -134,6 +148,11 @@ void matter_core_init_server(intptr_t context)
     static chip::CommonCaseDeviceServerInitParams initParams;
     initParams.InitializeStaticResourcesBeforeServerInit();
     chip::Server::GetInstance().Init(initParams);
+
+#if AMEBA_MATTER_MDNS_FILTER_ENABLED || DEFAULT_MATTER_MDNS_FILTER_ENABLED
+    chip::Inet::UDPEndPointImplLwIP::SetQueueFilter(&sMdnsPacketFilter);
+#endif
+
     gExampleDeviceInfoProvider.SetStorageDelegate(&Server::GetInstance().GetPersistentStorage());
     // TODO: Use our own DeviceInfoProvider
     chip::DeviceLayer::SetDeviceInfoProvider(&gExampleDeviceInfoProvider);
