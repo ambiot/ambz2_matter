@@ -155,6 +155,7 @@ INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/blu
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/bluetooth/bt_matter_adapter
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/mbedtls
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/port
+INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/core
 
 # CHIP Include folder list
 # -------------------------------------------------------------------
