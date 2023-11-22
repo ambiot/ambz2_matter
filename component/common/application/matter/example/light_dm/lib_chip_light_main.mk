@@ -10,6 +10,8 @@ OUTPUT_DIR = $(CHIPDIR)/examples/lighting-app/ameba/build/chip
 CODEGENDIR = $(OUTPUT_DIR)/codegen
 TOOLCHAINDIR = $(SDKROOTDIR)/tools/arm-none-eabi-gcc/asdk/linux/newlib/bin/
 
+CHIP_ENABLE_OTA_REQUESTOR = $(shell grep 'chip_enable_ota_requestor' $(OUTPUT_DIR)/args.gn | cut -d' ' -f3)
+
 OS := $(shell uname)
 
 CROSS_COMPILE = ${TOOLCHAINDIR}/arm-none-eabi-
@@ -228,7 +230,9 @@ SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_core.cp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_data_model.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_data_model_presets.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_interaction.cpp
+ifeq ($(CHIP_ENABLE_OTA_REQUESTOR), true)
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_ota_initializer.cpp
+endif
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/led_driver.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/light_dm/example_matter_light.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/light_dm/matter_drivers.cpp

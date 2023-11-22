@@ -28,7 +28,7 @@
 //wake up by UART      : 2
 //wake up by Gtimer    : 3
 //wake up by PWM       : 4
-#define WAKEUP_SOURCE 0
+#define WAKEUP_SOURCE 3
 //Clock, 1: 4MHz, 0: 250kHz
 #define CLOCK 0
 //SLEEP_DURATION, 5s
@@ -84,7 +84,6 @@ static int Gtimer_init_count = 0;
 static void Gtimer_timeout_handler (uint32_t id)
 {
     dbg_printf("Gtimer wake up   \r\n");
-    pwmout_period_int(&my_PWM, 0, 0); // disable interrupt to sync the count
 }
 #endif
 
@@ -100,6 +99,7 @@ extern void pwmout_period_int(pwmout_t *obj, pwm_period_callback_t callback, u8 
 static void PWM_period_handler (uint32_t id)
 {
     dbg_printf("PWM wake up   \r\n");
+    pwmout_period_int(&my_PWM, 0, 0); // disable interrupt to sync the count
 }
 #endif
 

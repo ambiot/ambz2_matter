@@ -16,6 +16,8 @@ OTAR_FILE = $(CHIPDIR)/examples/ota-requestor-app/ameba/build/chip/codegen/clust
 OTAR_ZAP = $(CHIPDIR)/examples/ota-requestor-app/ota-requestor-common/ota-requestor-app.zap
 CHEF_FILE = $(CHIPDIR)/examples/chef/ameba/build/chip/codegen/cluster-file.txt
 CHEF_ZAP = $(CHIPDIR)/examples/chef/devices/$(SAMPLE_NAME).zap
+AIR_PURIFIER_FILE = $(CHIPDIR)/examples/air-purifier-app/ameba/build/chip/codegen/cluster-file.txt
+AIR_PURIFIER_ZAP = $(CHIPDIR)/examples/air-purifier-app/air-purifier-common/air-purifier-app.zap
 
 .PHONY: toolchain
 toolchain:
@@ -100,6 +102,14 @@ $(CHEF_FILE): $(CHEF_ZAP)
 	@python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $^ > $(CHIPDIR)/examples/chef-app/ameba/build/chip/codegen/cluster-file.txt
 	@python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $@ --chip_path $(CHIPDIR)
 
+$(AIR_PURIFIER_FILE): $(AIR_PURIFIER_ZAP)
+	@mkdir -p $(CHIPDIR)/examples/air-purifier-app/ameba/build/chip/codegen/zap-generated
+	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl-server.json --output-dir examples/air-purifier-app/ameba/build/chip/codegen/zap-generated  $^
+	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/air-purifier-app/ameba/build/chip/codegen/zap-generated $^
+	@python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(CHIPDIR)/examples/air-purifier-app/ameba/build/chip/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(CHIPDIR)/examples/air-purifier-app/air-purifier-common/air-purifier-app.matter
+	@python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $^ > $(CHIPDIR)/examples/air-purifier-app/ameba/build/chip/codegen/cluster-file.txt
+	@python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $@ --chip_path $(CHIPDIR)
+
 .PHONY: all_clusters
 all_clusters: toolchain $(ALL_CLUSTERS_FILE)
 	$(MAKE) -f lib_chip.mk all
@@ -125,6 +135,11 @@ chef: toolchain $(CHEF_FILE)
 	$(MAKE) -f lib_chip_chef_core.mk all
 	$(MAKE) -f lib_chip_chef_main.mk all
 
+.PHONY: air_purifier
+air_purifier: toolchain $(AIR_PURIFIER_FILE)
+	$(MAKE) -f lib_chip_air_purifier_core.mk all
+	$(MAKE) -f lib_chip_air_purifier_main.mk all
+
 .PHONY: is_matter
 is_matter: toolchain
 	cp partition_matter.json partition.json
@@ -142,6 +157,8 @@ clean_matter_libs:
 	@$(MAKE) -f lib_chip_otar_core.mk clean
 	@$(MAKE) -f lib_chip_chef_main.mk clean
 	@$(MAKE) -f lib_chip_chef_core.mk clean
+	@$(MAKE) -f lib_chip_air_purifier_main.mk clean
+	@$(MAKE) -f lib_chip_air_purifier_core.mk clean
 
 .PHONY: clean_matter
 clean_matter:

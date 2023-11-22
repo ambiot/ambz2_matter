@@ -66,6 +66,7 @@ int main (void)
     for (i = 0; i < 4; i++) {
         pwmout_init(&pwm_led[i], pwm_led_pin[i]);
         pwmout_period_us(&pwm_led[i], PWM_PERIOD);
+        pwmout_start(&pwm_led[i]);
     }
 
     while (1) {

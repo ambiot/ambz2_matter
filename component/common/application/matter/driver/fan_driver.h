@@ -11,7 +11,7 @@ public:
     void deInit(void);
     void setFanMode(uint8_t mode);
     void setFanSpeedPercent(uint8_t speed);
-    chip::app::Clusters::FanControl::FanModeType mapPercentToMode(uint8_t percent);
+    chip::app::Clusters::FanControl::FanModeEnum mapPercentToMode(uint8_t percent);
     uint8_t mapModeToPercent(uint8_t mode);
 
 private:

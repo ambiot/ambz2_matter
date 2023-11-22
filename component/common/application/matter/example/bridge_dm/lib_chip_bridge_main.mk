@@ -6,15 +6,15 @@ BASEDIR := $(shell pwd)
 SDKROOTDIR := $(BASEDIR)/../../../../../..
 AMEBAZ2_TOOLDIR	= $(SDKROOTDIR)/component/soc/realtek/8710c/misc/iar_utility
 CHIPDIR = $(SDKROOTDIR)/third_party/connectedhomeip
-OUTPUT_DIR = $(CHIPDIR)/examples/thermostat/ameba/build/chip
+OUTPUT_DIR = $(BASEDIR)/build/chip
 CODEGENDIR = $(OUTPUT_DIR)/codegen
+TOOLCHAINDIR = $(SDKROOTDIR)/tools/arm-none-eabi-gcc/asdk/linux/newlib/bin/
 
 CHIP_ENABLE_OTA_REQUESTOR = $(shell grep 'chip_enable_ota_requestor' $(OUTPUT_DIR)/args.gn | cut -d' ' -f3)
 
 OS := $(shell uname)
 
-#CROSS_COMPILE = $(ARM_GCC_TOOLCHAIN)/arm-none-eabi-
-CROSS_COMPILE = arm-none-eabi-
+CROSS_COMPILE = ${TOOLCHAINDIR}/arm-none-eabi-
 
 # Compilation tools
 AR = $(CROSS_COMPILE)ar
@@ -75,7 +75,6 @@ INCLUDES += -I$(SDKROOTDIR)/component/common/network/lwip/lwip_v2.1.2/port/realt
 INCLUDES += -I$(SDKROOTDIR)/component/common/network/lwip/lwip_v2.1.2/port/realtek/freertos
 INCLUDES += -I$(SDKROOTDIR)/component/common/network/ssl/mbedtls-matter/include
 INCLUDES += -I$(SDKROOTDIR)/component/common/network/ssl/mbedtls-matter/include/mbedtls
-#INCLUDES += -I$(SDKROOTDIR)/component/common/network/ssl/ssl_ram_map/rom
 INCLUDES += -I$(SDKROOTDIR)/component/common/drivers/wlan/realtek/include
 INCLUDES += -I$(SDKROOTDIR)/component/common/drivers/wlan/realtek/src/osdep
 INCLUDES += -I$(SDKROOTDIR)/component/common/drivers/wlan/realtek/src/core/option
@@ -159,16 +158,12 @@ INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/mbedtls
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/port
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/core
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/driver
-INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/example/thermostat
+INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/example/bridge_dm
 
 # CHIP Include folder list
 # -------------------------------------------------------------------
 INCLUDES += -I$(CHIPDIR)/zzz_generated/app-common
-INCLUDES += -I$(CHIPDIR)/zzz_generated/thermostat
-INCLUDES += -I$(CHIPDIR)/zzz_generated/thermostat/zap-generated
-INCLUDES += -I$(CHIPDIR)/examples/thermostat/thermostat-common
-INCLUDES += -I$(CHIPDIR)/examples/thermostat/ameba/main/include
-INCLUDES += -I$(CHIPDIR)/examples/thermostat/ameba/build/chip/gen/include
+INCLUDES += -I$(OUTPUT_DIR)/gen/include
 INCLUDES += -I$(CHIPDIR)/examples/platform/ameba
 INCLUDES += -I$(CHIPDIR)/examples/providers
 INCLUDES += -I$(CHIPDIR)/src/include
@@ -181,6 +176,7 @@ INCLUDES += -I$(CHIPDIR)/src/app/server
 INCLUDES += -I$(CHIPDIR)/src/app/clusters/bindings
 INCLUDES += -I$(CHIPDIR)/third_party/nlio/repo/include
 INCLUDES += -I$(CHIPDIR)/third_party/nlunit-test/repo/src
+INCLUDES += -I$(CHIPDIR)/examples/all-clusters-app/all-clusters-common/include
 INCLUDES += -I$(CODEGENDIR)
 
 # Source file list
@@ -212,8 +208,9 @@ SRC_CPP += $(CHIPDIR)/src/app/util/generic-callback-stubs.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/message.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/util.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/privilege-storage.cpp
-
 SRC_CPP += $(CHIPDIR)/src/app/reporting/Engine.cpp
+
+SRC_CPP += $(CHIPDIR)/src/lib/dnssd/minimal_mdns/responders/IP.cpp
 
 SRC_CPP += $(shell cat $(CODEGENDIR)/cluster-file.txt)
 
@@ -221,21 +218,20 @@ SRC_CPP += $(CODEGENDIR)/app/callback-stub.cpp
 SRC_CPP += $(CODEGENDIR)/zap-generated/IMClusterCommandHandler.cpp
 
 SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/attributes/Accessors.cpp
-SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/cluster-objects.cpp
-
+# SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/cluster-objects.cpp
 SRC_CPP += $(CHIPDIR)/examples/providers/DeviceInfoProviderImpl.cpp
 
-# Custom thermostat src files with porting layer
-SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_api.cpp
+# Custom light-app src files with porting layer
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_core.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_interaction.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_data_model.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_data_model_presets.cpp
 ifeq ($(CHIP_ENABLE_OTA_REQUESTOR), true)
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_ota_initializer.cpp
 endif
-SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/thermostat.cpp
-SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/thermostat_ui.cpp
-SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/thermostat/example_matter_thermostat.cpp
-SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/thermostat/matter_drivers.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/bridge_driver.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/bridge_dm/example_matter_bridge.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/bridge_dm/matter_drivers.cpp
 
 #lib_version
 VER_C += $(TARGET)_version.c
@@ -262,14 +258,14 @@ CFLAGS =
 CFLAGS += -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=soft -D__thumb2__ -g -gdwarf-3 -Os
 CFLAGS += -D__ARM_ARCH_8M_MAIN__=1 -gdwarf-3 -fstack-usage -fdata-sections -ffunction-sections 
 CFLAGS += -fdiagnostics-color=always -Wall -Wpointer-arith -Wno-write-strings 
-CFLAGS += -Wno-maybe-uninitialized --save-temps -c -MMD
+CFLAGS += -Wno-maybe-uninitialized -c -MMD
 CFLAGS += -DCONFIG_PLATFORM_8710C -DCONFIG_BUILD_RAM=1
 CFLAGS += -DV8M_STKOVF
 
 # CHIP options
 # -------------------------------------------------------------------
 CFLAGS += -DCHIP_PROJECT=1
-CFLAGS += -DCONFIG_ENABLE_OTA_REQUESTOR=1
+CFLAGS += -DCONFIG_ENABLE_OTA_REQUESTOR=0
 CFLAGS += -DCONFIG_ENABLE_AMEBA_FACTORY_DATA=0
 CFLAGS += -DCHIP_DEVICE_LAYER_TARGET=Ameba
 CFLAGS += -DMBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"
@@ -350,16 +346,12 @@ $(SRC_OO): %_$(TARGET).oo : %.cpp | prerequirement
 	$(CC) $(CPPFLAGS) $(INCLUDES) -c $< -o $@
 	$(CC) $(CPPFLAGS) $(INCLUDES) -c $< -MM -MT $@ -MF $(OBJ_DIR)/$(notdir $(patsubst %.oo,%.d,$@))
 	cp $@ $(OBJ_DIR)/$(notdir $@)
-	cp $*_$(TARGET).ii $(INFO_DIR)
-	cp $*_$(TARGET).s $(INFO_DIR)
 	chmod 777 $(OBJ_DIR)/$(notdir $@)
 
 $(SRC_O): %_$(TARGET).o : %.c | prerequirement
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -MM -MT $@ -MF $(OBJ_DIR)/$(notdir $(patsubst %.o,%.d,$@))
 	cp $@ $(OBJ_DIR)/$(notdir $@)
-	cp $*_$(TARGET).i $(INFO_DIR)
-	cp $*_$(TARGET).s $(INFO_DIR)
 	chmod 777 $(OBJ_DIR)/$(notdir $@)
 
 -include $(DEPENDENCY_LIST)

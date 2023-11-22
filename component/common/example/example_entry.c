@@ -291,7 +291,7 @@
 #endif
 
 #if defined(CONFIG_EXAMPLE_CJSON) && CONFIG_EXAMPLE_CJSON
-#include <cjson/example_cJSON.h>
+#include <cJSON/example_cJSON.h>
 #endif
 	
 #if defined(CONFIG_MEDIA_H264_TO_SDCARD) && CONFIG_MEDIA_H264_TO_SDCARD
@@ -371,6 +371,8 @@
 #include <laundrywasher/example_matter_laundrywasher.h>
 #elif defined(CONFIG_EXAMPLE_MATTER_REFRIGERATOR) && (CONFIG_EXAMPLE_MATTER_REFRIGERATOR == 1)
 #include <refrigerator/example_matter_refrigerator.h>
+#elif defined(CONFIG_EXAMPLE_MATTER_BRIDGE) && (CONFIG_EXAMPLE_MATTER_BRIDGE == 1)
+#include <bridge_dm/example_matter_bridge.h>
 #elif defined(CONFIG_EXAMPLE_MATTER_DISHWASHER) && (CONFIG_EXAMPLE_MATTER_DISHWASHER == 1)
 #include <dishwasher/example_matter_dishwasher.h>
 #endif
@@ -869,6 +871,9 @@ example_hilink();
 #elif defined(CONFIG_EXAMPLE_MATTER_REFRIGERATOR) && (CONFIG_EXAMPLE_MATTER_REFRIGERATOR == 1)
     extern void example_matter_refrigerator();
     example_matter_refrigerator();
+#elif defined(CONFIG_EXAMPLE_MATTER_BRIDGE) && (CONFIG_EXAMPLE_MATTER_BRIDGE == 1)
+    extern void example_matter_bridge();
+    example_matter_bridge();
 #elif defined(CONFIG_EXAMPLE_MATTER_DISHWASHER) && (CONFIG_EXAMPLE_MATTER_DISHWASHER == 1)
     extern void example_matter_dishwasher();
     example_matter_dishwasher();

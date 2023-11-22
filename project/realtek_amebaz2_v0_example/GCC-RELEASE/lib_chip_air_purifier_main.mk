@@ -5,7 +5,7 @@ SHELL = /bin/bash
 BASEDIR := $(shell pwd)
 AMEBAZ2_TOOLDIR	= $(BASEDIR)/../../../component/soc/realtek/8710c/misc/iar_utility
 CHIPDIR = $(BASEDIR)/../../../third_party/connectedhomeip
-OUTPUT_DIR = $(CHIPDIR)/examples/all-clusters-app/ameba/build/chip
+OUTPUT_DIR = $(CHIPDIR)/examples/air-purifier-app/ameba/build/chip
 CODEGENDIR = $(OUTPUT_DIR)/codegen
 
 CHIP_ENABLE_OTA_REQUESTOR = $(shell grep 'chip_enable_ota_requestor' $(OUTPUT_DIR)/args.gn | cut -d' ' -f3)
@@ -159,12 +159,12 @@ INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/por
 # CHIP Include folder list
 # -------------------------------------------------------------------
 INCLUDES += -I$(CHIPDIR)/zzz_generated/app-common
-INCLUDES += -I$(CHIPDIR)/zzz_generated/all-clusters-app
-INCLUDES += -I$(CHIPDIR)/zzz_generated/all-clusters-app/zap-generated
-INCLUDES += -I$(CHIPDIR)/examples/all-clusters-app/all-clusters-common
-INCLUDES += -I$(CHIPDIR)/examples/all-clusters-app/all-clusters-common/include
-INCLUDES += -I$(CHIPDIR)/examples/all-clusters-app/ameba/main/include
-INCLUDES += -I$(CHIPDIR)/examples/all-clusters-app/ameba/build/chip/gen/include
+INCLUDES += -I$(CHIPDIR)/zzz_generated/air-purifier
+INCLUDES += -I$(CHIPDIR)/zzz_generated/air-purifier/zap-generated
+INCLUDES += -I$(CHIPDIR)/examples/air-purifier-app/air-purifier-common
+INCLUDES += -I$(CHIPDIR)/examples/air-purifier-app/air-purifier-common/include
+INCLUDES += -I$(CHIPDIR)/examples/air-purifier-app/ameba/main/include
+INCLUDES += -I$(CHIPDIR)/examples/air-purifier-app/ameba/build/chip/gen/include
 INCLUDES += -I$(CHIPDIR)/examples/platform/ameba
 INCLUDES += -I$(CHIPDIR)/examples/providers
 INCLUDES += -I$(CHIPDIR)/src/include
@@ -220,35 +220,17 @@ SRC_CPP += $(CODEGENDIR)/zap-generated/IMClusterCommandHandler.cpp
 SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/attributes/Accessors.cpp
 SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/cluster-objects.cpp
 
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/bridged-actions-stub.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/laundry-washer-controls-delegate-impl.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/laundry-washer-mode.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/dishwasher-alarm-stub.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/dishwasher-mode.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/fan-stub.cpp
-# SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/operational-state-delegate-impl.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/resource-monitoring-delegates.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/rvc-modes.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/smco-stub.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/static-supported-modes-manager.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/static-supported-temperature-levels.cpp
-
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/chipinterface.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/BindingHandler.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/ManualOperationCommand.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/OperationalStateManager.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/DeviceCallbacks.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/SmokeCOAlarmManager.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/CHIPDeviceManager.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/Globals.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/LEDWidget.cpp
+SRC_CPP += $(CHIPDIR)/examples/air-purifier-app/ameba/main/chipinterface.cpp
+SRC_CPP += $(CHIPDIR)/examples/air-purifier-app/ameba/main/DeviceCallbacks.cpp
+SRC_CPP += $(CHIPDIR)/examples/air-purifier-app/ameba/main/CHIPDeviceManager.cpp
+SRC_CPP += $(CHIPDIR)/examples/air-purifier-app/air-purifier-common/src/air-purifier-manager.cpp
+SRC_CPP += $(CHIPDIR)/examples/air-purifier-app/air-purifier-common/src/air-quality-sensor-manager.cpp
+SRC_CPP += $(CHIPDIR)/examples/air-purifier-app/air-purifier-common/src/filter-delegates.cpp
 
 ifeq ($(CHIP_ENABLE_OTA_REQUESTOR), true)
 SRC_CPP += $(CHIPDIR)/examples/platform/ameba/ota/OTAInitializer.cpp
 endif
 SRC_CPP += $(CHIPDIR)/examples/providers/DeviceInfoProviderImpl.cpp
-SRC_CPP += $(CHIPDIR)/examples/platform/ameba/shell/launch_shell.cpp
-SRC_CPP += $(CHIPDIR)/examples/platform/ameba/test_event_trigger/AmebaTestEventTriggerDelegate.cpp
 
 SRC_CPP += $(BASEDIR)/../../../component/common/application/matter/api/matter_api.cpp
 

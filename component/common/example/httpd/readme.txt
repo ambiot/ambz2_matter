@@ -42,6 +42,11 @@ AmebaPro and AmebaZ2 only support MBEDTLS.
 			For AmebaPro and Ameba-Z2:
 				#define MBEDTLS_CERTS_C
 				#define MBEDTLS_SSL_SRV_C
+For Matter:
+[component\common\application\matter\common\mbedtls\mbedtls_config.h]
+	For Ameba-Z2:
+	#define MBEDTLS_CERTS_C
+	#define MBEDTLS_SSL_SRV_C
 
         Can make automatical Wi-Fi connection when booting by using wlan fast connect example.
 		

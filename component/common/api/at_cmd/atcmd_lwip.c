@@ -4130,7 +4130,11 @@ static void client_start(void *param)
 				#endif
 				#if LWIP_IGMP
 				ip_addr_t dst_addr;
+#if LWIP_VERSION_MAJOR >= 2
+				ip_addr_set_ip4_u32(&dst_addr, c_serv_addr.sin_addr.s_addr);
+#else
 				dst_addr.addr = c_serv_addr.sin_addr.s_addr;
+#endif
 				if(ip_addr_ismulticast(&dst_addr)){
 					struct ip_mreq imr;
 					struct in_addr intfAddr;
@@ -4725,11 +4729,19 @@ void fATPB(void *arg)
 	}
 	if(enable){
 		if(argv[2] != NULL){
+#if LWIP_VERSION_MAJOR >= 2
+			ip_addr_set_ip4_u32(&dnsserver, ipaddr_addr(argv[2]));
+#else
 			ip4_addr_set_u32(&dnsserver, ipaddr_addr(argv[2]));
+#endif
 			dns_setserver(0,&dnsserver);			
 		}
 		else{
+#if LWIP_VERSION_MAJOR >= 2
+			ip_addr_set_ip4_u32(&dnsserver, ipaddr_addr("208.67.222.222"));
+#else
 			ip4_addr_set_u32(&dnsserver, ipaddr_addr("208.67.222.222"));
+#endif
 			dns_setserver(0, &dnsserver);
 			}
 		}
@@ -4740,7 +4752,11 @@ void fATPB(void *arg)
 			goto exit;
 			}
 		else{
+#if LWIP_VERSION_MAJOR >= 2
+			ip_addr_set_ip4_u32(&dnsserver, ipaddr_addr("208.67.222.222"));
+#else
 			ip4_addr_set_u32(&dnsserver, ipaddr_addr("208.67.222.222"));
+#endif
 			dns_setserver(0, &dnsserver);			
 		}
 	}
@@ -6972,7 +6988,11 @@ int atcmd_lwip_auto_connect(void)
 #endif
 #if LWIP_IGMP
 				ip_addr_t dst_addr;
+#if LWIP_VERSION_MAJOR >= 2
+				ip_addr_set_ip4_u32(&dst_addr, htonl(re_node->addr));
+#else
 				dst_addr.addr = htonl(re_node->addr);
+#endif
 				if(ip_addr_ismulticast(&dst_addr)){
 					struct ip_mreq imr;
 					struct in_addr intfAddr;
