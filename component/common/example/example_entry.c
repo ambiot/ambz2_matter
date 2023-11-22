@@ -373,6 +373,8 @@
 #include <refrigerator/example_matter_refrigerator.h>
 #elif defined(CONFIG_EXAMPLE_MATTER_BRIDGE) && (CONFIG_EXAMPLE_MATTER_BRIDGE == 1)
 #include <bridge_dm/example_matter_bridge.h>
+#elif defined(CONFIG_EXAMPLE_MATTER_DISHWASHER) && (CONFIG_EXAMPLE_MATTER_DISHWASHER == 1)
+#include <dishwasher/example_matter_dishwasher.h>
 #endif
 #endif
 
@@ -872,6 +874,9 @@ example_hilink();
 #elif defined(CONFIG_EXAMPLE_MATTER_BRIDGE) && (CONFIG_EXAMPLE_MATTER_BRIDGE == 1)
     extern void example_matter_bridge();
     example_matter_bridge();
+#elif defined(CONFIG_EXAMPLE_MATTER_DISHWASHER) && (CONFIG_EXAMPLE_MATTER_DISHWASHER == 1)
+    extern void example_matter_dishwasher();
+    example_matter_dishwasher();
 #endif
 #endif
 
