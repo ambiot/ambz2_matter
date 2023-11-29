@@ -1287,6 +1287,37 @@ int wifi_is_ready_to_transceive(rtw_interface_t interface)
     }
 }
 
+/**
+Example:
+u8 mac[ETH_ALEN] = {0x00, 0xe0, 0x4c, 0x87, 0x12, 0x34};
+wifi_change_mac_address_from_ram(mac);
+This method is to modify the mac and don't write to efuse.
+**/
+extern int rltk_change_mac_address_from_ram(int idx, u8 *mac);
+int wifi_change_mac_address_from_ram(int idx, u8 *mac)
+{
+	int ret = 0;
+	int ret_ps = 0;
+	const char *ifname = WLAN0_NAME;
+	if ((0 != idx) && (1 != idx)) {
+		RTW_API_INFO("\n\rInvalid interface selected");
+		return RTW_ERROR;
+	}
+	if (1 == idx) {
+		ifname = WLAN1_NAME;
+	}
+	ret_ps = wext_disable_powersave(ifname);
+	if (RTW_SUCCESS != ret_ps) {
+		RTW_API_INFO("\n\rFailed to disable powersave");
+	}
+	ret = rltk_change_mac_address_from_ram(idx, mac);
+	ret_ps = wext_resume_powersave(ifname);
+	if (RTW_SUCCESS != ret_ps) {
+		RTW_API_INFO("\n\rFailed to resume powersave");
+	}
+	return ret;
+}
+
 //----------------------------------------------------------------------------//
 int wifi_set_mac_address(char * mac)
 {
