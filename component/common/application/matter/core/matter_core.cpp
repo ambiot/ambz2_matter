@@ -3,6 +3,7 @@
 
 #include "matter_core.h"
 #include "matter_ota_initializer.h"
+#include "matter_fabric_observer.h"
 #include <DeviceInfoProviderImpl.h>
 
 #include <app-common/zap-generated/attributes/Accessors.h>
@@ -134,6 +135,9 @@ void matter_core_init_server(intptr_t context)
     static chip::CommonCaseDeviceServerInitParams initParams;
     initParams.InitializeStaticResourcesBeforeServerInit();
     chip::Server::GetInstance().Init(initParams);
+
+    chip::Server::GetInstance().GetFabricTable().AddFabricDelegate(&AmebaObserver);
+
     gExampleDeviceInfoProvider.SetStorageDelegate(&Server::GetInstance().GetPersistentStorage());
     // TODO: Use our own DeviceInfoProvider
     chip::DeviceLayer::SetDeviceInfoProvider(&gExampleDeviceInfoProvider);
