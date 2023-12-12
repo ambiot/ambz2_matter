@@ -462,6 +462,8 @@ void matter_set_autoreconnect(u8 mode)
     wifi_set_autoreconnect(mode);
 }
 
+#if LWIP_VERSION_MAJOR > 2 || LWIP_VERSION_MINOR > 0
+#if LWIP_IPV6
 uint8_t *matter_LwIP_GetIPv6_linklocal(uint8_t idx)
 {
     return LwIP_GetIPv6_linklocal(&xnetif[idx]);
@@ -471,6 +473,8 @@ uint8_t *matter_LwIP_GetIPv6_global(uint8_t idx)
 {
     return LwIP_GetIPv6_global(&xnetif[idx]);
 }
+#endif // LWIP_IPV6
+#endif // LWIP_VERSION_MAJOR > 2 || LWIP_VERSION_MINOR > 0
 
 unsigned char *matter_LwIP_GetIP(uint8_t idx)
 {
