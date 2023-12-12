@@ -58,6 +58,12 @@ int matter_wifi_get_wifi_channel_number(const char *ifname, uint8_t *ch);
 int matter_wifi_get_rssi(int *prssi);
 int matter_wifi_get_mac_address(char *mac);
 int matter_wifi_get_last_error(void);
+uint8_t *matter_LwIP_GetIPv6_linklocal(uint8_t idx);
+uint8_t *matter_LwIP_GetIPv6_global(uint8_t idx);
+unsigned char *matter_LwIP_GetIP(uint8_t idx);
+unsigned char *matter_LwIP_GetGW(uint8_t idx);
+uint8_t *matter_LwIP_GetMASK(uint8_t idx);
+int matter_wifi_get_setting(unsigned char wlan_idx, rtw_wifi_setting_t *psetting);
 
 #ifdef __cplusplus
 }

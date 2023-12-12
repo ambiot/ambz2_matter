@@ -462,6 +462,43 @@ void matter_set_autoreconnect(u8 mode)
     wifi_set_autoreconnect(mode);
 }
 
+uint8_t *matter_LwIP_GetIPv6_linklocal(uint8_t idx)
+{
+    return LwIP_GetIPv6_linklocal(&xnetif[idx]);
+}
+
+uint8_t *matter_LwIP_GetIPv6_global(uint8_t idx)
+{
+    return LwIP_GetIPv6_global(&xnetif[idx]);
+}
+
+unsigned char *matter_LwIP_GetIP(uint8_t idx)
+{
+    return LwIP_GetIP(&xnetif[idx]);
+}
+
+unsigned char *matter_LwIP_GetGW(uint8_t idx)
+{
+    return LwIP_GetGW(&xnetif[idx]);
+}
+
+uint8_t *matter_LwIP_GetMASK(uint8_t idx)
+{
+    return LwIP_GetMASK(&xnetif[idx]);
+}
+
+int matter_wifi_get_setting(unsigned char wlan_idx, rtw_wifi_setting_t *psetting)
+{
+    if (wlan_idx == WLAN0_IDX)
+    {
+    return wifi_get_setting(WLAN0_NAME, psetting);
+    }
+    else
+    {
+    return wifi_get_setting(WLAN1_NAME, psetting);
+    }
+}
+
 #ifdef __cplusplus
 }
 #endif
