@@ -284,20 +284,28 @@ int32_t DecodeFactory(uint8_t *buffer, FactoryData *fdp, uint16_t data_len)
     if (decrypted_output == NULL)
     {
         ret = -1;
-        goto exit;
+        goto encrypt_exit;
     }
 
     memcpy(nonce_counter, test_iv, sizeof(nonce_counter));
     ret = mbedtls_aes_crypt_ctr(&aes_ctx, data_len, &nc_off, nonce_counter, stream_block, buffer, decrypted_output);
-    if (ret !=0)
+    if (ret != 0)
     {
-        goto exit; 
+        ret = -1;
+        goto encrypt_exit;
+    }
+    else
+    {
+        ret = 1;
+        memcpy(buffer, decrypted_output, data_len);
     }
 
-    memcpy(buffer, decrypted_output, data_len);
+encrypt_exit:
+
     vPortFree(decrypted_output);
     mbedtls_aes_free(&aes_ctx);
-#endif
+
+#endif /* CONFIG_ENABLE_FACTORY_DATA_ENCRYPTION */
 
     stream = pb_istream_from_buffer(buffer, data_len);
 
