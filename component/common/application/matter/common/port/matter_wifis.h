@@ -5,6 +5,9 @@
  *
  * @note rmtp is ignored, as signals are not implemented.
  */
+#ifndef MATTER_WIFIS_H_
+#define MATTER_WIFIS_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -13,6 +16,14 @@ extern "C" {
 #include <lwip_netconf.h>
 
 #define JOIN_HANDSHAKE_DONE (uint32_t)(1 << 7)
+
+typedef enum{
+    MATTER_WIFI_EVENT_CONNECT = 0,
+    MATTER_WIFI_EVENT_FOURWAY_HANDSHAKE_DONE = 1,
+    MATTER_WIFI_EVENT_DISCONNECT = 2,
+    MATTER_WIFI_EVENT_DHCP6_DONE = 3,
+} matter_wifi_event;
+
 extern uint32_t rtw_join_status;
 
 void wifi_btcoex_set_bt_on(void);
@@ -53,8 +64,8 @@ void matter_lwip_dhcp6(void);
 void matter_lwip_releaseip(void);
 int matter_wifi_get_ap_bssid(unsigned char*);
 int matter_wifi_get_network_mode(rtw_network_mode_t *pmode);
-int matter_wifi_get_security_type(const char *ifname, uint16_t *alg, uint8_t *key_idx, uint8_t *passphrase);
-int matter_wifi_get_wifi_channel_number(const char *ifname, uint8_t *ch);
+int matter_wifi_get_security_type(uint8_t wlan_idx, uint16_t *alg, uint8_t *key_idx, uint8_t *passphrase);
+int matter_wifi_get_wifi_channel_number(uint8_t wlan_idx, uint8_t *ch);
 int matter_wifi_get_rssi(int *prssi);
 int matter_wifi_get_mac_address(char *mac);
 int matter_wifi_get_last_error(void);
@@ -68,7 +79,10 @@ unsigned char *matter_LwIP_GetIP(uint8_t idx);
 unsigned char *matter_LwIP_GetGW(uint8_t idx);
 uint8_t *matter_LwIP_GetMASK(uint8_t idx);
 int matter_wifi_get_setting(unsigned char wlan_idx, rtw_wifi_setting_t *psetting);
+void matter_wifi_reg_event_handler(matter_wifi_event event_cmds, rtw_event_handler_t handler_func, void *handler_user_data);
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif //MATTER_WIFIS_H_
