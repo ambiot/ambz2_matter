@@ -377,6 +377,8 @@
 #include <dishwasher/example_matter_dishwasher.h>
 #elif defined(CONFIG_EXAMPLE_MATTER_FAN) && (CONFIG_EXAMPLE_MATTER_FAN == 1)
 #include <fan/example_matter_fan.h>
+#elif defined(CONFIG_EXAMPLE_MATTER_AIRPURIFIER) && (CONFIG_EXAMPLE_MATTER_AIRPURIFIER == 1)
+#include <airpurifier/example_matter_airpurifier.h>
 #endif
 #endif
 
@@ -882,6 +884,9 @@ example_hilink();
 #elif defined(CONFIG_EXAMPLE_MATTER_FAN) && (CONFIG_EXAMPLE_MATTER_FAN == 1)
     extern void example_matter_fan();
     example_matter_fan();
+#elif defined(CONFIG_EXAMPLE_MATTER_AIRPURIFIER) && (CONFIG_EXAMPLE_MATTER_AIRPURIFIER == 1)
+    extern void example_matter_airpurifier();
+    example_matter_airpurifier();
 #endif
 #endif
 
