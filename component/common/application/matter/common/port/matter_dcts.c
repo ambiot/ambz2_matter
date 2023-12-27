@@ -39,69 +39,77 @@
 
 #if CONFIG_ENABLE_DCT_ENCRYPTION
 #if defined(MBEDTLS_CIPHER_MODE_CTR)
-    mbedtls_aes_context aes;
+mbedtls_aes_context aes;
 
-    // key length 32 bytes for 256 bit encrypting, it can be 16 or 24 bytes for 128 and 192 bits encrypting mode
-    unsigned char key[] = {0xff, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xff, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
+// key length 32 bytes for 256 bit encrypting, it can be 16 or 24 bytes for 128 and 192 bits encrypting mode
+unsigned char key[] = {0xff, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xff, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
 
 #define DCT_REGION_1 0
 #define DCT_REGION_2 1
 
-    int32_t dct_encrypt(unsigned char *input_to_encrypt, int input_len, unsigned char *encrypt_output)
-    {
-        size_t nc_off = 0;
+int32_t dct_encrypt(unsigned char *input_to_encrypt, int input_len, unsigned char *encrypt_output)
+{
+    size_t nc_off = 0;
 
-        unsigned char nonce_counter[16] = {0};
-        unsigned char stream_block[16] = {0};
-        int ret = mbedtls_aes_crypt_ctr(&aes, input_len, &nc_off, nonce_counter, stream_block, input_to_encrypt, encrypt_output);
-        return ret;
+    unsigned char nonce_counter[16] = {0};
+    unsigned char stream_block[16] = {0};
+
+    return mbedtls_aes_crypt_ctr(&aes, input_len, &nc_off, nonce_counter, stream_block, input_to_encrypt, encrypt_output);
+}
+
+int32_t dct_decrypt(unsigned char *input_to_decrypt, int input_len, unsigned char *decrypt_output)
+{
+    size_t nc_off1 = 0;
+    unsigned char nonce_counter1[16] = {0};
+    unsigned char stream_block1[16] = {0};
+
+    return mbedtls_aes_crypt_ctr(&aes, input_len, &nc_off1, nonce_counter1, stream_block1, input_to_decrypt, decrypt_output);
+}
+
+int32_t dct_set_encrypted_variable(dct_handle_t *dct_handle, char *variable_name, char *variable_value, uint16_t variable_value_length, uint8_t region)
+{
+    int32_t ret;
+    char encrypted_data[VARIABLE_VALUE_SIZE2] = {0};
+
+    // encrypt the variable value
+    ret = dct_encrypt(variable_value, variable_value_length, encrypted_data);
+    if (ret != 0)
+    {
+       return DCT_ERROR;
     }
 
-    int32_t dct_decrypt(unsigned char *input_to_decrypt, int input_len, unsigned char *decrypt_output)
-    {
-        size_t nc_off1 = 0;
-        unsigned char nonce_counter1[16] = {0};
-        unsigned char stream_block1[16] = {0};
-        int ret = mbedtls_aes_crypt_ctr(&aes, input_len, &nc_off1, nonce_counter1, stream_block1, input_to_decrypt, decrypt_output);
+    // store in dct
+    if (region == DCT_REGION_1)
+        ret = dct_set_variable_new(dct_handle, variable_name, encrypted_data, variable_value_length);
+    else if (region == DCT_REGION_2)
+        ret = dct_set_variable_new2(dct_handle, variable_name, encrypted_data, variable_value_length);
+
+    return ret;
+}
+
+int32_t dct_get_encrypted_variable(dct_handle_t *dct_handle, char *variable_name, char *buffer, uint16_t *buffer_size, uint8_t region)
+{
+    int32_t ret;
+    uint8_t encrypted_data[404] = {0};
+
+    // get the encrypted value from dct
+    if (region == DCT_REGION_1)
+        ret = dct_get_variable_new(dct_handle, variable_name, encrypted_data, buffer_size);
+    else if (region == DCT_REGION_2)
+        ret = dct_get_variable_new2(dct_handle, variable_name, encrypted_data, buffer_size);
+
+    if (ret != DCT_SUCCESS)
         return ret;
-    }
 
-    int32_t dct_set_encrypted_variable(dct_handle_t *dct_handle, char *variable_name, char *variable_value, uint16_t variable_value_length, uint8_t region)
+    // decrypt the encrypted value
+    ret = dct_decrypt(encrypted_data, *buffer_size, buffer);
+    if (ret != 0)
     {
-        int32_t ret;
-        char encrypted_data[VARIABLE_VALUE_SIZE2] = {0};
-
-        // encrypt the variable value
-        ret = dct_encrypt(variable_value, variable_value_length, encrypted_data);
-
-        // store in dct
-        if (region == DCT_REGION_1)
-            ret = dct_set_variable_new(dct_handle, variable_name, encrypted_data, variable_value_length);
-        else if (region == DCT_REGION_2)
-            ret = dct_set_variable_new2(dct_handle, variable_name, encrypted_data, variable_value_length);
-
-        return ret;
+        return DCT_ERROR;
     }
-
-    int32_t dct_get_encrypted_variable(dct_handle_t *dct_handle, char *variable_name, char *buffer, uint16_t *buffer_size, uint8_t region)
-    {
-        int32_t ret;
-        uint8_t encrypted_data[404] = {0};
-
-        // get the encrypted value from dct
-        if (region == DCT_REGION_1)
-            ret = dct_get_variable_new(dct_handle, variable_name, encrypted_data, buffer_size);
-        else if (region == DCT_REGION_2)
-            ret = dct_get_variable_new2(dct_handle, variable_name, encrypted_data, buffer_size);
-
-        if (ret != DCT_SUCCESS)
-            return ret;
-
-        // decrypt the encrypted value
-        ret = dct_decrypt(encrypted_data, *buffer_size, buffer);
-        
-        return ret;
-    }
+    
+    return ret;
+}
 
 #else
 #error "MBEDTLS_CIPHER_MODE_CTR must be enabled to perform DCT flash encryption" 
@@ -126,7 +134,10 @@ s32 initPref(void)
 #if CONFIG_ENABLE_DCT_ENCRYPTION
     // Initialize mbedtls aes context and set encryption key
     mbedtls_aes_init(&aes);
-    mbedtls_aes_setkey_enc(&aes, key, 256);
+    if (mbedtls_aes_setkey_enc(&aes, key, 256) != 0)
+    {
+        return DCT_ERROR;
+    }
 #endif
 
     return ret;
