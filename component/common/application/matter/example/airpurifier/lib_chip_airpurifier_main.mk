@@ -226,6 +226,7 @@ SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/cluster-
 
 SRC_CPP += $(CHIPDIR)/examples/providers/DeviceInfoProviderImpl.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/fan-stub.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/resource-monitoring-delegates.cpp
 
 # Custom light-app src files with porting layer
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_api.cpp

@@ -7,7 +7,7 @@ OUTPUT_DIR = $(BUILDDIR)/chip
 MATTER_TOOLDIR = $(SDKROOTDIR)/tools/matter
 
 AIRPURIFIER_FILE = $(OUTPUT_DIR)/codegen/cluster-file.txt
-AIRPURIFIER_ZAP = $(BASEDIR)/airpurifier-app.zap
+AIRPURIFIER_ZAP = $(BASEDIR)/air-purifier-app.zap
 
 OS := $(shell uname)
 LBITS := $(shell getconf LONG_BIT)
@@ -46,7 +46,7 @@ $(AIRPURIFIER_FILE): $(AIRPURIFIER_ZAP)
 	@mkdir -p $(OUTPUT_DIR)/codegen/zap-generated
 	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl-server.json -z $(CHIPDIR)/src/app/zap-templates/zcl/zcl.json --output-dir $(OUTPUT_DIR)/codegen/zap-generated  $^
 	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json -z $(CHIPDIR)/src/app/zap-templates/zcl/zcl.json --output-dir $(OUTPUT_DIR)/codegen/zap-generated $^
-	@python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(OUTPUT_DIR)/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(BASEDIR)/airpurifier-app.matter
+	@python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(OUTPUT_DIR)/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(BASEDIR)/air-purifier-app.matter
 	@python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $^ > $@
 	@python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $@ --chip_path $(CHIPDIR)
 
