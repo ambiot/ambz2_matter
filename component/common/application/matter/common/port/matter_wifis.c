@@ -34,6 +34,14 @@ extern char wps_profile_ssid[33];
 extern char wps_profile_password[65];
 #endif
 
+unsigned int wifi_event[] =
+{
+    WIFI_EVENT_CONNECT,
+    WIFI_EVENT_FOURWAY_HANDSHAKE_DONE,
+    WIFI_EVENT_DISCONNECT,
+    WIFI_EVENT_DHCP6_DONE
+};
+
 chip_connmgr_callback chip_connmgr_callback_func = NULL;
 void *chip_connmgr_callback_data = NULL;
 void chip_connmgr_set_callback_func(chip_connmgr_callback p, void *data)
@@ -424,20 +432,50 @@ int matter_wifi_get_network_mode(rtw_network_mode_t *pmode)
     return wifi_get_network_mode(pmode);
 }
 
-int matter_wifi_get_security_type(const char *ifname, uint16_t *alg, uint8_t *key_idx, uint8_t *passphrase)
+int matter_wifi_get_security_type(uint8_t wlan_idx, uint16_t *alg, uint8_t *key_idx, uint8_t *passphrase)
 {
-    if (wext_get_enc_ext(ifname, alg, key_idx, passphrase) < 0)
+    switch(wlan_idx)
     {
-        return RTW_ERROR;
+        case(WLAN0_IDX):
+        {
+            if (wext_get_enc_ext(WLAN0_NAME, alg, key_idx, passphrase) < 0)
+            {
+                return RTW_ERROR;
+            }
+            break;
+        }
+        case(WLAN1_IDX):
+        {
+            if (wext_get_enc_ext(WLAN1_NAME, alg, key_idx, passphrase) < 0)
+            {
+                return RTW_ERROR;
+            }
+            break;
+        }
     }
     return RTW_SUCCESS;
 }
 
-int matter_wifi_get_wifi_channel_number(const char *ifname, uint8_t *ch)
+int matter_wifi_get_wifi_channel_number(uint8_t wlan_idx, uint8_t *ch)
 {
-    if (wext_get_channel(ifname, ch) < 0)
+    switch(wlan_idx)
     {
-        return RTW_ERROR;
+        case(WLAN0_IDX):
+        {
+            if (wext_get_channel(WLAN0_NAME, ch) < 0)
+            {
+                return RTW_ERROR;
+            }
+            break;
+        }
+        case(WLAN1_IDX):
+        {
+            if (wext_get_channel(WLAN1_NAME, ch) < 0)
+            {
+                return RTW_ERROR;
+            }
+            break;
+        }
     }
     return RTW_SUCCESS;
 }
@@ -460,6 +498,52 @@ int matter_wifi_get_last_error()
 void matter_set_autoreconnect(u8 mode)
 {
     wifi_set_autoreconnect(mode);
+}
+
+#if LWIP_VERSION_MAJOR > 2 || LWIP_VERSION_MINOR > 0
+#if LWIP_IPV6
+uint8_t *matter_LwIP_GetIPv6_linklocal(uint8_t idx)
+{
+    return LwIP_GetIPv6_linklocal(&xnetif[idx]);
+}
+
+uint8_t *matter_LwIP_GetIPv6_global(uint8_t idx)
+{
+    return LwIP_GetIPv6_global(&xnetif[idx]);
+}
+#endif // LWIP_IPV6
+#endif // LWIP_VERSION_MAJOR > 2 || LWIP_VERSION_MINOR > 0
+
+unsigned char *matter_LwIP_GetIP(uint8_t idx)
+{
+    return LwIP_GetIP(&xnetif[idx]);
+}
+
+unsigned char *matter_LwIP_GetGW(uint8_t idx)
+{
+    return LwIP_GetGW(&xnetif[idx]);
+}
+
+uint8_t *matter_LwIP_GetMASK(uint8_t idx)
+{
+    return LwIP_GetMASK(&xnetif[idx]);
+}
+
+int matter_wifi_get_setting(unsigned char wlan_idx, rtw_wifi_setting_t *psetting)
+{
+    if (wlan_idx == WLAN0_IDX)
+    {
+        return wifi_get_setting(WLAN0_NAME, psetting);
+    }
+    else
+    {
+        return wifi_get_setting(WLAN1_NAME, psetting);
+    }
+}
+
+void matter_wifi_reg_event_handler(matter_wifi_event event_cmds, rtw_event_handler_t handler_func, void *handler_user_data)
+{
+    wifi_reg_event_handler(wifi_event[event_cmds], handler_func, handler_user_data);
 }
 
 #ifdef __cplusplus
