@@ -533,11 +533,11 @@ int matter_wifi_get_setting(unsigned char wlan_idx, rtw_wifi_setting_t *psetting
 {
     if (wlan_idx == WLAN0_IDX)
     {
-    return wifi_get_setting(WLAN0_NAME, psetting);
+        return wifi_get_setting(WLAN0_NAME, psetting);
     }
     else
     {
-    return wifi_get_setting(WLAN1_NAME, psetting);
+        return wifi_get_setting(WLAN1_NAME, psetting);
     }
 }
 
