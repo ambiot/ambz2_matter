@@ -213,6 +213,7 @@ SRC_CPP += $(CHIPDIR)/src/app/reporting/Engine.cpp
 SRC_CPP += $(shell cat $(CODEGENDIR)/cluster-file.txt)
 
 SRC_CPP += $(CODEGENDIR)/app/callback-stub.cpp
+SRC_CPP += $(CODEGENDIR)/app/cluster-init-callback.cpp
 SRC_CPP += $(CODEGENDIR)/zap-generated/IMClusterCommandHandler.cpp
 
 SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/attributes/Accessors.cpp
