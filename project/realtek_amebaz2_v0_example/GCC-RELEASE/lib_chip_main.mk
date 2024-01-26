@@ -213,6 +213,7 @@ SRC_CPP += $(CHIPDIR)/src/app/reporting/Engine.cpp
 SRC_CPP += $(shell cat $(CODEGENDIR)/cluster-file.txt)
 
 SRC_CPP += $(CODEGENDIR)/app/callback-stub.cpp
+SRC_CPP += $(CODEGENDIR)/app/cluster-init-callback.cpp
 SRC_CPP += $(CODEGENDIR)/zap-generated/IMClusterCommandHandler.cpp
 
 SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/attributes/Accessors.cpp
@@ -224,7 +225,8 @@ SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/laundry-
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/dishwasher-alarm-stub.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/dishwasher-mode.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/fan-stub.cpp
-# SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/operational-state-delegate-impl.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/operational-state-delegate-impl.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/rvc-operational-state-delegate-impl.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/resource-monitoring-delegates.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/rvc-modes.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/smco-stub.cpp
@@ -234,7 +236,6 @@ SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/static-s
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/chipinterface.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/BindingHandler.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/ManualOperationCommand.cpp
-SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/OperationalStateManager.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/DeviceCallbacks.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/SmokeCOAlarmManager.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/CHIPDeviceManager.cpp
