@@ -8,8 +8,10 @@
 #include <app-common/zap-generated/attributes/Accessors.h>
 #include <app-common/zap-generated/ids/Attributes.h>
 #include <app-common/zap-generated/ids/Clusters.h>
+#include <protocols/interaction_model/StatusCode.h>
 
 using namespace ::chip::app;
+using chip::Protocols::InteractionModel::Status;
 
 MatterThermostatUI ui;
 MatterThermostat thermostat;
@@ -66,21 +68,21 @@ CHIP_ERROR matter_driver_thermostat_ui_init()
 CHIP_ERROR matter_driver_thermostat_ui_set_startup_value()
 {
     CHIP_ERROR err = CHIP_NO_ERROR;
-    EmberAfStatus getstatus;
+    Status getstatus;
     DataModel::Nullable<int16_t> temp;
     int16_t OccupiedCoolingSetpoint;
     int16_t OccupiedHeatingSetpoint;
-    uint8_t SystemMode;
+    chip::app::Clusters::Thermostat::SystemModeEnum SystemMode;
 
     chip::DeviceLayer::PlatformMgr().LockChipStack();
     getstatus = Clusters::Thermostat::Attributes::LocalTemperature::Get(1, temp);
-    VerifyOrExit(getstatus == EMBER_ZCL_STATUS_SUCCESS, err = CHIP_ERROR_INTERNAL);
+    VerifyOrExit(getstatus == Status::Success, err = CHIP_ERROR_INTERNAL);
     getstatus = Clusters::Thermostat::Attributes::OccupiedCoolingSetpoint::Get(1, &OccupiedCoolingSetpoint);
-    VerifyOrExit(getstatus == EMBER_ZCL_STATUS_SUCCESS, err = CHIP_ERROR_INTERNAL);
+    VerifyOrExit(getstatus == Status::Success, err = CHIP_ERROR_INTERNAL);
     getstatus = Clusters::Thermostat::Attributes::OccupiedHeatingSetpoint::Get(1, &OccupiedHeatingSetpoint);
-    VerifyOrExit(getstatus == EMBER_ZCL_STATUS_SUCCESS, err = CHIP_ERROR_INTERNAL);
+    VerifyOrExit(getstatus == Status::Success, err = CHIP_ERROR_INTERNAL);
     getstatus = Clusters::Thermostat::Attributes::SystemMode::Get(1, &SystemMode);
-    VerifyOrExit(getstatus == EMBER_ZCL_STATUS_SUCCESS, err = CHIP_ERROR_INTERNAL);
+    VerifyOrExit(getstatus == Status::Success, err = CHIP_ERROR_INTERNAL);
     chip::DeviceLayer::PlatformMgr().UnlockChipStack();
 
     if (temp.IsNull())
@@ -90,7 +92,7 @@ CHIP_ERROR matter_driver_thermostat_ui_set_startup_value()
 
     ui.SetOccupiedCoolingSetpoint(OccupiedCoolingSetpoint);
     ui.SetOccupiedHeatingSetpoint(OccupiedHeatingSetpoint);
-    ui.SetSystemMode(SystemMode);
+    ui.SetSystemMode((uint8_t)SystemMode);
 
     ui.UpdateDisplay();
 
@@ -135,8 +137,6 @@ void matter_driver_uplink_update_handler(AppEvent *aEvent)
             thermostat.Do();
         }
         ui.UpdateDisplay();
-        break;
-    case Clusters::Scenes::Id:
         break;
     case Clusters::RelativeHumidityMeasurement::Id:
         break;

@@ -195,7 +195,8 @@ SRC_CPP += $(CHIPDIR)/src/app/server/OnboardingCodesUtil.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/Server.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/CommissioningWindowManager.cpp
 
-SRC_CPP += $(CHIPDIR)/src/app/icd/ICDMonitoringTable.cpp
+SRC_CPP += $(CHIPDIR)/src/app/icd/server/ICDMonitoringTable.cpp
+SRC_CPP += $(CHIPDIR)/src/app/icd/server/ICDNotifier.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-storage.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-table.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/binding-table.cpp

@@ -51,8 +51,8 @@ $(LIGHTING_FILE): $(LIGHTING_ZAP)
 	@cp endpoint_config.h $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/zap-generated
 	@cp gen_config.h $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/zap-generated
 
-.PHONY: light
-light: toolchain  $(LIGHTING_FILE)
+.PHONY: light_dm
+light_dm: toolchain  $(LIGHTING_FILE)
 	export 
 	$(MAKE) -f lib_chip_light_core.mk all
 	$(MAKE) -f lib_chip_light_main.mk all

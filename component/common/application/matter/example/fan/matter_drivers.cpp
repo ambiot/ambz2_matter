@@ -6,8 +6,10 @@
 #include <app-common/zap-generated/attributes/Accessors.h>
 #include <app-common/zap-generated/ids/Attributes.h>
 #include <app-common/zap-generated/ids/Clusters.h>
+#include <protocols/interaction_model/StatusCode.h>
 
 using namespace ::chip::app;
+using chip::Protocols::InteractionModel::Status;
 
 #define PWM_PIN         PA_23
 
@@ -27,15 +29,15 @@ CHIP_ERROR matter_driver_fan_init()
 CHIP_ERROR matter_driver_fan_set_startup_value()
 {
     CHIP_ERROR err = CHIP_NO_ERROR;
-    EmberAfStatus status;
+    Status status;
     DataModel::Nullable<uint8_t> FanPercentSettingValue;
     chip::app::Clusters::FanControl::FanModeEnum FanModeValue;
 
     chip::DeviceLayer::PlatformMgr().LockChipStack();
     status = Clusters::FanControl::Attributes::PercentSetting::Get(1, FanPercentSettingValue);
-    VerifyOrExit(status == EMBER_ZCL_STATUS_SUCCESS, err = CHIP_ERROR_INTERNAL);
+    VerifyOrExit(status == Status::Success, err = CHIP_ERROR_INTERNAL);
     status = Clusters::FanControl::Attributes::FanMode::Get(1, &FanModeValue);
-    VerifyOrExit(status == EMBER_ZCL_STATUS_SUCCESS, err = CHIP_ERROR_INTERNAL);
+    VerifyOrExit(status == Status::Success, err = CHIP_ERROR_INTERNAL);
 
     // Set fan speed to percent setting value
     fan.setFanSpeedPercent(FanPercentSettingValue.Value());
@@ -85,7 +87,6 @@ void matter_driver_on_trigger_effect(Identify * identify)
 void matter_driver_uplink_update_handler(AppEvent *aEvent)
 {
     chip::app::ConcreteAttributePath path = aEvent->path;
-    EmberAfStatus status;
     DataModel::Nullable<uint8_t> FanPercentSettingValue;
 
     // this example only considers endpoint 1

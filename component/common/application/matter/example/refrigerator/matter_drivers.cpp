@@ -8,6 +8,7 @@
 #include <app-common/zap-generated/ids/Attributes.h>
 #include <app-common/zap-generated/ids/Clusters.h>
 #include <clusters/refrigerator-alarm-server/refrigerator-alarm-server.h>
+#include <protocols/interaction_model/StatusCode.h>
 
 using namespace ::chip::app;
 using namespace chip;
@@ -15,6 +16,7 @@ using namespace chip::app;
 using namespace chip::app::Clusters;
 using namespace chip::app::Clusters::RefrigeratorAlarm;
 using namespace chip::app::Clusters::RefrigeratorAndTemperatureControlledCabinetMode;
+using chip::Protocols::InteractionModel::Status;
 
 #define GPIO_IRQ_LEVEL_PIN    PA_17
 #define GPIO_LED_PIN PA_19
@@ -59,7 +61,7 @@ CHIP_ERROR matter_driver_refrigerator_set_startup_value(void)
     CHIP_ERROR err = CHIP_NO_ERROR;
 
     ModeBase::Commands::ChangeToModeResponse::Type modeChangedResponse;
-    EmberAfStatus status;
+    Status status;
     ModeBase::Instance & refrigeratorObject = RefrigeratorAndTemperatureControlledCabinetMode::Instance();
     RefrigeratorAlarmServer & refrigeratorAlarmObject = RefrigeratorAlarmServer::Instance();
     chip::DeviceLayer::PlatformMgr().LockChipStack();
@@ -74,7 +76,7 @@ CHIP_ERROR matter_driver_refrigerator_set_startup_value(void)
     BitMask<AlarmMap> supported; // Set refrigerator alarm supported value
     supported.SetField(AlarmMap::kDoorOpen, 1);
     refrigeratorAlarmObject.SetSupportedValue(1, supported);
-    if (status != EMBER_ZCL_STATUS_SUCCESS)
+    if (status != Status::Success)
     {
         ChipLogProgress(DeviceLayer, "Failed to set Refrigerator Alarm Supported Value!\n");
         err = CHIP_ERROR_INTERNAL;
@@ -83,7 +85,7 @@ CHIP_ERROR matter_driver_refrigerator_set_startup_value(void)
     BitMask<AlarmMap> mask; // Set refrigerator alarm mask value
     mask.SetField(AlarmMap::kDoorOpen, 1);
     refrigeratorAlarmObject.SetMaskValue(1, mask);
-    if (status != EMBER_ZCL_STATUS_SUCCESS)
+    if (status != Status::Success)
     {
         ChipLogProgress(DeviceLayer, "Failed to set Refrigerator Alarm Mask Value!\n");
         err = CHIP_ERROR_INTERNAL;
@@ -114,7 +116,6 @@ void matter_driver_set_door_callback(uint32_t id)
 void matter_driver_uplink_update_handler(AppEvent *event)
 {
     chip::app::ConcreteAttributePath path = event->path;
-    EmberAfStatus status;
 
     // this example only considers endpoint 1
     VerifyOrExit(event->path.mEndpointId == 1,
@@ -146,7 +147,7 @@ exit:
 void matter_driver_downlink_update_handler(AppEvent *event)
 {
     ModeBase::Commands::ChangeToModeResponse::Type modeChangedResponse;
-    EmberAfStatus alarmChangedStatus;
+    Status alarmChangedStatus;
     ModeBase::Instance & refrigeratorObject = RefrigeratorAndTemperatureControlledCabinetMode::Instance();
     RefrigeratorAlarmServer & refrigeratorAlarmObject = RefrigeratorAlarmServer::Instance();
 
@@ -168,7 +169,7 @@ void matter_driver_downlink_update_handler(AppEvent *event)
             value.SetField(AlarmMap::kDoorOpen, event->value._u8);
             ChipLogProgress(DeviceLayer, "Set Refrigerator Alarm State Value 0x%x", event->value._u8);
             alarmChangedStatus = refrigeratorAlarmObject.SetStateValue(1, value);
-            if (alarmChangedStatus != EMBER_ZCL_STATUS_SUCCESS)
+            if (alarmChangedStatus != Status::Success)
             {
                 ChipLogProgress(DeviceLayer, "Failed to set door status!\n");
             }

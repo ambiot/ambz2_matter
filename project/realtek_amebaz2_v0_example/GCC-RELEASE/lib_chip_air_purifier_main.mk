@@ -197,7 +197,7 @@ SRC_CPP += $(CHIPDIR)/src/app/server/OnboardingCodesUtil.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/Server.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/CommissioningWindowManager.cpp
 
-SRC_CPP += $(CHIPDIR)/src/app/icd/ICDMonitoringTable.cpp
+SRC_CPP += $(CHIPDIR)/src/app/icd/server/ICDMonitoringTable.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-storage.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-table.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/binding-table.cpp
@@ -225,6 +225,7 @@ SRC_CPP += $(CHIPDIR)/examples/air-purifier-app/ameba/main/CHIPDeviceManager.cpp
 SRC_CPP += $(CHIPDIR)/examples/air-purifier-app/air-purifier-common/src/air-purifier-manager.cpp
 SRC_CPP += $(CHIPDIR)/examples/air-purifier-app/air-purifier-common/src/air-quality-sensor-manager.cpp
 SRC_CPP += $(CHIPDIR)/examples/air-purifier-app/air-purifier-common/src/filter-delegates.cpp
+SRC_CPP += $(CHIPDIR)/examples/air-purifier-app/air-purifier-common/src/thermostat-manager.cpp
 
 ifeq ($(CHIP_ENABLE_OTA_REQUESTOR), true)
 SRC_CPP += $(CHIPDIR)/examples/platform/ameba/ota/OTAInitializer.cpp
