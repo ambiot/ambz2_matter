@@ -7,7 +7,8 @@
 #include <app-common/zap-generated/ids/Attributes.h>
 #include <app-common/zap-generated/ids/Clusters.h>
 #include <clusters/laundry-washer-controls-server/laundry-washer-controls-server.h>
-#include <opstate_driver.h>
+#include <operational-state-delegate-impl.h>
+#include <protocols/interaction_model/StatusCode.h>
 
 using namespace ::chip::app;
 using namespace chip::app;
@@ -15,6 +16,7 @@ using namespace chip::app::Clusters;
 using namespace chip::app::Clusters::OperationalState;
 using namespace chip::app::Clusters::LaundryWasherControls;
 using namespace chip::app::Clusters::ModeSelect;
+using chip::Protocols::InteractionModel::Status;
 
 #define PWM_PIN         PA_23
 
@@ -71,7 +73,6 @@ void matter_driver_set_mode_callback(uint32_t id)
 void matter_driver_uplink_update_handler(AppEvent *aEvent)
 {
     chip::app::ConcreteAttributePath path = aEvent->path;
-    EmberAfStatus status;
 
     // this example only considers endpoint 1
     VerifyOrExit(aEvent->path.mEndpointId == 1,

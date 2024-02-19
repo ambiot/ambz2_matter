@@ -5,13 +5,15 @@
 #include <app/util/attribute-storage.h>
 #include "matter_data_model.h"
 #include <platform/Ameba/AmebaUtils.h>
+#include <protocols/interaction_model/StatusCode.h>
 
 using namespace ::chip;
 using chip::DeviceLayer::PersistedStorage::KeyValueStoreMgr;
 using namespace chip::DeviceLayer::Internal;
+using chip::Protocols::InteractionModel::Status;
 
 /* emberAfExternalAttributeRead/WriteCallback are required for externally stored attributes */
-EmberAfStatus emberAfExternalAttributeReadCallback(EndpointId endpoint_id, ClusterId cluster_id,
+Status emberAfExternalAttributeReadCallback(EndpointId endpoint_id, ClusterId cluster_id,
                                                    const EmberAfAttributeMetadata *matter_attribute, uint8_t *buffer,
                                                    uint16_t max_read_length)
 {
@@ -23,15 +25,15 @@ EmberAfStatus emberAfExternalAttributeReadCallback(EndpointId endpoint_id, Clust
     if (attribute->getAttributeSize() > max_read_length)
     {
         ChipLogError(DeviceLayer, "[%s] Insufficient space to read Attribute 0x%08x from Cluster 0x%08x in Endpoint 0x%04x", __FUNCTION__, matter_attribute->attributeId, cluster_id, endpoint_id);
-        return EMBER_ZCL_STATUS_RESOURCE_EXHAUSTED;
+        return Status::ResourceExhausted;
     }
 
     attribute->getValue(buffer);
 
-    return EMBER_ZCL_STATUS_SUCCESS;
+    return Status::Success;
 }
 
-EmberAfStatus emberAfExternalAttributeWriteCallback(EndpointId endpoint_id, ClusterId cluster_id, const EmberAfAttributeMetadata *matter_attribute, uint8_t *buffer)
+Status emberAfExternalAttributeWriteCallback(EndpointId endpoint_id, ClusterId cluster_id, const EmberAfAttributeMetadata *matter_attribute, uint8_t *buffer)
 {
     Node &node = Node::getInstance();
     Endpoint *endpoint = node.getEndpoint(endpoint_id);
@@ -40,7 +42,7 @@ EmberAfStatus emberAfExternalAttributeWriteCallback(EndpointId endpoint_id, Clus
 
     attribute->setValue(buffer);
 
-    return EMBER_ZCL_STATUS_SUCCESS;
+    return Status::Success;
 }
 
 /*                  Attributes                  */
@@ -736,10 +738,10 @@ void Endpoint::enableEndpoint()
 
     // Register endpoint as dynamic endpoint in matter stack
     chip::DeviceLayer::PlatformMgr().LockChipStack();
-    EmberAfStatus status = emberAfSetDynamicEndpoint(endpointIndex, endpointId, endpointType, chip::Span<chip::DataVersion>(dataVersion, clusters.size()), deviceTypeList, parentEndpointId);
+    ChipError status = emberAfSetDynamicEndpoint(endpointIndex, endpointId, endpointType, chip::Span<chip::DataVersion>(dataVersion, clusters.size()), deviceTypeList, parentEndpointId);
     chip::DeviceLayer::PlatformMgr().UnlockChipStack();
 
-    if (status == EMBER_ZCL_STATUS_SUCCESS)
+    if (status == CHIP_NO_ERROR)
     {
         ChipLogProgress(DeviceLayer, "Set dynamic endpoint %d success", endpointId);
         endpointMetadata = endpointType;

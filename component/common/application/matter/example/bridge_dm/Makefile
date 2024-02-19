@@ -52,8 +52,8 @@ $(BRIDGE_FILE): $(BRIDGE_ZAP)
 	@cp endpoint_config.h $(OUTPUT_DIR)/codegen/zap-generated
 	@cp gen_config.h $(OUTPUT_DIR)/codegen/zap-generated
 
-.PHONY: bridge
-bridge: toolchain  $(BRIDGE_FILE)
+.PHONY: bridge_dm
+bridge_dm: toolchain  $(BRIDGE_FILE)
 	$(MAKE) -f lib_chip_bridge_core.mk all
 	$(MAKE) -f lib_chip_bridge_main.mk all
 

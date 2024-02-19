@@ -7,8 +7,10 @@
 #include <app-common/zap-generated/attributes/Accessors.h>
 #include <app-common/zap-generated/ids/Attributes.h>
 #include <app-common/zap-generated/ids/Clusters.h>
+#include <protocols/interaction_model/StatusCode.h>
 
 using namespace ::chip::app;
+using chip::Protocols::InteractionModel::Status;
 
 #define PWM_LED         PA_23
 #define GPIO_IRQ_PIN    PA_17
@@ -52,15 +54,15 @@ CHIP_ERROR matter_driver_led_set_startup_value()
     CHIP_ERROR err = CHIP_NO_ERROR;
     bool LEDOnOffValue = 0;
     DataModel::Nullable<uint8_t> LEDCurrentLevelValue;
-    EmberAfStatus getonoffstatus;
-    EmberAfStatus getcurrentlevelstatus;
+    Status getonoffstatus;
+    Status getcurrentlevelstatus;
 
     chip::DeviceLayer::PlatformMgr().LockChipStack();
     getonoffstatus = Clusters::OnOff::Attributes::OnOff::Get(1, &LEDOnOffValue);
-    VerifyOrExit(getonoffstatus == EMBER_ZCL_STATUS_SUCCESS, err = CHIP_ERROR_INTERNAL);
+    VerifyOrExit(getonoffstatus == Status::Success, err = CHIP_ERROR_INTERNAL);
 
     getcurrentlevelstatus = Clusters::LevelControl::Attributes::CurrentLevel::Get(1, LEDCurrentLevelValue);
-    VerifyOrExit(getcurrentlevelstatus == EMBER_ZCL_STATUS_SUCCESS, err = CHIP_ERROR_INTERNAL);
+    VerifyOrExit(getcurrentlevelstatus == Status::Success, err = CHIP_ERROR_INTERNAL);
     chip::DeviceLayer::PlatformMgr().UnlockChipStack();
 
     // Set LED to onoff value
@@ -147,9 +149,9 @@ void matter_driver_downlink_update_handler(AppEvent * event)
         case AppEvent::kEventType_Downlink_OnOff:
             led.Toggle();
             ChipLogProgress(DeviceLayer, "Writing to OnOff cluster");
-            EmberAfStatus status = Clusters::OnOff::Attributes::OnOff::Set(1, led.IsTurnedOn());
+            Status status = Clusters::OnOff::Attributes::OnOff::Set(1, led.IsTurnedOn());
 
-            if (status != EMBER_ZCL_STATUS_SUCCESS)
+            if (status != Status::Success)
             {
                 ChipLogError(DeviceLayer, "Updating on/off cluster failed: %x", status);
             }
@@ -157,7 +159,7 @@ void matter_driver_downlink_update_handler(AppEvent * event)
             ChipLogProgress(DeviceLayer, "Writing to LevelControl cluster");
             status = Clusters::LevelControl::Attributes::CurrentLevel::Set(1, led.GetLevel());
 
-            if (status != EMBER_ZCL_STATUS_SUCCESS)
+            if (status != Status::Success)
             {
                 ChipLogError(DeviceLayer, "Updating level cluster failed: %x", status);
             }

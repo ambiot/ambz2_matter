@@ -1,6 +1,5 @@
 #include "matter_drivers.h"
 #include "matter_interaction.h"
-#include "opstate_driver.h"
 #include "dishwasher_driver.h"
 #include "dishwasher_mode.h"
 
@@ -9,6 +8,8 @@
 #include <app-common/zap-generated/ids/Attributes.h>
 #include <app-common/zap-generated/ids/Clusters.h>
 #include <clusters/dishwasher-alarm-server/dishwasher-alarm-server.h>
+#include <operational-state-delegate-impl.h>
+#include <protocols/interaction_model/StatusCode.h>
 
 using namespace ::chip::app;
 using namespace chip;
@@ -19,7 +20,7 @@ using namespace chip::app::Clusters::OperationalState;
 using namespace chip::app::Clusters::DishwasherMode;
 using namespace chip::app::Clusters::DishwasherAlarm;
 using namespace chip::app::Clusters::TemperatureControl;
-
+using chip::Protocols::InteractionModel::Status;
 
 #define PWM_PIN         PA_23
 
@@ -34,7 +35,7 @@ CHIP_ERROR matter_driver_dishwasher_init()
 CHIP_ERROR matter_driver_dishwasher_set_startup_value()
 {
     CHIP_ERROR err = CHIP_NO_ERROR;
-    EmberAfStatus status;
+    Status status;
     ModeBase::Commands::ChangeToModeResponse::Type modeChangedResponse;
     ModeBase::Instance & dishwasherInstance = DishwasherMode::Instance();
     DishwasherAlarmServer & dishwasherAlarmInstance = DishwasherAlarmServer::Instance();
@@ -42,21 +43,21 @@ CHIP_ERROR matter_driver_dishwasher_set_startup_value()
     chip::DeviceLayer::PlatformMgr().LockChipStack();
 
     status = Clusters::OnOff::Attributes::OnOff::Set(1, false);
-    if (status != EMBER_ZCL_STATUS_SUCCESS)
+    if (status != Status::Success)
     {
         ChipLogProgress(DeviceLayer, "Failed to set OnOff!\n");
         err = CHIP_ERROR_INTERNAL;
     }
 
     status = Clusters::TemperatureControl::Attributes::MaxTemperature::Set(1, dishwasher.GetMaxTemperature());
-    if (status != EMBER_ZCL_STATUS_SUCCESS)
+    if (status != Status::Success)
     {
         ChipLogProgress(DeviceLayer, "Failed to set MaxTemperature!\n");
         err = CHIP_ERROR_INTERNAL;
     }
 
     status = Clusters::TemperatureControl::Attributes::MinTemperature::Set(1, dishwasher.GetMinTemperature());
-    if (status != EMBER_ZCL_STATUS_SUCCESS)
+    if (status != Status::Success)
     {
         ChipLogProgress(DeviceLayer, "Failed to set MinTemperature!\n");
         err = CHIP_ERROR_INTERNAL;
@@ -64,7 +65,7 @@ CHIP_ERROR matter_driver_dishwasher_set_startup_value()
 
     dishwasher.SetTemperature(55); // Set dishwasher temperature
     status = Clusters::TemperatureControl::Attributes::TemperatureSetpoint::Set(1, dishwasher.GetTemperature());
-    if (status != EMBER_ZCL_STATUS_SUCCESS)
+    if (status != Status::Success)
     {
         ChipLogProgress(DeviceLayer, "Failed to set TemperatureSetpoint!\n");
         err = CHIP_ERROR_INTERNAL;
@@ -85,7 +86,7 @@ CHIP_ERROR matter_driver_dishwasher_set_startup_value()
     supported.SetField(AlarmMap::kTempTooHigh, 1);           // 0x10, 16
     supported.SetField(AlarmMap::kWaterLevelError, 1);       // 0x20, 32 
     dishwasherAlarmInstance.SetSupportedValue(1, supported); // 0x3F, 63
-    if (status != EMBER_ZCL_STATUS_SUCCESS)
+    if (status != Status::Success)
     {
         ChipLogProgress(DeviceLayer, "Failed to set Dishwasher Alarm Supported Value!\n");
         err = CHIP_ERROR_INTERNAL;
@@ -99,7 +100,7 @@ CHIP_ERROR matter_driver_dishwasher_set_startup_value()
     mask.SetField(AlarmMap::kTempTooHigh, 1);      // 0x10, 16
     mask.SetField(AlarmMap::kWaterLevelError, 1);  // 0x20, 32 
     dishwasherAlarmInstance.SetMaskValue(1, mask); // 0x3F, 63
-    if (status != EMBER_ZCL_STATUS_SUCCESS)
+    if (status != Status::Success)
     {
         ChipLogProgress(DeviceLayer, "Failed to set Dishwasher Alarm Mask Value!\n");
         err = CHIP_ERROR_INTERNAL;
@@ -113,7 +114,7 @@ CHIP_ERROR matter_driver_dishwasher_set_startup_value()
     latch.SetField(AlarmMap::kDoorError, 1);         // 0x04, 4
     latch.SetField(AlarmMap::kTempTooLow, 1);        // 0x08, 8
     dishwasherAlarmInstance.SetLatchValue(1, latch); // 0x0D, 13
-    if (status != EMBER_ZCL_STATUS_SUCCESS)
+    if (status != Status::Success)
     {
         ChipLogProgress(DeviceLayer, "Failed to set Dishwasher Alarm Latch Value!\n");
         err = CHIP_ERROR_INTERNAL;
@@ -180,7 +181,6 @@ void matter_driver_set_temperature_callback(int32_t id)
 void matter_driver_uplink_update_handler(AppEvent *event)
 {
     chip::app::ConcreteAttributePath path = event->path;
-    EmberAfStatus status;
 
     // this example only considers endpoint 1
     VerifyOrExit(event->path.mEndpointId == 1,
@@ -228,7 +228,7 @@ exit:
 
 void matter_driver_downlink_update_handler(AppEvent *event)
 {
-    EmberAfStatus status;
+    Status status;
     CHIP_ERROR error;
     ModeBase::Commands::ChangeToModeResponse::Type modeChangedResponse;
     ModeBase::Instance & dishwasherInstance = DishwasherMode::Instance();
@@ -241,7 +241,7 @@ void matter_driver_downlink_update_handler(AppEvent *event)
         {
             ChipLogProgress(DeviceLayer, "Set OnOff 0x%x", event->value._u8);
             status = Clusters::OnOff::Attributes::OnOff::Set(1, (bool) event->value._u8);
-            if (status != EMBER_ZCL_STATUS_SUCCESS)
+            if (status != Status::Success)
             {
                 ChipLogProgress(DeviceLayer, "Failed to set OnOff!\n");
             }
@@ -268,7 +268,7 @@ void matter_driver_downlink_update_handler(AppEvent *event)
         {
             ChipLogProgress(DeviceLayer, "Set Dishwasher Alarm State 0x%u", event->value._u8);
             status = dishwasherAlarmInstance.SetStateValue(1, event->value._u8, false); // We can input the value directly, no need to use BitMask<AlarmMap> and setfield one by one.
-            if (status != EMBER_ZCL_STATUS_SUCCESS)
+            if (status != Status::Success)
             {
                 ChipLogProgress(DeviceLayer, "Failed to set DishwasherAlarm state!\n");
             }
@@ -290,7 +290,7 @@ void matter_driver_downlink_update_handler(AppEvent *event)
             {
                 ChipLogProgress(DeviceLayer, "Set TemperatureSetpoint %i", event->value._i16);
                 status = Clusters::TemperatureControl::Attributes::TemperatureSetpoint::Set(1, event->value._i16);
-                if (status != EMBER_ZCL_STATUS_SUCCESS)
+                if (status != Status::Success)
                 {
                     ChipLogProgress(DeviceLayer, "Failed to set TemperatureSetpoint!\n");
                 }

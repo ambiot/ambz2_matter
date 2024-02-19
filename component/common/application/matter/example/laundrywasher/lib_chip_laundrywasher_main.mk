@@ -195,7 +195,7 @@ SRC_CPP += $(CHIPDIR)/src/app/server/OnboardingCodesUtil.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/Server.cpp
 SRC_CPP += $(CHIPDIR)/src/app/server/CommissioningWindowManager.cpp
 
-SRC_CPP += $(CHIPDIR)/src/app/icd/ICDMonitoringTable.cpp
+SRC_CPP += $(CHIPDIR)/src/app/icd/server/ICDMonitoringTable.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-storage.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/attribute-table.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/binding-table.cpp
@@ -208,6 +208,7 @@ SRC_CPP += $(CHIPDIR)/src/app/util/privilege-storage.cpp
 SRC_CPP += $(CHIPDIR)/src/app/reporting/Engine.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/laundry-washer-mode.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/laundry-washer-controls-delegate-impl.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/operational-state-delegate-impl.cpp
 
 SRC_CPP += $(shell cat $(CODEGENDIR)/cluster-file.txt)
 
@@ -227,7 +228,6 @@ ifeq ($(CHIP_ENABLE_OTA_REQUESTOR), true)
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_ota_initializer.cpp
 endif
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/laundrywasher/example_matter_laundrywasher.cpp
-SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/opstate_driver.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/washer_driver.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/laundrywasher/matter_drivers.cpp
 
