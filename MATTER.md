@@ -6,7 +6,7 @@ https://github.com/ambiot/ambz2_matter/blob/main/CHANGELOG.md
 
 ## Get Ameba SDK & Matter SDK
 
-    Tested on Ubuntu 20.04
+    Tested on Ubuntu 22.04
        
 Create and enter new directory
     
@@ -33,6 +33,10 @@ Make sure ambz2_matter and connectedhomeip are on the same directory level
     > https://github.com/project-chip/connectedhomeip/blob/master/docs/guides/BUILDING.md
     
     cd connectedhomeip
+
+    git submodule sync
+
+    git submodule update --init --recursive
 
     source scripts/bootstrap.sh
 
@@ -112,7 +116,12 @@ Method 2 (using image tool and flashing script):
 	Matter task will auto start after reset the device.
 
 ## Test with [chip-tool](https://github.com/project-chip/connectedhomeip/tree/master/examples/chip-tool)
-Use standalone chip-tool app(linux) to communicate with the device.
+Use standalone chip-tool app(linux) to communicate with the device. The Chip-tool is a software utility designed to assist developers and manufacturers working on Matter-compatible devices.
+It provides various functionalities to interact with Matter-enabled devices, such as commissioning, controlling, and monitoring their operations. 
+The Chip-tool is an essential component for developers working on Matter devices as it allows them to validate their implementations, debug issues, and ensure interoperability with other Matter devices. 
+Additionally, it assists in configuring and managing Matter networks, making it easier for developers to create robust and reliable smart home and IoT solutions.
+
+As a commissioner, the Chip-tool facilitates the provisioning and configuration of Matter devices within a network. It assigns necessary network addresses, security keys, and other parameters to newly added devices, ensuring their seamless integration into the Matter network.
 
 In order to send commands to a device, the device must be commissioned into the Matter network. The configuration state for chip-tool is stored in `/tmp/chip_tool_config.ini`; deleting this and other `.ini` files in `/tmp` can sometimes resolve issues due to stale configuration.
 
