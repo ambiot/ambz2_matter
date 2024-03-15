@@ -206,7 +206,6 @@ SRC_CPP += $(CHIPDIR)/src/app/util/binding-table.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/DataModelHandler.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/ember-compatibility-functions.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/generic-callback-stubs.cpp
-SRC_CPP += $(CHIPDIR)/src/app/util/message.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/util.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/privilege-storage.cpp
 
