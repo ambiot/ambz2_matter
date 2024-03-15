@@ -165,6 +165,7 @@ INCLUDES += -I$(CHIPDIR)/examples/all-clusters-app/all-clusters-common
 INCLUDES += -I$(CHIPDIR)/examples/all-clusters-app/all-clusters-common/include
 INCLUDES += -I$(CHIPDIR)/examples/all-clusters-app/ameba/main/include
 INCLUDES += -I$(CHIPDIR)/examples/all-clusters-app/ameba/build/chip/gen/include
+INCLUDES += -I$(CHIPDIR)/examples/microwave-oven-app/microwave-oven-common/include
 INCLUDES += -I$(CHIPDIR)/examples/platform/ameba
 INCLUDES += -I$(CHIPDIR)/examples/providers
 INCLUDES += -I$(CHIPDIR)/src/include
@@ -204,7 +205,6 @@ SRC_CPP += $(CHIPDIR)/src/app/util/binding-table.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/DataModelHandler.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/ember-compatibility-functions.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/generic-callback-stubs.cpp
-SRC_CPP += $(CHIPDIR)/src/app/util/message.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/util.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/privilege-storage.cpp
 
@@ -220,6 +220,7 @@ SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/attribut
 SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/cluster-objects.cpp
 
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/bridged-actions-stub.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/air-quality-instance.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/laundry-washer-controls-delegate-impl.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/laundry-washer-mode.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/dishwasher-alarm-stub.cpp
@@ -232,6 +233,13 @@ SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/rvc-mode
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/smco-stub.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/static-supported-modes-manager.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/static-supported-temperature-levels.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/concentration-measurement-instances.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/oven-modes.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/microwave-oven-mode.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/oven-operational-state-delegate.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/tcc-mode.cpp
+SRC_CPP += $(CHIPDIR)/examples/microwave-oven-app/microwave-oven-common/src/microwave-oven-device.cpp
+SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/src/laundry-dryer-controls-delegate-impl.cpp
 
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/chipinterface.cpp
 SRC_CPP += $(CHIPDIR)/examples/all-clusters-app/ameba/main/BindingHandler.cpp

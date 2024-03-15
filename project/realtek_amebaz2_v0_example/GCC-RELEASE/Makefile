@@ -3,6 +3,7 @@ all: is
 OS := $(shell uname)
 LBITS := $(shell getconf LONG_BIT)
 
+MATTER_DIR = $(shell pwd)/../../../component/common/application/matter
 CHIPDIR = $(shell pwd)/../../../third_party/connectedhomeip
 MATTER_TOOLDIR = ../../../tools/matter
 
@@ -63,6 +64,7 @@ clean:
 	@$(MAKE) -f application.is.mk clean
 
 $(ALL_CLUSTERS_FILE): $(ALL_CLUSTERS_ZAP)
+	@cp $(MATTER_DIR)/example/chiptest/all-clusters-app.zap $(ALL_CLUSTERS_ZAP)
 	@mkdir -p $(CHIPDIR)/examples/all-clusters-app/ameba/build/chip/codegen/zap-generated
 	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl-server.json --output-dir examples/all-clusters-app/ameba/build/chip/codegen/zap-generated  $^
 	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/all-clusters-app/ameba/build/chip/codegen/zap-generated $^

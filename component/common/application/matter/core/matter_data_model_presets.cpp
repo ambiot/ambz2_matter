@@ -1,6 +1,6 @@
 #include <app/PluginApplicationCallbacks.h>
 #include <app/util/endpoint-config-defines.h>
-#include <app/att-storage.h>
+#include <app/util/att-storage.h>
 #include <app-common/zap-generated/ids/Attributes.h>
 #include <app-common/zap-generated/ids/Clusters.h>
 #include <app-common/zap-generated/callback.h>
