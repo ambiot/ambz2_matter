@@ -31,9 +31,11 @@
 #include "mbedtls/error.h"
 
 #include <string.h>
+#include <platform_opts.h>
 
 #if (CONFIG_EXAMPLE_MATTER) && (CONFIG_ENABLE_MATTER_PRNG)
 #include <crypto_api.h>
+#include <device_lock.h>
 #endif
 
 #if defined(MBEDTLS_FS_IO)
@@ -596,18 +598,21 @@ int mbedtls_ctr_drbg_random( void *p_rng, unsigned char *output,
                              size_t output_len )
 {
 #if (CONFIG_EXAMPLE_MATTER) && (CONFIG_ENABLE_MATTER_PRNG)
-    int ret = crypto_init();
+    int ret = 0;
+
+    device_mutex_lock(RT_DEV_LOCK_CRYPTO);
+    ret = crypto_init();
     if (ret != SUCCESS)
     {
         printf("crypto_init() failed\r\n");
+        device_mutex_unlock(RT_DEV_LOCK_CRYPTO);
         return ret;
     }
 
     ret = crypto_random_generate(output, output_len);
+    device_mutex_unlock(RT_DEV_LOCK_CRYPTO);
     if (ret != 0)
-        ret = 0xac // CHIP_ERROR_INTERNAL
-
-    return ret;
+        ret = 0xac; // CHIP_ERROR_INTERNAL
 #else
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     mbedtls_ctr_drbg_context *ctx = (mbedtls_ctr_drbg_context *) p_rng;
@@ -623,7 +628,7 @@ int mbedtls_ctr_drbg_random( void *p_rng, unsigned char *output,
     if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
         return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
 #endif
-#endif
+#endif /* CONFIG_EXAMPLE_MATTER */
 
     return( ret );
 }
