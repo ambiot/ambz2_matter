@@ -532,6 +532,9 @@ uint8_t LwIP_DHCP6(uint8_t idx, uint8_t dhcp6_state)
 	uint8_t DHCP6_state;
 	struct netif *pnetif = NULL;
 	struct dhcp6 *dhcp6 = NULL;
+#ifdef CHIP_PROJECT
+	int dhcp6_handler_trigger = 0;
+#endif
 	err_t err;
 
 	DHCP6_state = dhcp6_state;
@@ -583,6 +586,14 @@ uint8_t LwIP_DHCP6(uint8_t idx, uint8_t dhcp6_state)
 				ip6_addr_t zero_address;
 				ip6_addr_set_any(&zero_address);
 
+#ifdef CHIP_PROJECT
+				if (ip6_addr_isvalid(netif_ip6_addr_state(pnetif, 0)) && (dhcp6_handler_trigger == 0))
+				{
+					wifi_indication(WIFI_EVENT_DHCP6_DONE, NULL, 0, 0);
+					dhcp6_handler_trigger = 1;
+				}
+#endif
+
 				if(!ip6_addr_cmp(&zero_address, netif_ip6_addr(pnetif, 1))){
 
 					DHCP6_state = DHCP6_ADDRESS_ASSIGNED;
@@ -599,7 +610,8 @@ uint8_t LwIP_DHCP6(uint8_t idx, uint8_t dhcp6_state)
 					/*Todo: error_flag for DHCPv6*/
 
 #ifdef CHIP_PROJECT
-					wifi_indication(WIFI_EVENT_DHCP6_DONE, NULL, 0, 0);
+					if (!dhcp6_handler_trigger)
+						wifi_indication(WIFI_EVENT_DHCP6_DONE, NULL, 0, 0);
 #endif
 					return DHCP6_ADDRESS_ASSIGNED;
 				}
@@ -620,7 +632,8 @@ uint8_t LwIP_DHCP6(uint8_t idx, uint8_t dhcp6_state)
 							netif_set_up(pnetif);
 #endif
 #ifdef CHIP_PROJECT
-                        wifi_indication(WIFI_EVENT_DHCP6_DONE, NULL, 0, 0);
+						if (!dhcp6_handler_trigger)
+							wifi_indication(WIFI_EVENT_DHCP6_DONE, NULL, 0, 0);
 #endif
 						return DHCP6_TIMEOUT;
 					}
