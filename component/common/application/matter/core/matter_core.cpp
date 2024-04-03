@@ -201,6 +201,7 @@ exit:
 
 CHIP_ERROR matter_core_start()
 {
+    matter_timer_init();
     return matter_core_init();
     // matter_core_init_server();
 }

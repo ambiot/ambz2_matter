@@ -13,14 +13,24 @@
 #include "errno.h"
 #include "FreeRTOS.h"
 #include "chip_porting.h"
+#include "time.h"
 #include "rtc_api.h"
+#include "timer_api.h"
+#include "task.h"
 
 #define MICROSECONDS_PER_SECOND    ( 1000000LL )                                   /**< Microseconds per second. */
 #define NANOSECONDS_PER_SECOND     ( 1000000000LL )                                /**< Nanoseconds per second. */
 #define NANOSECONDS_PER_TICK       ( NANOSECONDS_PER_SECOND / configTICK_RATE_HZ ) /**< Nanoseconds per FreeRTOS tick. */
 
+#define US_OVERFLOW_MAX            (0xFFFFFFFF)
+#define MATTER_SW_RTC_TIMER_ID     TIMER4
+
 extern int FreeRTOS_errno;
 #define errno FreeRTOS_errno
+
+static gtimer_t matter_rtc_timer;
+static uint64_t current_us = 0;
+static volatile uint32_t rtc_counter = 0;
 
 BOOL UTILS_ValidateTimespec( const struct timespec * const pxTimespec )
 {
@@ -135,6 +145,26 @@ long long matter_rtc_read()
 void matter_rtc_write(long long time)
 {
     rtc_write(time);
+}
+
+uint64_t ameba_get_clock_time(void)
+{
+    uint64_t global_us = 0;
+    current_us = gtimer_read_us(&matter_rtc_timer);
+    global_us = ((uint64_t)rtc_counter * US_OVERFLOW_MAX) + (current_us);
+    return global_us;
+}
+
+static void matter_timer_rtc_callback(void)
+{
+    rtc_counter++;
+}
+
+void matter_timer_init(void)
+{
+    gtimer_init(&matter_rtc_timer, MATTER_SW_RTC_TIMER_ID);
+    hal_timer_set_cntmode(&matter_rtc_timer.timer_adp, 0); //use count up
+    gtimer_start_periodical(&matter_rtc_timer, US_OVERFLOW_MAX, (void *)matter_timer_rtc_callback, (uint32_t) &matter_rtc_timer);
 }
 
 #ifdef __cplusplus
