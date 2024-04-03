@@ -204,7 +204,9 @@ SRC_CPP += $(CHIPDIR)/src/app/util/ember-compatibility-functions.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/generic-callback-stubs.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/util.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/privilege-storage.cpp
+
 SRC_CPP += $(CHIPDIR)/src/app/reporting/Engine.cpp
+SRC_CPP += $(CHIPDIR)/src/app/reporting/reporting.cpp
 
 SRC_CPP += $(shell cat $(CODEGENDIR)/cluster-file.txt)
 
