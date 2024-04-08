@@ -693,17 +693,6 @@ static void wifi_disconn_hdl( char* buf, int buf_len, int flags, void* userdata)
 		rtw_up_sema(&disconnect_sema);
 	}
 #endif
-
-#ifdef CHIP_PROJECT
-    if(matter_wifi_trigger) {
-		join_user_data = NULL;
-
-		wifi_unreg_event_handler(WIFI_EVENT_CONNECT, wifi_connected_hdl);
-		wifi_unreg_event_handler(WIFI_EVENT_NO_NETWORK,wifi_no_network_hdl);
-		wifi_unreg_event_handler(WIFI_EVENT_FOURWAY_HANDSHAKE_DONE, wifi_handshake_done_hdl);
-		rtw_join_status &= ~JOIN_CONNECTING;
-	}
-#endif
 }
 
 #if CONFIG_EXAMPLE_WLAN_FAST_CONNECT || CONFIG_JD_SMART
@@ -3367,7 +3356,7 @@ int wifi_config_autoreconnect(__u8 mode, __u8 retry_times, __u16 timeout)
 	if(mode == RTW_AUTORECONNECT_DISABLE)
 		p_wlan_autoreconnect_hdl = NULL;
 #ifdef CHIP_PROJECT
-    else if (matter_wifi_trigger)
+	else if (matter_wifi_trigger)
 		p_wlan_autoreconnect_hdl = matter_wifi_autoreconnect_hdl;
 #endif
 	else
