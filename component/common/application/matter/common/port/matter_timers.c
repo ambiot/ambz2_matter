@@ -23,7 +23,7 @@
 #define NANOSECONDS_PER_TICK       ( NANOSECONDS_PER_SECOND / configTICK_RATE_HZ ) /**< Nanoseconds per FreeRTOS tick. */
 
 #define US_OVERFLOW_MAX            (0xFFFFFFFF)
-#define MATTER_SW_RTC_TIMER_ID     TIMER4
+#define MATTER_SW_RTC_TIMER_ID     TIMER5
 
 extern int FreeRTOS_errno;
 #define errno FreeRTOS_errno
