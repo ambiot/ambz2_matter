@@ -35,11 +35,6 @@ extern "C"
 {
 #endif
 
-#ifdef CHIP_PROJECT
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
-
 /**
  * @addtogroup hs_hal_pwm PWM
  * @ingroup 8710c_hal
@@ -351,10 +346,6 @@ hal_status_t hal_pwm_auto_duty_ns_inc (hal_pwm_adapter_t *ppwm_adp, u32 max_duty
 hal_status_t hal_pwm_auto_duty_ns_dec (hal_pwm_adapter_t *ppwm_adp, u32 min_duty_ns,
                                     u32 step_sz_ns, u32 step_period_cnt);
 /** @} */ /* End of group hs_hal_pwm */
-
-#ifdef CHIP_PROJECT
-#pragma GCC diagnostic pop
-#endif
 
 #ifdef  __cplusplus
 }

@@ -23,7 +23,7 @@
 #define _POSIX_C_SOURCE 200112L
 #define _XOPEN_SOURCE 600 /* sockaddr_storage */
 
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_MATTER) && CONFIG_MATTER
 #include "common.h"
 
 #if defined(MBEDTLS_NET_C)
@@ -833,5 +833,5 @@ void mbedtls_net_free( mbedtls_net_context *ctx )
 
     ctx->fd = -1;
 }
-#endif /* CHIP_PROJECT */
+#endif /* CONFIG_MATTER */
 #endif /* MBEDTLS_NET_C */

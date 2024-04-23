@@ -261,7 +261,7 @@ __STATIC_INLINE size_t strlen(char const *s)
   \return   Return "count" if there is no null terminating ('\0') among the
             first "count" characters pointed to by s.
 */
-#ifndef CHIP_PROJECT
+#ifndef CONFIG_MATTER
 __STATIC_INLINE 
 #endif
 size_t strnlen(char const *s, size_t count)

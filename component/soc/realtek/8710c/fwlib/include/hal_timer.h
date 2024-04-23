@@ -35,11 +35,6 @@ extern "C"
 {
 #endif
 
-#ifdef CHIP_PROJECT
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
-
 /**
  * @addtogroup hs_hal_timer TIMER
  * @ingroup 8710c_hal
@@ -878,10 +873,6 @@ void hal_timer_event_deinit (timer_id_t tid)
 }
 
 /** @} */ /* End of group hs_hal_timer */
-
-#ifdef CHIP_PROJECT
-#pragma GCC diagnostic pop
-#endif
 
 #ifdef  __cplusplus
 }

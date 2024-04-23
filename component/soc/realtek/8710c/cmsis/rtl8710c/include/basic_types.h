@@ -541,25 +541,8 @@ typedef unsigned char	BOOLEAN,*PBOOLEAN;
 #define	__restrict			/* Ignore */
 #endif
 
-#if defined(CHIP_PROJECT) && CHIP_PROJECT
-#include <assert.h>
-
-extern size_t strnlen(const char *s, size_t count);
-extern void *pvPortMalloc( size_t xWantedSize );
-
-//def
-#ifndef false
-    #define false   0
-#endif
-
-#ifndef true
-    #define true    1
-#endif
-
-#ifndef in_addr_t
-    typedef __uint32_t in_addr_t;
-#endif
-
-#endif // defined(CHIP_PROJECT) && CHIP_PROJECT
+#if defined(CHIP_PROJECT) && CHIP_PROJECT /* For Matter */
+#include "platform_stdlib_matter.h"
+#endif /* CHIP_PROJECT */
 
 #endif// __BASIC_TYPES_H__

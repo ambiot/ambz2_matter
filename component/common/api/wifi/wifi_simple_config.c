@@ -183,12 +183,6 @@ RTW_PACK_STRUCT_END
 #include "pack_end.h"
 #endif
 
-#ifdef CHIP_PROJECT
-#ifndef IN
-#define IN
-#endif
-#endif
-
 static void set_device_name(char *device_name, int max_size)
 {
 	int pos = 0;
@@ -2055,11 +2049,5 @@ void cmd_simple_config(int argc, char **argv){
 
 #endif	
 }
-
-#ifdef CHIP_PROJECT
-#ifdef IN
-#undef IN
-#endif
-#endif
 
 #endif	//#if CONFIG_WLAN

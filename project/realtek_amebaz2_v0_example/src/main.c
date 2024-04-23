@@ -6,7 +6,7 @@
 
 extern void console_init(void);
 
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_MATTER) && CONFIG_MATTER
 static void* app_mbedtls_calloc_func(size_t nelements, size_t elementSize)
 {
 	size_t size;
@@ -32,7 +32,7 @@ int main(void)
 	/* Initialize log uart and at command service */
 	console_init();
 
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_MATTER) && CONFIG_MATTER
 	mbedtls_platform_set_calloc_free(app_mbedtls_calloc_func, vPortFree);
 #endif
 

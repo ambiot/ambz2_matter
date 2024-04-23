@@ -90,7 +90,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_RECURSIVE_MUTEXES				1
 #define configUSE_QUEUE_SETS                    			1
 #define configUSE_TASK_NOTIFICATIONS				1
-#define configUSE_TRACE_FACILITY						1
+#define configUSE_TRACE_FACILITY						0
 
 /* Constants that define which hook (callback) functions should be used. */
 #define configUSE_IDLE_HOOK                     				0
@@ -99,8 +99,7 @@ extern uint32_t SystemCoreClock;
 #define secureconfigUSE_MALLOC_FAILED_HOOK		1
 
 /* Constants provided for debugging and optimisation assistance. */
-#define configCHECK_FOR_STACK_OVERFLOW			        2
-#define configRECORD_STACK_HIGH_ADDRESS                 1
+#define configCHECK_FOR_STACK_OVERFLOW			2
 
 /* Software timer definitions. */
 #define configUSE_TIMERS							1
@@ -120,8 +119,6 @@ extern uint32_t SystemCoreClock;
 #define INCLUDE_vTaskDelay						1
 #define INCLUDE_pcTaskGetTaskName       1
 #define INCLUDE_uxTaskGetStackHighWaterMark	0
-#define INCLUDE_uxTaskGetStackSize      				1
-#define INCLUDE_uxTaskGetFreeStackSize    				1
 #define INCLUDE_xTaskGetIdleTaskHandle			0
 #define INCLUDE_eTaskGetState					1
 #define INCLUDE_xTaskResumeFromISR			0
@@ -298,5 +295,9 @@ warnings. */
 
 #if defined(ENABLE_AMAZON_COMMON)
 #include "FreeRTOSConfig_Amazon.h"
+#endif
+
+#if defined(CONFIG_MATTER) && CONFIG_MATTER
+#include "FreeRTOSConfig_Matter.h"
 #endif
 #endif /* FREERTOS_CONFIG_H */
