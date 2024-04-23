@@ -1,5 +1,21 @@
 # Matter (previously CHIP) on AmebaZ2
 
+## Reminder
+
+### For v1.3.0.0 onwards, all-clusters-app.zap location change
+
+If you need to change all-clusters-app.zap, please change it in the following directory:
+
+	component/common/application/matter/example/chiptest/all-clusters-app.zap
+
+This is because we have added all files required for all supported clusters in project/realtek_amebaz2_v0_example/GCC-RELEASE/lib_chip_main.mk, while the default all-clusters-app.zap in connectedhomeip does not include some clusters supported by Ameba. Therefore, build errors occur.
+
+The only solution is to add Ameba's all-clusters-app.zap. 
+
+In project/realtek_amebaz2_v0_example/GCC-RELEASE/Makefile, the default all-clusters-app.zap in connectedhomeip will be replaced by Ameba's all-clusters-app.zap
+
+	@cp $(MATTER_DIR)/example/chiptest/all-clusters-app.zap $(ALL_CLUSTERS_ZAP)
+
 ## How to support Matter on Ameba SDK
 
 https://github.com/ambiot/ambz2_matter/blob/main/CHANGELOG.md
