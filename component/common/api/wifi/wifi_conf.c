@@ -189,10 +189,6 @@ extern int rltk_set_mode_posthandle(rtw_mode_t curr_mode, rtw_mode_t next_mode, 
 #ifdef CONFIG_PMKSA_CACHING
 extern int wifi_set_pmk_cache_enable(unsigned char value);
 #endif
-#if defined(CONFIG_MATTER) && CONFIG_MATTER
-extern u8 matter_wifi_trigger;
-extern void matter_wifi_autoreconnect_hdl(rtw_security_t security_type, char *ssid, int ssid_len, char *password, int password_len, int key_id);
-#endif
 
 //----------------------------------------------------------------------------//
 static int wifi_connect_local(rtw_network_info_t *pWifi)
@@ -446,8 +442,8 @@ static void rx_mgnt_hdl( char* buf, int buf_len, int flags, void* userdata)
 }
 
 extern void dhcp_stop(struct netif *netif);
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #if LWIP_IPV6
+#if LWIP_IPV6_DHCP6 && (LWIP_VERSION_MAJOR >= 2) && (LWIP_VERSION_MINOR >= 1)
 extern void dhcp6_stop(struct netif *netif);
 #endif
 #endif
@@ -664,8 +660,8 @@ static void wifi_disconn_hdl( char* buf, int buf_len, int flags, void* userdata)
 	//TODO
 #else
 	dhcp_stop(&xnetif[0]);
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #if LWIP_IPV6
+#if LWIP_IPV6_DHCP6 && (LWIP_VERSION_MAJOR >= 2) && (LWIP_VERSION_MINOR >= 1)
 	dhcp6_stop(&xnetif[0]);
 #endif
 #endif
@@ -1610,10 +1606,8 @@ int wifi_on(rtw_mode_t mode)
 	//TODO
 	#else
 	netif_set_up(&xnetif[0]);
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #if LWIP_IPV6
 	netif_create_ip6_linklocal_address(&xnetif[0], 1);
-#endif
 #endif
 	if(mode == RTW_MODE_AP) 
 		netif_set_link_up(&xnetif[0]);
@@ -1647,8 +1641,8 @@ int wifi_off(void)
 #else
 	dhcps_deinit();
 	LwIP_DHCP(0, DHCP_STOP);
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #if LWIP_IPV6
+#if LWIP_IPV6_DHCP6 && (LWIP_VERSION_MAJOR >= 2) && (LWIP_VERSION_MINOR >= 1)
 	LwIP_DHCP6(0, DHCP6_STOP);
 #endif
 #endif
@@ -1699,8 +1693,8 @@ int wifi_off_fastly(void)
 #else
 	dhcps_deinit();
 	LwIP_DHCP(0, DHCP_STOP);
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #if LWIP_IPV6
+#if LWIP_IPV6_DHCP6 && (LWIP_VERSION_MAJOR >= 2) && (LWIP_VERSION_MINOR >= 1)
 	LwIP_DHCP6(0, DHCP6_STOP);
 #endif
 #endif
@@ -3183,8 +3177,8 @@ int wifi_restart_ap(
 		if(ret == RTW_SUCCESS) {
 			/* Start DHCPClient */
 			LwIP_DHCP(0, DHCP_START);
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #if LWIP_IPV6
+#if LWIP_IPV6_DHCP6 && (LWIP_VERSION_MAJOR >= 2) && (LWIP_VERSION_MINOR >= 1)
 			LwIP_DHCP6(0, DHCP6_START);
 #endif
 #endif
@@ -3287,8 +3281,8 @@ static void wifi_autoreconnect_thread(void *param)
 #endif
 		{
 			LwIP_DHCP(0, DHCP_START);
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #if LWIP_IPV6
+#if LWIP_IPV6_DHCP6 && (LWIP_VERSION_MAJOR >= 2) && (LWIP_VERSION_MINOR >= 1)
 			LwIP_DHCP6(0, DHCP6_START);
 #endif
 #endif
@@ -3349,10 +3343,6 @@ int wifi_config_autoreconnect(__u8 mode, __u8 retry_times, __u16 timeout)
 {
 	if(mode == RTW_AUTORECONNECT_DISABLE)
 		p_wlan_autoreconnect_hdl = NULL;
-#if defined(CONFIG_MATTER) && CONFIG_MATTER
-	else if (matter_wifi_trigger)
-		p_wlan_autoreconnect_hdl = matter_wifi_autoreconnect_hdl;
-#endif
 	else
 		p_wlan_autoreconnect_hdl = wifi_autoreconnect_hdl;
 	return rltk_wlan_set_autoreconnect(WLAN0_NAME, mode, retry_times, timeout);

@@ -172,8 +172,8 @@ WIFI_RETRY_LOOP:
 		}
 		if(ret == RTW_SUCCESS){
 			LwIP_DHCP(0, DHCP_START);
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #if LWIP_IPV6
+#if LWIP_IPV6_DHCP6 && (LWIP_VERSION_MAJOR >= 2) && (LWIP_VERSION_MINOR >= 1)
 			LwIP_DHCP6(0, DHCP6_START);
 #endif
 #endif
@@ -218,10 +218,8 @@ int wlan_init_done_callback(void)
 #if CONFIG_LWIP_LAYER
 	netif_set_up(&xnetif[0]);
 #endif
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #if LWIP_IPV6
 	netif_create_ip6_linklocal_address(&xnetif[0], 1);
-#endif
 #endif
 
 #if CONFIG_AUTO_RECONNECT
@@ -338,8 +336,8 @@ int wlan_init_done_callback(void)
 			}
 			if(ret == RTW_SUCCESS){
 				LwIP_DHCP(0, DHCP_START);
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #if LWIP_IPV6
+#if LWIP_IPV6_DHCP6 && (LWIP_VERSION_MAJOR >= 2) && (LWIP_VERSION_MINOR >= 1)
 				LwIP_DHCP6(0, DHCP6_START);
 #endif
 #endif
