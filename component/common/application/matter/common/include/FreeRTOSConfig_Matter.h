@@ -43,16 +43,6 @@
 #define configRECORD_STACK_HIGH_ADDRESS         1
 #define INCLUDE_uxTaskGetStackSize              1
 #define INCLUDE_uxTaskGetFreeStackSize          1
-
-#elif defined(CONFIG_PLATFORM_8721D)
-
-#undef configTOTAL_HEAP_SIZE
-#undef CONFIG_DYNAMIC_HEAP_SIZE
-#define configTOTAL_HEAP_SIZE                   ( ( size_t ) ( 200 * 1024 ) ) //default
-#define CONFIG_DYNAMIC_HEAP_SIZE                0
-
-#define INCLUDE_uxTaskGetStackSize              1
-#define INCLUDE_uxTaskGetFreeStackSize          1
 #endif
 
 #endif /* FREERTOS_CONFIG_MATTER_H */
