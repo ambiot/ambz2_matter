@@ -19,6 +19,8 @@ time_t _time( time_t * tloc );
 void matter_rtc_init(void);
 long long matter_rtc_read(void);
 void matter_rtc_write(long long time);
+uint64_t ameba_get_clock_time(void);
+void matter_timer_init(void);
 
 #ifdef __cplusplus
 }

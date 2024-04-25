@@ -2,7 +2,7 @@
 
 #include <platform_stdlib.h>
 #include "pwmout_api.h"
-#include <app/util/af.h>
+#include <app/util/attribute-table.h>
 
 class MatterFan
 {

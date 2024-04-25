@@ -1,6 +1,7 @@
 #pragma once
 
 #include <platform/CHIPDeviceLayer.h>
+#include <app/ConcreteAttributePath.h>
 
 struct AppEvent;
 typedef void (*EventHandler)(AppEvent *);
