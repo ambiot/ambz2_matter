@@ -5198,7 +5198,6 @@ const TickType_t xConstTickCount = xTickCount;
 	#endif /* INCLUDE_vTaskSuspend */
 }
 
-#ifdef CHIP_PROJECT
 #if ( INCLUDE_uxTaskGetStackSize == 1 )
 
 	uint32_t uxTaskGetStackSize( TaskHandle_t xTask )
@@ -5244,7 +5243,6 @@ const TickType_t xConstTickCount = xTickCount;
 
 #endif /* INCLUDE_uxTaskGetFreeStackSize */
 /*-----------------------------------------------------------*/
-#endif
 
 /* Code below here allows additional code to be inserted into this source file,
 especially where access to file scope functions and data is needed (for example

@@ -15,7 +15,7 @@ After another 20 second delay, the `Dimmable Light` endpoint on Endpoint2 will b
 ## How to build
 
 ### Configurations
-Enable `CONFIG_EXAMPLE_MATTER` and `CONFIG_EXAMPLE_MATTER_LIGHT` in `platform_opts.h`.
+Enable `CONFIG_EXAMPLE_MATTER` and `CONFIG_EXAMPLE_MATTER_LIGHT` in `platform_opts_matter.h`.
 Ensure that `CONFIG_EXAMPLE_MATTER_CHIPTEST` is disabled.
 
 ### Setup the Build Environment
@@ -25,8 +25,8 @@ Ensure that `CONFIG_EXAMPLE_MATTER_CHIPTEST` is disabled.
   
 ### Build Matter Libraries
 
-    cd ambz2_matter/component/common/application/matter/example/light
-    make light
+    cd ambz2_matter/project/realtek_amebaz2_v0_example/GCC-RELEASE/
+    make light_dm
     
 ### Build the Final Firmware
 
@@ -38,5 +38,10 @@ Refer to this [guide](https://github.com/ambiot/ambz2_matter/blob/main/tools/Ame
 
 ### Clean Matter Libraries
 
-    cd ambz2_matter/component/common/application/matter/example/light
-    make clean
+    cd ambz2_matter/project/realtek_amebaz2_v0_example/GCC-RELEASE/
+    make clean_matter_libs
+
+## Clean Ameba Matter application
+
+    cd ambz2_matter/project/realtek_amebaz2_v0_example/GCC-RELEASE/
+    make clean_matter

@@ -15,6 +15,8 @@ extern "C" {
 #include <wifi_conf.h>
 #include <lwip_netconf.h>
 
+#define RTW_SECURITY_WPA_WPA2_MIXED RTW_SECURITY_WPA_WPA2_MIXED_PSK
+
 #define JOIN_HANDSHAKE_DONE (uint32_t)(1 << 7)
 
 typedef enum{

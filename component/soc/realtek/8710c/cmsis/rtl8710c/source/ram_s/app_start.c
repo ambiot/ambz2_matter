@@ -138,7 +138,7 @@ void sau_setup(ns_region_t *ns_region)
     TZ_SAU_Setup();
 }
 #endif
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_MATTER) && CONFIG_MATTER
 #if defined (__GNUC__)
 /* Add This for C++ support to avoid compile error */
 void _init(void) {}
@@ -163,7 +163,7 @@ void app_start (void)
 	//__iar_cstart_call_ctors(NULL);
 #endif
 
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_MATTER) && CONFIG_MATTER
 #if defined (__GNUC__)
 	extern void __libc_init_array(void);
 	/* Add This for C++ support */

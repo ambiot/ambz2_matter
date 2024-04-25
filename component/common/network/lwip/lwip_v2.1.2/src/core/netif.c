@@ -1513,7 +1513,7 @@ netif_create_ip6_linklocal_address(struct netif *netif, u8_t from_mac_48bit)
 
   LWIP_ASSERT("netif_create_ip6_linklocal_address: invalid netif", netif != NULL);
 
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_MATTER) && CONFIG_MATTER
   /*Realtek Added Start*/
   if(ip6_addr_isvalid(netif_ip6_addr_state(netif, 0))){
     printf("IPv6 Linklocal address already exist\n");

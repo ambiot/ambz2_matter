@@ -4,7 +4,8 @@
 #include <platform_stdlib.h>
 #include <platform_opts.h>
 
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_MATTER) && CONFIG_MATTER
+#include <main.h>
 #include <sys_api.h>
 #include "log_service.h"
 extern void ChipTest(void);
@@ -75,10 +76,10 @@ void fATmattershell(void *arg)
 log_item_t at_matter_items[] = {
 #ifndef CONFIG_INIC_NO_FLASH
 #if ATCMD_VER == ATVER_1
-    {"ATM$", fATchipapp, {NULL,NULL}},
-    {"ATM%", fATchipapp1, {NULL, NULL}},
-    {"ATM^", fATchipapp2, {NULL, NULL}},
-    {"ATMS", fATmattershell, {NULL, NULL}},
+    {"ATM$", fATchipapp},
+    {"ATM%", fATchipapp1},
+    {"ATM^", fATchipapp2},
+    {"ATMS", fATmattershell},
 #endif // end of #if ATCMD_VER == ATVER_1
 #endif
 };
@@ -93,4 +94,4 @@ void at_matter_init(void)
 log_module_init(at_matter_init);
 #endif
 
-#endif /* CHIP_PROJECT */
+#endif /* CONFIG_MATTER */

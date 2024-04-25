@@ -37,7 +37,7 @@ extern void at_isp_init(void);
 	(defined(CONFIG_RSC) && CONFIG_RSC))
 extern void at_cloud_init(void);
 #endif
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_MATTER) && CONFIG_MATTER
 extern void at_matter_init(void);
 #endif
 void at_log_init(void);
@@ -112,7 +112,7 @@ log_init_t log_init_table[] = {
 	at_cloud_init,
 #endif
 
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_MATTER) && CONFIG_MATTER
 	at_matter_init,
 #endif
 };
