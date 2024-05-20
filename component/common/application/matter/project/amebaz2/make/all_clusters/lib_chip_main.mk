@@ -39,6 +39,10 @@ OBJ_DIR=$(TARGET)/Debug/obj
 BIN_DIR=$(TARGET)/Debug/bin
 INFO_DIR=$(TARGET)/Debug/info
 
+# Build Definition
+# -------------------------------------------------------------------
+CHIP_ENABLE_OTA_REQUESTOR = $(shell grep 'chip_enable_ota_requestor' $(OUTPUT_DIR)/args.gn | cut -d' ' -f3)
+
 # Include folder list
 # -------------------------------------------------------------------
 
@@ -295,34 +299,19 @@ CFLAGS += -DV8M_STKOVF
 
 # CHIP options
 # -------------------------------------------------------------------
-CFLAGS += -DCHIP_PROJECT=1
-CFLAGS += -DCONFIG_MATTER=1
-CFLAGS += -DCONFIG_BT=1
+# common flags
+include matter_common_flags.mk
 
+# for matter ota
+ifeq ($(CHIP_ENABLE_OTA_REQUESTOR), true)
 CFLAGS += -DCONFIG_ENABLE_OTA_REQUESTOR=1
+endif
+
+# for matter shell
 CFLAGS += -DCONFIG_ENABLE_CHIP_SHELL=1
-CFLAGS += -DCONFIG_ENABLE_AMEBA_FACTORY_DATA=0
-CFLAGS += -DCONFIG_ENABLE_AMEBA_TEST_EVENT_TRIGGER=0
-CFLAGS += -DCHIP_DEVICE_LAYER_TARGET=Ameba
-CFLAGS += -DMBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"
-CFLAGS += -DCHIP_ADDRESS_RESOLVE_IMPL_INCLUDE_HEADER=\"lib/address_resolve/AddressResolve_DefaultImpl.h\"
-
-CFLAGS += -DLWIP_IPV6_ND=1
-CFLAGS += -DLWIP_IPV6_SCOPES=0
-CFLAGS += -DLWIP_PBUF_FROM_CUSTOM_POOLS=0
-CFLAGS += -DLWIP_IPV6_ROUTE_TABLE_SUPPORT=1
-
-CFLAGS += -DCHIP_DEVICE_LAYER_NONE=0
-CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_ZEPHYR_NET_IF=0
-CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_BSD_IFADDRS=0
-CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_ZEPHYR_SOCKET_EXTENSIONS=0
-
-CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_LWIP=1
-CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_SOCKETS=0
-CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_NETWORK_FRAMEWORK=0
-CFLAGS += -DCHIP_SYSTEM_CONFIG_POSIX_LOCKING=0
-CFLAGS += -DINET_CONFIG_ENABLE_IPV4=0
 CFLAGS += -DCHIP_SHELL_MAX_TOKENS=11
+
+CFLAGS += -DCHIP_ADDRESS_RESOLVE_IMPL_INCLUDE_HEADER=\"lib/address_resolve/AddressResolve_DefaultImpl.h\"
 
 CFLAGS += -DUSE_ZAP_CONFIG
 CFLAGS += -DCHIP_HAVE_CONFIG_H

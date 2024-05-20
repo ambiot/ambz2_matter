@@ -6,7 +6,7 @@ LBITS := $(shell getconf LONG_BIT)
 BASEDIR = $(shell pwd)
 MATTER_BUILDDIR = $(shell pwd)/../../../component/common/application/matter/project/amebaz2
 
-include toolchain.mk
+include $(MATTER_BUILDDIR)/toolchain.app.mk
 
 .PHONY: is
 is: toolchain

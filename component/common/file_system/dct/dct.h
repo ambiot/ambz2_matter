@@ -163,7 +163,7 @@ int32_t dct_delete_variable(dct_handle_t *dct_handle, char *variable_name);
 int32_t dct_remain_variable(dct_handle_t *dct_handle);
 
 #if defined(CONFIG_MATTER) && CONFIG_MATTER
-#include <dct_matter.h>
+#include <dct2.h>
 #endif
 
 /*\@}*/

@@ -17,6 +17,7 @@
 
 #include <platform_stdlib.h>
 #include <osdep_service.h>
+#include <dct.h>
 
 /**
  * @brief      Format device configuration table.
