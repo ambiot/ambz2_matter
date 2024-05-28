@@ -13,7 +13,7 @@
 
 /* Add Includes here */
 #include <string.h>
-#include "mesh_data_uart.h"
+#include <stdio.h>
 #include "mesh_user_cmd_parse.h"
 #include "platform_os.h"
 
@@ -137,19 +137,19 @@ static void user_cmd_send_result(user_cmd_parse_result_t result)
     switch (result)
     {
     case USER_CMD_RESULT_ERROR:
-        data_uart_debug("Error\n\r");
+        printf("Error\r\n");
         break;
     case USER_CMD_RESULT_CMD_NOT_FOUND:
-        data_uart_debug("Command not found\n\r");
+        printf("Command not found\r\n");
         break;
     case USER_CMD_RESULT_WRONG_NUM_OF_PARAMETERS:
-        data_uart_debug("Wrong number of parameters\n\r");
+        printf("Wrong number of parameters\r\n");
         break;
     case USER_CMD_RESULT_WRONG_PARAMETER:
-        data_uart_debug("Wrong parameter\n\r");
+        printf("Wrong parameter\r\n");
         break;
     case USER_CMD_RESULT_VALUE_OUT_OF_RANGE:
-        data_uart_debug("Value out of range\n\r");
+        printf("Value out of range\r\n");
         break;
     default:
         break;
@@ -175,17 +175,17 @@ static user_cmd_parse_result_t user_cmd_list(user_cmd_parse_value_t *pparse_valu
     /* find command in table */
     while ((pcmd_table + i)->pcommand != NULL)
     {
-        data_uart_debug((pcmd_table + i)->poption);
-        data_uart_debug("  *");
-        data_uart_debug((pcmd_table + i)->phelp);
+        printf((pcmd_table + i)->poption);
+        printf("  *");
+        printf((pcmd_table + i)->phelp);
         Result = USER_CMD_RESULT_OK;
         i++;
     };
 
-    data_uart_debug(",.\r\n  *up down\r\n");
-    data_uart_debug("[]\r\n  *left right\r\n");
-    data_uart_debug("/\\\r\n  *home end\r\n");
-    data_uart_debug("backspace\r\n  *delete\r\n");
+    printf(",.\r\n  *up down\r\n");
+    printf("[]\r\n  *left right\r\n");
+    printf("/\\\r\n  *home end\r\n");
+    printf("backspace\r\n  *delete\r\n");
 
     return (Result);
 }
@@ -211,9 +211,9 @@ static user_cmd_parse_result_t user_cmd_execute(user_cmd_parse_value_t *pparse_v
             /* check if user wants help */
             if (pparse_value->para_count && *pparse_value->pparameter[0] == '?')
             {
-                data_uart_debug((pcmd_table + i)->poption);
-                data_uart_debug("  *");
-                data_uart_debug((pcmd_table + i)->phelp);
+                printf((pcmd_table + i)->poption);
+                printf("  *");
+                printf((pcmd_table + i)->phelp);
                 Result = USER_CMD_RESULT_OK;
             }
             else
@@ -350,14 +350,14 @@ static void user_cmd_clear_screen(void)
 {
     if (puser_cmd_if->cmd_cur < puser_cmd_if->cmd_len)
     {
-        data_uart_debug("%s", puser_cmd_if->cmd_line + puser_cmd_if->cmd_cur);
+        printf("%s", puser_cmd_if->cmd_line + puser_cmd_if->cmd_cur);
     }
 
     while (puser_cmd_if->cmd_len != 0)
     {
         puser_cmd_if->cmd_len--;
         puser_cmd_if->cmd_line[puser_cmd_if->cmd_len] = '\0';
-        data_uart_debug("\b \b");
+        printf("\b \b");
     }
     puser_cmd_if->cmd_cur = 0;
 }
@@ -388,7 +388,7 @@ bool mesh_user_cmd_collect(uint8_t *pdata, uint8_t len, const user_cmd_table_ent
             {
             case '\n':
             case '\r':                          /* end of line */
-                data_uart_debug("%s", puser_cmd_if->cmd_crlf);
+                printf("%s", puser_cmd_if->cmd_crlf);
                 puser_cmd_if->history_cur = USER_CMD_MAX_HISTORY_LINE;
                 if (puser_cmd_if->cmd_len > 0)  /* at least one character in command line ? */
                 {
@@ -424,7 +424,7 @@ bool mesh_user_cmd_collect(uint8_t *pdata, uint8_t len, const user_cmd_table_ent
                     }
                 }
 
-                data_uart_debug("%s", puser_cmd_if->cmd_prompt);
+                printf("%s", puser_cmd_if->cmd_prompt);
 
                 /* maybe more than 1 cmd in pData: */
                 user_cmd_clear_command();
@@ -437,11 +437,11 @@ bool mesh_user_cmd_collect(uint8_t *pdata, uint8_t len, const user_cmd_table_ent
                     puser_cmd_if->cmd_len--;
                     puser_cmd_if->cmd_cur--;
                     puser_cmd_if->cmd_line[puser_cmd_if->cmd_len] = '\0';
-                    data_uart_debug("\b%s", puser_cmd_if->cmd_line + puser_cmd_if->cmd_cur);
-                    data_uart_debug(" \b");
+                    printf("\b%s", puser_cmd_if->cmd_line + puser_cmd_if->cmd_cur);
+                    printf(" \b");
                     for (uint8_t loop = 0; loop < puser_cmd_if->cmd_len - puser_cmd_if->cmd_cur; loop++)
                     {
-                        data_uart_debug("\b");
+                        printf("\b");
                     }
                 }
                 break;
@@ -470,7 +470,7 @@ bool mesh_user_cmd_collect(uint8_t *pdata, uint8_t len, const user_cmd_table_ent
                     puser_cmd_if->cmd_cur = puser_cmd_if->cmd_len;
                     memcpy(puser_cmd_if->cmd_line, puser_cmd_if->cmd_history[puser_cmd_if->history_cur],
                            puser_cmd_if->cmd_len);
-                    data_uart_debug("%s", puser_cmd_if->cmd_line);
+                    printf("%s", puser_cmd_if->cmd_line);
                 }
                 break;
             case 46:                            /* down: . */
@@ -497,34 +497,34 @@ bool mesh_user_cmd_collect(uint8_t *pdata, uint8_t len, const user_cmd_table_ent
                     puser_cmd_if->cmd_cur = puser_cmd_if->cmd_len;
                     memcpy(puser_cmd_if->cmd_line, puser_cmd_if->cmd_history[puser_cmd_if->history_cur],
                            puser_cmd_if->cmd_len);
-                    data_uart_debug("%s", puser_cmd_if->cmd_line);
+                    printf("%s", puser_cmd_if->cmd_line);
                 }
                 break;
             case 91:                           /* left: [ */
                 if (puser_cmd_if->cmd_cur > 0)
                 {
-                    data_uart_debug("\b");
+                    printf("\b");
                     puser_cmd_if->cmd_cur--;
                 }
                 break;
             case 93:                           /* right: ] */
                 if (puser_cmd_if->cmd_cur < puser_cmd_if->cmd_len)
                 {
-                    data_uart_debug("%c", puser_cmd_if->cmd_line[puser_cmd_if->cmd_cur]);
+                    printf("%c", puser_cmd_if->cmd_line[puser_cmd_if->cmd_cur]);
                     puser_cmd_if->cmd_cur++;
                 }
                 break;
             case 92:                            /* end: \ */
                 if (puser_cmd_if->cmd_cur < puser_cmd_if->cmd_len)
                 {
-                    data_uart_debug("%s", puser_cmd_if->cmd_line + puser_cmd_if->cmd_cur);
+                    printf("%s", puser_cmd_if->cmd_line + puser_cmd_if->cmd_cur);
                     puser_cmd_if->cmd_cur = puser_cmd_if->cmd_len;
                 }
                 break;
             case 47:                            /* begin: / */
                 while (puser_cmd_if->cmd_cur > 0)
                 {
-                    data_uart_debug("\b");
+                    printf("\b");
                     puser_cmd_if->cmd_cur--;
                 }
                 break;
@@ -534,12 +534,12 @@ bool mesh_user_cmd_collect(uint8_t *pdata, uint8_t len, const user_cmd_table_ent
                 {
                     user_cmd_move_back();
                     puser_cmd_if->cmd_line[puser_cmd_if->cmd_cur] = c;
-                    data_uart_debug("%s", puser_cmd_if->cmd_line + puser_cmd_if->cmd_cur);
+                    printf("%s", puser_cmd_if->cmd_line + puser_cmd_if->cmd_cur);
                     puser_cmd_if->cmd_len++;
                     puser_cmd_if->cmd_cur++;
                     for (uint8_t loop = 0; loop < puser_cmd_if->cmd_len - puser_cmd_if->cmd_cur; loop++)
                     {
-                        data_uart_debug("\b");
+                        printf("\b");
                     }
                 }
                 break;
@@ -566,13 +566,13 @@ void mesh_user_cmd_init(char *s)
     puser_cmd_if->history_tail = USER_CMD_MAX_HISTORY_LINE;
     puser_cmd_if->history_cur = USER_CMD_MAX_HISTORY_LINE;
 
-    data_uart_debug(">> Hello %s <<\r\n%s", s, puser_cmd_if->cmd_prompt);
+    printf(">> Hello %s <<\r\n%s", s, puser_cmd_if->cmd_prompt);
 }
 
 void mesh_user_cmd_deinit(char *s)
 {
     if (puser_cmd_if) {
-        data_uart_debug(">> Goodbye %s <<\r\n", s);
+        printf(">> Goodbye %s <<\r\n", s);
         plt_free(puser_cmd_if, RAM_TYPE_DATA_OFF);
         puser_cmd_if = NULL;
     }

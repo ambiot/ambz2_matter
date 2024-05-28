@@ -13,35 +13,33 @@
 
 /* Add Includes here */
 #include <string.h>
-#if defined(CONFIG_PLATFORM_8721D)
-#include "ameba_soc.h"
-#endif
+#include "platform_ic_misc.h"
 #include "trace.h"
 #include "app_msg.h"
 #include "gap_wrapper.h"
 #include "mesh_cmd.h"
 #include "mesh_api.h"
 #include "proxy_client.h"
+#include "dfu_client.h"
 #include "ping.h"
 #include "tp.h"
+#include "mesh_data_dump.h"
+#include "firmware_distribution.h"
+#include "dfu_distributor_app.h"
 
 bool dev_info_show_flag;
 uint8_t proxy_client_conn_id;
 
 user_cmd_parse_result_t user_cmd_reset(user_cmd_parse_value_t *pparse_value)
 {
+    UNUSED(pparse_value);
     //WDG_SystemReset(RESET_ALL, SW_RESET_APP_START);
-    /* avoid gcc compile warning */
-    (void)pparse_value;
-    
     return USER_CMD_RESULT_OK;
 }
 
 user_cmd_parse_result_t user_cmd_list(user_cmd_parse_value_t *pparse_value)
 {
-    /* avoid gcc compile warning */
-    (void)pparse_value;
-
+    UNUSED(pparse_value);
     data_uart_debug("MeshState:\t%d\r\n", mesh_node.node_state);
     data_uart_debug("DevUUID:\t");
     data_uart_dump(mesh_node.dev_uuid, 16);
@@ -80,20 +78,35 @@ user_cmd_parse_result_t user_cmd_list(user_cmd_parse_value_t *pparse_value)
     {
         if (mesh_node.net_key_list[index].key_state != MESH_KEY_STATE_INVALID)
         {
-            data_uart_debug("NetKey:\t\t%d-0x%04x-%d-%d-%d\r\n", index,
+            switch (net_key_type_get(index))
+            {
+            case NET_KEY_TYPE_MASTER:
+                data_uart_debug("NetKey:\t\t");
+                break;
+            case NET_KEY_TYPE_FRND:
+                data_uart_debug("NetKey-FN:\t");
+                break;
+#if F_BT_MESH_1_1_DF_SUPPORT
+            case NET_KEY_TYPE_DF:
+                data_uart_debug("NetKey-DF:\t");
+                break;
+#endif
+            default:
+                break;
+            }
+            data_uart_debug("%d-0x%04x-%d-%d-%d\r\n", index,
                             mesh_node.net_key_list[index].net_key_index_g, mesh_node.net_key_list[index].key_state,
                             key_state_to_tx_loop(mesh_node.net_key_list[index].key_state),
                             key_state_to_key_refresh_phase(mesh_node.net_key_list[index].key_state));
-            if (mesh_node.net_key_list[index].net_key_index_g & 0x8000)
+            if (NET_KEY_TYPE_MASTER == net_key_type_get(index))
             {
-                break;
-            }
-            for (uint8_t loop = 0; loop < 2; loop++)
-            {
-                if (mesh_node.net_key_list[index].pnet_key[loop] != NULL)
+                for (uint8_t loop = 0; loop < 2; loop++)
                 {
-                    data_uart_debug("\t\t");
-                    data_uart_dump(mesh_node.net_key_list[index].pnet_key[loop]->net_key, 16);
+                    if (mesh_node.net_key_list[index].pnet_key[loop] != NULL)
+                    {
+                        data_uart_debug("\t\t");
+                        data_uart_dump(mesh_node.net_key_list[index].pnet_key[loop]->net_key, 16);
+                    }
                 }
             }
         }
@@ -134,8 +147,12 @@ user_cmd_parse_result_t user_cmd_list(user_cmd_parse_value_t *pparse_value)
             }
             if (MESH_NOT_UNASSIGNED_ADDR(pmodel->pub_params.pub_addr))
             {
-                data_uart_debug("-(pub:0x%04x-%d-%d)", pmodel->pub_params.pub_addr, pmodel->pub_params.pub_ttl,
+                data_uart_debug("-(pub:0x%04x-%d-%d", pmodel->pub_params.pub_addr, pmodel->pub_params.pub_ttl,
                                 pmodel->pub_params.pub_key_info.app_key_index);
+#if F_BT_MESH_1_1_DF_SUPPORT
+                data_uart_debug("-%d", pmodel->pub_params.pub_policy);
+#endif
+                data_uart_debug(")");
             }
             mesh_model_p pmodelb = pmodel;
             while (pmodelb->pmodel_info->pmodel_bound != NULL)
@@ -173,6 +190,44 @@ user_cmd_parse_result_t user_cmd_list(user_cmd_parse_value_t *pparse_value)
         }
         pelement = pelement->pnext;
     }
+
+#if F_BT_MESH_1_1_SBR_SUPPORT
+    bridging_table_t *ptable;
+    for (uint16_t i = 0; i < mesh_node.bridging_table_size; ++i)
+    {
+        ptable = subnet_bridge_table_get_by_index(i);
+        if (ptable->used)
+        {
+            data_uart_debug("Bridge:\t\t%d-%d-0x%04x-0x%04x-0x%04x-0x%04x\r\n", i, ptable->directions,
+                            ptable->net_key_index1, ptable->net_key_index2, ptable->addr1, ptable->addr2);
+        }
+    }
+#endif
+#if F_BT_MESH_1_1_DF_SUPPORT
+    forwarding_table_t *ptable_f = (forwarding_table_t *)forwarding_table_list.pfirst;
+    while (NULL != ptable_f)
+    {
+        data_uart_debug("DF-Path:\t%d-%d-%d-0x%04x(%d)", ptable_f->df_key_index, ptable_f->master_key_index,
+                        ptable_f->entry.fixed_path, ptable_f->entry.origin_addr,
+                        ptable_f->entry.origin_secondary_elem_num);
+        df_dependent_addr_t *paddr = (df_dependent_addr_t *)ptable_f->entry.dependent_origin_list.pfirst;
+        while (NULL != paddr)
+        {
+            data_uart_debug("-<0x%04x(%d)>", paddr->primary_addr, paddr->secondary_elem_num);
+            paddr = paddr->pnext;
+        }
+        data_uart_debug("\r\n\t\t----->0x%04x(%d)", ptable_f->entry.target_addr,
+                        ptable_f->entry.target_secondary_elem_num);
+        paddr = (df_dependent_addr_t *)ptable_f->entry.dependent_target_list.pfirst;
+        while (NULL != paddr)
+        {
+            data_uart_debug("-<0x%04x(%d)>", paddr->primary_addr, paddr->secondary_elem_num);
+            paddr = paddr->pnext;
+        }
+        data_uart_debug("\r\n");
+        ptable_f = ptable_f->pnext;
+    }
+#endif
     return USER_CMD_RESULT_OK;
 }
 
@@ -253,24 +308,29 @@ static uint16_t ping_key_index;
 static uint16_t pong_max_delay;
 static uint32_t rtime_min;
 static uint32_t rtime_max;
+#if MESH_SUPPORT_TRANS_PING
 static mesh_msg_send_cause_t (*const ping_pf[3])(uint16_t dst, uint8_t ttl, uint16_t key_index,
                                                  uint16_t pong_max_delay) = {trans_ping, ping, big_ping};
+#else
+static mesh_msg_send_cause_t (*const ping_pf[3])(uint16_t dst, uint8_t ttl, uint16_t key_index,
+                                                 uint16_t pong_max_delay) = {NULL, ping, big_ping};
+#endif
 
-int32_t tp_reveive(const mesh_model_info_p pmodel_info, uint32_t type, void *pargs)
+int32_t tp_receive(const mesh_model_info_p pmodel_info, uint32_t type, void *pargs)
 {
-    /* avoid gcc compile warning */
-    (void)pmodel_info;
-    (void)type;
+    UNUSED(pmodel_info);
+    UNUSED(type);
     mesh_msg_t *pmesh_msg = (mesh_msg_t *)pargs;
     uint8_t *pbuffer = pmesh_msg->pbuffer + pmesh_msg->msg_offset;
     tp_msg_t *pmsg = (tp_msg_t *)(pbuffer);
-    
     data_uart_debug("From:0x%04x To:0x%04x Tid:%d Time:%dms\r\n", pmesh_msg->src, pmesh_msg->dst,
                     pmsg->tid, plt_time_read_ms());
     if (pmesh_msg->msg_len < sizeof(tp_msg_t))
     {
-        data_uart_send_string(pmsg->padding, pmesh_msg->msg_len - MEMBER_OFFSET(tp_msg_t, padding));
-        data_uart_debug("\r\n>");
+        for (uint32_t i = 0; i < pmesh_msg->msg_len - MEMBER_OFFSET(tp_msg_t, padding); i++) {
+            printf("%c", *(pmsg->padding + i));
+        }
+        printf("\r\n");
     }
     return 0;
 }
@@ -278,10 +338,8 @@ int32_t tp_reveive(const mesh_model_info_p pmodel_info, uint32_t type, void *par
 void pong_receive(uint16_t src, uint16_t dst, uint8_t hops_forward, ping_pong_type_t type,
                   uint8_t hops_reverse, uint16_t pong_delay)
 {
-    /* avoid gcc compile warning */
-    (void)dst;
-    (void)type;
-   
+    UNUSED(dst);
+    UNUSED(type);
     pong_count++;
     uint32_t pong_time_us = plt_time_read_us();
     uint32_t pong_time_ms = plt_time_read_ms();
@@ -309,83 +367,13 @@ void pong_receive(uint16_t src, uint16_t dst, uint8_t hops_forward, ping_pong_ty
                     hops_reverse, diff_time, pong_delay * 10, rtime, rtime_sum / pong_count);
 }
 
-#if defined(CONFIG_BT_MESH_PROVISIONER) && CONFIG_BT_MESH_PROVISIONER
-extern void *bt_mesh_provisioner_evt_queue_handle; //!< Event queue handle
-extern void *bt_mesh_provisioner_io_queue_handle; //!< IO queue handle
-#elif defined(CONFIG_BT_MESH_DEVICE) && CONFIG_BT_MESH_DEVICE 
-extern void *bt_mesh_device_evt_queue_handle; //!< Event queue handle
-extern void *bt_mesh_device_io_queue_handle; //!< IO queue handle
-#elif defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE 
-#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
-extern void *bt_mesh_device_matter_evt_queue_handle;
-extern void *bt_mesh_device_matter_io_queue_handle;
-#else
-extern void *bt_mesh_device_multiple_profile_evt_queue_handle;  //!< Event queue handle
-extern void *bt_mesh_device_multiple_profile_io_queue_handle;   //!< IO queue handle
-#endif
-#elif defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
-#if defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
-extern void *bt_mesh_provisioner_ota_client_evt_queue_handle;  //!< Event queue handle
-extern void *bt_mesh_provisioner_ota_client_io_queue_handle;   //!< IO queue handle
-#else
-extern void *bt_mesh_provisioner_multiple_profile_evt_queue_handle;  //!< Event queue handle
-extern void *bt_mesh_provisioner_multiple_profile_io_queue_handle;   //!< IO queue handle
-#endif
-#endif
 static void ping_timeout_cb(void *ptimer)
 {
-    /* avoid gcc compile warning */
-    (void)ptimer;
-    uint8_t event = EVENT_IO_TO_APP;
+    UNUSED(ptimer);
     T_IO_MSG msg;
     msg.type = PING_TIMEOUT_MSG;
-#if defined(CONFIG_BT_MESH_PROVISIONER) && CONFIG_BT_MESH_PROVISIONER
-    if (os_msg_send(bt_mesh_provisioner_io_queue_handle, &msg, 0) == false)
-    {
-    }
-    else if (os_msg_send(bt_mesh_provisioner_evt_queue_handle, &event, 0) == false)
-    {
-    }
-#elif defined(CONFIG_BT_MESH_DEVICE) && CONFIG_BT_MESH_DEVICE 
-    if (os_msg_send(bt_mesh_device_io_queue_handle, &msg, 0) == false)
-    {
-    }
-    else if (os_msg_send(bt_mesh_device_evt_queue_handle, &event, 0) == false)
-    {
-    }
-#elif defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE 
-#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
-    if (os_msg_send(bt_mesh_device_matter_io_queue_handle, &msg, 0) == false)
-    {
-    }
-    else if (os_msg_send(bt_mesh_device_matter_evt_queue_handle, &event, 0) == false)
-    {
-    }
-#else
-    if (os_msg_send(bt_mesh_device_multiple_profile_io_queue_handle, &msg, 0) == false)
-    {
-    }
-    else if (os_msg_send(bt_mesh_device_multiple_profile_evt_queue_handle, &event, 0) == false)
-    {
-    }
-#endif
-#elif defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE 
-#if defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
-    if (os_msg_send(bt_mesh_provisioner_ota_client_io_queue_handle, &msg, 0) == false)
-    {
-    }
-    else if (os_msg_send(bt_mesh_provisioner_ota_client_evt_queue_handle, &event, 0) == false)
-    {
-    }
-#else
-    if (os_msg_send(bt_mesh_provisioner_multiple_profile_io_queue_handle, &msg, 0) == false)
-    {
-    }
-    else if (os_msg_send(bt_mesh_provisioner_multiple_profile_evt_queue_handle, &event, 0) == false)
-    {
-    }
-#endif
-#endif
+    // Call timer callback function through app main task
+    common_send_io_msg_to_app(msg);
 }
 
 mesh_msg_send_cause_t ping_handle_timeout(void)
@@ -544,11 +532,17 @@ user_cmd_parse_result_t user_cmd_disconnect(user_cmd_parse_value_t *pparse_value
     return USER_CMD_RESULT_OK;
 }
 
+user_cmd_parse_result_t user_cmd_dfu_start_discover(user_cmd_parse_value_t *pparse_value)
+{
+    data_uart_debug("Dfu Start Discover\r\n");
+    dfu_client_start_discovery(pparse_value->dw_parameter[0]);
+    return USER_CMD_RESULT_OK;
+}
 
 user_cmd_parse_result_t user_cmd_proxy_discover(user_cmd_parse_value_t *pparse_value)
 {
     data_uart_debug("Proxy Start Discover\r\n");
-#if defined(MESH_DEVICE) && MESH_DEVICE
+#if MESH_DEVICE
     /* for pts test */
     proxy_client_add(NULL);
     /* replace proxy server */
@@ -588,9 +582,7 @@ user_cmd_parse_result_t user_cmd_proxy_cccd_operate(user_cmd_parse_value_t *ppar
 
 user_cmd_parse_result_t user_cmd_proxy_list(user_cmd_parse_value_t *pparse_value)
 {
-    /* avoid gcc compile warning */
-    (void)pparse_value;
-    
+    UNUSED(pparse_value);
     data_uart_debug("Proxy Server Handle List:\r\nidx\thandle\r\n");
     for (proxy_handle_type_t hdl_idx = HDL_PROXY_SRV_START; hdl_idx < HDL_PROXY_CACHE_LEN; hdl_idx++)
     {
@@ -627,6 +619,22 @@ user_cmd_parse_result_t user_cmd_proxy_cfg_remove_addr(user_cmd_parse_value_t *p
     return USER_CMD_RESULT_OK;
 }
 
+user_cmd_parse_result_t user_cmd_proxy_cfg_directed_proxy_control(user_cmd_parse_value_t
+                                                                  *pparse_value)
+{
+#if F_BT_MESH_1_1_DF_SUPPORT
+    uint8_t use_directed = pparse_value->dw_parameter[0];
+    uint16_t unicast_addr = pparse_value->dw_parameter[1];
+    uint8_t element_num = pparse_value->dw_parameter[2];
+    mesh_addr_range_t addr_range = unicast_addr_range_transform(false, unicast_addr, element_num);
+    proxy_cfg_directed_proxy_control(proxy_ctx_id_get(proxy_client_conn_id, PROXY_CTX_TYPE_PROXY),
+                                     use_directed, &addr_range);
+    data_uart_debug("Proxy cfg directed proxy control, use directed %d addr 0x%04x(%d)\r\n",
+                    use_directed, unicast_addr, element_num);
+#endif
+    return USER_CMD_RESULT_OK;
+}
+
 user_cmd_parse_result_t user_cmd_log_set(user_cmd_parse_value_t *pparse_value)
 {
     log_module_trace_set(TRACE_MODULE_LOWERSTACK, TRACE_LEVEL_ERROR,
@@ -653,8 +661,7 @@ user_cmd_parse_result_t user_cmd_log_set(user_cmd_parse_value_t *pparse_value)
 
 user_cmd_parse_result_t user_cmd_time(user_cmd_parse_value_t *pparse_value)
 {
-    /* avoid gcc compile warning */
-    (void)pparse_value;
+    UNUSED(pparse_value);
     uint32_t time_ms = plt_time_read_ms();
     uint32_t day, hour, minute, second;
     second = time_ms / 1000;
@@ -671,8 +678,8 @@ user_cmd_parse_result_t user_cmd_time(user_cmd_parse_value_t *pparse_value)
 user_cmd_parse_result_t user_cmd_adv_power_set(user_cmd_parse_value_t *pparse_value)
 {
     //uint8_t tx_gain[4] = {0x30, 0x80, 0xA0, 0xF0};
-    int8_t tx_gain_info[4] = {-20, 0, 4, 8};
     //le_adv_set_tx_power(GAP_ADV_TX_POW_SET_1M, tx_gain[pparse_value->dw_parameter[0]]);
+    int8_t tx_gain_info[4] = {-20, 0, 4, 8};
     data_uart_debug("Adv power %d dBm\r\n", tx_gain_info[pparse_value->dw_parameter[0]]);
     return USER_CMD_RESULT_OK;
 }
@@ -696,14 +703,18 @@ user_cmd_parse_result_t user_cmd_fn_init(user_cmd_parse_value_t *pparse_value)
 
 user_cmd_parse_result_t user_cmd_fn_deinit(user_cmd_parse_value_t *pparse_value)
 {
-	/* avoid gcc compile warning */
-    (void)pparse_value;
-	fn_deinit();
-	return USER_CMD_RESULT_OK;
+#if MESH_FN
+    UNUSED(pparse_value);
+    fn_deinit();
+    return USER_CMD_RESULT_OK;
+#else
+    return USER_CMD_RESULT_ERROR;
+#endif
 }
 
 user_cmd_parse_result_t user_cmd_hb_pub(user_cmd_parse_value_t *pparse_value)
 {
+#if MESH_HB
     hb_pub_t pub;
     pub.dst = pparse_value->dw_parameter[0];
     pub.count = pparse_value->dw_parameter[1];
@@ -719,10 +730,14 @@ user_cmd_parse_result_t user_cmd_hb_pub(user_cmd_parse_value_t *pparse_value)
     hb_publication_set(pub);
     hb_timer_start(HB_TIMER_PUB);
     return USER_CMD_RESULT_OK;
+#else
+    return USER_CMD_RESULT_ERROR;
+#endif
 }
 
 user_cmd_parse_result_t user_cmd_hb_sub(user_cmd_parse_value_t *pparse_value)
 {
+#if MESH_HB
     hb_sub_t sub;
     sub.src = pparse_value->dw_parameter[0];
     sub.dst = pparse_value->dw_parameter[1];
@@ -734,14 +749,125 @@ user_cmd_parse_result_t user_cmd_hb_sub(user_cmd_parse_value_t *pparse_value)
     hb_subscription_set(sub);
     hb_timer_start(HB_TIMER_SUB);
     return USER_CMD_RESULT_OK;
+#else
+    return USER_CMD_RESULT_ERROR;
+#endif
 }
 
 user_cmd_parse_result_t user_cmd_mesh_deinit(user_cmd_parse_value_t *pparse_value)
 {
-    /* avoid gcc compile warning */
-    (void)pparse_value;
-    
+    UNUSED(pparse_value);
     mesh_deinit();
     return USER_CMD_RESULT_OK;
 }
 
+user_cmd_parse_result_t user_cmd_df_path_discovery(user_cmd_parse_value_t *pparse_value)
+{
+#if F_BT_MESH_1_1_DF_SUPPORT
+    uint16_t master_key_index = pparse_value->dw_parameter[0];
+    uint16_t target_addr = pparse_value->dw_parameter[1];
+    uint16_t dependent_node_addr = pparse_value->dw_parameter[2];
+    uint8_t dependent_node_elem_num = 0;
+    if (MESH_NOT_UNASSIGNED_ADDR(dependent_node_addr))
+    {
+        if (pparse_value->dw_parameter[3] > 0)
+        {
+            dependent_node_elem_num = pparse_value->dw_parameter[3];
+        }
+        else
+        {
+            data_uart_debug("wrong dependent elem num: %d\r\n", pparse_value->dw_parameter[3]);
+            return USER_CMD_RESULT_WRONG_PARAMETER;
+        }
+    }
+    df_path_discovery(master_key_index, target_addr, dependent_node_addr, dependent_node_elem_num);
+#endif
+    return USER_CMD_RESULT_OK;
+}
+
+user_cmd_parse_result_t user_cmd_df_path_solicitation(user_cmd_parse_value_t *pparse_value)
+{
+#if F_BT_MESH_1_1_DF_SUPPORT
+    uint16_t addr_num  = pparse_value->para_count - 1;
+    uint16_t *addr_list = plt_malloc(addr_num * sizeof(uint16_t), RAM_TYPE_DATA_ON);
+    for (uint16_t i = 0; i < addr_num; i++)
+    {
+        addr_list[i] = pparse_value->dw_parameter[i + 1];
+    }
+    df_path_solicitation(pparse_value->dw_parameter[0], addr_list, addr_num);
+    plt_free(addr_list, RAM_TYPE_DATA_ON);
+#endif
+    return USER_CMD_RESULT_OK;
+}
+
+user_cmd_parse_result_t user_cmd_df_path_dependents_update(user_cmd_parse_value_t *pparse_value)
+{
+#if F_BT_MESH_1_1_DF_SUPPORT
+    mesh_addr_range_t addr_range = unicast_addr_range_transform(true, pparse_value->dw_parameter[2],
+                                                                pparse_value->dw_parameter[3]);
+    df_path_dependents_update(pparse_value->dw_parameter[0], pparse_value->dw_parameter[1],
+                              &addr_range);
+#endif
+    return USER_CMD_RESULT_OK;
+}
+
+user_cmd_parse_result_t user_cmd_df_path_monitor_test_mode_trigger(user_cmd_parse_value_t
+                                                                   *pparse_value)
+{
+#if F_BT_MESH_1_1_DF_SUPPORT
+    df_path_monitor_test_mode_trigger(pparse_value->dw_parameter[0]);
+#endif
+    return USER_CMD_RESULT_OK;
+}
+
+user_cmd_parse_result_t user_cmd_dfu_add(user_cmd_parse_value_t *pparse_value)
+{
+#if F_BT_MESH_1_1_DFU_SUPPORT
+    fw_dist_receiver_t recv;
+    recv.addr = pparse_value->dw_parameter[0];
+    recv.update_fw_image_idx = pparse_value->dw_parameter[1];
+    fw_dist_server_add_receiver(&recv);
+#endif
+    return USER_CMD_RESULT_OK;
+}
+
+user_cmd_parse_result_t user_cmd_dfu_delete(user_cmd_parse_value_t *pparse_value)
+{
+#if F_BT_MESH_1_1_DFU_SUPPORT
+    fw_dist_server_delete_all_receiver();
+#endif
+    return USER_CMD_RESULT_OK;
+}
+
+user_cmd_parse_result_t user_cmd_dfu_start(user_cmd_parse_value_t *pparse_value)
+{
+#if F_BT_MESH_1_1_DFU_SUPPORT
+    fw_update_policy_t update_policy = FW_UPDATE_POLICY_VERIFY_AND_UPDATE;
+    uint8_t metadata[255] = {0};
+    uint8_t metadata_len = 0;
+    if (pparse_value->para_count > 4)
+    {
+        update_policy = pparse_value->dw_parameter[4];
+    }
+    if (pparse_value->para_count > 6)
+    {
+        metadata_len = pparse_value->dw_parameter[5];
+        plt_hex_to_bin(metadata, (uint8_t *)pparse_value->pparameter[6], metadata_len);
+    }
+    dfu_dist_start(pparse_value->dw_parameter[0], pparse_value->dw_parameter[1],
+                   pparse_value->dw_parameter[2], update_policy, metadata, metadata_len,
+                   pparse_value->dw_parameter[3]);
+#endif
+    return USER_CMD_RESULT_OK;
+}
+
+user_cmd_parse_result_t user_cmd_blob_transfer_server_init(user_cmd_parse_value_t
+                                                           *pparse_value)
+{
+#if F_BT_MESH_1_1_MBT_SUPPORT
+    uint8_t blob_id[8];
+    plt_hex_to_bin(blob_id, (uint8_t *)pparse_value->pparameter[0], 8);
+    blob_transfer_server_init(blob_id, pparse_value->dw_parameter[1], pparse_value->dw_parameter[2]);
+#endif
+    return USER_CMD_RESULT_OK;
+}

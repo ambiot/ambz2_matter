@@ -104,6 +104,14 @@ void plt_srand(uint32_t seed);
 void plt_rand(uint8_t *prand, uint16_t len);
 
 /**
+  * @brief generate the random number between the lower & upper limit
+  * @param[out] range_min: the lower limit
+  * @param[in] range_max: the upper limit
+  * @return the random number
+  */
+uint32_t plt_rand_range(uint32_t range_min, uint32_t range_max);
+
+/**
   * @brief logarithm
   * @param[in] value: exp value
   * @return log value
@@ -118,12 +126,12 @@ uint8_t plt_log2(uint32_t value);
 uint32_t plt_exp2(uint8_t log);
 
 /**
-  * @brief trasnform the hex string to a binary array (big endian)
+  * @brief transform the hex string to a binary array (big endian)
   *
   * The binary array will be filled with 0 if the string length is not enough.
   * @param[out] pbin: binary output
   * @param[in] phex: hex ascii input
-  * @param[in] pbin_len: binary output max lenght
+  * @param[in] pbin_len: binary output max length
   * @return actual binary output length
   *
   * <b>Example usage</b>

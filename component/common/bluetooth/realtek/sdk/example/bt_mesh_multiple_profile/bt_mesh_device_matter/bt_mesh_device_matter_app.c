@@ -25,7 +25,6 @@
 #include "trace_app.h"
 #include "gap_wrapper.h"
 #include "mesh_api.h"
-#include "mesh_data_uart.h"
 #include "mesh_user_cmd_parse.h"
 #include "device_cmd.h"
 #include "mesh_cmd.h"
@@ -45,7 +44,6 @@
 #endif
 #include "platform_stdlib.h"
 #include <ble_scatternet_link_mgr.h>
-#include <ble_scatternet_user_cmd.h>
 #include "gatt_builtin_services.h"
 #include "ble_central_at_cmd.h"
 #include "ble_peripheral_at_cmd.h"
@@ -182,7 +180,20 @@ void bt_mesh_device_matter_handle_callback_msg(T_IO_MSG callback_msg)//receive
             callback_msg.u.buf = NULL;
         }
         break;
-
+#if 0
+    case BT_MATTER_SEND_CB_MSG_SEND_DATA_COMPLETE:
+        {
+            T_SERVER_APP_CB_DATA *send_data_complete = callback_msg.u.buf;
+            T_MATTER_BLEMGR_TX_COMPLETE_CB_ARG tx_complete_cb_arg;
+            tx_complete_cb_arg.conn_id = send_data_complete->event_data.send_data_result.conn_id;
+            if (matter_blemgr_callback_func) {
+                matter_blemgr_callback_func(matter_blemgr_callback_data, MATTER_BLEMGR_TX_COMPLETE_CB, &tx_complete_cb_arg);
+            }
+            os_mem_free(callback_msg.u.buf);
+            callback_msg.u.buf = NULL;
+        }
+        break;
+#endif
     default:
         break;
     }
@@ -240,7 +251,7 @@ void bt_mesh_device_matter_app_handle_io_msg(T_IO_MSG io_msg)
             } else if (io_msg.subtype == 4) {
                 bt_mesh_device_matter_app_handle_upstream_msg(io_msg.subtype, io_msg.u.buf);
             } else if (io_msg.subtype == 5) {
-                uint8_t conn_id = io_msg.u.buf;
+                uint8_t conn_id = (uint8_t)io_msg.u.buf;
                 le_disconnect(conn_id);
             }
         }
@@ -252,7 +263,7 @@ void bt_mesh_device_matter_app_handle_io_msg(T_IO_MSG io_msg)
 
                 if (NULL == padv_data)
                 {
-                    printf("[BT Mesh Device] bt_mesh_device_matter_adv_timer_handler allocate padv_data fail ! \n\r");
+                    printf("[BT Mesh Device] bt_mesh_device_matter_adv_timer_handler allocate padv_data fail ! \r\n");
                     break;
                 }
 
@@ -268,6 +279,22 @@ void bt_mesh_device_matter_app_handle_io_msg(T_IO_MSG io_msg)
            }
         }
         break;
+#if F_BT_MESH_1_1_MBT_SUPPORT
+    case BLOB_CLIENT_PROCEDURE_TIMEOUT:
+        blob_client_handle_procedure_timeout();
+        break;
+    case BLOB_CLIENT_RETRY_TIMEOUT:
+        blob_client_handle_retry_timeout();
+        break;
+    case BLOB_CLIENT_CHUNK_TRANSFER:
+        blob_client_active_chunk_transfer();
+        break;
+#endif
+#if F_BT_MESH_1_1_DFU_SUPPORT
+    case DFU_DIST_APP_TIMEOUT_MSG:
+        dfu_dist_handle_timeout();
+        break;
+#endif
     default:
         break;
     }
@@ -293,7 +320,7 @@ void bt_mesh_device_matter_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, u
             APP_PRINT_INFO0("GAP stack ready");
             uint8_t bt_addr[6];
             gap_get_param(GAP_PARAM_BD_ADDR, bt_addr);
-            data_uart_debug("bt addr: 0x%02x%02x%02x%02x%02x%02x\r\n>",
+            printf("bt addr: 0x%02x%02x%02x%02x%02x%02x\r\n",
                             bt_addr[5], bt_addr[4], bt_addr[3],
                             bt_addr[2], bt_addr[1], bt_addr[0]);
 
@@ -308,18 +335,18 @@ void bt_mesh_device_matter_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, u
             if (new_state.gap_adv_sub_state == GAP_ADV_TO_IDLE_CAUSE_CONN)
             {
                 APP_PRINT_INFO0("GAP adv stoped: because connection created");
-                printf("\n\rGAP adv stoped: because connection created\n\r");
+                printf("GAP adv stoped: because connection created\r\n");
             }
             else
             {
                 APP_PRINT_INFO0("GAP adv stoped");
-                printf("\n\rGAP adv stopped\n\r");
+                printf("GAP adv stopped\r\n");
             }
         }
         else if (new_state.gap_adv_state == GAP_ADV_STATE_ADVERTISING)
         {
             APP_PRINT_INFO0("GAP adv start");
-            printf("\n\rGAP adv start\n\r");
+            printf("GAP adv start\r\n");
         }
     }
 
@@ -328,12 +355,12 @@ void bt_mesh_device_matter_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, u
         if (new_state.gap_scan_state == GAP_SCAN_STATE_IDLE)
         {
             APP_PRINT_INFO0("GAP scan stop");
-            //data_uart_debug("GAP scan stop\r\n");
+            //printf("GAP scan stop\r\n");
         }
         else if (new_state.gap_scan_state == GAP_SCAN_STATE_SCANNING)
         {
             APP_PRINT_INFO0("GAP scan start");
-            //data_uart_debug("GAP scan start\r\n");
+            //printf("GAP scan start\r\n");
         }
     }
 
@@ -371,14 +398,14 @@ void bt_mesh_device_matter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN
                 APP_PRINT_ERROR2("bt_mesh_device_matter_app_handle_conn_state_evt: connection lost, conn_id %d, cause 0x%x", conn_id,
                                  disc_cause);
             }
-            data_uart_debug("Disconnect conn_id %d, cause 0x%x\r\n", conn_id, disc_cause);
+            printf("Disconnect conn_id %d, cause 0x%x\r\n", conn_id, disc_cause);
             mesh_device_conn_state = 0;
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
             uint8_t ret = USER_API_RESULT_ERROR;
             ret = bt_mesh_indication(GEN_MESH_CODE(_connect), BT_MESH_USER_CMD_FAIL, NULL);
             if (ret != USER_API_RESULT_OK) {
                 if (ret != USER_API_RESULT_INCORRECT_CODE) {
-                    data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_connect));
+                    printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_connect));
                     goto next;
                 }
             } else {
@@ -387,7 +414,7 @@ void bt_mesh_device_matter_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN
             ret = bt_mesh_indication(GEN_MESH_CODE(_disconnect), BT_MESH_USER_CMD_FAIL, NULL);
             if (ret != USER_API_RESULT_OK) {
                 if (ret != USER_API_RESULT_INCORRECT_CODE) {
-                    data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_disconnect));
+                    printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_disconnect));
                     goto next;
                 }
             } else {
@@ -443,11 +470,11 @@ next:
             APP_PRINT_INFO5("GAP_CONN_STATE_CONNECTED:remote_bd %s, remote_addr_type %d, conn_interval 0x%x, conn_latency 0x%x, conn_supervision_timeout 0x%x",
                             TRACE_BDADDR(bt_mesh_device_matter_app_link_table[conn_id].bd_addr), bt_mesh_device_matter_app_link_table[conn_id].bd_type,
                             conn_interval, conn_latency, conn_supervision_timeout);
-            data_uart_debug("Connected success conn_id %d\r\n", conn_id);
+            printf("Connected success conn_id %d\r\n", conn_id);
             mesh_device_conn_state = 1;
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
             if (bt_mesh_indication(GEN_MESH_CODE(_connect), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-                data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_connect));  
+                printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_connect));  
             }
 #endif
 
@@ -469,7 +496,7 @@ next:
             le_get_conn_param(GAP_PARAM_CONN_BD_ADDR_TYPE, &remote_bd_type, conn_id);
             APP_PRINT_INFO3("GAP_CONN_STATE_CONNECTED: conn_id %d, local_bd_type %d, remote_bd_type %d\n",
                             conn_id, local_bd_type, remote_bd_type);
-            data_uart_debug("GAP_CONN_STATE_CONNECTED: conn_id %d, local_bd_type %d, remote_bd_type %d\n",
+            printf("GAP_CONN_STATE_CONNECTED: conn_id %d, local_bd_type %d, remote_bd_type %d\r\n",
                             conn_id, local_bd_type, remote_bd_type);
 
             //send data to matter
@@ -541,13 +568,13 @@ void bt_mesh_device_matter_app_handle_authen_state_evt(uint8_t conn_id, uint8_t 
         {
             if (cause == GAP_SUCCESS)
             {
-                data_uart_debug("Pair success\r\n");
+                printf("Pair success\r\n");
                 APP_PRINT_INFO0("bt_mesh_device_matter_app_handle_authen_state_evt: GAP_AUTHEN_STATE_COMPLETE pair success");
 
             }
             else
             {
-                data_uart_debug("Pair failed: cause 0x%x\r\n", cause);
+                printf("Pair failed: cause 0x%x\r\n", cause);
                 APP_PRINT_INFO0("bt_mesh_device_matter_app_handle_authen_state_evt: GAP_AUTHEN_STATE_COMPLETE pair failed");
             }
         }
@@ -596,7 +623,7 @@ void bt_mesh_device_matter_app_handle_conn_param_update_evt(uint8_t conn_id, uin
             le_get_conn_param(GAP_PARAM_CONN_TIMEOUT, &conn_supervision_timeout, conn_id);
             APP_PRINT_INFO4("bt_mesh_device_matter_app_handle_conn_param_update_evt update success:conn_id %d, conn_interval 0x%x, conn_slave_latency 0x%x, conn_supervision_timeout 0x%x",
                             conn_id, conn_interval, conn_slave_latency, conn_supervision_timeout);
-            data_uart_debug("\n\rbt_mesh_device_matter_app_handle_conn_param_update_evt update success:conn_id %d, conn_interval 0x%x, conn_slave_latency 0x%x, conn_supervision_timeout 0x%x \r\n",
+            printf("bt_mesh_device_matter_app_handle_conn_param_update_evt update success:conn_id %d, conn_interval 0x%x, conn_slave_latency 0x%x, conn_supervision_timeout 0x%x \r\n",
                             conn_id, conn_interval, conn_slave_latency, conn_supervision_timeout);
         }
         break;
@@ -605,7 +632,7 @@ void bt_mesh_device_matter_app_handle_conn_param_update_evt(uint8_t conn_id, uin
         {
             APP_PRINT_ERROR2("bt_mesh_device_matter_app_handle_conn_param_update_evt update failed: conn_id %d, cause 0x%x",
                              conn_id, cause);
-            data_uart_debug("\n\rbt_mesh_device_matter_app_handle_conn_param_update_evt update failed: conn_id %d, cause 0x%x\r\n",
+            printf("bt_mesh_device_matter_app_handle_conn_param_update_evt update failed: conn_id %d, cause 0x%x\r\n",
                              conn_id, cause);
         }
         break;
@@ -613,7 +640,7 @@ void bt_mesh_device_matter_app_handle_conn_param_update_evt(uint8_t conn_id, uin
     case GAP_CONN_PARAM_UPDATE_STATUS_PENDING:
         {
             APP_PRINT_INFO1("bt_mesh_device_matter_app_handle_conn_param_update_evt update pending: conn_id %d", conn_id);
-            data_uart_debug("\n\rbt_mesh_device_matter_app_handle_conn_param_update_evt update pending: conn_id %d\r\n", conn_id);
+            printf("bt_mesh_device_matter_app_handle_conn_param_update_evt update pending: conn_id %d\r\n", conn_id);
         }
         break;
 
@@ -729,7 +756,7 @@ void bt_mesh_device_matter_app_handle_gap_msg(T_IO_MSG *p_gap_msg)
             conn_id = gap_msg.msg_data.gap_bond_passkey_input.conn_id;
             APP_PRINT_INFO2("GAP_MSG_LE_BOND_PASSKEY_INPUT: conn_id %d, key_press %d",
                             conn_id, gap_msg.msg_data.gap_bond_passkey_input.key_press);
-            data_uart_debug("GAP_MSG_LE_BOND_PASSKEY_INPUT: conn_id %d\r\n", conn_id);
+            printf("GAP_MSG_LE_BOND_PASSKEY_INPUT: conn_id %d\r\n", conn_id);
             //le_bond_passkey_input_confirm(conn_id, passkey, GAP_CFM_CAUSE_ACCEPT);
         }
         break;
@@ -781,7 +808,7 @@ void bt_mesh_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
 
             APP_PRINT_TRACE2("bt_mesh_device_matter_app_parse_scan_info: AD Structure Info: AD type 0x%x, AD Data Length %d", type,
                              length - 1);
-//            BLE_PRINT("ble_scatternet_app_parse_scan_info: AD Structure Info: AD type 0x%x, AD Data Length %d\n\r", type,
+//            printf("ble_scatternet_app_parse_scan_info: AD Structure Info: AD type 0x%x, AD Data Length %d\r\n", type,
 //                             length - 1);
 
 
@@ -796,7 +823,7 @@ void bt_mesh_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                     /* (flags & 0x10) -- Simultaneous LE and BR/EDR to Same Device Capable (Host) */
                     uint8_t flags = scan_info->data[pos + 1];
                     APP_PRINT_INFO1("GAP_ADTYPE_FLAGS: 0x%x", flags);
-                    BLE_PRINT("GAP_ADTYPE_FLAGS: 0x%x\n\r", flags);
+                    printf("GAP_ADTYPE_FLAGS: 0x%x\r\n", flags);
 
                 }
                 break;
@@ -811,7 +838,7 @@ void bt_mesh_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                     while (i >= 2)
                     {
                         APP_PRINT_INFO1("GAP_ADTYPE_16BIT_XXX: 0x%x", *p_uuid);
-                        BLE_PRINT("GAP_ADTYPE_16BIT_XXX: 0x%x\n\r", *p_uuid);
+                        printf("GAP_ADTYPE_16BIT_XXX: 0x%x\r\n", *p_uuid);
                         p_uuid ++;
                         i -= 2;
                     }
@@ -827,7 +854,7 @@ void bt_mesh_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                     while (i >= 4)
                     {
                         APP_PRINT_INFO1("GAP_ADTYPE_32BIT_XXX: 0x%x", *p_uuid);
-                        BLE_PRINT("GAP_ADTYPE_32BIT_XXX: 0x%x\n\r", (unsigned int)*p_uuid);
+                        printf("GAP_ADTYPE_32BIT_XXX: 0x%x\r\n", (unsigned int)*p_uuid);
                         p_uuid ++;
 
                         i -= 4;
@@ -842,7 +869,7 @@ void bt_mesh_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                     uint32_t *p_uuid = (uint32_t *)(buffer);
                     APP_PRINT_INFO4("GAP_ADTYPE_128BIT_XXX: 0x%8.8x%8.8x%8.8x%8.8x",
                                     p_uuid[3], p_uuid[2], p_uuid[1], p_uuid[0]);
-                    BLE_PRINT("GAP_ADTYPE_128BIT_XXX: 0x%8.8x%8.8x%8.8x%8.8x\n\r",
+                    printf("GAP_ADTYPE_128BIT_XXX: 0x%8.8x%8.8x%8.8x%8.8x\r\n",
                                     (unsigned int)p_uuid[3], (unsigned int)p_uuid[2], (unsigned int)p_uuid[1], (unsigned int)p_uuid[0]);
 
                 }
@@ -853,7 +880,7 @@ void bt_mesh_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                 {
                     buffer[length - 1] = '\0';
                     APP_PRINT_INFO1("GAP_ADTYPE_LOCAL_NAME_XXX: %s", TRACE_STRING(buffer));
-                    BLE_PRINT("GAP_ADTYPE_LOCAL_NAME_XXX: %s\n\r", buffer);
+                    printf("GAP_ADTYPE_LOCAL_NAME_XXX: %s\r\n", buffer);
 
                 }
                 break;
@@ -861,7 +888,7 @@ void bt_mesh_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
             case GAP_ADTYPE_POWER_LEVEL:
                 {
                     APP_PRINT_INFO1("GAP_ADTYPE_POWER_LEVEL: 0x%x", scan_info->data[pos + 1]);
-                    BLE_PRINT("GAP_ADTYPE_POWER_LEVEL: 0x%x\n\r", scan_info->data[pos + 1]);
+                    printf("GAP_ADTYPE_POWER_LEVEL: 0x%x\r\n", scan_info->data[pos + 1]);
 
                 }
                 break;
@@ -872,7 +899,7 @@ void bt_mesh_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                     uint16_t *p_max = p_min + 1;
                     APP_PRINT_INFO2("GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE: 0x%x - 0x%x", *p_min,
                                     *p_max);
-                    BLE_PRINT("GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE: 0x%x - 0x%x\n\r", *p_min, *p_max);
+                    printf("GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE: 0x%x - 0x%x\r\n", *p_min, *p_max);
 
                 }
                 break;
@@ -884,7 +911,7 @@ void bt_mesh_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
 
                     APP_PRINT_INFO3("GAP_ADTYPE_SERVICE_DATA: UUID 0x%x, len %d, data %b", *p_uuid,
                                     data_len, TRACE_BINARY(data_len, &buffer[2]));
-                    BLE_PRINT("GAP_ADTYPE_SERVICE_DATA: UUID 0x%x, len %d\n\r", *p_uuid, data_len);
+                    printf("GAP_ADTYPE_SERVICE_DATA: UUID 0x%x, len %d\r\n", *p_uuid, data_len);
 
                 }
                 break;
@@ -892,7 +919,7 @@ void bt_mesh_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                 {
                     uint16_t *p_appearance = (uint16_t *)(buffer);
                     APP_PRINT_INFO1("GAP_ADTYPE_APPEARANCE: %d", *p_appearance);
-                    BLE_PRINT("GAP_ADTYPE_APPEARANCE: %d\n\r", *p_appearance);
+                    printf("GAP_ADTYPE_APPEARANCE: %d\r\n", *p_appearance);
 
                 }
                 break;
@@ -903,7 +930,7 @@ void bt_mesh_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
                     uint16_t *p_company_id = (uint16_t *)(buffer);
                     APP_PRINT_INFO3("GAP_ADTYPE_MANUFACTURER_SPECIFIC: company_id 0x%x, len %d, data %b",
                                     *p_company_id, data_len, TRACE_BINARY(data_len, &buffer[2]));
-                    BLE_PRINT("GAP_ADTYPE_MANUFACTURER_SPECIFIC: company_id 0x%x, len %d\n\r", *p_company_id, data_len);
+                    printf("GAP_ADTYPE_MANUFACTURER_SPECIFIC: company_id 0x%x, len %d\r\n", *p_company_id, data_len);
 
                 }
                 break;
@@ -914,8 +941,8 @@ void bt_mesh_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
 
                     for (i = 0; i < (length - 1); i++)
                     {
-                        APP_PRINT_INFO1("  AD Data: Unhandled Data = 0x%x", scan_info->data[pos + i]);
-                    //BLE_PRINT("  AD Data: Unhandled Data = 0x%x\n\r", scan_info->data[pos + i]);
+                        APP_PRINT_INFO1("  AD Data: Unhandled Data = 0x%x", scan_info->data[pos + 1 + i]);
+                    //printf("  AD Data: Unhandled Data = 0x%x\r\n", scan_info->data[pos + 1 + i]);
 
                     }
                 }
@@ -923,7 +950,10 @@ void bt_mesh_device_matter_app_parse_scan_info(T_LE_SCAN_INFO *scan_info)
             }
         }
 
-        pos += length;
+        if (pos + length > 0xFF)    //Avoid pos + length overflow uint8_t
+            pos = 0xFF;
+        else
+            pos += length;
     }
 }
 
@@ -951,7 +981,7 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
                                 i, p_result_table->result_data.srv_uuid16_disc_data.att_handle,
                                 p_result_table->result_data.srv_uuid16_disc_data.end_group_handle,
                                 p_result_table->result_data.srv_uuid16_disc_data.uuid16);
-                data_uart_debug("ALL SRV UUID16[%d]: service range: 0x%x-0x%x, uuid16 0x%x\n\r",
+                printf("ALL SRV UUID16[%d]: service range: 0x%x-0x%x, uuid16 0x%x\r\n",
                                 i, p_result_table->result_data.srv_uuid16_disc_data.att_handle,
                                 p_result_table->result_data.srv_uuid16_disc_data.end_group_handle,
                                 p_result_table->result_data.srv_uuid16_disc_data.uuid16);
@@ -961,7 +991,7 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
                                 i, p_result_table->result_data.srv_uuid128_disc_data.att_handle,
                                 p_result_table->result_data.srv_uuid128_disc_data.end_group_handle,
                                 TRACE_BINARY(16, p_result_table->result_data.srv_uuid128_disc_data.uuid128));
-                data_uart_debug("ALL SRV UUID128[%d]: service range: 0x%x-0x%x, service="UUID_128_FORMAT"\n\r",
+                printf("ALL SRV UUID128[%d]: service range: 0x%x-0x%x, service="UUID_128_FORMAT"\r\n",
                                 i, p_result_table->result_data.srv_uuid128_disc_data.att_handle,
                                 p_result_table->result_data.srv_uuid128_disc_data.end_group_handle,
                                 UUID_128(p_result_table->result_data.srv_uuid128_disc_data.uuid128));
@@ -969,7 +999,7 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
 
             default:
                 APP_PRINT_ERROR0("Invalid Discovery Result Type!");
-                data_uart_debug("Invalid Discovery Result Type!\n\r");
+                printf("Invalid Discovery Result Type!\r\n");
                 break;
             }
         }
@@ -978,7 +1008,7 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
     case GCS_BY_UUID128_SRV_DISCOV:
         APP_PRINT_INFO2("conn_id %d, GCS_BY_UUID128_SRV_DISCOV, is_success %d",
                         conn_id, discov_result.is_success);
-        data_uart_debug("conn_id %d, GCS_BY_UUID128_SRV_DISCOV, is_success %d\n\r",
+        printf("conn_id %d, GCS_BY_UUID128_SRV_DISCOV, is_success %d\r\n",
                         conn_id, discov_result.is_success);
 
         for (i = 0; i < discov_result.result_num; i++)
@@ -990,14 +1020,14 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
                 APP_PRINT_INFO3("SRV DATA[%d]: service range: 0x%x-0x%x",
                                 i, p_result_table->result_data.srv_disc_data.att_handle,
                                 p_result_table->result_data.srv_disc_data.end_group_handle);
-                data_uart_debug("SRV DATA[%d]: service range: 0x%x-0x%x\n\r",
+                printf("SRV DATA[%d]: service range: 0x%x-0x%x\r\n",
                                 i, p_result_table->result_data.srv_disc_data.att_handle,
                                 p_result_table->result_data.srv_disc_data.end_group_handle);
                 break;
 
             default:
                 APP_PRINT_ERROR0("Invalid Discovery Result Type!");
-                data_uart_debug("Invalid Discovery Result Type!\n\r");
+                printf("Invalid Discovery Result Type!\r\n");
                 break;
             }
         }
@@ -1006,7 +1036,7 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
     case GCS_BY_UUID_SRV_DISCOV:
         APP_PRINT_INFO2("conn_id %d, GCS_BY_UUID_SRV_DISCOV, is_success %d",
                         conn_id, discov_result.is_success);
-        data_uart_debug("conn_id %d, GCS_BY_UUID_SRV_DISCOV, is_success %d\n\r",
+        printf("conn_id %d, GCS_BY_UUID_SRV_DISCOV, is_success %d\r\n",
                         conn_id, discov_result.is_success);
         for (i = 0; i < discov_result.result_num; i++)
         {
@@ -1017,14 +1047,14 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
                 APP_PRINT_INFO3("SRV DATA[%d]: service range: 0x%x-0x%x",
                                 i, p_result_table->result_data.srv_disc_data.att_handle,
                                 p_result_table->result_data.srv_disc_data.end_group_handle);
-                data_uart_debug("SRV DATA[%d]: service range: 0x%x-0x%x\n\r",
+                printf("SRV DATA[%d]: service range: 0x%x-0x%x\r\n",
                                 i, p_result_table->result_data.srv_disc_data.att_handle,
                                 p_result_table->result_data.srv_disc_data.end_group_handle);
                 break;
 
             default:
                 APP_PRINT_ERROR0("Invalid Discovery Result Type!");
-                data_uart_debug("Invalid Discovery Result Type!\n\r");
+                printf("Invalid Discovery Result Type!\r\n");
                 break;
             }
         }
@@ -1033,7 +1063,7 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
     case GCS_ALL_CHAR_DISCOV:
         APP_PRINT_INFO2("conn_id %d, GCS_ALL_CHAR_DISCOV, is_success %d",
                         conn_id, discov_result.is_success);
-        data_uart_debug("conn_id %d, GCS_ALL_CHAR_DISCOV, is_success %d\n\r",
+        printf("conn_id %d, GCS_ALL_CHAR_DISCOV, is_success %d\r\n",
                         conn_id, discov_result.is_success);
         for (i = 0; i < discov_result.result_num; i++)
         {
@@ -1053,12 +1083,12 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
                                 properties & GATT_CHAR_PROP_WRITE_NO_RSP,
                                 properties & GATT_CHAR_PROP_WRITE,
                                 properties & GATT_CHAR_PROP_NOTIFY);
-                data_uart_debug("CHAR UUID16[%d]: decl_handle 0x%x, properties 0x%x, value_handle 0x%x, uuid16 0x%x\n\r",
+                printf("CHAR UUID16[%d]: decl_handle 0x%x, properties 0x%x, value_handle 0x%x, uuid16 0x%x\r\n",
                                 i, p_result_table->result_data.char_uuid16_disc_data.decl_handle,
                                 p_result_table->result_data.char_uuid16_disc_data.properties,
                                 p_result_table->result_data.char_uuid16_disc_data.value_handle,
                                 p_result_table->result_data.char_uuid16_disc_data.uuid16);
-                data_uart_debug("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\n\r",
+                printf("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\r\n",
                                 properties & GATT_CHAR_PROP_INDICATE,
                                 properties & GATT_CHAR_PROP_READ,
                                 properties & GATT_CHAR_PROP_WRITE_NO_RSP,
@@ -1080,12 +1110,12 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
                                 properties & GATT_CHAR_PROP_WRITE,
                                 properties & GATT_CHAR_PROP_NOTIFY
                                );
-                data_uart_debug("CHAR UUID128[%d]:  decl hndl=0x%x, prop=0x%x, value hndl=0x%x, uuid128="UUID_128_FORMAT"\n\r",
+                printf("CHAR UUID128[%d]:  decl hndl=0x%x, prop=0x%x, value hndl=0x%x, uuid128="UUID_128_FORMAT"\r\n",
                                 i, p_result_table->result_data.char_uuid128_disc_data.decl_handle,
                                 p_result_table->result_data.char_uuid128_disc_data.properties,
                                 p_result_table->result_data.char_uuid128_disc_data.value_handle,
                                 UUID_128(p_result_table->result_data.char_uuid128_disc_data.uuid128));
-                data_uart_debug("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\n\r",
+                printf("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\r\n",
                                 properties & GATT_CHAR_PROP_INDICATE,
                                 properties & GATT_CHAR_PROP_READ,
                                 properties & GATT_CHAR_PROP_WRITE_NO_RSP,
@@ -1095,7 +1125,7 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
                 break;
             default:
                 APP_PRINT_ERROR0("Invalid Discovery Result Type!");
-                data_uart_debug("Invalid Discovery Result Type!\n\r");
+                printf("Invalid Discovery Result Type!\r\n");
                 break;
             }
         }
@@ -1104,7 +1134,7 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
     case GCS_BY_UUID_CHAR_DISCOV:
         APP_PRINT_INFO2("conn_id %d, GCS_BY_UUID_CHAR_DISCOV, is_success %d",
                         conn_id, discov_result.is_success);
-        data_uart_debug("conn_id %d, GCS_BY_UUID_CHAR_DISCOV, is_success %d\n\r",
+        printf("conn_id %d, GCS_BY_UUID_CHAR_DISCOV, is_success %d\r\n",
                         conn_id, discov_result.is_success);
 
         for (i = 0; i < discov_result.result_num; i++)
@@ -1126,12 +1156,12 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
                                 properties & GATT_CHAR_PROP_WRITE,
                                 properties & GATT_CHAR_PROP_NOTIFY
                                );
-                data_uart_debug("UUID16 CHAR[%d]: Characteristics by uuid16, decl hndl=0x%x, prop=0x%x, value hndl=0x%x, uuid16=<0x%x>\n\r",
+                printf("UUID16 CHAR[%d]: Characteristics by uuid16, decl hndl=0x%x, prop=0x%x, value hndl=0x%x, uuid16=<0x%x>\r\n",
                                 i, p_result_table->result_data.char_uuid16_disc_data.decl_handle,
                                 p_result_table->result_data.char_uuid16_disc_data.properties,
                                 p_result_table->result_data.char_uuid16_disc_data.value_handle,
                                 p_result_table->result_data.char_uuid16_disc_data.uuid16);
-                data_uart_debug("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\n\r",
+                printf("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\r\n",
                                 properties & GATT_CHAR_PROP_INDICATE,
                                 properties & GATT_CHAR_PROP_READ,
                                 properties & GATT_CHAR_PROP_WRITE_NO_RSP,
@@ -1142,7 +1172,7 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
 
             default:
                 APP_PRINT_ERROR0("Invalid Discovery Result Type!");
-                data_uart_debug("Invalid Discovery Result Type!");
+                printf("Invalid Discovery Result Type!\r\n");
                 break;
             }
         }
@@ -1151,7 +1181,7 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
     case GCS_BY_UUID128_CHAR_DISCOV:
         APP_PRINT_INFO2("conn_id %d, GCS_BY_UUID128_CHAR_DISCOV, is_success %d",
                         conn_id, discov_result.is_success);
-        data_uart_debug("conn_id %d, GCS_BY_UUID128_CHAR_DISCOV, is_success %d\n\r",
+        printf("conn_id %d, GCS_BY_UUID128_CHAR_DISCOV, is_success %d\r\n",
                         conn_id, discov_result.is_success);
         for (i = 0; i < discov_result.result_num; i++)
         {
@@ -1173,12 +1203,12 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
                                 properties & GATT_CHAR_PROP_WRITE,
                                 properties & GATT_CHAR_PROP_NOTIFY
                                );
-                data_uart_debug("UUID128 CHAR[%d]: Characteristics by uuid128, decl hndl=0x%x, prop=0x%x, value hndl=0x%x, uuid128="UUID_128_FORMAT"\n\r",
+                printf("UUID128 CHAR[%d]: Characteristics by uuid128, decl hndl=0x%x, prop=0x%x, value hndl=0x%x, uuid128="UUID_128_FORMAT"\r\n",
                                 i, p_result_table->result_data.char_uuid128_disc_data.decl_handle,
                                 p_result_table->result_data.char_uuid128_disc_data.properties,
                                 p_result_table->result_data.char_uuid128_disc_data.value_handle,
                                 UUID_128(p_result_table->result_data.char_uuid128_disc_data.uuid128));
-                data_uart_debug("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\n\r",
+                printf("properties:indicate %d, read %d, write cmd %d, write %d, notify %d\r\n",
                                 properties & GATT_CHAR_PROP_INDICATE,
                                 properties & GATT_CHAR_PROP_READ,
                                 properties & GATT_CHAR_PROP_WRITE_NO_RSP,
@@ -1189,7 +1219,7 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
 
             default:
                 APP_PRINT_ERROR0("Invalid Discovery Result Type!");
-                BLE_PRINT("Invalid Discovery Result Type!\n\r");
+                printf("Invalid Discovery Result Type!\r\n");
                 break;
             }
         }
@@ -1198,7 +1228,7 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
     case GCS_ALL_CHAR_DESC_DISCOV:
         APP_PRINT_INFO2("conn_id %d, GCS_ALL_CHAR_DESC_DISCOV, is_success %d\r\n",
                         conn_id, discov_result.is_success);
-        data_uart_debug("conn_id %d, GCS_ALL_CHAR_DESC_DISCOV, is_success %d\n\r",
+        printf("conn_id %d, GCS_ALL_CHAR_DESC_DISCOV, is_success %d\r\n",
                         conn_id, discov_result.is_success);
         for (i = 0; i < discov_result.result_num; i++)
         {
@@ -1209,7 +1239,7 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
                 APP_PRINT_INFO3("DESC UUID16[%d]: Descriptors handle=0x%x, uuid16=<0x%x>",
                                 i, p_result_table->result_data.char_desc_uuid16_disc_data.handle,
                                 p_result_table->result_data.char_desc_uuid16_disc_data.uuid16);
-                data_uart_debug("DESC UUID16[%d]: Descriptors handle=0x%x, uuid16=<0x%x>\n\r",
+                printf("DESC UUID16[%d]: Descriptors handle=0x%x, uuid16=<0x%x>\r\n",
                                 i, p_result_table->result_data.char_desc_uuid16_disc_data.handle,
                                 p_result_table->result_data.char_desc_uuid16_disc_data.uuid16);
                 break;
@@ -1217,14 +1247,14 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
                 APP_PRINT_INFO3("DESC UUID128[%d]: Descriptors handle=0x%x, uuid128=<%b>",
                                 i, p_result_table->result_data.char_desc_uuid128_disc_data.handle,
                                 TRACE_BINARY(16, p_result_table->result_data.char_desc_uuid128_disc_data.uuid128));
-                data_uart_debug("DESC UUID128[%d]: Descriptors handle=0x%x, uuid128="UUID_128_FORMAT"\n\r",
+                printf("DESC UUID128[%d]: Descriptors handle=0x%x, uuid128="UUID_128_FORMAT"\r\n",
                                 i, p_result_table->result_data.char_desc_uuid128_disc_data.handle,
                                 UUID_128(p_result_table->result_data.char_desc_uuid128_disc_data.uuid128));
                 break;
 
             default:
                 APP_PRINT_ERROR0("Invalid Discovery Result Type!");
-                data_uart_debug("Invalid Discovery Result Type!\n\r");
+                printf("Invalid Discovery Result Type!\r\n");
                 break;
             }
         }
@@ -1233,7 +1263,7 @@ void bt_mesh_device_matter_gcs_handle_discovery_result(uint8_t conn_id, T_GCS_DI
     default:
         APP_PRINT_ERROR2("Invalid disc type: conn_id %d, discov_type %d",
                          conn_id, discov_result.discov_type);
-        data_uart_debug("Invalid disc type: conn_id %d, discov_type %d\n\r",
+        printf("Invalid disc type: conn_id %d, discov_type %d\r\n",
                          conn_id, discov_result.discov_type);
         break;
     }
@@ -1264,7 +1294,7 @@ T_APP_RESULT bt_mesh_device_matter_gcs_client_callback(T_CLIENT_ID client_id, ui
                             p_gcs_cb_data->cb_content.read_result.cause,
                             p_gcs_cb_data->cb_content.read_result.handle,
                             p_gcs_cb_data->cb_content.read_result.value_size);
-            data_uart_debug("READ RESULT: cause 0x%x, handle 0x%x, value_len %d\n\r",
+            printf("READ RESULT: cause 0x%x, handle 0x%x, value_len %d\r\n",
                             p_gcs_cb_data->cb_content.read_result.cause,
                             p_gcs_cb_data->cb_content.read_result.handle,
                             p_gcs_cb_data->cb_content.read_result.value_size);
@@ -1274,10 +1304,10 @@ T_APP_RESULT bt_mesh_device_matter_gcs_client_callback(T_CLIENT_ID client_id, ui
                 APP_PRINT_INFO1("READ VALUE: %b",
                                 TRACE_BINARY(p_gcs_cb_data->cb_content.read_result.value_size,
                                              p_gcs_cb_data->cb_content.read_result.p_value));
-                data_uart_debug("READ VALUE: ");
+                printf("READ VALUE: ");
                 for(int i=0; i< p_gcs_cb_data->cb_content.read_result.value_size; i++)
-                    data_uart_debug("0x%02x ", *(p_gcs_cb_data->cb_content.read_result.p_value + i));
-                data_uart_debug("\n\r");
+                    printf("0x%02x ", *(p_gcs_cb_data->cb_content.read_result.p_value + i));
+                printf("\r\n");
             }
             break;
         case GCS_CLIENT_CB_TYPE_WRITE_RESULT:
@@ -1285,7 +1315,7 @@ T_APP_RESULT bt_mesh_device_matter_gcs_client_callback(T_CLIENT_ID client_id, ui
                             p_gcs_cb_data->cb_content.write_result.cause,
                             p_gcs_cb_data->cb_content.write_result.handle,
                             p_gcs_cb_data->cb_content.write_result.type);
-            data_uart_debug("WRITE RESULT: cause 0x%x, handle 0x%x, type %d\n\r",
+            printf("WRITE RESULT: cause 0x%x, handle 0x%x, type %d\r\n",
                             p_gcs_cb_data->cb_content.write_result.cause,
                             p_gcs_cb_data->cb_content.write_result.handle,
                             p_gcs_cb_data->cb_content.write_result.type);
@@ -1299,14 +1329,14 @@ T_APP_RESULT bt_mesh_device_matter_gcs_client_callback(T_CLIENT_ID client_id, ui
                 APP_PRINT_INFO1("INDICATION: value %b",
                                 TRACE_BINARY(p_gcs_cb_data->cb_content.notif_ind.value_size,
                                              p_gcs_cb_data->cb_content.notif_ind.p_value));
-                data_uart_debug("INDICATION: handle 0x%x, value_size %d\r\n",
+                printf("INDICATION: handle 0x%x, value_size %d\r\n",
                                 p_gcs_cb_data->cb_content.notif_ind.handle,
                                 p_gcs_cb_data->cb_content.notif_ind.value_size);
-                data_uart_debug("INDICATION: value ");
+                printf("INDICATION: value ");
                 for (int i = 0; i < p_gcs_cb_data->cb_content.notif_ind.value_size; i++) {
-                    data_uart_debug("0x%02x ", *(p_gcs_cb_data->cb_content.notif_ind.p_value+ i));
+                    printf("0x%02x ", *(p_gcs_cb_data->cb_content.notif_ind.p_value+ i));
                 }
-                data_uart_debug("\n\r");
+                printf("\r\n");
             }
             else
             {
@@ -1316,14 +1346,14 @@ T_APP_RESULT bt_mesh_device_matter_gcs_client_callback(T_CLIENT_ID client_id, ui
                 APP_PRINT_INFO1("NOTIFICATION: value %b",
                                 TRACE_BINARY(p_gcs_cb_data->cb_content.notif_ind.value_size,
                                              p_gcs_cb_data->cb_content.notif_ind.p_value));
-                data_uart_debug("NOTIFICATION: handle 0x%x, value_size %d\r\n",
+                printf("NOTIFICATION: handle 0x%x, value_size %d\r\n",
                                 p_gcs_cb_data->cb_content.notif_ind.handle,
                                 p_gcs_cb_data->cb_content.notif_ind.value_size);
-                data_uart_debug("NOTIFICATION: value ");
+                printf("NOTIFICATION: value ");
                 for (int i = 0; i < p_gcs_cb_data->cb_content.notif_ind.value_size; i++) {
-                    data_uart_debug("0x%02x ", *(p_gcs_cb_data->cb_content.notif_ind.p_value+ i));
+                    printf("0x%02x ", *(p_gcs_cb_data->cb_content.notif_ind.p_value+ i));
                 }
-                data_uart_debug("\n\r");
+                printf("\r\n");
             }
             break;
         default:
@@ -1387,8 +1417,8 @@ T_APP_RESULT bt_mesh_device_matter_app_gap_callback(uint8_t cb_type, void *p_cb_
             sprintf(remote_addr_type,"%s",(p_data->p_le_scan_info->remote_addr_type == GAP_REMOTE_ADDR_LE_PUBLIC)? "public":
                                   (p_data->p_le_scan_info->remote_addr_type == GAP_REMOTE_ADDR_LE_RANDOM)? "random":"unknown");
 
-            BLE_PRINT("ADVType\t\t\t| AddrType\t|%s\t\t\t|rssi\n\r","BT_Addr");
-            BLE_PRINT("%s\t\t%s\t"BD_ADDR_FMT"\t%d\n\r",adv_type,remote_addr_type,BD_ADDR_ARG(p_data->p_le_scan_info->bd_addr),
+            printf("ADVType\t\t\t| AddrType\t|%s\t\t\t|rssi\r\n","BT_Addr");
+            printf("%s\t\t%s\t"BD_ADDR_FMT"\t%d\r\n",adv_type,remote_addr_type,BD_ADDR_ARG(p_data->p_le_scan_info->bd_addr),
                                                     p_data->p_le_scan_info->rssi);
 
             bt_mesh_device_matter_app_parse_scan_info(p_data->p_le_scan_info);
@@ -1436,7 +1466,7 @@ T_APP_RESULT bt_mesh_device_matter_app_gap_callback(uint8_t cb_type, void *p_cb_
                         p_data->p_le_phy_update_info->cause,
                         p_data->p_le_phy_update_info->rx_phy,
                         p_data->p_le_phy_update_info->tx_phy);
-        data_uart_print("GAP_MSG_LE_PHY_UPDATE_INFO:conn_id %d, cause 0x%x, rx_phy %d, tx_phy %d\r\n",
+        printf("GAP_MSG_LE_PHY_UPDATE_INFO:conn_id %d, cause 0x%x, rx_phy %d, tx_phy %d\r\n",
                         p_data->p_le_phy_update_info->conn_id,
                         p_data->p_le_phy_update_info->cause,
                         p_data->p_le_phy_update_info->rx_phy,
@@ -1552,7 +1582,7 @@ T_APP_RESULT bt_mesh_device_matter_app_profile_callback(T_SERVER_ID service_id, 
                             p_param->event_data.send_data_result.service_id,
                             p_param->event_data.send_data_result.attrib_idx,
                             p_param->event_data.send_data_result.credits);
-            data_uart_debug("\n\rPROFILE_EVT_SEND_DATA_COMPLETE: conn_id %d, cause 0x%x, service_id %d, attrib_idx 0x%x, credits %d\r\n",
+            printf("PROFILE_EVT_SEND_DATA_COMPLETE: conn_id %d, cause 0x%x, service_id %d, attrib_idx 0x%x, credits %d\r\n",
                             p_param->event_data.send_data_result.conn_id,
                             p_param->event_data.send_data_result.cause,
                             p_param->event_data.send_data_result.service_id,
@@ -1561,7 +1591,7 @@ T_APP_RESULT bt_mesh_device_matter_app_profile_callback(T_SERVER_ID service_id, 
             if (p_param->event_data.send_data_result.cause == GAP_SUCCESS)
             {
                 APP_PRINT_INFO0("PROFILE_EVT_SEND_DATA_COMPLETE success");
-                data_uart_debug("PROFILE_EVT_SEND_DATA_COMPLETE success\r\n");
+                printf("PROFILE_EVT_SEND_DATA_COMPLETE success\r\n");
 
                 //send msg to matter
                 if (p_param->event_data.send_data_result.service_id == bt_mesh_device_matter_adapter_srv_id)
@@ -1582,7 +1612,7 @@ T_APP_RESULT bt_mesh_device_matter_app_profile_callback(T_SERVER_ID service_id, 
             else
             {
                 APP_PRINT_ERROR0("PROFILE_EVT_SEND_DATA_COMPLETE failed");
-                data_uart_debug("PROFILE_EVT_SEND_DATA_COMPLETE failed\r\n");
+                printf("PROFILE_EVT_SEND_DATA_COMPLETE failed\r\n");
             }
             break;
 
@@ -1622,7 +1652,7 @@ T_APP_RESULT bt_mesh_device_matter_app_profile_callback(T_SERVER_ID service_id, 
                 case MATTER_NOTIFY_INDICATE_V3_ENABLE:
                     {
                         APP_PRINT_INFO0("MATTER_NOTIFY_INDICATE_V3_ENABLE");
-                        printf("\n\rMATTER_NOTIFY_INDICATE_V3_ENABLE\r\n");
+                        printf("MATTER_NOTIFY_INDICATE_V3_ENABLE\r\n");
                         //send msg to matter
                         T_MATTER_CALLBACK_DATA *indication_notification_enable = os_mem_alloc(0, sizeof(T_MATTER_CALLBACK_DATA));
 
@@ -1643,7 +1673,7 @@ T_APP_RESULT bt_mesh_device_matter_app_profile_callback(T_SERVER_ID service_id, 
                 case MATTER_NOTIFY_INDICATE_V3_DISABLE:
                     {
                         APP_PRINT_INFO0("MATTER_NOTIFY_INDICATE_V3_DISABLE");
-                        printf("\n\rMATTER_NOTIFY_INDICATE_V3_DISABLE\r\n");
+                        printf("MATTER_NOTIFY_INDICATE_V3_DISABLE\r\n");
 
                         //send msg to matter
                         T_MATTER_CALLBACK_DATA *indication_notification_disable = os_mem_alloc(0, sizeof(T_MATTER_CALLBACK_DATA));
@@ -1729,21 +1759,25 @@ void device_info_cb(uint8_t bt_addr[6], uint8_t bt_addr_type, int8_t rssi, devic
     {
         return;
     }
-    data_uart_debug("bt addr=0x%02x%02x%02x%02x%02x%02x type=%d rssi=%d ", bt_addr[5], bt_addr[4],
+    printf("bt addr=0x%02x%02x%02x%02x%02x%02x type=%d rssi=%d ", bt_addr[5], bt_addr[4],
                     bt_addr[3], bt_addr[2], bt_addr[1], bt_addr[0], bt_addr_type, rssi);
     switch (pinfo->type)
     {
     case DEVICE_INFO_UDB:
-        data_uart_debug("udb=");
-        data_uart_dump(pinfo->pbeacon_udb->dev_uuid, 16);
+        printf("udb=");
+        mesh_data_dump(pinfo->pbeacon_udb->dev_uuid, 16);
+        break;
+    case DEVICE_INFO_SNB:
+        printf("snb=");
+        mesh_data_dump(pinfo->pbeacon_snb->net_id, 8);
         break;
     case DEVICE_INFO_PROV_ADV:
-        data_uart_debug("prov=");
-        data_uart_dump(pinfo->pservice_data->provision.dev_uuid, 16);
+        printf("prov=");
+        mesh_data_dump(pinfo->pservice_data->provision.dev_uuid, 16);
         break;
     case DEVICE_INFO_PROXY_ADV:
-        data_uart_debug("proxy=");
-        data_uart_dump((uint8_t *)&pinfo->pservice_data->proxy, pinfo->len);
+        printf("proxy=");
+        mesh_data_dump((uint8_t *)&pinfo->pservice_data->proxy, pinfo->len);
         break;
     default:
         break;
@@ -1767,23 +1801,23 @@ bool prov_cb(prov_cb_type_t cb_type, prov_cb_data_t cb_data)
         switch (cb_data.pb_generic_cb_type)
         {
         case PB_GENERIC_CB_LINK_OPENED:
-            data_uart_debug("PB-ADV Link Opened!\r\n>");
+            printf("PB-ADV Link Opened!\r\n");
             break;
         case PB_GENERIC_CB_LINK_OPEN_FAILED:
-            data_uart_debug("PB-ADV Link Open Failed!\r\n>");
+            printf("PB-ADV Link Open Failed!\r\n");
             break;
         case PB_GENERIC_CB_LINK_CLOSED:
-            data_uart_debug("PB-ADV Link Closed!\r\n>");
+            printf("PB-ADV Link Closed!\r\n");
             break;
         default:
             break;
         }
         break;
     case PROV_CB_TYPE_UNPROV:
-        data_uart_debug("unprov device!\r\n>");
+        printf("unprov device!\r\n");
         break;
     case PROV_CB_TYPE_START:
-        data_uart_debug("being prov-ed!\r\n");
+        printf("being prov-ed!\r\n");
         break;
     case PROV_CB_TYPE_PUBLIC_KEY:
         {
@@ -1799,7 +1833,7 @@ bool prov_cb(prov_cb_type_t cb_type, prov_cb_data_t cb_data)
             prov_start_p pprov_start = cb_data.pprov_start;
             prov_auth_value_type = prov_auth_value_type_get(pprov_start);
             /* use cmd to set auth data */
-            data_uart_debug("auth method=%d[nsoi] action=%d size=%d type=%d[nbNa]\r\n>",
+            printf("auth method=%d[nsoi] action=%d size=%d type=%d[nbNa]\r\n",
                             pprov_start->auth_method,
                             pprov_start->auth_action, pprov_start->auth_size, prov_auth_value_type);
             //uint8_t auth_data[16] = {1};
@@ -1828,15 +1862,15 @@ bool prov_cb(prov_cb_type_t cb_type, prov_cb_data_t cb_data)
         {
             mesh_node.iv_timer_count = MESH_IV_INDEX_48W;
             prov_data_p pprov_data = cb_data.pprov_data;
-            data_uart_debug("been prov-ed with addr 0x%04x!\r\n", pprov_data->unicast_address);
+            printf("been prov-ed with addr 0x%04x!\r\n", pprov_data->unicast_address);
         }
         break;
     case PROV_CB_TYPE_FAIL:
-        data_uart_debug("provision fail, type=%d!\r\n", cb_data.prov_fail.fail_type);
+        printf("provision fail, type=%d!\r\n", cb_data.prov_fail.fail_type);
         break;
     case PROV_CB_TYPE_PROV:
         /* stack ready */
-        data_uart_debug("ms addr: 0x%04x\r\n>", mesh_node.unicast_addr);
+        printf("ms addr: 0x%04x\r\n", mesh_node.unicast_addr);
         break;
     default:
         break;
@@ -1858,7 +1892,7 @@ void fn_cb(uint8_t frnd_index, fn_cb_type_t type, uint16_t lpn_addr)
     /* avoid gcc compile warning */
     (void)frnd_index;
     char *string[] = {"establishing with lpn 0x%04x\r\n", "no poll from 0x%04x\r\n", "established with lpn 0x%04x\r\n", "lpn 0x%04x lost\r\n"};
-    data_uart_debug(string[type], lpn_addr);
+    printf(string[type], lpn_addr);
     if (type == FN_CB_TYPE_ESTABLISH_SUCCESS || type == FN_CB_TYPE_FRND_LOST)
     {
         user_cmd_time(NULL);
@@ -1879,7 +1913,7 @@ void lpn_cb(uint8_t frnd_index, lpn_cb_type_t type, uint16_t fn_addr)
     /* avoid gcc compile warning */
     (void)frnd_index;
     char *string[] = {"established with fn 0x%04x\r\n", "no frnd offer\r\n", "no frnd update\r\n", "fn 0x%04x lost\r\n"};
-    data_uart_debug(string[type], fn_addr);
+    printf(string[type], fn_addr);
     if (type == LPN_CB_TYPE_ESTABLISH_SUCCESS || type == LPN_CB_TYPE_FRIENDSHIP_LOST)
     {
         user_cmd_time(NULL);
@@ -1918,11 +1952,11 @@ void hb_cb(hb_data_type_t type, void *pargs)
             hb_data_timer_state_t *pdata = pargs;
             if (HB_TIMER_STATE_START == pdata->state)
             {
-                data_uart_debug("heartbeat publish timer start, period = %d\r\n", pdata->period);
+                printf("heartbeat publish timer start, period = %d\r\n", pdata->period);
             }
             else
             {
-                data_uart_debug("heartbeat publish timer stop\r\n");
+                printf("heartbeat publish timer stop\r\n");
             }
         }
         break;
@@ -1931,30 +1965,30 @@ void hb_cb(hb_data_type_t type, void *pargs)
             hb_data_timer_state_t *pdata = pargs;
             if (HB_TIMER_STATE_START == pdata->state)
             {
-                data_uart_debug("heartbeat subscription timer start, period = %d\r\n", pdata->period);
+                printf("heartbeat subscription timer start, period = %d\r\n", pdata->period);
             }
             else
             {
-                data_uart_debug("heartbeat subscription timer stop\r\n");
+                printf("heartbeat subscription timer stop\r\n");
             }
         }
         break;
     case HB_DATA_PUB_COUNT_UPDATE:
         {
             hb_data_pub_count_update_t *pdata = pargs;
-            data_uart_debug("heartbeat publish count update: %d\r\n", pdata->count);
+            printf("heartbeat publish count update: %d\r\n", pdata->count);
         }
         break;
     case HB_DATA_SUB_PERIOD_UPDATE:
         {
             hb_data_sub_period_update_t *pdata = pargs;
-            data_uart_debug("heartbeat subscription period update: %d\r\n", pdata->period);
+            printf("heartbeat subscription period update: %d\r\n", pdata->period);
         }
         break;
     case HB_DATA_SUB_RECEIVE:
         {
             hb_data_sub_receive_t *pdata = pargs;
-            data_uart_debug("receive heartbeat: src = %d, init_ttl = %d, features = %d-%d-%d-%d, ttl = %d\r\n",
+            printf("receive heartbeat: src = %d, init_ttl = %d, features = %d-%d-%d-%d, ttl = %d\r\n",
                             pdata->src, pdata->init_ttl, pdata->features.relay, pdata->features.proxy,
                             pdata->features.frnd, pdata->features.lpn, pdata->ttl);
         }
@@ -2040,7 +2074,7 @@ T_APP_RESULT bt_mesh_device_matter_gap_service_callback(T_SERVER_ID service_id, 
                 T_LOCAL_NAME device_name;
                 memcpy(device_name.local_name, p_gap_data->msg_data.p_value, p_gap_data->msg_data.len);
                 device_name.local_name[p_gap_data->msg_data.len] = 0;
-                //data_uart_debug("GAPS_WRITE_DEVICE_NAME:device_name = %s \n\r",device_name.local_name);
+                //printf("GAPS_WRITE_DEVICE_NAME:device_name = %s \r\n",device_name.local_name);
                 flash_save_local_name(&device_name);
             }
             break;
@@ -2052,19 +2086,146 @@ T_APP_RESULT bt_mesh_device_matter_gap_service_callback(T_SERVER_ID service_id, 
 
                 LE_ARRAY_TO_UINT16(appearance_val, p_gap_data->msg_data.p_value);
                 appearance.local_appearance = appearance_val;
-                //data_uart_debug("GAPS_WRITE_APPEARANCE:appearance = %s \n\r",appearance.local_appearance);
+                //printf("GAPS_WRITE_APPEARANCE:appearance = %s \r\n",appearance.local_appearance);
                 flash_save_local_appearance(&appearance);
             }
             break;
         default:
             APP_PRINT_ERROR1("bt_mesh_device_matter_gap_service_callback: unhandled msg_data.opcode 0x%x", p_gap_data->msg_data.opcode);
-            //data_uart_debug("bt_mesh_device_matter_gap_service_callback: unhandled msg_data.opcode 0x%x", p_gap_data->msg_data.opcode);
+            //printf("bt_mesh_device_matter_gap_service_callback: unhandled msg_data.opcode 0x%x\r\n", p_gap_data->msg_data.opcode);
             break;
         }
     }
     return result;
 }
 /** @} */
+#endif
+
+/******************************************************************
+ * @fn      rpl_cb
+ * @brief   rpl check fail callbacks are handled in this function.
+ *
+ * @param[in] type:       fail type
+ * @param[in] rpl_loop:   loop of rpl list
+ * @param[in] src:        mesh address in received msg
+ * @param[in] iv_index:   iv index in received msg
+ * @param[in] rpl_seq:    seq stored in rpl list
+ * @param[in] seq:        seq used in received msg
+ * @return ignore rpl check, true: ignore rpl check fail, receive message normally; false: don't receive the message
+ */
+bool rpl_cb(mesh_rpl_fail_type_t type, uint8_t rpl_loop, uint16_t src, uint32_t iv_index,
+            uint32_t rpl_seq, uint32_t seq)
+{
+    return false;
+}
+
+#if F_BT_MESH_1_1_DF_SUPPORT
+/******************************************************************
+ * @fn      df_cb
+ * @brief   df callbacks are handled in this function.
+ *
+ * @param   type
+ * @param   pdata
+ * @return  result
+ */
+uint16_t df_cb(uint8_t type, void *pdata)
+{
+    switch (type)
+    {
+    case MESH_MSG_DF_PATH_ACTION:
+        {
+            df_path_action_t *paction = (df_path_action_t *)pdata;
+            char *state_str[] = {"discovering", "discovery failed", "established", "path released"};
+            char *path_str =
+                "master key index %d\r\nsrc 0x%04x(%d) [0x%04x(%d)] --> dst 0x%04x(%d) [0x%04x(%d)]\r\n";
+            char info[120];
+            sprintf(info, "%s, %s", state_str[paction->action_type], path_str);
+            printf(info, paction->master_key_index,
+                            paction->path_src, paction->path_src_sec_elem_num,
+                            paction->dp_src, paction->dp_src_sec_elem_num,
+                            paction->path_dst, paction->path_dst_sec_elem_num,
+                            paction->dp_dst, paction->dp_dst_sec_elem_num);
+            if (paction->action_type == DF_PATH_ACTION_TYPE_DISCOVERING ||
+                paction->action_type == DF_PATH_ACTION_TYPE_DISCOVERY_FAIL ||
+                paction->action_type == DF_PATH_ACTION_TYPE_ESTABLISHED ||
+                paction->action_type == DF_PATH_ACTION_TYPE_PATH_RELEASE)
+            {
+                user_cmd_time(NULL);
+            }
+        }
+        break;
+    default:
+        break;
+    }
+
+    return 0x00;
+}
+#endif
+
+#if F_BT_MESH_1_1_MBT_SUPPORT
+/******************************************************************
+ * @fn      blob_client_cb
+ * @brief   blob client callbacks are handled in this function.
+ *
+ * @param   pcb_data
+ * @return  void
+ */
+void blob_client_cb(blob_transfer_cb_data_t *pcb_data)
+{
+    char *procedure_str[] = {"caps retrieve", "transfer", "cancel"};
+    char *type_str[] = {"node fail", "success", "fail", "progress"};
+    char info[30];
+    sprintf(info, "%s, %s\r\n", procedure_str[pcb_data->procedure], type_str[pcb_data->type]);
+    printf(info);
+    printf("client phase %d\r\n", pcb_data->client_phase);
+
+    if (pcb_data->type == BLOB_CB_TYPE_NODE_FAIL)
+    {
+        printf("addr 0x%04x", pcb_data->addr);
+    }
+    else if (pcb_data->type == BLOB_CB_TYPE_PROGRESS)
+    {
+        printf("---------- %d%% ---------", pcb_data->progress);
+    }
+
+    printf("\r\n");
+}
+#endif
+
+#if F_BT_MESH_1_1_DFU_SUPPORT
+/******************************************************************
+ * @fn      dfu_dist_cb
+ * @brief   dfu distributor callbacks are handled in this function.
+ *
+ * @param   pcb_data
+ * @return  void
+ */
+void dfu_dist_cb(dfu_dist_cb_data_t *pcb_data)
+{
+    char *type_str[] = {"node fail", "transfer progress", "transfer success", "transfer fail", "verify", "complete"};
+    printf("type %s, client phase %d\r\n", type_str[pcb_data->type], pcb_data->dist_phase);
+
+    if (pcb_data->type == DFU_DIST_CB_TYPE_NODE_FAIL)
+    {
+        printf("addr 0x%04x", pcb_data->paddr[0]);
+    }
+    else if (pcb_data->type == DFU_DIST_CB_TYPE_TRANSFER_PROGRESS)
+    {
+        printf("---------- %d%% ---------", pcb_data->progress);
+    }
+    else if (pcb_data->type == DFU_DIST_CB_TYPE_TRANSFER_SUCCESS ||
+             pcb_data->type == DFU_DIST_CB_TYPE_VERIFY ||
+             pcb_data->type == DFU_DIST_CB_TYPE_COMPLETE)
+    {
+        uint8_t i = 0;
+        while (i < pcb_data->addr_num)
+        {
+            printf("0x%04x ", pcb_data->paddr[i++]);
+        }
+    }
+
+    printf("\r\n");
+}
 #endif
 
 #endif

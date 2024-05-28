@@ -16,8 +16,8 @@
 #define _MESH_SERVICE_H
 
 /* Add Includes here */
-#include "mesh_provision.h"
 #include "mesh_config.h"
+#include "mesh_provision.h"
 
 BEGIN_DECLS
 
@@ -28,7 +28,7 @@ BEGIN_DECLS
 /** @defgroup Mesh_Service_Exported_Macros Exported Macros
   * @{
   */
-#if defined(MESH_DEVICE) && MESH_DEVICE
+#if MESH_DEVICE
 #if MESH_DEVICE_PROV_PROXY_SERVER_COEXIST
 #define MESH_GATT_SERVER_COUNT                              2
 #else
@@ -38,7 +38,7 @@ BEGIN_DECLS
 #define MESH_GATT_SERVER_COUNT                              0
 #endif
 
-#if defined(MESH_PROVISIONER) && MESH_PROVISIONER
+#if MESH_PROVISIONER
 #define MESH_GATT_CLIENT_COUNT                              2
 #else
 #define MESH_GATT_CLIENT_COUNT                              1 //!< or 0 ?
@@ -91,15 +91,16 @@ typedef union
 
 typedef enum
 {
-    MESH_SERVCIE_ADV_CFG_TYPE_PROV_RETRANS_COUNT = 0, //!< uint8_t
-    MESH_SERVCIE_ADV_CFG_TYPE_PROV_RETRANS_INTERVAL = 1, //!< uint16_t, unit: ms
-    MESH_SERVCIE_ADV_CFG_TYPE_PROXY_RETRANS_COUNT = 2, //!< uint8_t
-    MESH_SERVCIE_ADV_CFG_TYPE_PROXY_RETRANS_INTERVAL = 3, //!< uint16_t, unit: ms
-    MESH_SERVCIE_ADV_CFG_TYPE_PROXY_WITH_BT_ADDR = 4, //!< bool
+    MESH_SERVICE_ADV_CFG_TYPE_PROV_RETRANS_COUNT = 0, //!< uint8_t
+    MESH_SERVICE_ADV_CFG_TYPE_PROV_RETRANS_INTERVAL = 1, //!< uint16_t, unit: ms
+    MESH_SERVICE_ADV_CFG_TYPE_PROXY_RETRANS_COUNT = 2, //!< uint8_t
+    MESH_SERVICE_ADV_CFG_TYPE_PROXY_RETRANS_INTERVAL = 3, //!< uint16_t, unit: ms
+    MESH_SERVICE_ADV_CFG_TYPE_PROXY_WITH_BT_ADDR = 4, //!< bool
 #if MESH_PRB
-    MESH_SERVCIE_ADV_CFG_TYPE_PRIVATE_PROXY_RETRANS_COUNT = 5, //!< uint8_t
-    MESH_SERVCIE_ADV_CFG_TYPE_PRIVATE_PROXY_RETRANS_INTERVAL = 6, //!< uint16_t, unit: ms
+    MESH_SERVICE_ADV_CFG_TYPE_PRIVATE_PROXY_RETRANS_COUNT = 5, //!< uint8_t
+    MESH_SERVICE_ADV_CFG_TYPE_PRIVATE_PROXY_RETRANS_INTERVAL = 6, //!< uint16_t, unit: ms
 #endif
+    MESH_SERVICE_ADV_CFG_TYPE_UUID_LIST_TYPE = 7, //!< bool
 } mesh_service_adv_cfg_type_t;
 /** @} */
 

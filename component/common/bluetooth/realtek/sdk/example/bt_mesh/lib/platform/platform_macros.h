@@ -54,12 +54,19 @@ extern "C"  {
 #undef  CLAMP
 #define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 
+#ifndef MEMBER_OFFSET
 #define MEMBER_OFFSET(struct_type, member)      ((uint32_t)&((struct_type *)0)->member)
+#endif
 
+#ifndef CONTAINER_OF
 #define CONTAINER_OF(member_ptr, struct_type, member)                       \
-        (struct_type *)((char *)member_ptr - MEMBER_OFFSET(struct_type, member))
+    ((struct_type *)((char *)member_ptr - MEMBER_OFFSET(struct_type, member)))
+#endif
 
-/* avoid gcc compile warning */        
+#ifndef ARRAY_LEN
+#define ARRAY_LEN(arr)       (sizeof(arr) / sizeof((arr)[0]))
+#endif
+
 #ifndef BIT0
 #define BIT0        0x00000001
 #define BIT1        0x00000002
@@ -77,7 +84,6 @@ extern "C"  {
 #define BIT13       0x00002000
 #define BIT14       0x00004000
 #define BIT15       0x00008000
-#endif
 #define BIT16       0x00010000
 #define BIT17       0x00020000
 #define BIT18       0x00040000
@@ -94,11 +100,13 @@ extern "C"  {
 #define BIT29       0x20000000
 #define BIT30       0x40000000
 #define BIT31       0x80000000
+#endif
 
 #ifndef BIT
 #define BIT(_n)         (uint32_t)(1U << (_n))
 #endif
 
+#ifndef BYTE0
 #define BYTE0(data)     ((uint8_t)data)
 #define BYTE1(data)     ((uint8_t)(data >> 8))
 #define BYTE2(data)     ((uint8_t)(data >> 16))
@@ -106,7 +114,9 @@ extern "C"  {
 #define BYTE(data, n)   ((uint8_t)(data >> 8*n))
 #define BYTES2(data)    BYTE0(data), BYTE1(data)
 #define BYTES4(data)    BYTE0(data), BYTE1(data), BYTE2(data), BYTE3(data)
+#endif
 
+#ifndef BE_EXTRN2WORD
 /* Get local WORD from external 2 BYTE, Big-Endian format STANDARD NETWORK BYTE ORDER */
 #define BE_EXTRN2WORD(p) ((*((p)+1)) & 0xff) + ((*(p)) << 8)
 
@@ -144,6 +154,7 @@ extern "C"  {
         *(((unsigned char*)p)+1) = (unsigned char)(((unsigned long)(w)>>8) & 0xff);     \
         *(((unsigned char*)p)+2) = (unsigned char)(((unsigned long)(w)>>16) & 0xff);    \
         *(((unsigned char*)p)+3) = (unsigned char)(((unsigned long)(w)>>24) & 0xff);}
+#endif
 
 #ifdef __cplusplus
 #define BEGIN_DECLS extern "C" {

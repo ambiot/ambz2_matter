@@ -74,7 +74,7 @@ static mesh_msg_send_cause_t sensor_setup_server_send(const mesh_model_info_p pm
                                                       uint16_t dst, uint16_t app_key_index, void *pmsg, uint16_t msg_len,
                                                       uint32_t delay_time)
 {
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = pmodel_info;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = pmsg;

@@ -16,7 +16,7 @@ static mesh_msg_send_cause_t generic_property_client_send(const mesh_model_info_
                                                           uint16_t dst, uint16_t app_key_index,
                                                           uint8_t *pmsg, uint16_t msg_len)
 {
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = pmodel_info;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = pmsg;
@@ -196,27 +196,30 @@ static bool generic_property_client_receive(mesh_msg_p pmesh_msg)
                     status_data.pproperty_ids = pmsg->property_ids;
                     status_data.num_ids = value_len / 2;
                 }
-                pmodel_info->model_data_cb(pmodel_info, GENERIC_USER_PROPERIES_CLIENT_STATUS, &status_data);
+                pmodel_info->model_data_cb(pmodel_info, GENERIC_USER_PROPERTIES_CLIENT_STATUS, &status_data);
             }
         }
         break;
     case MESH_MSG_GENERIC_USER_PROPERTY_STATUS:
         {
-            uint16_t value_len = pmesh_msg->msg_len - MEMBER_OFFSET(generic_user_property_status_t,
-                                                                    property_value);
             generic_user_property_status_t *pmsg = (generic_user_property_status_t *)pbuffer;
             if (NULL != pmodel_info->model_data_cb)
             {
                 generic_property_client_status_t status_data;
                 status_data.src = pmesh_msg->src;
                 status_data.property_id = pmsg->property_id;
-                status_data.property_access = pmsg->property_access;
+                status_data.property_access = 0;
                 status_data.pproperty_value = NULL;
                 status_data.value_len = 0;
-                if (value_len > 0)
+                if (pmesh_msg->msg_len > MEMBER_OFFSET(generic_user_property_status_t, property_access))
                 {
-                    status_data.pproperty_value = pmsg->property_value;
-                    status_data.value_len = value_len;
+                    status_data.property_access = pmsg->property_access;
+                    if (pmesh_msg->msg_len > MEMBER_OFFSET(generic_user_property_status_t, property_value))
+                    {
+                        status_data.pproperty_value = pmsg->property_value;
+                        status_data.value_len = pmesh_msg->msg_len - MEMBER_OFFSET(generic_user_property_status_t,
+                                                                                   property_value);
+                    }
                 }
                 pmodel_info->model_data_cb(pmodel_info, GENERIC_USER_PROPERTY_CLIENT_STATUS, &status_data);
             }
@@ -244,21 +247,24 @@ static bool generic_property_client_receive(mesh_msg_p pmesh_msg)
         break;
     case MESH_MSG_GENERIC_ADMIN_PROPERTY_STATUS:
         {
-            uint16_t value_len = pmesh_msg->msg_len - MEMBER_OFFSET(generic_admin_property_status_t,
-                                                                    property_value);
             generic_admin_property_status_t *pmsg = (generic_admin_property_status_t *)pbuffer;
             if (NULL != pmodel_info->model_data_cb)
             {
                 generic_property_client_status_t status_data;
                 status_data.src = pmesh_msg->src;
                 status_data.property_id = pmsg->property_id;
-                status_data.property_access = pmsg->property_access;
+                status_data.property_access = 0;
                 status_data.pproperty_value = NULL;
                 status_data.value_len = 0;
-                if (value_len > 0)
+                if (pmesh_msg->msg_len > MEMBER_OFFSET(generic_admin_property_status_t, property_access))
                 {
-                    status_data.pproperty_value = pmsg->property_value;
-                    status_data.value_len = value_len;
+                    status_data.property_access = pmsg->property_access;
+                    if (pmesh_msg->msg_len > MEMBER_OFFSET(generic_admin_property_status_t, property_value))
+                    {
+                        status_data.pproperty_value = pmsg->property_value;
+                        status_data.value_len = pmesh_msg->msg_len - MEMBER_OFFSET(generic_admin_property_status_t,
+                                                                                   property_value);
+                    }
                 }
                 pmodel_info->model_data_cb(pmodel_info, GENERIC_ADMIN_PROPERTY_CLIENT_STATUS, &status_data);
             }
@@ -288,21 +294,24 @@ static bool generic_property_client_receive(mesh_msg_p pmesh_msg)
         break;
     case MESH_MSG_GENERIC_MANUFACTURER_PROPERTY_STATUS:
         {
-            uint16_t value_len = pmesh_msg->msg_len - MEMBER_OFFSET(generic_manufacturer_property_status_t,
-                                                                    property_value);
             generic_manufacturer_property_status_t *pmsg = (generic_manufacturer_property_status_t *)pbuffer;
             if (NULL != pmodel_info->model_data_cb)
             {
                 generic_property_client_status_t status_data;
                 status_data.src = pmesh_msg->src;
                 status_data.property_id = pmsg->property_id;
-                status_data.property_access = pmsg->property_access;
+                status_data.property_access = 0;
                 status_data.pproperty_value = NULL;
                 status_data.value_len = 0;
-                if (value_len > 0)
+                if (pmesh_msg->msg_len > MEMBER_OFFSET(generic_manufacturer_property_status_t, property_access))
                 {
-                    status_data.pproperty_value = pmsg->property_value;
-                    status_data.value_len = value_len;
+                    status_data.property_access = pmsg->property_access;
+                    if (pmesh_msg->msg_len > MEMBER_OFFSET(generic_manufacturer_property_status_t, property_value))
+                    {
+                        status_data.pproperty_value = pmsg->property_value;
+                        status_data.value_len = pmesh_msg->msg_len - MEMBER_OFFSET(generic_manufacturer_property_status_t,
+                                                                                   property_value);
+                    }
                 }
                 pmodel_info->model_data_cb(pmodel_info, GENERIC_MANUFACTURER_PROPERTY_CLIENT_STATUS, &status_data);
             }

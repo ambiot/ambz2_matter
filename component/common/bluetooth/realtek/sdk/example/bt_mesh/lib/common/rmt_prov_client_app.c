@@ -16,8 +16,9 @@
 #include "remote_provisioning.h"
 #include "generic_types.h"
 #include "bt_mesh_provisioner_api.h"
+#include "mesh_data_dump.h"
 
-#if MESH_RPR
+#if F_BT_MESH_1_1_RPR_SUPPORT
 
 static int32_t rmt_prov_client_data(const mesh_model_info_p pmodel_info, uint32_t type,
                                     void *pargs)
@@ -58,19 +59,19 @@ static int32_t rmt_prov_client_data(const mesh_model_info_p pmodel_info, uint32_
             data_uart_dump(pdata->uuid, 16);
         }
         break;
-    case RMT_PROV_CLIENT_EXTENED_SCAN_REPORT:
+    case RMT_PROV_CLIENT_EXTENDED_SCAN_REPORT:
         {
-            rmt_prov_client_extened_scan_report_t *pdata = (rmt_prov_client_extened_scan_report_t *)pargs;
+            rmt_prov_client_extended_scan_report_t *pdata = (rmt_prov_client_extended_scan_report_t *)pargs;
             uint16_t oob = 0xffff;
             if (pdata->poob)
             {
                 oob = (pdata->poob[1] << 8) + pdata->poob[0];
             }
-            data_uart_debug("rmt_prov_extened_scan_report: oob %d, uuid ", oob);
+            data_uart_debug("rmt_prov_extended_scan_report: oob %d, uuid ", oob);
             data_uart_dump(pdata->uuid, 16);
             if (pdata->adv_structs_len > 0)
             {
-                data_uart_debug("rmt_prov_extened_scan_report: adv structs ");
+                data_uart_debug("rmt_prov_extended_scan_report: adv structs ");
                 data_uart_dump(pdata->padv_structs, pdata->adv_structs_len);
             }
         }
@@ -89,19 +90,19 @@ static int32_t rmt_prov_client_data(const mesh_model_info_p pmodel_info, uint32_
                             pdata->src, pdata->status, pdata->link_state, pdata->preason ? *pdata->preason : -1);
 			if ((pdata->status == RMT_PROV_SUCCESS) && (pdata->link_state == RMT_PROV_LINK_STATE_LINK_ACTIVE))
 			{
-				data_uart_debug("\r\nLink Open Success!\r\n");
+				printf("Link Open Success!\r\n");
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 				if (bt_mesh_indication(GEN_MESH_CODE(_rmt_prov_client_link_open_prov), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-					data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_rmt_prov_client_link_open_prov)); 
+					printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_rmt_prov_client_link_open_prov)); 
 				}
 #endif
 				break;
 			} else if ((pdata->status != RMT_PROV_SUCCESS) && (pdata->status < RMT_PROV_LINK_CLOSED_BY_DEVICE))
 			{
-				data_uart_debug("\r\nLink Open Fail!\r\n");
+				printf("Link Open Fail!\r\n");
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 				if (bt_mesh_indication(GEN_MESH_CODE(_rmt_prov_client_link_open_prov), BT_MESH_USER_CMD_FAIL, NULL) != USER_API_RESULT_OK) {
-					data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_rmt_prov_client_link_open_prov));  
+					printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_rmt_prov_client_link_open_prov));  
 				}
 #endif
 				break;
@@ -110,20 +111,20 @@ static int32_t rmt_prov_client_data(const mesh_model_info_p pmodel_info, uint32_
 			if ((pdata->status >= RMT_PROV_LINK_CLOSED_BY_DEVICE) &&
 				(pdata->status <= RMT_PROV_LINK_CLOSED_BY_CLIENT))
 			{
-				data_uart_debug("\r\nClose Link Success!\r\n");
+				printf("Close Link Success!\r\n");
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 				if (bt_mesh_indication(GEN_MESH_CODE(_rmt_prov_client_close), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-					data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_rmt_prov_client_close)); 
+					printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_rmt_prov_client_close)); 
 				}
 #endif
 				break;
 			} else if ((pdata->status >= RMT_PROV_LINK_CLOSED_AS_CANNOT_RECEIVE_PDU) &&
 					   (pdata->status <= RMT_PROV_LINK_CLOSED_AS_CANNOT_DELIVER_PDU_REPORT))
 			{
-				data_uart_debug("\r\nClose Link Fail!\r\n");
+				printf("Close Link Fail!\r\n");
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 				if (bt_mesh_indication(GEN_MESH_CODE(_rmt_prov_client_close), BT_MESH_USER_CMD_FAIL, NULL) != USER_API_RESULT_OK) {
-					data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_rmt_prov_client_close));  
+					printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_rmt_prov_client_close));  
 				}
 #endif
 				break;

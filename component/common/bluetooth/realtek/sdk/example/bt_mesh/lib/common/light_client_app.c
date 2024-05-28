@@ -23,6 +23,8 @@
 #include "bt_mesh_device_api.h"
 #endif
 
+#include "mesh_data_dump.h"
+
 mesh_model_info_t light_cwrgb_client;
 mesh_model_info_t light_lightness_client;
 mesh_model_info_t light_ctl_client;
@@ -77,7 +79,7 @@ static int32_t light_lightness_client_data(const mesh_model_info_p pmodel_info,
             }
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_lightness_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_lightness_get));  
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_lightness_get));
 			}
 #endif
         }
@@ -101,7 +103,7 @@ static int32_t light_lightness_client_data(const mesh_model_info_p pmodel_info,
             }
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_lightness_linear_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_lightness_linear_get));  
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_lightness_linear_get));
 			}
 #endif
         }
@@ -113,7 +115,7 @@ static int32_t light_lightness_client_data(const mesh_model_info_p pmodel_info,
                             pdata->lightness);
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_lightness_last_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_lightness_last_get));  
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_lightness_last_get));
 			}
 #endif
         }
@@ -125,8 +127,8 @@ static int32_t light_lightness_client_data(const mesh_model_info_p pmodel_info,
                             pdata->lightness);
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 					if (bt_mesh_indication(GEN_MESH_CODE(_light_lightness_default_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-						data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_lightness_default_get));	
-					}	
+						printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_lightness_default_get));	
+					}
 #endif
         }
         break;
@@ -137,7 +139,7 @@ static int32_t light_lightness_client_data(const mesh_model_info_p pmodel_info,
                             pdata->src, pdata->status, pdata->range_min, pdata->range_max);
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_lightness_range_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_lightness_range_get));	
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_lightness_range_get));
 			}
 #endif
         }
@@ -175,7 +177,7 @@ static int32_t light_ctl_client_data(const mesh_model_info_p pmodel_info,
             }
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_ctl_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_ctl_get)); 
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_ctl_get)); 
 			}
 #endif
         }
@@ -200,33 +202,33 @@ static int32_t light_ctl_client_data(const mesh_model_info_p pmodel_info,
             }
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_ctl_temperature_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_ctl_temperature_get)); 
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_ctl_temperature_get)); 
 			}
-#endif			
+#endif
         }
         break;
     case LIGHT_CTL_CLIENT_STATUS_DEFAULT:
         {
             light_ctl_client_status_default_t *pdata = pargs;
-            data_uart_debug("light ctl client receive: src  %d, lightness %d, temperature %d, delta_uv %d\r\n",
+            data_uart_debug("light ctl client receive: src %d, lightness %d, temperature %d, delta_uv %d\r\n",
                             pdata->src, pdata->lightness, pdata->temperature, pdata->delta_uv);
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_ctl_default_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_ctl_default_get)); 
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_ctl_default_get)); 
 			}
-#endif			
+#endif
         }
         break;
     case LIGHT_CTL_CLIENT_STATUS_TEMPERATURE_RANGE:
         {
             light_ctl_client_status_temperature_range_t *pdata = pargs;
-            data_uart_debug("light ctl client receive: status %d, min %d, max %d\r\n",
+            data_uart_debug("light ctl client receive: src %d, status %d, min %d, max %d\r\n",
                             pdata->src, pdata->status, pdata->range_min, pdata->range_max);
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_ctl_temperature_range_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_ctl_temperature_range_get)); 
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_ctl_temperature_range_get)); 
 			}
-#endif				
+#endif
         }
         break;
     default:
@@ -256,14 +258,14 @@ static int32_t light_hsl_client_data(const mesh_model_info_p pmodel_info,
             }
             else
             {
-                data_uart_debug("light hsl client receive: src %d, present lightness %d, present hue %d, presnet saturation %d\r\n",
+                data_uart_debug("light hsl client receive: src %d, present lightness %d, present hue %d, present saturation %d\r\n",
                                 pdata->src, pdata->lightness, pdata->hue, pdata->saturation);
             }
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_hsl_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_hsl_get)); 
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_hsl_get));
 			}
-#endif			
+#endif
         }
         break;
     case LIGHT_HSL_CLIENT_STATUS_TARGET:
@@ -285,9 +287,9 @@ static int32_t light_hsl_client_data(const mesh_model_info_p pmodel_info,
             }
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_hsl_target_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_hsl_target_get)); 
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_hsl_target_get));
 			}
-#endif				
+#endif
         }
         break;
     case LIGHT_HSL_CLIENT_STATUS_HUE:
@@ -309,9 +311,9 @@ static int32_t light_hsl_client_data(const mesh_model_info_p pmodel_info,
             }
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_hsl_hue_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_hsl_hue_get)); 
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_hsl_hue_get)); 
 			}
-#endif				
+#endif
         }
         break;
     case LIGHT_HSL_CLIENT_STATUS_SATURATION:
@@ -333,9 +335,9 @@ static int32_t light_hsl_client_data(const mesh_model_info_p pmodel_info,
             }
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_hsl_saturation_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_hsl_saturation_get)); 
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_hsl_saturation_get)); 
 			}
-#endif			
+#endif
         }
         break;
     case LIGHT_HSL_CLIENT_STATUS_DEFAULT:
@@ -345,9 +347,9 @@ static int32_t light_hsl_client_data(const mesh_model_info_p pmodel_info,
                             pdata->src, pdata->lightness, pdata->hue, pdata->saturation);
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_hsl_default_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_hsl_default_get)); 
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_hsl_default_get));
 			}
-#endif				
+#endif
         }
         break;
     case LIGHT_HSL_CLIENT_STATUS_RANGE:
@@ -358,9 +360,9 @@ static int32_t light_hsl_client_data(const mesh_model_info_p pmodel_info,
                             pdata->saturation_range_min, pdata->saturation_range_max);
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_hsl_range_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_hsl_range_get)); 
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_hsl_range_get));
 			}
-#endif				
+#endif
         }
         break;
     default:
@@ -390,12 +392,12 @@ static int32_t light_xyl_client_data(const mesh_model_info_p pmodel_info,
             }
             else
             {
-                data_uart_debug("light xyl client receive: src %d, present lightness %d, present hue %d, presnet saturation %d\r\n",
+                data_uart_debug("light xyl client receive: src %d, present lightness %d, present xyl_x %d, present xyl_y %d\r\n",
                                 pdata->src, pdata->xyl.xyl_lightness, pdata->xyl.xyl_x, pdata->xyl.xyl_y);
             }
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_xyl_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_xyl_get)); 
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_xyl_get));
 			}
 #endif	
         }
@@ -419,9 +421,9 @@ static int32_t light_xyl_client_data(const mesh_model_info_p pmodel_info,
             }
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_xyl_target_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_xyl_target_get)); 
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_xyl_target_get));
 			}
-#endif			
+#endif
         }
         break;
     case LIGHT_XYL_CLIENT_STATUS_DEFAULT:
@@ -431,9 +433,9 @@ static int32_t light_xyl_client_data(const mesh_model_info_p pmodel_info,
                             pdata->src, pdata->xyl.xyl_lightness, pdata->xyl.xyl_x, pdata->xyl.xyl_y);
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_xyl_default_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_xyl_default_get)); 
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_xyl_default_get));
 			}
-#endif			
+#endif
         }
         break;
     case LIGHT_XYL_CLIENT_STATUS_RANGE:
@@ -444,9 +446,9 @@ static int32_t light_xyl_client_data(const mesh_model_info_p pmodel_info,
                             pdata->xyl_y_range_min, pdata->xyl_y_range_max);
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_light_xyl_range_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_xyl_range_get)); 
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_light_xyl_range_get));
 			}
-#endif			
+#endif
         }
         break;
     default:
@@ -496,7 +498,7 @@ static int32_t light_lc_client_data(const mesh_model_info_p pmodel_info,
     case LIGHT_LC_CLIENT_PROPERTY_STATUS:
         {
             light_lc_client_property_status_t *pdata = pargs;
-            data_uart_debug("light lc client receive: src %d, property id 0x%x, property value %d",
+            data_uart_debug("light lc client receive: src %d, property id 0x%x, property value %d\r\n",
                             pdata->src, pdata->property_id, pdata->property_value);
         }
         break;

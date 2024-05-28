@@ -11,516 +11,579 @@
 * *********************************************************************************************************
 */
 
-#define MM_ID MM_MODEL
+#define MM_ID MM_APP
+
+#if F_BT_MESH_1_1_DFU_SUPPORT
 
 #include <stdlib.h>
+#include "platform_misc.h"
+#include "blob_client_app.h"
 #include "dfu_distributor_app.h"
 #include "generic_types.h"
 #include "app_msg.h"
-#include "bt_mesh_provisioner_api.h"
 
-#if MESH_DFU
+#define DFU_DIST_RETRY_TIMES                            3
+#define DFU_DIST_UPDATE_START_RETRY_PERIOD              2000
+#define DFU_DIST_UPDATE_GET_RETRY_PERIOD                2000
+#define DFU_DIST_UPDATE_APPLY_RETRY_PERIOD              2000
+#define DFU_DIST_UPDATE_INFO_GET_RETRY_PERIOD           2000
 
-#define DFU_DIST_NODE_NUM_MAX                               5
-#define DFU_DIST_RETRY_TIMES                                5
-#define DFU_DIST_UPDATE_RETRY_PERIOD                        2000
-#define DFU_DIST_BLOB_TRANSFER_START_RETRY_PERIOD           2000
-#define DFU_DIST_BLOB_BLOCK_START_RETRY_PERIOD              2000
-#define DFU_DIST_BLOB_CHUNK_TRANSFER_RETRY_PERIOD           3000
-#define DFU_DIST_BLOB_BLOCK_GET_RETRY_PERIOD                3000
-#define DFU_DIST_BLOB_NEW_BLOCK_PERIOD                      8000
-
-/* transfer capabilites */
-#define DFU_BLOCK_SIZE_LOG                         10
-#define DFU_BLOCK_SIZE                             1024
-#define DFU_CHUNK_SIZE                             128
-#define DFU_CLIENT_MTU                             256
-#define DFU_CHUNK_NUM                              (DFU_BLOCK_SIZE / DFU_CHUNK_SIZE)
-
-typedef enum
-{
-    DFU_DIST_PHASE_IDLE,
-    DFU_DIST_PHASE_UPDATE_START,
-    DFU_DIST_PHASE_BLOB_TRANSFER_START,
-    DFU_DIST_PHASE_BLOB_BLOCK_START,
-    DFU_DIST_PHASE_BLOB_CHUNK_TRANSFER,
-    DFU_DIST_PHASE_VERIFY,
-} dfu_dist_phase_t;
-
-typedef enum
-{
-    DFU_NODE_PHASE_IDLE,
-    DFU_NODE_PHASE_UPDATE_STARTING,
-    DFU_NODE_PHASE_UPDATE_STARTED,
-    DFU_NODE_PHASE_BLOB_TRANSFER_STARTING,
-    DFU_NODE_PHASE_BLOB_TRANSFER_STARTED,
-    DFU_NODE_PHASE_BLOB_BLOCK_STARTING,
-    DFU_NODE_PHASE_BLOB_BLOCK_STARTED,
-    DFU_NODE_PHASE_BLOB_CHUNK_TRANSFERING,
-    DFU_NODE_PHASE_BLOB_CHUNK_TRANSFERED,
-    DFU_NODE_PHASE_FAILED,
-} dfu_node_phase_t;
-
-typedef struct
-{
-    uint16_t addr;
-    fw_update_phase_t phase;
-} dfu_dist_node_info_t;
-
-typedef struct _dfu_update_node_e_t
-{
-    struct _dfu_update_node_e_t *pnext;
-    /* node information */
-    uint16_t addr;
-    uint8_t update_fw_image_idx;
-    /* node update status */
-    //uint8_t transfer_progress;
-    dfu_node_phase_t node_phase;
-} dfu_update_node_e_t;
-
-typedef enum
-{
-    DFU_TIMER_IDLE,
-    DFU_TIMER_FW_UPDATE_CLIENT_STATUS,
-    DFU_TIMER_BLOB_TRANSFER_START,
-    DFU_TIMER_BLOB_BLOCK_START,
-    DFU_TIMER_BLOB_BLOCK_GET,
-    DFU_TIMER_BLOB_CHUNK_TRANSFER
-} dfu_timer_state_t;
+/* transfer capabilities */
+#define DFU_DIST_BLOCK_SIZE_LOG                         12
+#define DFU_DIST_CHUNK_SIZE                             256
+#define DFU_DIST_CLIENT_MTU                             376
 
 struct
 {
     plt_timer_t timer;
-    dfu_timer_state_t timer_state;
     dfu_dist_phase_t dist_phase;
     uint8_t dist_retry_count;
-    fw_image_data_get_t fw_image_data_get;
-    uint32_t fw_image_size;
-    uint32_t fw_image_left_size;
-    plt_list_t dfu_update_node_list;
-    dfu_update_node_e_t *pcur_update_node;
+    uint16_t *ptransfer_addr;
+    uint8_t transfer_addr_num;
+    fw_dist_update_node_p pcur_update_node;
     uint8_t blob_id[8];
-    uint16_t dist_app_key_index;
     uint8_t dist_ttl;
-    uint16_t dist_timeout_base;
-    blob_transfer_mode_t dist_transfer_mode;
-    fw_update_policy_t update_policy;
-    uint16_t dist_multicast_addr;
+    uint16_t cur_image_index;
     uint8_t fw_metadata[255];
     uint8_t metadata_len;
-    /* current transfer data */
-    uint16_t block_num;
-    uint16_t total_blocks;
-    uint8_t *pblock_data;
-    uint16_t block_size;
-    uint16_t block_left_size;
-    uint16_t chunk_num;
-    uint16_t total_chunks;
-    uint8_t *pchunk_data;
-    uint16_t chunk_size;
+    uint32_t fw_image_size;
+    pf_dfu_dist_cb_t dfu_dist_cb;
 } dfu_dist_ctx;
 
+uint16_t dfu_dist_blob_client_cb(uint8_t type, void *pdata);
+void dfu_dist_fw_apply(void);
 
-int32_t dfu_transfer_client_data(const mesh_model_info_p pmodel_info, uint32_t type, void *pargs)
+void dfu_dist_handle_node_fail(fw_dist_update_node_p pnode)
 {
-    switch (type)
+    if (dfu_dist_ctx.dfu_dist_cb)
     {
-    case BLOB_TRANSFER_CLIENT_TRANSFER_STATUS:
-        {
-            if (dfu_dist_ctx.timer_state == DFU_TIMER_BLOB_TRANSFER_START) {
-                plt_timer_stop(dfu_dist_ctx.timer, 0);
-            } else {
-                printf("dfu_update_client_data %d, timer state %d \r\n", __LINE__, dfu_dist_ctx.timer_state);
-            }
-            blob_transfer_client_transfer_status_t *pdata = (blob_transfer_client_transfer_status_t *)pargs;
-            dfu_update_node_e_t *pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-            if (pdata->status == BLOB_TRANSFER_STATUS_SUCCESS)
-            {     
-                while (NULL != pentry)
-                {
-                    if (pentry->addr == pdata->src)
-                    {
-                       if (pentry->node_phase == DFU_NODE_PHASE_BLOB_TRANSFER_STARTING) {
-                            pentry->node_phase = DFU_NODE_PHASE_BLOB_TRANSFER_STARTED;
-                            printf("dfu_transfer_client_data: node 0x%04x blob transfer start success \r\n", pdata->src);
-                            break;
-                        } else {
-                            printf("dfu_transfer_client_data: node 0x%04x is not DFU_NODE_PHASE_BLOB_TRANSFER_STARTING, current state is %d \r\n", 
-                                pdata->src, pentry->node_phase);
-                            return MODEL_SUCCESS;
-                        }
-                    }
-                    pentry = pentry->pnext;
-                }
-                if (pentry == NULL) {
-                    printf("dfu_transfer_client_data: node 0x%04x is not in the update list \r\n", pdata->src);
-                    return MODEL_SUCCESS;
-                }
-            }
-            else
-            {
-                dfu_dist_ctx.pcur_update_node->node_phase = DFU_NODE_PHASE_FAILED;
-                printf("dfu_transfer_client_data: node 0x%04x transfer start failed, reason %d \r\n", pdata->src,
-                       pdata->status);
-                dfu_dist_receiver_remove(pdata->src);
-            }
-
-            /* find active node and send blob transfer start */
-            pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-            while (NULL != pentry)
-            {
-                if (pentry->node_phase == DFU_NODE_PHASE_UPDATE_STARTED)
-                {
-                    blob_transfer_start(pentry->addr, dfu_dist_ctx.dist_app_key_index, BLOB_TRANSFER_MODE_PUSH,
-                                        dfu_dist_ctx.blob_id, dfu_dist_ctx.fw_image_size, DFU_BLOCK_SIZE_LOG, DFU_CLIENT_MTU);
-                    dfu_dist_ctx.dist_retry_count = 0;
-                    plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_TRANSFER_START_RETRY_PERIOD, 0);
-                    dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_TRANSFER_START;
-                    pentry->node_phase = DFU_NODE_PHASE_BLOB_TRANSFER_STARTING;
-                    dfu_dist_ctx.pcur_update_node = pentry;
-                    return MODEL_SUCCESS;
-                }
-                if (pentry->node_phase == DFU_NODE_PHASE_BLOB_TRANSFER_STARTING)
-                {
-                    return MODEL_SUCCESS;
-                }
-                pentry = pentry->pnext;
-            }
-
-            /* all node received blob transfer start message, begin blob block start */
-            printf("dfu_transfer_client_data: block start, num %d \r\n", dfu_dist_ctx.block_num);
-            dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_BLOB_BLOCK_START;
-            /* get block data */
-            dfu_dist_ctx.block_size = (dfu_dist_ctx.fw_image_left_size >= DFU_BLOCK_SIZE) ? DFU_BLOCK_SIZE :
-                                      dfu_dist_ctx.fw_image_left_size;
-            printf("dfu_transfer_client_data: fetch firmware, dfu_dist_ctx.block_size = %d \r\n", dfu_dist_ctx.block_size);
-            dfu_dist_ctx.fw_image_data_get(dfu_dist_ctx.block_size - DFU_BLOCK_SIGNATURE_SIZE,
-                                           dfu_dist_ctx.pblock_data);
-            dfu_block_signature(dfu_dist_ctx.pblock_data, dfu_dist_ctx.block_size - DFU_BLOCK_SIGNATURE_SIZE, 
-                                    DFU_BLOCK_SIGNATURE_SIZE);
-            dfu_dist_ctx.block_left_size = dfu_dist_ctx.block_size;
-            printf("dfu_transfer_client_data: ========Sending one block========= \r\n");
-            // for (uint32_t i = 0; i <  dfu_dist_ctx.block_size; i++) {
-            //     if (i % 12 == 0) {
-            //         printf("\r\n");
-            //     }
-            //     printf(" 0x%02x ", dfu_dist_ctx.pblock_data[i]);
-            // }
-            // printf("\r\n");
-            /* block start */
-            pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-            while (NULL != pentry)
-            {
-                if (pentry->node_phase == DFU_NODE_PHASE_BLOB_TRANSFER_STARTED)
-                {
-                    blob_block_start(pentry->addr, dfu_dist_ctx.dist_app_key_index, dfu_dist_ctx.block_num,
-                                     DFU_CHUNK_SIZE);
-                    dfu_dist_ctx.dist_retry_count = 0;
-                    plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_BLOCK_START_RETRY_PERIOD, 0);
-                    dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_BLOCK_START;
-                    pentry->node_phase = DFU_NODE_PHASE_BLOB_BLOCK_STARTING;
-                    return MODEL_SUCCESS;
-                }
-                pentry = pentry->pnext;
-            }
-        }
-        break;
-    case BLOB_TRANSFER_CLIENT_BLOCK_STATUS:
-        {
-            blob_transfer_client_block_status_t *pdata = (blob_transfer_client_block_status_t *)pargs;
-            dfu_update_node_e_t *pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-            if (dfu_dist_ctx.dist_phase == DFU_DIST_PHASE_BLOB_BLOCK_START)
-            {
-                if (dfu_dist_ctx.timer_state == DFU_TIMER_BLOB_BLOCK_START) {
-                    plt_timer_stop(dfu_dist_ctx.timer, 0);
-                } else {
-                    printf("dfu_update_client_data %d, timer state %d \r\n", __LINE__, dfu_dist_ctx.timer_state);
-                }
-                if (pdata->status == BLOB_TRANSFER_STATUS_SUCCESS)
-                {
-                    while (NULL != pentry)
-                    {
-                        if (pentry->addr == pdata->src)
-                        {
-                            if (pentry->node_phase == DFU_NODE_PHASE_BLOB_BLOCK_STARTING) {
-                                pentry->node_phase = DFU_NODE_PHASE_BLOB_BLOCK_STARTED;
-                                printf("dfu_transfer_client_data: node 0x%04x blob block start success \r\n", pdata->src);
-                                break;
-                            } else {
-                                printf("dfu_transfer_client_data: node 0x%04x is not DFU_NODE_PHASE_BLOB_BLOCK_STARTING, current state is %d \r\n", 
-                                    pdata->src, pentry->node_phase);
-                                return MODEL_SUCCESS;
-                            }
-                        }
-                        pentry = pentry->pnext;
-                    } 
-                    if (pentry == NULL) {
-                        printf("dfu_transfer_client_data: node 0x%04x is not in the update list \r\n", pdata->src);
-                        return MODEL_SUCCESS;
-                    }
-                }
-                else
-                {
-                    dfu_dist_ctx.pcur_update_node->node_phase = DFU_NODE_PHASE_FAILED;
-                    printf("dfu_transfer_client_data: node 0x%04x block start failed, reason %d \r\n", pdata->src,
-                           pdata->status);
-                    dfu_dist_receiver_remove(pdata->src);
-                }
-
-                /* find active node and send blob transfer start */
-                pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-                while (NULL != pentry)
-                {
-                    if (pentry->node_phase == DFU_NODE_PHASE_BLOB_TRANSFER_STARTED)
-                    {
-                        blob_block_start(pentry->addr, dfu_dist_ctx.dist_app_key_index, dfu_dist_ctx.block_num,
-                                         DFU_CHUNK_SIZE);
-                        dfu_dist_ctx.dist_retry_count = 0;
-                        plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_BLOCK_START_RETRY_PERIOD, 0);
-                        dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_BLOCK_START;
-                        pentry->node_phase = DFU_NODE_PHASE_BLOB_BLOCK_STARTING;
-                        dfu_dist_ctx.pcur_update_node = pentry;
-                        return MODEL_SUCCESS;
-                    }
-                    pentry = pentry->pnext;
-                }
-
-                /* check chun transfer */
-                bool need_chunk_transfer = false;
-                pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-                while (NULL != pentry)
-                {
-                    if (pentry->node_phase == DFU_NODE_PHASE_BLOB_BLOCK_STARTED)
-                    {
-                        pentry->node_phase = DFU_NODE_PHASE_BLOB_CHUNK_TRANSFERING;
-                        need_chunk_transfer = true;
-                    }
-                    pentry = pentry->pnext;
-                }
-                if (!need_chunk_transfer)
-                {
-                    /* no node need to update */
-                    printf("dfu_update_client_data: no node need chunk transfer, dfu procedure finish \r\n");
-                    dfu_dist_clear();
-                    return MODEL_SUCCESS;
-                }
-
-                /* all node received blob block start message, start chunk transfer */
-                printf("dfu_transfer_client_data: chunk transfer \r\n");
-                dfu_dist_ctx.pcur_update_node = NULL;
-                dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_BLOB_CHUNK_TRANSFER;
-                /* set chunk data */
-                dfu_dist_ctx.chunk_num = 0;
-                dfu_dist_ctx.pchunk_data = dfu_dist_ctx.pblock_data;
-                dfu_dist_ctx.chunk_size = (dfu_dist_ctx.block_left_size >= DFU_CHUNK_SIZE) ? DFU_CHUNK_SIZE :
-                                          dfu_dist_ctx.block_left_size;
-                dfu_dist_ctx.total_chunks = dfu_dist_ctx.block_size / dfu_dist_ctx.chunk_size;
-                if (dfu_dist_ctx.block_size % dfu_dist_ctx.chunk_size)
-                {
-                    dfu_dist_ctx.total_chunks += 1;
-                }
-                /* chunk transfer start */
-                dfu_dist_ctx.dist_retry_count = 0;
-                if (dfu_dist_ctx.chunk_num == (DFU_CHUNK_NUM - 1)) {
-                    plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_NEW_BLOCK_PERIOD, 0);
-                } else {
-                    plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_CHUNK_TRANSFER_RETRY_PERIOD, 0);
-                }
-                dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_BLOCK_GET;
-                printf("dfu_transfer_client_data: blob_chunk_transfer, dst 0x%04x, chunk num %d, chunk size %d, retry count %d \r\n",
-                       dfu_dist_ctx.dist_multicast_addr, dfu_dist_ctx.chunk_num, dfu_dist_ctx.chunk_size,
-                       dfu_dist_ctx.dist_retry_count);
-                blob_chunk_transfer(dfu_dist_ctx.dist_multicast_addr, dfu_dist_ctx.dist_app_key_index,
-                                    dfu_dist_ctx.chunk_num, dfu_dist_ctx.pchunk_data, dfu_dist_ctx.chunk_size);
-            }
-            else
-            {
-                /* this case is for BLOB Block Get Message (BLOB Block Status ack to BLOB Block Get)*/
-                pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-                while (NULL != pentry)
-                {
-                    if (pentry->addr == pdata->src)
-                    {
-                        if (pdata->status == BLOB_TRANSFER_STATUS_SUCCESS)
-                        {
-                            printf("dfu_transfer_client_data: get node 0x%04x block status success \r\n", pdata->src);
-                            switch (pdata->missing_format)
-                            {
-                            case BLOB_CHUNK_MISSING_FORMAT_ALL:
-                                break;
-                            case BLOB_CHUNK_MISSING_FORMAT_NONE:
-                                pentry->node_phase = DFU_NODE_PHASE_BLOB_CHUNK_TRANSFERED;
-                                break;
-                            case BLOB_CHUNK_MISSING_FORMAT_SOME:
-                                for (uint16_t i = 0; i < pdata->missing_chunks_len; ++i)
-                                {
-                                    if (pdata->pmissing_chunks[i] == dfu_dist_ctx.chunk_num)
-                                    {
-                                        printf("missing chunk num %d \r\n", dfu_dist_ctx.chunk_num);
-                                        return MODEL_SUCCESS;
-                                    }
-                                }
-                                printf("dfu_transfer_client_data: node 0x%04x receive block %d, chunk %d \r\n", pdata->src,
-                                       dfu_dist_ctx.block_num, dfu_dist_ctx.chunk_num);
-                                pentry->node_phase = DFU_NODE_PHASE_BLOB_CHUNK_TRANSFERED;
-                                break;
-                            default:
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            pentry->node_phase = DFU_NODE_PHASE_FAILED;
-                            printf("dfu_transfer_client_data: node 0x%04x get block status failed, reason %d \r\n", pdata->src,
-                                   pdata->status);
-                            dfu_dist_receiver_remove(pdata->src);
-                        }
-                        return MODEL_SUCCESS;
-                    }
-                    pentry = pentry->pnext;
-                }
-            }
-        }
-        break;
-    case BLOB_TRANSFER_CLIENT_PARTIAL_BLOCK_REPORT:
-        {
-            /* this is for trunk transfer mode : PULL MODE (indicate server is ready to receive a chunk)*/
-            //blob_transfer_client_partial_block_report_t *pdata = (blob_transfer_client_partial_block_report_t *)pargs;
-        }
-        break;
-    case BLOB_TRANSFER_CLIENT_INFO_STATUS:
-        {
-            /* this is the ack message to BLOB information Get message */
-            //blob_transfer_client_info_status_t *pdata = (blob_transfer_client_info_status_t *)pargs;
-        }
-        break;
-    default:
-        break;
+        dfu_dist_transfer_t cb_data = {0};
+        cb_data.type = DFU_DIST_CB_TYPE_NODE_FAIL;
+        cb_data.dist_phase = dfu_dist_ctx.dist_phase;
+        uint16_t addr = pnode->update_node.addr;
+        cb_data.paddr = &addr;
+        cb_data.addr_num = 1;
+        dfu_dist_ctx.dfu_dist_cb(MESH_MSG_DFU_DIST_TRANSFER, &cb_data);
     }
-    return MODEL_SUCCESS;
+    pnode->node_phase = FW_NODE_PHASE_FAILED;
 }
 
-int32_t dfu_update_client_data(const mesh_model_info_p pmodel_info, uint32_t type, void *pargs)
+void dfu_dist_handle_blob_transfer(bool ret)
+{
+    printi("dfu_dist_handle_blob_transfer: ret %d", ret);
+    if (dfu_dist_ctx.dfu_dist_cb)
+    {
+        dfu_dist_transfer_t cb_data = {0};
+        cb_data.type = ret ? DFU_DIST_CB_TYPE_TRANSFER_SUCCESS : DFU_DIST_CB_TYPE_TRANSFER_FAIL;
+        cb_data.dist_phase = dfu_dist_ctx.dist_phase;
+        uint8_t count = fw_dist_server_ctx.dist_update_node_list.count;
+        uint16_t *paddr = plt_zalloc(count * sizeof(*paddr), RAM_TYPE_DATA_ON);
+        uint8_t i = 0;
+        if (ret && paddr)
+        {
+            fw_dist_update_node_p pnode = (fw_dist_update_node_p)
+                                          fw_dist_server_ctx.dist_update_node_list.pfirst;
+            while (pnode)
+            {
+                if (pnode->node_phase == FW_NODE_PHASE_UPDATE_STARTED)
+                {
+                    paddr[i++] = pnode->update_node.addr;
+                }
+                pnode = pnode->pnext;
+            }
+            cb_data.paddr = paddr;
+            cb_data.addr_num = i;
+        }
+        dfu_dist_ctx.dfu_dist_cb(MESH_MSG_DFU_DIST_TRANSFER, &cb_data);
+        if (paddr)
+        {
+            plt_free(paddr, RAM_TYPE_DATA_ON);
+            paddr = NULL;
+        }
+    }
+
+    fw_dist_server_ctx.dist_phase = ret ? FW_DIST_PHASE_TRANSFER_SUCCESS : FW_DIST_PHASE_FAILED;
+}
+
+void dfu_dist_handle_fw_verify(void)
+{
+    if (dfu_dist_ctx.dfu_dist_cb)
+    {
+        dfu_dist_transfer_t cb_data = {0};
+        cb_data.type = DFU_DIST_CB_TYPE_VERIFY;
+        cb_data.dist_phase = dfu_dist_ctx.dist_phase;
+        uint8_t count = fw_dist_server_ctx.dist_update_node_list.count;
+        uint16_t *paddr = plt_zalloc(count * sizeof(*paddr), RAM_TYPE_DATA_ON);
+        uint8_t i = 0;
+        if (paddr)
+        {
+            fw_dist_update_node_p pnode = (fw_dist_update_node_p)
+                                          fw_dist_server_ctx.dist_update_node_list.pfirst;
+            while (pnode)
+            {
+                if (pnode->update_node.retrieved_update_phase == FW_RETRIEVED_UPDATE_PHASE_VERIFICATION_SUCCEEDED)
+                {
+                    paddr[i++] = pnode->update_node.addr;
+                }
+                pnode = pnode->pnext;
+            }
+            cb_data.paddr = paddr;
+            cb_data.addr_num = i;
+        }
+        dfu_dist_ctx.dfu_dist_cb(MESH_MSG_DFU_DIST_TRANSFER, &cb_data);
+        if (paddr)
+        {
+            plt_free(paddr, RAM_TYPE_DATA_ON);
+            paddr = NULL;
+        }
+    }
+
+    /* all node verify finished */
+    if (fw_dist_server_ctx.dist_update_policy == FW_UPDATE_POLICY_VERIFY_AND_UPDATE)
+    {
+        dfu_dist_fw_apply();
+    }
+}
+
+void dfu_dist_handle_dist_result(void)
+{
+    if (dfu_dist_ctx.dfu_dist_cb)
+    {
+        dfu_dist_transfer_t cb_data = {0};
+        cb_data.type = DFU_DIST_CB_TYPE_COMPLETE;
+        cb_data.dist_phase = dfu_dist_ctx.dist_phase;
+        uint8_t count = fw_dist_server_ctx.dist_update_node_list.count;
+        uint16_t *paddr = plt_zalloc(count * sizeof(*paddr), RAM_TYPE_DATA_ON);
+        uint8_t i = 0;
+        if (paddr)
+        {
+            fw_dist_update_node_p pnode = (fw_dist_update_node_p)
+                                          fw_dist_server_ctx.dist_update_node_list.pfirst;
+            while (pnode)
+            {
+                if (pnode->node_phase == FW_NODE_PHASE_CONFIRMED)
+                {
+                    paddr[i++] = pnode->update_node.addr;
+                }
+                pnode = pnode->pnext;
+            }
+            cb_data.paddr = paddr;
+            cb_data.addr_num = i;
+        }
+        dfu_dist_ctx.dfu_dist_cb(MESH_MSG_DFU_DIST_TRANSFER, &cb_data);
+        if (paddr)
+        {
+            plt_free(paddr, RAM_TYPE_DATA_ON);
+            paddr = NULL;
+        }
+    }
+
+    printi("dfu_dist_handle_dist_result: node update finished");
+    fw_dist_server_ctx.dist_phase = FW_DIST_PHASE_COMPLETED;
+    dfu_dist_clear();
+}
+
+void dfu_dist_clear(void)
+{
+    printi("dfu_dist_clear");
+    if (dfu_dist_ctx.timer != NULL)
+    {
+        plt_timer_delete(dfu_dist_ctx.timer, 0);
+        dfu_dist_ctx.timer = NULL;
+    }
+    if (dfu_dist_ctx.ptransfer_addr)
+    {
+        plt_free(dfu_dist_ctx.ptransfer_addr, RAM_TYPE_DATA_ON);
+        dfu_dist_ctx.ptransfer_addr = NULL;
+    }
+}
+
+static bool dfu_dist_active_update_start_send(void)
+{
+    fw_dist_update_node_p pnode = (fw_dist_update_node_p)
+                                  fw_dist_server_ctx.dist_update_node_list.pfirst;
+    while (pnode)
+    {
+        if (pnode->node_phase == FW_NODE_PHASE_IDLE)
+        {
+            dfu_dist_ctx.dist_retry_count = 0;
+            plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_UPDATE_START_RETRY_PERIOD, 0);
+            pnode->node_phase = FW_NODE_PHASE_UPDATE_STARTING;
+            dfu_dist_ctx.pcur_update_node = pnode;
+            printi("dfu dist update start: addr 0x%04x, app key index %d, ttl %d, timeout base %d, image idx %d",
+                   pnode->update_node.addr, fw_dist_server_ctx.dist_app_key_index, dfu_dist_ctx.dist_ttl,
+                   fw_dist_server_ctx.dist_timeout_base, pnode->update_node.update_fw_image_idx);
+            fw_update_start(pnode->update_node.addr, fw_dist_server_ctx.dist_app_key_index,
+                            dfu_dist_ctx.dist_ttl,
+                            fw_dist_server_ctx.dist_timeout_base, dfu_dist_ctx.blob_id,
+                            pnode->update_node.update_fw_image_idx, dfu_dist_ctx.fw_metadata, dfu_dist_ctx.metadata_len);
+            return true;
+        }
+        pnode = pnode->pnext;
+    }
+    printi("dfu dist update start: no active node");
+    return false;
+}
+
+static bool dist_skip_caps_retrieve = false;
+
+void dfu_dist_skip_caps_retrieve_set(bool skip)
+{
+    dist_skip_caps_retrieve = skip;
+}
+
+static bool dfu_dist_blob_transfer(void)
+{
+    if (fw_dist_server_ctx.dist_update_node_list.count == 0)
+    {
+        printe("dfu_dist_blob_transfer: no node in list");
+        return false;
+    }
+
+    dfu_dist_ctx.ptransfer_addr = plt_zalloc(fw_dist_server_ctx.dist_update_node_list.count * sizeof(
+                                                 uint16_t), RAM_TYPE_DATA_ON);
+    if (!dfu_dist_ctx.ptransfer_addr)
+    {
+        printe("dfu_dist_blob_transfer: alloc failed");
+        return false;
+    }
+
+    dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_BLOB_TRANSFER;
+    dfu_dist_ctx.transfer_addr_num = 0;
+
+    fw_dist_update_node_p pnode = (fw_dist_update_node_p)
+                                  fw_dist_server_ctx.dist_update_node_list.pfirst;
+    while (pnode)
+    {
+        if (pnode->node_phase != FW_NODE_PHASE_FAILED)
+        {
+            dfu_dist_ctx.ptransfer_addr[dfu_dist_ctx.transfer_addr_num ++] = pnode->update_node.addr;
+        }
+        pnode = pnode->pnext;
+    }
+
+    if (dfu_dist_ctx.transfer_addr_num == 0)
+    {
+        printe("dfu_dist_blob_transfer: all node is failed");
+        return false;
+    }
+
+    /* change callback since Role change to Distributor */
+    blob_client_app_cb_reg(dfu_dist_blob_client_cb);
+
+    if (dist_skip_caps_retrieve)
+    {
+        blob_client_chunk_size_set(DFU_DIST_CHUNK_SIZE);
+        blob_client_block_size_log_set(DFU_DIST_BLOCK_SIZE_LOG);
+    }
+
+    blob_client_mtu_size_set(DFU_DIST_CLIENT_MTU);
+
+    if (dist_skip_caps_retrieve)
+    {
+        return blob_client_blob_transfer(fw_dist_server_ctx.dist_multicast_addr,
+                                         fw_dist_server_ctx.dist_app_key_index,
+                                         dfu_dist_ctx.dist_ttl, dfu_dist_ctx.ptransfer_addr,
+                                         dfu_dist_ctx.transfer_addr_num,
+                                         dfu_dist_ctx.blob_id, dfu_dist_ctx.fw_image_size,
+                                         BLOB_TRANSFER_MODE_PUSH, fw_dist_server_ctx.dist_timeout_base,
+                                         dist_skip_caps_retrieve);
+    }
+    else
+    {
+        return blob_client_caps_retrieve(fw_dist_server_ctx.dist_app_key_index,
+                                         dfu_dist_ctx.dist_ttl,
+                                         dfu_dist_ctx.ptransfer_addr,
+                                         dfu_dist_ctx.transfer_addr_num);
+    }
+}
+
+static bool dfu_dist_active_update_get_send(void)
+{
+    fw_dist_update_node_p pnode = (fw_dist_update_node_p)
+                                  fw_dist_server_ctx.dist_update_node_list.pfirst;
+    while (pnode)
+    {
+        if (pnode->node_phase == FW_NODE_PHASE_APPLYING &&
+            (pnode->update_node.retrieved_update_phase == FW_RETRIEVED_UPDATE_PHASE_TRANSFER_ACTIVE ||
+             pnode->update_node.retrieved_update_phase == FW_RETRIEVED_UPDATE_PHASE_VERIFYING_UPDATE))
+        {
+            dfu_dist_ctx.dist_retry_count = 0;
+            plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_UPDATE_GET_RETRY_PERIOD, 0);
+            dfu_dist_ctx.pcur_update_node = pnode;
+            printi("dfu dist update get: addr 0x%04x, app key index %d",
+                   pnode->update_node.addr, fw_dist_server_ctx.dist_app_key_index);
+            fw_update_get(pnode->update_node.addr, fw_dist_server_ctx.dist_app_key_index);
+            return true;
+        }
+        pnode = pnode->pnext;
+    }
+    printi("dfu dist update get: no active node");
+    return false;
+}
+
+static bool dfu_dist_active_update_apply_send(void)
+{
+    fw_dist_update_node_p pnode = (fw_dist_update_node_p)
+                                  fw_dist_server_ctx.dist_update_node_list.pfirst;
+    while (pnode)
+    {
+        if (pnode->node_phase == FW_NODE_PHASE_APPLYING &&
+            pnode->update_node.retrieved_update_phase == FW_RETRIEVED_UPDATE_PHASE_VERIFICATION_SUCCEEDED)
+        {
+            dfu_dist_ctx.dist_retry_count = 0;
+            plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_UPDATE_APPLY_RETRY_PERIOD, 0);
+            dfu_dist_ctx.pcur_update_node = pnode;
+            printi("dfu dist update apply: addr 0x%04x, app key index %d",
+                   pnode->update_node.addr, fw_dist_server_ctx.dist_app_key_index);
+            fw_update_apply(pnode->update_node.addr, fw_dist_server_ctx.dist_app_key_index);
+            return true;
+        }
+        pnode = pnode->pnext;
+    }
+    printi("dfu dist update apply: no active node");
+    return false;
+}
+
+static bool dfu_dist_active_update_info_get_send(void)
+{
+    fw_dist_update_node_p pnode = (fw_dist_update_node_p)
+                                  fw_dist_server_ctx.dist_update_node_list.pfirst;
+    while (pnode)
+    {
+        if (pnode->node_phase == FW_NODE_PHASE_APPLIED &&
+            pnode->update_node.retrieved_update_phase == FW_RETRIEVED_UPDATE_PHASE_APPLYING_UPDATE)
+        {
+            dfu_dist_ctx.dist_retry_count = 0;
+            plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_UPDATE_INFO_GET_RETRY_PERIOD, 0);
+            dfu_dist_ctx.pcur_update_node = pnode;
+            printi("dfu dist update info get: addr 0x%04x, app key index %d, fw image index %d",
+                   pnode->update_node.addr, fw_dist_server_ctx.dist_app_key_index,
+                   pnode->update_node.update_fw_image_idx);
+            fw_update_info_get(pnode->update_node.addr, fw_dist_server_ctx.dist_app_key_index,
+                               pnode->update_node.update_fw_image_idx, 1);
+            return true;
+        }
+        pnode = pnode->pnext;
+    }
+    printi("dfu dist update info get: no active node");
+    return false;
+}
+
+static bool dfu_dist_handle_update_cancel(void)
+{
+    fw_dist_update_node_p pnode = (fw_dist_update_node_p)
+                                  fw_dist_server_ctx.dist_update_node_list.pfirst;
+    while (pnode)
+    {
+        if (pnode->node_phase == FW_NODE_PHASE_CANCELING)
+        {
+            return false;
+        }
+        pnode = pnode->pnext;
+    }
+
+    return true;
+}
+
+static void dfu_dist_update_cancel(void)
+{
+    dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_CANCELING;
+    fw_dist_update_node_p pnode = (fw_dist_update_node_p)
+                                  fw_dist_server_ctx.dist_update_node_list.pfirst;
+    while (pnode)
+    {
+        if (pnode->node_phase != FW_NODE_PHASE_FAILED)
+        {
+            printi("dfu dist update cancel: addr 0x%04x, app key index %d",
+                   pnode->update_node.addr, fw_dist_server_ctx.dist_app_key_index);
+            pnode->node_phase = FW_NODE_PHASE_CANCELING;
+            fw_update_cancel(pnode->update_node.addr, fw_dist_server_ctx.dist_app_key_index);
+        }
+        pnode = pnode->pnext;
+    }
+}
+
+static void dfu_dist_fw_apply(void)
+{
+    dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_APPLY;
+    fw_dist_server_ctx.dist_phase = FW_DIST_PHASE_APPLYING_UPDATE;
+    if (!dfu_dist_active_update_apply_send())
+    {
+        dfu_dist_handle_dist_result();
+    }
+}
+
+static void dfu_dist_fw_confirm(void)
+{
+    dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_CONFIRM;
+    if (!dfu_dist_active_update_info_get_send())
+    {
+        dfu_dist_handle_dist_result();
+    }
+}
+
+int32_t dfu_dist_update_client_data(const mesh_model_info_p pmodel_info, uint32_t type, void *pargs)
 {
     switch (type)
     {
     case FW_UPDATE_CLIENT_INFO_STATUS:
         {
-            /* get firmware update information status in response to Firmware Update Information Get Message */
             fw_update_client_info_status_t *pdata = (fw_update_client_info_status_t *)pargs;
-            fw_dist_receiver_t recv;
+            fw_dist_update_node_p pnode = fw_dist_server_receiver_get_by_addr(pdata->src);
+            if (!pnode)
+            {
+                printe("dfu update info status: addr 0x%04x not in update list", pdata->src);
+                return MODEL_SUCCESS;
+            }
 
-            if (dfu_check_fw_info(pdata->pfw_info) == DFU_RESULT_OK) {
-                recv.addr = pdata->src;
-                recv.update_fw_image_idx = pdata->first_index;
-                printf("%s:get firmware information for node 0x%04x and first index is 0x%02x! \r\n", __func__, recv.addr, recv.update_fw_image_idx);
-                dfu_dist_receiver_add(&recv);
+            if (dfu_dist_ctx.dist_phase == DFU_DIST_PHASE_CONFIRM)
+            {
+                plt_timer_stop(dfu_dist_ctx.timer, 0);
+                fw_image_e_p pimage = (fw_image_e_p)fw_dist_server_get_image_by_index(dfu_dist_ctx.cur_image_index);
+                if (!pimage)
+                {
+                    printe("dfu update info status: no image in list, index %d", dfu_dist_ctx.cur_image_index);
+                    return MODEL_SUCCESS;
+                }
+                if ((pimage->image.fw_id_len != pdata->pfw_info->fw_id_len) ||
+                    (0 != memcmp(&pimage->image.fw_id, &pdata->pfw_info->fw_id,
+                                 pdata->pfw_info->fw_id_len)))
+                {
+                    printw("dfu update info status: node 0x%04x, fw info mismatch %d-%d", pdata->src,
+                           pimage->image.fw_id_len, pdata->pfw_info->fw_id_len);
+                    dprintw((uint8_t *)&pimage->image.fw_id, pimage->image.fw_id_len);
+                    dprintw((uint8_t *)&pdata->pfw_info->fw_id, pdata->pfw_info->fw_id_len);
+                }
+                else
+                {
+                    printi("dfu update info status: node 0x%04x confirm success", pdata->src);
+                    pnode->node_phase = FW_NODE_PHASE_CONFIRMED;
+                    pnode->update_node.retrieved_update_phase = FW_RETRIEVED_UPDATE_PHASE_APPLY_SUCCESS;
+                }
+
+                if (dfu_dist_active_update_info_get_send())
+                {
+                    return MODEL_SUCCESS;
+                }
+
+                dfu_dist_handle_dist_result();
             }
         }
         break;
     case FW_UPDATE_CLIENT_FW_METADATA_STATUS:
         {
-            fw_update_client_fw_metadata_status_t *pdata = (fw_update_client_fw_metadata_status_t *)pargs;
-            if (pdata->status == FW_UPDATE_STATUS_SUCCESS) {
-                printf("%s:Metadata check success for node 0x%04x !\r\n", __func__, pdata->src);
-            } else {
-                printf("%s:Metadata check fail for node 0x%04x !\r\n", __func__, pdata->src);
-                dfu_dist_receiver_remove(pdata->src);
-            }
+            //fw_update_client_fw_metadata_status_t *pdata = (fw_update_client_fw_metadata_status_t *)pargs;
         }
         break;
     case FW_UPDATE_CLIENT_STATUS:
         {
             fw_update_client_status_t *pdata = (fw_update_client_status_t *)pargs;
-            dfu_update_node_e_t *pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-            switch (dfu_dist_ctx.dist_phase)
+            fw_dist_update_node_p pnode = fw_dist_server_receiver_get_by_addr(pdata->src);
+            if (!pnode)
             {
-            case DFU_DIST_PHASE_UPDATE_START:
+                printe("dfu update status: addr 0x%04x not in update list", pdata->src);
+                return MODEL_SUCCESS;
+            }
+
+            pnode->update_node.retrieved_update_phase = pdata->update_phase;
+
+            printi("dfu update status: dist phase %d", dfu_dist_ctx.dist_phase);
+            if (dfu_dist_ctx.dist_phase == DFU_DIST_PHASE_UPDATE_START)
+            {
+                plt_timer_stop(dfu_dist_ctx.timer, 0);
+                if (pdata->status != FW_UPDATE_STATUS_SUCCESS)
                 {
-                    if (dfu_dist_ctx.timer_state == DFU_TIMER_FW_UPDATE_CLIENT_STATUS) {
-                        plt_timer_stop(dfu_dist_ctx.timer, 0);
-                    } else {
-                        printf("dfu_update_client_data %d, timer state %d \r\n", __LINE__, dfu_dist_ctx.timer_state);
-                    }
-                    if (pdata->status == FW_UPDATE_STATUS_SUCCESS)
-                    {
-                        while (NULL != pentry)
-                        {
-                            if (pentry->addr == pdata->src)
-                            {
-                                if (pentry->node_phase == DFU_NODE_PHASE_IDLE \
-                                    || pentry->node_phase == DFU_NODE_PHASE_UPDATE_STARTING) {
-                                    pentry->node_phase = DFU_NODE_PHASE_UPDATE_STARTED;
-                                    printf("dfu_update_client_data: node 0x%04x update start success \r\n", pdata->src);
-                                    break;
-                                } else {
-                                    printf("dfu_update_client_data: node 0x%04x is not idle, current state is  \r\n", 
-                                        pdata->src, pentry->node_phase);
-                                    return MODEL_SUCCESS;
-                                }
-                            }
-                            pentry = pentry->pnext;
-                        } 
-                        if (pentry == NULL) {
-                            printf("dfu_transfer_client_data: node 0x%04x is not in the update list \r\n", pdata->src);
-                            return MODEL_SUCCESS;
-                        }
-                    }
-                    else
-                    {
-                        dfu_dist_ctx.pcur_update_node->node_phase = DFU_NODE_PHASE_FAILED;
-                        printf("dfu_update_client_data: node 0x%04x update start failed, reason %d \r\n", pdata->src,
-                               pdata->status);
-                        dfu_dist_receiver_remove(pdata->src);
-                    }
-
-                    /* find idle node and send update start */
-                    pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-                    while (NULL != pentry)
-                    {
-                        if (pentry->node_phase == DFU_NODE_PHASE_IDLE \
-                            || pentry->node_phase == DFU_NODE_PHASE_UPDATE_STARTING)
-                        {
-                            fw_update_start(pentry->addr, dfu_dist_ctx.dist_app_key_index, dfu_dist_ctx.dist_ttl,
-                                            dfu_dist_ctx.dist_timeout_base, dfu_dist_ctx.blob_id,
-                                            pentry->update_fw_image_idx, dfu_dist_ctx.fw_metadata, dfu_dist_ctx.metadata_len);
-                            dfu_dist_ctx.dist_retry_count = 0;
-                            pentry->node_phase = DFU_NODE_PHASE_UPDATE_STARTING;
-                            plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_UPDATE_RETRY_PERIOD, 0);
-                            dfu_dist_ctx.timer_state = DFU_TIMER_FW_UPDATE_CLIENT_STATUS;
-                            dfu_dist_ctx.pcur_update_node = pentry;
-                            return MODEL_SUCCESS;
-                        }
-                        pentry = pentry->pnext;
-                    }
-
-                    /* all node received update start message, begin blob transfer start */
-                    printf("dfu_update_client_data: start firmware blob transfer start \r\n");
-                    dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_BLOB_TRANSFER_START;
-                    pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-                    while (NULL != pentry)
-                    {
-                        if (pentry->node_phase == DFU_NODE_PHASE_UPDATE_STARTED)
-                        {
-                            blob_transfer_start(pentry->addr, dfu_dist_ctx.dist_app_key_index, BLOB_TRANSFER_MODE_PUSH,
-                                                dfu_dist_ctx.blob_id, dfu_dist_ctx.fw_image_size, DFU_BLOCK_SIZE_LOG, DFU_CLIENT_MTU);
-                            dfu_dist_ctx.dist_retry_count = 0;
-                            plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_TRANSFER_START_RETRY_PERIOD, 0);
-                            dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_TRANSFER_START;
-                            pentry->node_phase = DFU_NODE_PHASE_BLOB_TRANSFER_STARTING;
-                            dfu_dist_ctx.pcur_update_node = pentry;
-                            return MODEL_SUCCESS;
-                        }
-                        pentry = pentry->pnext;
-                    }
-
-                    /* no node need to update */
-                    printf("dfu_update_client_data: no node need to firmware blob transfer start, dfu procedure finish \r\n");
-                    dfu_dist_clear();
+                    printe("dfu update status: node 0x%04x update start failed, reason %d", pdata->src,
+                           pdata->status);
+                    dfu_dist_handle_node_fail(pnode);
                 }
-                break;
-            default:
-                break;
+                else
+                {
+                    printi("dfu update status: node 0x%04x update start success", pdata->src);
+                    pnode->node_phase = FW_NODE_PHASE_UPDATE_STARTED;
+                }
+
+                if (dfu_dist_active_update_start_send())
+                {
+                    return MODEL_SUCCESS;
+                }
+
+                /* all node received update start message, begin blob transfer start */
+                if (!dfu_dist_blob_transfer())
+                {
+                    printi("dfu update status: blob transfer failed");
+                    dfu_dist_handle_blob_transfer(false);
+                }
+            }
+            else if (dfu_dist_ctx.dist_phase == DFU_DIST_PHASE_VERIFY)
+            {
+                plt_timer_stop(dfu_dist_ctx.timer, 0);
+                if (pdata->status != FW_UPDATE_STATUS_SUCCESS ||
+                    pnode->update_node.retrieved_update_phase == FW_RETRIEVED_UPDATE_PHASE_VERIFICATION_FAILED)
+                {
+                    printe("dfu update status: node 0x%04x verify failed, reason %d, retrieved update phase %d",
+                           pdata->src,
+                           pdata->status, pnode->update_node.retrieved_update_phase);
+                    dfu_dist_handle_node_fail(pnode);
+                }
+                else if (pnode->update_node.retrieved_update_phase == FW_RETRIEVED_UPDATE_PHASE_VERIFYING_UPDATE)
+                {
+                    printe("dfu update status: node 0x%04x verifying...");
+                    dfu_dist_ctx.dist_retry_count = 0;
+                    plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_UPDATE_GET_RETRY_PERIOD, 0);
+                    return MODEL_SUCCESS;
+                }
+
+                if (dfu_dist_active_update_get_send())
+                {
+                    return MODEL_SUCCESS;
+                }
+
+                dfu_dist_handle_fw_verify();
+            }
+            else if (dfu_dist_ctx.dist_phase == DFU_DIST_PHASE_APPLY)
+            {
+                plt_timer_stop(dfu_dist_ctx.timer, 0);
+                if (pdata->status != FW_UPDATE_STATUS_SUCCESS)
+                {
+                    printe("dfu update status: node 0x%04x apply failed, reason %d", pdata->src,
+                           pdata->status);
+                    dfu_dist_handle_node_fail(pnode);
+                }
+                else
+                {
+                    printi("dfu update status: node 0x%04x apply success", pdata->src);
+                    pnode->node_phase = FW_NODE_PHASE_APPLIED;
+                }
+
+                if (dfu_dist_active_update_apply_send())
+                {
+                    return MODEL_SUCCESS;
+                }
+
+                dfu_dist_fw_confirm();
+            }
+            else if (dfu_dist_ctx.dist_phase == DFU_DIST_PHASE_CANCELING)
+            {
+                plt_timer_stop(dfu_dist_ctx.timer, 0);
+                if (pdata->status != FW_UPDATE_STATUS_SUCCESS)
+                {
+                    printe("dfu update status: node 0x%04x cancel failed, reason %d", pdata->src,
+                           pdata->status);
+                    dfu_dist_handle_node_fail(pnode);
+                }
+                else
+                {
+                    printi("dfu update status: node 0x%04x cancel success", pdata->src);
+                    pnode->node_phase = FW_NODE_PHASE_IDLE;
+                }
+
+                if (dfu_dist_handle_update_cancel())
+                {
+                    fw_dist_server_ctx.dist_phase = FW_DIST_PHASE_IDLE;
+                    dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_IDLE;
+                }
             }
         }
         break;
@@ -531,707 +594,421 @@ int32_t dfu_update_client_data(const mesh_model_info_p pmodel_info, uint32_t typ
     return MODEL_SUCCESS;
 }
 
-#if defined(CONFIG_BT_MESH_PROVISIONER) && CONFIG_BT_MESH_PROVISIONER
-extern void *bt_mesh_provisioner_evt_queue_handle;  //!< Event queue handle
-extern void *bt_mesh_provisioner_io_queue_handle;   //!< IO queue handle
-#elif defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
-#if defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
-extern void *bt_mesh_provisioner_ota_client_evt_queue_handle;  //!< Event queue handle
-extern void *bt_mesh_provisioner_ota_client_io_queue_handle;   //!< IO queue handle
-#else
-extern void *bt_mesh_provisioner_multiple_profile_evt_queue_handle;  //!< Event queue handle
-extern void *bt_mesh_provisioner_multiple_profile_io_queue_handle;   //!< IO queue handle
-#endif
-#endif
-
-static void dfu_timeout(void *ptimer)
+extern void *evt_queue_handle;  //!< Event queue handle
+extern void *io_queue_handle;   //!< IO queue handle
+static void dfu_dist_timeout(void *ptimer)
 {
     uint8_t event = EVENT_IO_TO_APP;
     T_IO_MSG msg;
     msg.type = DFU_DIST_APP_TIMEOUT_MSG;
     msg.u.buf = ptimer;
-#if defined(CONFIG_BT_MESH_PROVISIONER) && CONFIG_BT_MESH_PROVISIONER
-    if (os_msg_send(bt_mesh_provisioner_io_queue_handle, &msg, 0) == false)
+    if (os_msg_send(io_queue_handle, &msg, 0) == false)
     {
     }
-    else if (os_msg_send(bt_mesh_provisioner_evt_queue_handle, &event, 0) == false)
+    else if (os_msg_send(evt_queue_handle, &event, 0) == false)
     {
     }
-#elif defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE
-#if defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
-    if (os_msg_send(bt_mesh_provisioner_ota_client_io_queue_handle, &msg, 0) == false)
-    {
-    }
-    else if (os_msg_send(bt_mesh_provisioner_ota_client_evt_queue_handle, &event, 0) == false)
-    {
-    }
-#else
-    if (os_msg_send(bt_mesh_provisioner_multiple_profile_io_queue_handle, &msg, 0) == false)
-    {
-    }
-    else if (os_msg_send(bt_mesh_provisioner_multiple_profile_evt_queue_handle, &event, 0) == false)
-    {
-    }
-#endif
-#endif
 }
 
 void dfu_dist_handle_timeout(void)
 {
-    switch (dfu_dist_ctx.dist_phase)
+    printi("dfu_dist_handle_timeout: dist phase %d", dfu_dist_ctx.dist_phase);
+    fw_dist_update_node_p pnode = dfu_dist_ctx.pcur_update_node;
+    if (dfu_dist_ctx.dist_phase == DFU_DIST_PHASE_UPDATE_START)
     {
-    case DFU_DIST_PHASE_UPDATE_START:
+        if (pnode->node_phase == FW_NODE_PHASE_UPDATE_STARTING)
         {
-            if (dfu_dist_ctx.pcur_update_node->node_phase == DFU_NODE_PHASE_UPDATE_STARTING)
+            if (dfu_dist_ctx.dist_retry_count >= DFU_DIST_RETRY_TIMES)
             {
-                if (dfu_dist_ctx.dist_retry_count >= DFU_DIST_RETRY_TIMES)
-                {
-                    /* update start failed, skip this node or generate dfu failed? */
-                    printf("dfu_timeout_handle: node 0x%04x update start failed \r\n", dfu_dist_ctx.pcur_update_node->addr);
-                    dfu_dist_ctx.pcur_update_node->node_phase = DFU_NODE_PHASE_FAILED;
-                    dfu_dist_receiver_remove(dfu_dist_ctx.pcur_update_node->addr);
-                }
-                else
-                {
-                    fw_update_start(dfu_dist_ctx.pcur_update_node->addr, dfu_dist_ctx.dist_app_key_index,
-                                    dfu_dist_ctx.dist_ttl, dfu_dist_ctx.dist_timeout_base, dfu_dist_ctx.blob_id,
-                                    dfu_dist_ctx.pcur_update_node->update_fw_image_idx, dfu_dist_ctx.fw_metadata,
-                                    dfu_dist_ctx.metadata_len);
-                    dfu_dist_ctx.dist_retry_count ++;
-                    plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_UPDATE_RETRY_PERIOD, 0);
-                    dfu_dist_ctx.timer_state = DFU_TIMER_FW_UPDATE_CLIENT_STATUS;
-                    printf("dfu_dist_timeout_handle: fw_update_start, dst 0x%04x, retry count %d \r\n",
-                           dfu_dist_ctx.pcur_update_node->addr, dfu_dist_ctx.dist_retry_count);
-                    return ;
-                }
+                /* update start failed, skip this node */
+                printe("dfu_dist_handle_timeout: fw update start, dst 0x%04x failed",
+                       pnode->update_node.addr);
+                dfu_dist_handle_node_fail(pnode);
             }
-
-            dfu_dist_ctx.dist_retry_count = 0;
-            /* find idle node and send update start */
-            dfu_update_node_e_t *pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-            while (NULL != pentry)
+            else
             {
-                if (pentry->node_phase == DFU_NODE_PHASE_IDLE)
-                {
-                    fw_update_start(pentry->addr, dfu_dist_ctx.dist_app_key_index, dfu_dist_ctx.dist_ttl,
-                                    dfu_dist_ctx.dist_timeout_base, dfu_dist_ctx.blob_id, pentry->update_fw_image_idx,
-                                    dfu_dist_ctx.fw_metadata, dfu_dist_ctx.metadata_len);
-                    pentry->node_phase = DFU_NODE_PHASE_UPDATE_STARTING;
-                    plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_UPDATE_RETRY_PERIOD, 0);
-                    dfu_dist_ctx.timer_state = DFU_TIMER_FW_UPDATE_CLIENT_STATUS;
-                    dfu_dist_ctx.pcur_update_node = pentry;
-                    printf("dfu_dist_timeout_handle: fw_update_start, dst 0x%04x, retry count %d \r\n",
-                           dfu_dist_ctx.pcur_update_node->addr, dfu_dist_ctx.dist_retry_count);
-                    return ;
-                }
-
-                pentry = pentry->pnext;
+                dfu_dist_ctx.dist_retry_count ++;
+                plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_UPDATE_START_RETRY_PERIOD, 0);
+                printi("dfu_dist_handle_timeout: fw update start, dst 0x%04x, retry count %d",
+                       pnode->update_node.addr, dfu_dist_ctx.dist_retry_count);
+                fw_update_start(pnode->update_node.addr, fw_dist_server_ctx.dist_app_key_index,
+                                dfu_dist_ctx.dist_ttl, fw_dist_server_ctx.dist_timeout_base,
+                                dfu_dist_ctx.blob_id, pnode->update_node.update_fw_image_idx,
+                                dfu_dist_ctx.fw_metadata, dfu_dist_ctx.metadata_len);
+                return;
             }
-
-            /* all node received update start message, begin blob transfer start */
-            printf("dfu_timeout_handle: start firmware blob transfer start \r\n");
-            dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_BLOB_TRANSFER_START;
-            pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-            while (NULL != pentry)
-            {
-                if (pentry->node_phase == DFU_NODE_PHASE_UPDATE_STARTED)
-                {
-                    blob_transfer_start(pentry->addr, dfu_dist_ctx.dist_app_key_index, BLOB_TRANSFER_MODE_PUSH,
-                                        dfu_dist_ctx.blob_id, dfu_dist_ctx.fw_image_size, DFU_BLOCK_SIZE_LOG, DFU_CLIENT_MTU);
-                    plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_TRANSFER_START_RETRY_PERIOD, 0);
-                    dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_TRANSFER_START;
-                    pentry->node_phase = DFU_NODE_PHASE_BLOB_TRANSFER_STARTING;
-                    dfu_dist_ctx.pcur_update_node = pentry;
-                    printf("dfu_dist_timeout_handle: blob_transfer_start, dst 0x%04x, retry count %d \r\n", pentry->addr,
-                           dfu_dist_ctx.dist_retry_count);
-                    return ;
-                }
-                pentry = pentry->pnext;
-            }
-
-            /* no node need to update */
-            printf("dfu_update_client_data: no node need to firmware blob transfer start, dfu procedure finish \r\n");
-            dfu_dist_clear();
         }
-    case DFU_DIST_PHASE_BLOB_TRANSFER_START:
+
+        if (dfu_dist_active_update_start_send())
         {
-            if (dfu_dist_ctx.pcur_update_node->node_phase == DFU_NODE_PHASE_BLOB_TRANSFER_STARTING)
-            {
-                if (dfu_dist_ctx.dist_retry_count >= DFU_DIST_RETRY_TIMES)
-                {
-                    /* transfer start failed, skip this node or generate dfu failed? */
-                    printf("dfu_timeout_handle: node 0x%04x blob transfer start failed \r\n",
-                           dfu_dist_ctx.pcur_update_node->addr);
-                    dfu_dist_ctx.pcur_update_node->node_phase = DFU_NODE_PHASE_FAILED;
-                    dfu_dist_receiver_remove(dfu_dist_ctx.pcur_update_node->addr);
-                }
-                else
-                {
-                    blob_transfer_start(dfu_dist_ctx.pcur_update_node->addr, dfu_dist_ctx.dist_app_key_index,
-                                        BLOB_TRANSFER_MODE_PUSH, dfu_dist_ctx.blob_id, dfu_dist_ctx.fw_image_size, DFU_BLOCK_SIZE_LOG,
-                                        DFU_CLIENT_MTU);
-                    dfu_dist_ctx.dist_retry_count ++;
-                    plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_TRANSFER_START_RETRY_PERIOD, 0);
-                    dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_TRANSFER_START;
-                    printf("dfu_dist_timeout_handle: blob_transfer_start, dst 0x%04x, retry count %d \r\n",
-                           dfu_dist_ctx.pcur_update_node->addr, dfu_dist_ctx.dist_retry_count);
-                    return ;
-                }
-            }
-
-            dfu_dist_ctx.dist_retry_count = 0;
-            /* find active node and send blob transfer start */
-            dfu_update_node_e_t *pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-            while (NULL != pentry)
-            {
-                if (pentry->node_phase == DFU_NODE_PHASE_UPDATE_STARTED)
-                {
-                    blob_transfer_start(pentry->addr, dfu_dist_ctx.dist_app_key_index, BLOB_TRANSFER_MODE_PUSH,
-                                        dfu_dist_ctx.blob_id, dfu_dist_ctx.fw_image_size, DFU_BLOCK_SIZE_LOG, DFU_CLIENT_MTU);
-                    pentry->node_phase = DFU_NODE_PHASE_BLOB_TRANSFER_STARTING;
-                    plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_TRANSFER_START_RETRY_PERIOD, 0);
-                    dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_TRANSFER_START;
-                    dfu_dist_ctx.pcur_update_node = pentry;
-                    printf("dfu_dist_timeout_handle: blob_transfer_start, dst 0x%04x, retry count %d \r\n", pentry->addr,
-                           dfu_dist_ctx.dist_retry_count);
-                    return ;
-                }
-
-                pentry = pentry->pnext;
-            }
-
-            /* all node received blob transfer start message, begin blob block start */
-            printf("blob_transfer_client_data: block start \r\n");
-            dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_BLOB_BLOCK_START;
-            /* get block data */
-            dfu_dist_ctx.block_size = (dfu_dist_ctx.fw_image_left_size >= DFU_BLOCK_SIZE) ? DFU_BLOCK_SIZE :
-                                      dfu_dist_ctx.fw_image_left_size;
-            dfu_dist_ctx.fw_image_data_get(dfu_dist_ctx.block_size - DFU_BLOCK_SIGNATURE_SIZE, dfu_dist_ctx.pblock_data);
-            dfu_block_signature(dfu_dist_ctx.pblock_data, dfu_dist_ctx.block_size - DFU_BLOCK_SIGNATURE_SIZE, 
-                                    DFU_BLOCK_SIGNATURE_SIZE);
-            dfu_dist_ctx.block_left_size = dfu_dist_ctx.block_size;
-            /* block start */
-            pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-            while (NULL != pentry)
-            {
-                if (pentry->node_phase == DFU_NODE_PHASE_BLOB_TRANSFER_STARTED)
-                {
-                    blob_block_start(pentry->addr, dfu_dist_ctx.dist_app_key_index, dfu_dist_ctx.block_num,
-                                     DFU_CHUNK_SIZE);
-                    plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_BLOCK_START_RETRY_PERIOD, 0);
-                    dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_BLOCK_START;
-                    pentry->node_phase = DFU_NODE_PHASE_BLOB_BLOCK_STARTING;
-                    dfu_dist_ctx.pcur_update_node = pentry;
-                    printf("dfu_dist_timeout_handle: blob_block_start, dst 0x%04x, block num %d, retry count %d \r\n",
-                           pentry->addr, dfu_dist_ctx.block_num, dfu_dist_ctx.dist_retry_count);
-                    return ;
-                }
-                pentry = pentry->pnext;
-            }
-
-            /* no node need to update */
-            printf("dfu_update_client_data: no node need to blob block start, dfu procedure finish \r\n");
-            dfu_dist_clear();
+            return;
         }
-        break;
-    case DFU_DIST_PHASE_BLOB_BLOCK_START:
+
+        /* all node received update start message, begin blob transfer start */
+        if (!dfu_dist_blob_transfer())
         {
-            if (dfu_dist_ctx.pcur_update_node->node_phase == DFU_NODE_PHASE_BLOB_BLOCK_STARTING)
+            printi("dfu_dist_handle_timeout: blob transfer failed");
+            dfu_dist_handle_blob_transfer(false);
+        }
+    }
+    else if (dfu_dist_ctx.dist_phase == DFU_DIST_PHASE_VERIFY)
+    {
+        if (pnode->node_phase == FW_NODE_PHASE_APPLYING)
+        {
+            if (dfu_dist_ctx.dist_retry_count >= DFU_DIST_RETRY_TIMES)
             {
-                if (dfu_dist_ctx.dist_retry_count >= DFU_DIST_RETRY_TIMES)
-                {
-                    /* transfer start failed, skip this node or generate dfu failed? */
-                    printf("dfu_timeout_handle: node 0x%04x blob block start failed \r\n",
-                           dfu_dist_ctx.pcur_update_node->addr);
-                    dfu_dist_ctx.pcur_update_node->node_phase = DFU_NODE_PHASE_FAILED;
-                    dfu_dist_receiver_remove(dfu_dist_ctx.pcur_update_node->addr);
-                }
-                else
-                {
-                    blob_block_start(dfu_dist_ctx.pcur_update_node->addr, dfu_dist_ctx.dist_app_key_index,
-                                     dfu_dist_ctx.block_num, DFU_CHUNK_SIZE);
-                    dfu_dist_ctx.dist_retry_count ++;
-                    plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_BLOCK_START_RETRY_PERIOD, 0);
-                    dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_BLOCK_START;
-                    printf("dfu_dist_timeout_handle: blob_block_start, dst 0x%04x, block num %d, retry count %d \r\n",
-                           dfu_dist_ctx.pcur_update_node->addr, dfu_dist_ctx.block_num, dfu_dist_ctx.dist_retry_count);
-                    return ;
-                }
+                printe("dfu_dist_handle_timeout: fw update get, dst 0x%04x verify failed");
+                dfu_dist_handle_node_fail(pnode);
             }
-
-            dfu_dist_ctx.dist_retry_count = 0;
-            /* find active node and send blob block start */
-            dfu_update_node_e_t *pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-            while (NULL != pentry)
+            else
             {
-                if (pentry->node_phase == DFU_NODE_PHASE_BLOB_TRANSFER_STARTED)
-                {
-                    blob_block_start(pentry->addr, dfu_dist_ctx.dist_app_key_index, dfu_dist_ctx.block_num,
-                                     DFU_CHUNK_SIZE);
-                    pentry->node_phase = DFU_NODE_PHASE_BLOB_BLOCK_STARTING;
-                    plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_BLOCK_START_RETRY_PERIOD, 0);
-                    dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_BLOCK_START;
-                    dfu_dist_ctx.pcur_update_node = pentry;
-                    printf("dfu_dist_timeout_handle: blob_block_start, dst 0x%04x, block num %d, retry count %d \r\n",
-                           pentry->addr, dfu_dist_ctx.block_num, dfu_dist_ctx.dist_retry_count);
-                    return ;
-                }
-
-                pentry = pentry->pnext;
+                dfu_dist_ctx.dist_retry_count ++;
+                plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_UPDATE_GET_RETRY_PERIOD, 0);
+                printi("dfu_dist_handle_timeout: fw update get, dst 0x%04x, retry count %d",
+                       pnode->update_node.addr, dfu_dist_ctx.dist_retry_count);
+                fw_update_get(pnode->update_node.addr, fw_dist_server_ctx.dist_app_key_index);
+                return;
             }
+        }
 
+        if (dfu_dist_active_update_get_send())
+        {
+            return;
+        }
 
-            /* check chun transfer */
-            bool need_chunk_transfer = false;
-            pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-            while (NULL != pentry)
+        dfu_dist_handle_fw_verify();
+    }
+    else if (dfu_dist_ctx.dist_phase == DFU_DIST_PHASE_APPLY)
+    {
+        if (pnode->node_phase == FW_NODE_PHASE_APPLYING)
+        {
+            if (dfu_dist_ctx.dist_retry_count >= DFU_DIST_RETRY_TIMES)
             {
-                if (pentry->node_phase == DFU_NODE_PHASE_BLOB_BLOCK_STARTED)
-                {
-                    pentry->node_phase = DFU_NODE_PHASE_BLOB_CHUNK_TRANSFERING;
-                    need_chunk_transfer = true;
-                }
-                pentry = pentry->pnext;
+                printe("dfu_dist_handle_timeout: fw update apply, dst 0x%04x apply failed");
+                dfu_dist_handle_node_fail(pnode);
             }
-            if (!need_chunk_transfer)
+            else
             {
-                /* no node need to update */
-                printf("dfu_update_client_data: no node need chunk transfer, dfu procedure finish \r\n");
-                dfu_dist_clear();
-                return ;
+                dfu_dist_ctx.dist_retry_count ++;
+                plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_UPDATE_APPLY_RETRY_PERIOD, 0);
+                printi("dfu_dist_handle_timeout: fw update apply, dst 0x%04x, retry count %d",
+                       pnode->update_node.addr, dfu_dist_ctx.dist_retry_count);
+                fw_update_apply(pnode->update_node.addr, fw_dist_server_ctx.dist_app_key_index);
+                return;
             }
+        }
 
-            /* all node received blob block start message, start chunk transfer */
-            printf("dfu_dist_timeout_handle: chunk transfer \r\n");
-            dfu_dist_ctx.pcur_update_node = NULL;
-            dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_BLOB_CHUNK_TRANSFER;
-            /* set chunk data */
-            dfu_dist_ctx.chunk_num = 0;
-            dfu_dist_ctx.pchunk_data = dfu_dist_ctx.pblock_data;
-            dfu_dist_ctx.chunk_size = (dfu_dist_ctx.block_left_size >= DFU_CHUNK_SIZE) ? DFU_CHUNK_SIZE :
-                                      dfu_dist_ctx.block_left_size;
-            dfu_dist_ctx.total_chunks = dfu_dist_ctx.block_size / dfu_dist_ctx.chunk_size;
-            if (dfu_dist_ctx.block_size % dfu_dist_ctx.chunk_size)
+        if (dfu_dist_active_update_apply_send())
+        {
+            return;
+        }
+
+        // all node applied
+        dfu_dist_fw_confirm();
+    }
+    else if (dfu_dist_ctx.dist_phase == DFU_DIST_PHASE_CONFIRM)
+    {
+        if (pnode->node_phase == FW_NODE_PHASE_APPLIED)
+        {
+            if (dfu_dist_ctx.dist_retry_count >= DFU_DIST_RETRY_TIMES)
             {
-                dfu_dist_ctx.total_chunks += 1;
+                printe("dfu_dist_handle_timeout: fw update info get, dst 0x%04x failed");
+                dfu_dist_handle_node_fail(pnode);
             }
-            /* chunk transfer start */
-            if (dfu_dist_ctx.chunk_num == (DFU_CHUNK_NUM - 1)) {
-                plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_NEW_BLOCK_PERIOD, 0);
-            } else {
-                plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_CHUNK_TRANSFER_RETRY_PERIOD, 0);
+            else
+            {
+                dfu_dist_ctx.dist_retry_count ++;
+                plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_UPDATE_APPLY_RETRY_PERIOD, 0);
+                printi("dfu_dist_handle_timeout: fw update info get, dst 0x%04x, retry count %d",
+                       pnode->update_node.addr, dfu_dist_ctx.dist_retry_count);
+                fw_update_info_get(pnode->update_node.addr, fw_dist_server_ctx.dist_app_key_index,
+                                   pnode->update_node.update_fw_image_idx, 1);
+                return;
             }
-            dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_BLOCK_GET;
-            blob_chunk_transfer(dfu_dist_ctx.dist_multicast_addr, dfu_dist_ctx.dist_app_key_index,
-                                dfu_dist_ctx.chunk_num, dfu_dist_ctx.pchunk_data, dfu_dist_ctx.chunk_size);
-            printf("dfu_dist_timeout_handle: blob_chunk_transfer, dst 0x%04x, chunk num %d, chunk size %d, retry count %d \r\n",
-                   dfu_dist_ctx.dist_multicast_addr, dfu_dist_ctx.chunk_num, dfu_dist_ctx.chunk_size,
-                   dfu_dist_ctx.dist_retry_count);
+        }
+
+        if (dfu_dist_active_update_info_get_send())
+        {
+            return;
+        }
+
+        dfu_dist_handle_dist_result();
+    }
+}
+
+bool dfu_dist_start(uint16_t dst, uint16_t app_key_index, uint16_t update_timeout_base,
+                    uint8_t update_policy, uint8_t *pfw_metadata, uint8_t metadata_len,
+                    uint32_t fw_image_size)
+{
+    if (DFU_DIST_PHASE_IDLE != dfu_dist_ctx.dist_phase)
+    {
+        printe("dfu_dist_start: busy, phase %d", dfu_dist_ctx.dist_phase);
+        return false;
+    }
+
+    if (0 == fw_dist_server_ctx.dist_update_node_list.count)
+    {
+        printe("dfu_dist_start: there is no node need to update");
+        return false;
+    }
+
+    /* start timeout timer */
+    if (!dfu_dist_ctx.timer)
+    {
+        dfu_dist_ctx.timer = plt_timer_create("dfu", DFU_DIST_UPDATE_START_RETRY_PERIOD, false, 0,
+                                              dfu_dist_timeout);
+        if (!dfu_dist_ctx.timer)
+        {
+            printe("dfu_dist_start: create timer failed");
+            return false;
+        }
+        plt_timer_start(dfu_dist_ctx.timer, 0);
+    }
+
+    dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_UPDATE_START;
+    fw_dist_server_ctx.dist_phase = FW_DIST_PHASE_TRANSFER_ACTIVE;
+    fw_dist_server_ctx.dist_multicast_addr = dst;
+    fw_dist_server_ctx.dist_app_key_index = app_key_index;
+    fw_dist_server_ctx.dist_timeout_base = update_timeout_base;
+    fw_dist_server_ctx.dist_update_policy = update_policy;
+    dfu_dist_ctx.dist_ttl = mesh_node.ttl;
+    dfu_dist_ctx.fw_image_size = fw_image_size;
+    dfu_dist_ctx.dist_retry_count = 0;
+    memcpy(dfu_dist_ctx.fw_metadata, pfw_metadata, metadata_len);
+    dfu_dist_ctx.metadata_len = metadata_len;
+    plt_rand(dfu_dist_ctx.blob_id, sizeof(dfu_dist_ctx.blob_id));
+
+    printi("dfu_dist_start: dst 0x%04x, app_key_index %d, update_timeout_base %d, update policy %d, fw_image_size %d",
+           fw_dist_server_ctx.dist_multicast_addr, fw_dist_server_ctx.dist_app_key_index,
+           fw_dist_server_ctx.dist_timeout_base, fw_dist_server_ctx.dist_update_policy,
+           dfu_dist_ctx.fw_image_size);
+    printi("dfu_dist_start: firmware metadata = ");
+    dprinti(dfu_dist_ctx.fw_metadata, dfu_dist_ctx.metadata_len);
+    printi("dfu_dist_start: blob id = ");
+    dprinti(dfu_dist_ctx.blob_id, 8);
+
+    if (!dfu_dist_active_update_start_send())
+    {
+        printi("dfu_dist_start: update start failed");
+        dfu_dist_handle_blob_transfer(false);
+        return false;
+    }
+
+    return true;
+}
+
+int32_t dfu_dist_server_data(const mesh_model_info_p pmodel_info, uint32_t type,
+                             void *pargs)
+{
+    switch (type)
+    {
+    case FW_DIST_SERVER_START:
+        {
+            fw_dist_server_start_t *pdata = (fw_dist_server_start_t *)pargs;
+            /* start update */
+            dfu_dist_ctx.cur_image_index = pdata->dist_fw_image_index;
+            fw_image_e_p pimage = (fw_image_e_p)fw_dist_server_get_image_by_index(dfu_dist_ctx.cur_image_index);
+            if (!pimage)
+            {
+                data_uart_debug("dfu dist start: no image in list, index %d\r\n", dfu_dist_ctx.cur_image_index);
+                return MODEL_SUCCESS;
+            }
+            fw_dist_server_ctx.dist_update_policy = pdata->dist_update_policy;
+            dfu_dist_start(pdata->dist_multicast_addr, pdata->dist_app_key_index,
+                           pdata->dist_timeout_base, pdata->dist_update_policy,
+                           pimage->image.metadata, pimage->image.metadata_len,
+                           pimage->dfu_image_size);
+            data_uart_debug("dfu dist start: dst 0x%04x, image size %d\r\n", pdata->dist_multicast_addr,
+                            pimage->dfu_image_size);
         }
         break;
-    case DFU_DIST_PHASE_BLOB_CHUNK_TRANSFER:
+    case FW_DIST_SERVER_SUSPEND:
         {
-            if (dfu_dist_ctx.timer_state == DFU_TIMER_BLOB_BLOCK_GET)
+            /* dist suspend */
+            printi("dfu dist suspend: distribution suspend!");
+        }
+        break;
+    case FW_DIST_SERVER_CANCEL:
+        {
+            /* dist cancel */
+            printi("dfu dist cancel: distribution cancel!");
+            dfu_dist_update_cancel();
+            blob_client_transfer_cancel(dfu_dist_ctx.ptransfer_addr,
+                                        dfu_dist_ctx.transfer_addr_num, dfu_dist_ctx.blob_id);
+        }
+        break;
+    case FW_DIST_SERVER_APPLY:
+        {
+            /* start apply */
+            printi("dfu dist apply: start firmware apply");
+            dfu_dist_fw_apply();
+        }
+        break;
+    case FW_DIST_SERVER_UPLOAD_START:
+    case FW_DIST_SERVER_UPLOAD_OOB_START:
+    case FW_DIST_SERVER_UPLOAD_BLOCK_DATA:
+    case FW_DIST_SERVER_UPLOAD_COMPLETE:
+    case FW_DIST_SERVER_UPLOAD_FAIL:
+    case FW_DIST_SERVER_URI_CHECK:
+        {
+            if (type == FW_DIST_SERVER_UPLOAD_START)
             {
-                plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_BLOCK_GET_RETRY_PERIOD, 0);
-                dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_CHUNK_TRANSFER;
-                dfu_update_node_e_t *pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-                while (NULL != pentry)
+                /* change callback since Role change to Distributor */
+                blob_transfer_server_set_data_cb(fw_dist_handle_blob_server_data);
+            }
+
+            if (dfu_dist_ctx.dfu_dist_cb)
+            {
+                dfu_dist_upload_t cb_data = {0};
+                cb_data.upload_type = type;
+                cb_data.pupload_data = pargs;
+                dfu_dist_ctx.dfu_dist_cb(MESH_MSG_DFU_DIST_UPLOAD, &cb_data);
+            }
+        }
+        break;
+    case FW_DIST_SERVER_FW_DELETE:
+        {
+            // fw_dist_server_fw_delete_t *pdata = (fw_dist_server_fw_delete_t *)pargs;
+        }
+        break;
+    case FW_DIST_SERVER_FW_DELETE_ALL:
+        {
+        }
+        break;
+    default:
+        break;
+    }
+
+    return MODEL_SUCCESS;
+}
+
+uint16_t dfu_dist_blob_client_cb(uint8_t type, void *pdata)
+{
+    switch (type)
+    {
+    case MESH_MSG_BLOB_CLIENT_APP_TRANSFER:
+        {
+            blob_client_app_transfer_t *ptransfer = (blob_client_app_transfer_t *)pdata;
+            if (ptransfer->type == BLOB_CB_TYPE_NODE_FAIL)
+            {
+                fw_dist_update_node_p pnode = fw_dist_server_receiver_get_by_addr(ptransfer->addr);
+                if (pnode)
                 {
-                    if (pentry->node_phase == DFU_NODE_PHASE_BLOB_CHUNK_TRANSFERING)
-                    {
-                        printf("dfu_dist_timeout_handle: blob_block_get, dst 0x%04x \r\n", pentry->addr);
-                        blob_block_get(pentry->addr, dfu_dist_ctx.dist_app_key_index);
-                    }
-                    pentry = pentry->pnext;
+                    printe("dfu_dist_blob_client_cb: node 0x%04x failed in client phase %d, node phase %d",
+                           ptransfer->addr, ptransfer->client_phase, pnode->node_phase);
+                    dfu_dist_handle_node_fail(pnode);
                 }
             }
-            else if (dfu_dist_ctx.timer_state == DFU_TIMER_BLOB_CHUNK_TRANSFER)
+
+            if (ptransfer->procedure == BLOB_CB_PROCEDURE_TRANSFER &&
+                fw_dist_server_ctx.dist_phase == FW_DIST_PHASE_TRANSFER_ACTIVE)
             {
-                dfu_update_node_e_t *pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-                while (NULL != pentry)
+                if (ptransfer->type == BLOB_CB_TYPE_SUCCESS)
                 {
-                    if (pentry->node_phase == DFU_NODE_PHASE_BLOB_CHUNK_TRANSFERING)
+                    printi("dfu_dist_blob_client_cb: firmware send complete");
+                    dfu_dist_handle_blob_transfer(true);
+                    /* start verify and apply */
+                    fw_dist_update_node_p pnode = (fw_dist_update_node_p)
+                                                  fw_dist_server_ctx.dist_update_node_list.pfirst;
+                    while (pnode)
                     {
-                        if (dfu_dist_ctx.dist_retry_count >= DFU_DIST_RETRY_TIMES)
+                        if (pnode->node_phase == FW_NODE_PHASE_UPDATE_STARTED)
                         {
-                            printf("dfu_timeout_handle: node 0x%04x receive chunk %d failed \r\n", pentry->addr, dfu_dist_ctx.chunk_num);
-                            pentry->node_phase = DFU_NODE_PHASE_FAILED;
-                            dfu_dist_receiver_remove(dfu_dist_ctx.pcur_update_node->addr);
+                            pnode->node_phase = FW_NODE_PHASE_APPLYING;
                         }
-                        else
-                        {
-                            dfu_dist_ctx.dist_retry_count ++;
-                            if (dfu_dist_ctx.chunk_num == (DFU_CHUNK_NUM - 1)) {
-                                plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_NEW_BLOCK_PERIOD, 0);
-                            } else {
-                                plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_CHUNK_TRANSFER_RETRY_PERIOD, 0);
-                            }
-                            dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_BLOCK_GET;
-                            printf("dfu_dist_timeout_handle: blob_chunk_transfer, dst 0x%04x, chunk num %d, chunk size %d, retry count %d \r\n",
-                                   dfu_dist_ctx.dist_multicast_addr, dfu_dist_ctx.chunk_num, dfu_dist_ctx.chunk_size,
-                                   dfu_dist_ctx.dist_retry_count);
-                            blob_chunk_transfer(dfu_dist_ctx.dist_multicast_addr, dfu_dist_ctx.dist_app_key_index,
-                                                dfu_dist_ctx.chunk_num, dfu_dist_ctx.pchunk_data, dfu_dist_ctx.chunk_size);
-                            return ;
-                        }
+                        pnode = pnode->pnext;
                     }
-                    pentry = pentry->pnext;
+
+                    dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_VERIFY;
+
+                    dfu_dist_active_update_get_send();
                 }
-
-                /* all node receive this chunk, send next chunk or block start */
-                dfu_dist_ctx.dist_retry_count = 0;
-                dfu_dist_ctx.block_left_size -= dfu_dist_ctx.chunk_size;
-                if (dfu_dist_ctx.block_left_size == 0)
+                else if (ptransfer->type == BLOB_CB_TYPE_PROGRESS)
                 {
-                    printf("dfu_timeout_handle: block %d send complete \r\n", dfu_dist_ctx.block_num);
-                    dfu_dist_ctx.block_num ++;
-                    dfu_dist_ctx.fw_image_left_size = dfu_dist_ctx.fw_image_left_size - dfu_dist_ctx.block_size;
-                    if (dfu_dist_ctx.fw_image_left_size == 0)
+                    printi("dfu_dist_blob_client_cb: progress %d%%", ptransfer->progress);
+                    fw_dist_update_node_p pnode = (fw_dist_update_node_p)
+                                                  fw_dist_server_ctx.dist_update_node_list.pfirst;
+                    while (pnode)
                     {
-                        /* image send complete */
-                        printf("dfu_timeout_handle: firmware send complete \r\n");
-                        /* start apply */
-                        printf("dfu_timeout_handle: start firmware apply \r\n");
-                        fw_update_apply(dfu_dist_ctx.dist_multicast_addr, dfu_dist_ctx.dist_app_key_index);
-                        /* clear state */
-                        dfu_dist_clear();
+                        if (pnode->node_phase == FW_NODE_PHASE_UPDATE_STARTED)
+                        {
+                            pnode->update_node.transfer_progress = ptransfer->progress / 2;
+                        }
+                        pnode = pnode->pnext;
                     }
-                    else
+
+                    if (dfu_dist_ctx.dfu_dist_cb)
                     {
-                        /* block send complete */
-                        dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_BLOB_BLOCK_START;
-                        dfu_update_node_e_t *pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-                        while (NULL != pentry)
-                        {
-                            if (pentry->node_phase != DFU_NODE_PHASE_FAILED)
-                            {
-                                pentry->node_phase = DFU_NODE_PHASE_BLOB_TRANSFER_STARTED;
-                            }
-                            pentry = pentry->pnext;
-                        }
-
-                        /* all node received blob transfer start message, begin blob block start */
-                        dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_BLOB_BLOCK_START;
-                        /* get block data */
-                        dfu_dist_ctx.block_size = (dfu_dist_ctx.fw_image_left_size >= DFU_BLOCK_SIZE) ? DFU_BLOCK_SIZE :
-                                                  dfu_dist_ctx.fw_image_left_size;
-                        dfu_dist_ctx.fw_image_data_get(dfu_dist_ctx.block_size - DFU_BLOCK_SIGNATURE_SIZE, dfu_dist_ctx.pblock_data);
-                        dfu_block_signature(dfu_dist_ctx.pblock_data, dfu_dist_ctx.block_size - DFU_BLOCK_SIGNATURE_SIZE, 
-                                    DFU_BLOCK_SIGNATURE_SIZE);
-                        dfu_dist_ctx.block_left_size = dfu_dist_ctx.block_size;
-                        // printf("dfu_transfer_client_data: ========Sending one block========= \r\n");
-                        // for (uint32_t i = 0; i <  dfu_dist_ctx.block_size; i++) {
-                        //     if (i % 12 == 0) {
-                        //         printf("\r\n");
-                        //     }
-                        //     printf(" 0x%02x ", dfu_dist_ctx.pblock_data[i]);
-                        // }
-                        // printf("\r\n");
-                        /* block start */
-                        printf("dfu_timeout_handle: block start %d/%d, size %d \r\n", dfu_dist_ctx.block_num,
-                               dfu_dist_ctx.total_blocks, dfu_dist_ctx.block_size);
-                        pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-                        while (NULL != pentry)
-                        {
-                            if (pentry->node_phase == DFU_NODE_PHASE_BLOB_TRANSFER_STARTED)
-                            {
-                                blob_block_start(pentry->addr, dfu_dist_ctx.dist_app_key_index, dfu_dist_ctx.block_num,
-                                                 DFU_CHUNK_SIZE);
-                                plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_BLOCK_START_RETRY_PERIOD, 0);
-                                dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_BLOCK_START;
-                                pentry->node_phase = DFU_NODE_PHASE_BLOB_BLOCK_STARTING;
-                                dfu_dist_ctx.pcur_update_node = pentry;
-                                return ;
-                            }
-                            pentry = pentry->pnext;
-                        }
-
-                        /* no node need to update */
-                        printf("dfu_update_client_data: no node need to blob block start, dfu procedure finish \r\n");
-                        dfu_dist_clear();
+                        dfu_dist_transfer_t cb_data = {0};
+                        cb_data.type = DFU_DIST_CB_TYPE_TRANSFER_PROGRESS;
+                        cb_data.dist_phase = dfu_dist_ctx.dist_phase;
+                        cb_data.progress = ptransfer->progress;
+                        dfu_dist_ctx.dfu_dist_cb(MESH_MSG_DFU_DIST_TRANSFER, &cb_data);
                     }
                 }
-                else
+                else if (ptransfer->type == BLOB_CB_TYPE_FAIL)
                 {
-                    printf("dfu_timeout_handle: chunk %d send complete \r\n", dfu_dist_ctx.chunk_num);
-                    /* set chunk data */
-                    dfu_dist_ctx.chunk_num ++;
-                    dfu_dist_ctx.pchunk_data = dfu_dist_ctx.pchunk_data + dfu_dist_ctx.chunk_size;
-                    dfu_dist_ctx.chunk_size = (dfu_dist_ctx.block_left_size >= DFU_CHUNK_SIZE) ? DFU_CHUNK_SIZE :
-                                              dfu_dist_ctx.block_left_size;
-                    dfu_dist_ctx.dist_retry_count = 0;
-                    /* start chunk transfer */
-                    dfu_update_node_e_t *pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-                    while (NULL != pentry)
-                    {
-                        if (pentry->node_phase == DFU_NODE_PHASE_BLOB_CHUNK_TRANSFERED)
-                        {
-                            pentry->node_phase = DFU_NODE_PHASE_BLOB_CHUNK_TRANSFERING;
-                        }
-                        pentry = pentry->pnext;
-                    }
-                    if (dfu_dist_ctx.chunk_num == (DFU_CHUNK_NUM - 1)) {
-                        plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_NEW_BLOCK_PERIOD, 0);
-                    } else {
-                        plt_timer_change_period(dfu_dist_ctx.timer, DFU_DIST_BLOB_CHUNK_TRANSFER_RETRY_PERIOD, 0);
-                    }
-                    dfu_dist_ctx.timer_state = DFU_TIMER_BLOB_BLOCK_GET;
-                    printf("dfu_timeout_handle: chunk transfer %d:%d/%d, size %d \r\n", dfu_dist_ctx.block_num,
-                           dfu_dist_ctx.chunk_num, dfu_dist_ctx.total_chunks, dfu_dist_ctx.chunk_size);
-                    blob_chunk_transfer(dfu_dist_ctx.dist_multicast_addr, dfu_dist_ctx.dist_app_key_index,
-                                        dfu_dist_ctx.chunk_num, dfu_dist_ctx.pchunk_data, dfu_dist_ctx.chunk_size);
+                    printe("dfu_dist_blob_client_cb: firmware send failed");
+                    dfu_dist_handle_blob_transfer(false);
                 }
-            } else {
-                printf("dfu_dist_handle_timeout %d, wrong timer state %d \r\n", __LINE__, dfu_dist_ctx.timer_state);
+            }
+            else if (ptransfer->procedure == BLOB_CB_PROCEDURE_CAPS_RETRIEVE)
+            {
+                if (ptransfer->type == BLOB_CB_TYPE_SUCCESS &&
+                    !dist_skip_caps_retrieve)
+                {
+                    blob_client_blob_transfer(fw_dist_server_ctx.dist_multicast_addr,
+                                              fw_dist_server_ctx.dist_app_key_index,
+                                              dfu_dist_ctx.dist_ttl, dfu_dist_ctx.ptransfer_addr,
+                                              dfu_dist_ctx.transfer_addr_num,
+                                              dfu_dist_ctx.blob_id, dfu_dist_ctx.fw_image_size,
+                                              BLOB_TRANSFER_MODE_PUSH, fw_dist_server_ctx.dist_timeout_base,
+                                              dist_skip_caps_retrieve);
+                }
+            }
+        }
+        break;
+    case MESH_MSG_BLOB_CLIENT_APP_PARAM:
+        {
+            blob_client_app_param_t *pparam = (blob_client_app_param_t *)pdata;
+            if (dfu_dist_ctx.dfu_dist_cb)
+            {
+                dfu_dist_blob_param_t cb_data = {0};
+                cb_data.blob_size = pparam->blob_size;
+                cb_data.block_size = pparam->block_size;
+                cb_data.total_blocks = pparam->total_blocks;
+                cb_data.chunk_size = pparam->chunk_size;
+                dfu_dist_ctx.dfu_dist_cb(MESH_MSG_DFU_DIST_BLOB_PARAM, &cb_data);
+            }
+        }
+        break;
+    case MESH_MSG_BLOB_CLIENT_APP_BLOCK_LOAD:
+        {
+            blob_client_app_block_load_t *pblock_get = (blob_client_app_block_load_t *)pdata;
+            if (dfu_dist_ctx.dfu_dist_cb)
+            {
+                dfu_dist_block_load_t cb_data = {0};
+                cb_data.image_index = dfu_dist_ctx.cur_image_index;
+                cb_data.offset = pblock_get->offset;
+                cb_data.block_size = pblock_get->block_size;
+                cb_data.pblock_data = pblock_get->pblock_data;
+                dfu_dist_ctx.dfu_dist_cb(MESH_MSG_DFU_DIST_BLOCK_LOAD, &cb_data);
             }
         }
         break;
     default:
         break;
     }
+
+    return 0x00;
 }
 
-bool dfu_dist_receiver_add(fw_dist_receiver_t *precv)
+void dfu_dist_models_init(uint8_t element_index, pf_dfu_dist_cb_t pf_dfu_dist_cb)
 {
-    dfu_update_node_e_t *pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-    while (NULL != pentry)
-    {
-        if (pentry->addr == precv->addr)
-        {
-            printw("dfu_dist_receiver_add: receiver entry(0x%04x) already exists \r\n", precv->addr,
-                   precv->update_fw_image_idx);
-            return true;
-        }
-        pentry = pentry->pnext;
-    }
-
-    pentry = plt_zalloc(sizeof(dfu_update_node_e_t), RAM_TYPE_DATA_ON);
-    if (NULL == pentry)
-    {
-        printf("dfu_dist_receiver_add: add receiver failed, out of memory \r\n");
-        return false;
-    }
-
-    pentry->addr = precv->addr;
-    pentry->update_fw_image_idx = precv->update_fw_image_idx;
-    plt_list_push(&dfu_dist_ctx.dfu_update_node_list, pentry);
-    printf("dfu_dist_receiver_add: index %d, addr 0x%04x, update image index %d \r\n",
-           dfu_dist_ctx.dfu_update_node_list.count - 1, precv->addr, precv->update_fw_image_idx);
-
-    return true;
-}
-
-void dfu_dist_receiver_remove(uint16_t addr)
-{
-    dfu_update_node_e_t *pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-    dfu_update_node_e_t *pentry_prev = NULL;
-    while (NULL != pentry)
-    {
-        if (pentry->addr == addr)
-        {
-            plt_list_delete(&dfu_dist_ctx.dfu_update_node_list, pentry_prev, pentry);
-            plt_free(pentry, RAM_TYPE_DATA_ON);
-            printf("dfu_dist_receiver_remove: delete receiver, address 0x%04x \r\n", addr);
-            return ;
-        }
-        pentry_prev = pentry;
-        pentry = pentry->pnext;
-    }
-}
-
-void dfu_dist_receiver_remove_by_index(uint16_t index)
-{
-    if (index >= dfu_dist_ctx.dfu_update_node_list.count)
-    {
-        printf("dfu_dist_receiver_remove_by_index: invalid index %d-%d \r\n", index,
-               dfu_dist_ctx.dfu_update_node_list.count);
-        return ;
-    }
-
-    uint16_t cur_idx = 0;
-    dfu_update_node_e_t *pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-    dfu_update_node_e_t *pentry_prev = NULL;
-    while (NULL != pentry)
-    {
-        if (cur_idx == index)
-        {
-            printf("dfu_dist_receiver_remove_by_index: delete receiver, index %d, addr 0x%04x \r\n", index,
-                   pentry->addr);
-            plt_list_delete(&dfu_dist_ctx.dfu_update_node_list, pentry_prev, pentry);
-            plt_free(pentry, RAM_TYPE_DATA_ON);
-            return ;
-        }
-        pentry_prev = pentry;
-        pentry = pentry->pnext;
-        cur_idx ++;
-    }
-}
-
-void dfu_dist_receiver_remove_all(void)
-{
-    dfu_update_node_e_t *pentry;
-    uint32_t count = dfu_dist_ctx.dfu_update_node_list.count;
-    for (uint8_t i = 0; i < count; ++i)
-    {
-        pentry = plt_list_pop(&dfu_dist_ctx.dfu_update_node_list);
-        if (NULL != pentry)
-        {
-            plt_free(pentry, RAM_TYPE_DATA_ON);
-        }
-    }
-    printf("dfu_dist_receiver_remove_all: remove all receivers \r\n");
-}
-
-extern mesh_node_t mesh_node;
-
-void dfu_dist_clear(void)
-{
-    printf("dfu_dist_clear \r\n");
-    if (NULL != dfu_dist_ctx.timer)
-    {
-        plt_timer_delete(dfu_dist_ctx.timer, 0);
-    }
-
-    if (NULL != dfu_dist_ctx.pblock_data)
-    {
-        plt_free(dfu_dist_ctx.pblock_data, RAM_TYPE_DATA_ON);
-    }
-
-    dfu_update_node_e_t *pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-    while (NULL != pentry)
-    {
-        pentry->node_phase = DFU_NODE_PHASE_IDLE;
-        pentry = pentry->pnext;
-    }
-
-    memset(&dfu_dist_ctx, 0, sizeof(dfu_dist_ctx));
-
-    mesh_node.trans_tx_queue_size = 3;
-}
-
-bool dfu_dist_start(uint16_t dst, uint16_t app_key_index, uint16_t update_timeout_base,
-                    uint8_t *pfw_metadata, uint8_t metadata_len,
-                    uint32_t fw_image_size, fw_image_data_get_t fw_image_data_get)
-{
-    // fw_image_start_addr delete
-    if (DFU_DIST_PHASE_IDLE != dfu_dist_ctx.dist_phase)
-    {
-        printf("dfu_dist_start: busy, phase %d \r\n", dfu_dist_ctx.dist_phase);
-        return false;
-    }
-
-    if (0 == dfu_dist_ctx.dfu_update_node_list.count)
-    {
-        printf("dfu_dist_start: there is no node need to update \r\n");
-        return false;
-    }
-
-    if (NULL == fw_image_data_get)
-    {
-        printf("dfu_dist_start: firmware image data callback shall exist! \r\n");
-        return false;
-    }
-
-    if (fw_image_size == 0) {
-        printf("dfu_dist_start: firmware size is 0 ! \r\n");
-        return false;
-    }
-
-    /* start timeout timer */
-    if (NULL == dfu_dist_ctx.timer)
-    {
-        dfu_dist_ctx.timer = plt_timer_create("dfu", DFU_DIST_UPDATE_RETRY_PERIOD, false, 0, dfu_timeout);
-        if (NULL == dfu_dist_ctx.timer)
-        {
-            printf("dfu_dist_start: create timer failed \r\n");
-            return false;
-        }
-        dfu_dist_ctx.timer_state = DFU_TIMER_IDLE;
-    }
-
-    if (NULL == dfu_dist_ctx.pblock_data)
-    {
-        dfu_dist_ctx.pblock_data = plt_malloc(DFU_BLOCK_SIZE, RAM_TYPE_DATA_ON);
-        if (NULL == dfu_dist_ctx.pblock_data)
-        {
-            printf("dfu_dist_start: create block data buffer failed \r\n");
-            return false;
-        }
-    }
-
-    dfu_dist_ctx.dist_phase = DFU_DIST_PHASE_UPDATE_START;
-    dfu_dist_ctx.dist_multicast_addr = dst;
-    dfu_dist_ctx.dist_app_key_index = app_key_index;
-    dfu_dist_ctx.dist_timeout_base = update_timeout_base;
-    dfu_dist_ctx.dist_ttl = mesh_node.ttl;
-    /* if use block signature, total transfer blob = image file + block num * DFU_BLOCK_SIGNATURE_SIZE */
-    dfu_dist_ctx.total_blocks = fw_image_size / (DFU_BLOCK_SIZE - DFU_BLOCK_SIGNATURE_SIZE);
-    if (fw_image_size % (DFU_BLOCK_SIZE - DFU_BLOCK_SIGNATURE_SIZE))
-    {
-        dfu_dist_ctx.total_blocks += 1;
-    }
-    /* dfu_dist_ctx.fw_image_size should be firmware image + total block signature size */
-    dfu_dist_ctx.fw_image_size = fw_image_size + dfu_dist_ctx.total_blocks * DFU_BLOCK_SIGNATURE_SIZE;
-    dfu_dist_ctx.fw_image_left_size = dfu_dist_ctx.fw_image_size;
-    dfu_dist_ctx.fw_image_data_get = fw_image_data_get;
-    dfu_dist_ctx.dist_retry_count = 0;
-    memcpy(dfu_dist_ctx.fw_metadata, pfw_metadata, metadata_len);
-    dfu_dist_ctx.metadata_len = metadata_len;
-    uint32_t *pid = (uint32_t *)dfu_dist_ctx.blob_id;
-    *pid ++ = rand();
-    *pid ++ = rand();
-
-    dfu_update_node_e_t *pentry = (dfu_update_node_e_t *)dfu_dist_ctx.dfu_update_node_list.pfirst;
-    pentry->node_phase = DFU_NODE_PHASE_UPDATE_STARTING;
-    mesh_node.trans_tx_queue_size = 1;
-    /*_fw_update_start */
-    {
-      PUSER_ITEM puserItem = NULL;
-      uint8_t ret;
-      puserItem = bt_mesh_alloc_hdl(USER_API_ASYNCH);
-      if (!puserItem) {
-          printf("[BT_MESH_DEMO] bt_mesh_alloc_hdl fail!\r\n");
-                  return false;
-      }
-      puserItem->pparseValue->dw_parameter[0] = dst;
-      puserItem->pparseValue->dw_parameter[1] = app_key_index;
-      puserItem->pparseValue->dw_parameter[2] = mesh_node.ttl;
-      puserItem->pparseValue->dw_parameter[3] = update_timeout_base;
-      puserItem->pparseValue->pparameter[4] = dfu_dist_ctx.blob_id;
-      puserItem->pparseValue->dw_parameter[5] = pentry->update_fw_image_idx;
-      puserItem->pparseValue->pparameter[6] = dfu_dist_ctx.fw_metadata;
-      puserItem->pparseValue->dw_parameter[7] = metadata_len;
-      puserItem->pparseValue->dw_parameter[8] = 0; //indicate blob_id and metadata is not string type
-      puserItem->pparseValue->para_count = 9;
-      ret = bt_mesh_set_user_cmd(GEN_MESH_CODE(_fw_update_start), puserItem->pparseValue, NULL, puserItem);
-      if (ret != USER_API_RESULT_OK) {
-          printf("[BT_MESH_DEMO] bt_mesh_set_user_cmd fail! %d\r\n", ret);
-          return false;
-      }
-    }
-    plt_timer_start(dfu_dist_ctx.timer, 0);
-    dfu_dist_ctx.timer_state = DFU_TIMER_FW_UPDATE_CLIENT_STATUS;
-    dfu_dist_ctx.pcur_update_node = pentry;
-
-    printf("dfu_dist_start: dst 0x%04x, app_key_index %d, update_timeout_base %d, fw_image_size %d, total blocks %d \r\n",
-           dfu_dist_ctx.dist_multicast_addr, dfu_dist_ctx.dist_app_key_index, dfu_dist_ctx.dist_timeout_base,
-           dfu_dist_ctx.fw_image_size, dfu_dist_ctx.total_blocks);
-    printf("dfu_dist_start: firmware metadata = 0x%02x, 0x%02x \r\n", dfu_dist_ctx.fw_metadata[0], dfu_dist_ctx.fw_metadata[1]);
-    printf("dfu_dist_start: blob id = ");
-    for (uint8_t i = 0; i < 8; i++) {
-        printf(" 0x%02x ", dfu_dist_ctx.blob_id[i]);
-    }
-
-    return true;
-}
-
-uint8_t dfu_dist_model_enabled = 0;
-
-void dfu_dist_models_init(void)
-{
-    dfu_dist_model_enabled = 1;
-    fw_update_client_reg(0, dfu_update_client_data);
-    blob_transfer_client_reg(0, dfu_transfer_client_data);
+    dfu_dist_ctx.dfu_dist_cb = pf_dfu_dist_cb;
+    fw_dist_server_reg(element_index, dfu_dist_server_data);
+    fw_update_client_reg(element_index, dfu_dist_update_client_data);
+    blob_client_app_init(element_index, dfu_dist_blob_client_cb);
+    blob_transfer_server_reg(element_index, fw_dist_handle_blob_server_data);
 }
 #endif

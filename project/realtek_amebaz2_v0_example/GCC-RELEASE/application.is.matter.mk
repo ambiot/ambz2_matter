@@ -284,10 +284,12 @@ SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_config/bt_co
 
 ifdef BT_MATTER_MESH_ADAPTER
 #bluetooth - example - bt_mesh_device_matter
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/utility/mesh_data_dump.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/cmd/mesh_data_uart.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/cmd/mesh_user_cmd_parse.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/profile/datatrans_server.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/profile/datatrans_service.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/directed_forwarding_client.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/light_ctl_server.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/light_ctl_setup_server.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/light_ctl_temperature_server.c
@@ -310,6 +312,7 @@ SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/mod
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/health_server.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/scene_server.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/scene_setup_server.c
+SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/subnet_bridge_client.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/scheduler_server.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/scheduler_setup_server.c
 SRC_C += ../../../component/common/bluetooth/realtek/sdk/example/bt_mesh/lib/model/delay_msg_rsp.c

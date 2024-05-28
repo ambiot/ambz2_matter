@@ -41,7 +41,11 @@ enum bt_mesh_device_cmd
   GEN_MESH_CODE(_disconnect) ,
   GEN_MESH_CODE(_list) ,
   GEN_MESH_CODE(_dev_info_show) ,
-
+#if F_BT_MESH_1_1_DF_SUPPORT
+  GEN_MESH_CODE(_df_path_discovery) ,
+  GEN_MESH_CODE(_df_path_solicitation) ,
+  GEN_MESH_CODE(_df_path_dependents_update) ,
+#endif
   MAX_MESH_DEVICE_CMD
 };
 

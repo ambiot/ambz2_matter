@@ -130,9 +130,8 @@ const T_ATTRIB_APPL datatrans_server_table[] =
 static T_APP_RESULT datatrans_server_read_cb(uint8_t conn_id, T_SERVER_ID service_id,
                                              uint16_t attrib_index, uint16_t offset, uint16_t *p_length, uint8_t **pp_value)
 {
-    /* avoid gcc compile warning */
-    (void)conn_id;
-    (void)offset;
+    UNUSED(conn_id);
+    UNUSED(offset);
     T_APP_RESULT ret = APP_RESULT_SUCCESS;
 
     switch (attrib_index)
@@ -172,10 +171,9 @@ static T_APP_RESULT datatrans_server_write_cb(uint8_t conn_id, T_SERVER_ID servi
                                               uint16_t attrib_index,
                                               T_WRITE_TYPE write_type, uint16_t len, uint8_t *pvalue, P_FUN_WRITE_IND_POST_PROC *ppost_proc)
 {
-    /* avoid gcc compile warning */
-    (void)conn_id;
-    (void)write_type;
-    (void)ppost_proc;
+    UNUSED(conn_id);
+    UNUSED(write_type);
+    UNUSED(ppost_proc);
     T_APP_RESULT  ret = APP_RESULT_SUCCESS;
     switch (attrib_index)
     {
@@ -216,9 +214,8 @@ static void datatrans_server_cccd_update_cb(uint8_t conn_id, T_SERVER_ID server_
                                             uint16_t attrib_index,
                                             uint16_t cccd_bits)
 {
-    /* avoid gcc compile warning */
-    (void)conn_id;
-    (void)server_id;
+    UNUSED(conn_id);
+    UNUSED(server_id);
     printi("datatrans_server_cccd_update_cb: index = %d, cccd_bits = 0x%x", attrib_index, cccd_bits);
     switch (attrib_index)
     {

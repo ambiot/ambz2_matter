@@ -16,21 +16,11 @@
 #include "delay_msg_rsp.h"
 #endif
 
-#if 0
-typedef struct
-{
-    uint8_t tid;
-#if MODEL_ENABLE_DELAY_MSG_RSP
-    uint32_t delay_pub_time;
-#endif
-} scheduler_info_t;
-#endif
-
 static mesh_msg_send_cause_t scheduler_server_send(mesh_model_info_p pmodel_info,
                                                    uint16_t dst, void *pmsg, uint16_t msg_len, uint16_t app_key_index,
                                                    uint32_t delay_time)
 {
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = pmodel_info;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = pmsg;
@@ -56,14 +46,21 @@ mesh_msg_send_cause_t scheduler_status(mesh_model_info_p pmodel_info, uint16_t d
 }
 
 mesh_msg_send_cause_t scheduler_action_status(mesh_model_info_p pmodel_info, uint16_t dst,
-                                              uint16_t app_key_index, scheduler_register_t scheduler,
+                                              uint16_t app_key_index, bool optional, scheduler_register_t scheduler,
                                               uint32_t delay_time)
 {
     scheduler_action_status_t msg;
     ACCESS_OPCODE_BYTE(msg.opcode, MESH_MSG_SCHEDULER_ACTION_STATUS);
     msg.scheduler = scheduler;
 
-    return scheduler_server_send(pmodel_info, dst, &msg, sizeof(msg), app_key_index, delay_time);
+    uint16_t msg_len = sizeof(msg);
+    if (!optional)
+    {
+        msg_len = MEMBER_OFFSET(scheduler_action_status_t, scheduler) + 1;
+        msg.scheduler.year = 0;
+    }
+
+    return scheduler_server_send(pmodel_info, dst, &msg, msg_len, app_key_index, delay_time);
 }
 
 mesh_msg_send_cause_t scheduler_delay_publish(const mesh_model_info_p pmodel_info,
@@ -72,7 +69,7 @@ mesh_msg_send_cause_t scheduler_delay_publish(const mesh_model_info_p pmodel_inf
     mesh_msg_send_cause_t ret = MESH_MSG_SEND_CAUSE_INVALID_DST;
     if (mesh_model_pub_check(pmodel_info))
     {
-        ret = scheduler_action_status(pmodel_info, 0, 0, scheduler, delay_time);
+        ret = scheduler_action_status(pmodel_info, 0, 0, true, scheduler, delay_time);
     }
 
     return ret;
@@ -121,14 +118,16 @@ static bool scheduler_server_receive(mesh_msg_p pmesh_msg)
                 {
                     get_data.index = pmsg->index;
                     pmodel_info->model_data_cb(pmodel_info, SCHEDULER_SERVER_GET_ACTION, &get_data);
+                    get_data.scheduler.index = pmsg->index;
                 }
 
                 uint32_t delay_rsp_time = 0;
 #if MODEL_ENABLE_DELAY_MSG_RSP
                 delay_rsp_time = delay_msg_get_rsp_delay(pmesh_msg->dst);
 #endif
-                scheduler_action_status(pmodel_info, pmesh_msg->src, pmesh_msg->app_key_index, get_data.scheduler,
-                                        delay_rsp_time);
+                scheduler_action_status(pmodel_info, pmesh_msg->src, pmesh_msg->app_key_index,
+                                        get_data.scheduler.action != SCHEDULER_NO_ACTION,
+                                        get_data.scheduler, delay_rsp_time);
             }
         }
         break;
@@ -141,8 +140,7 @@ static bool scheduler_server_receive(mesh_msg_p pmesh_msg)
 
 static int32_t scheduler_server_publish(mesh_model_info_p pmodel_info, bool retrans)
 {
-    /* avoid gcc compile warning */
-    (void)retrans;
+    UNUSED(retrans);
     scheduler_server_get_action_t get_data;
     scheduler_server_get_action_t get_data_zero;
     memset(&get_data_zero, 0, sizeof(scheduler_server_get_action_t));
@@ -156,31 +154,13 @@ static int32_t scheduler_server_publish(mesh_model_info_p pmodel_info, bool retr
             pmodel_info->model_data_cb(pmodel_info, SCHEDULER_SERVER_GET_ACTION, &get_data);
             if (0 != memcmp(&get_data, &get_data_zero, sizeof(scheduler_server_get_action_t)))
             {
-                scheduler_action_status(pmodel_info, 0, 0, get_data.scheduler, 0);
+                scheduler_action_status(pmodel_info, 0, 0, true, get_data.scheduler, 0);
             }
         }
     }
 
     return 0;
 }
-
-#if MESH_MODEL_ENABLE_DEINIT
-static void scheduler_server_deinit(mesh_model_info_t *pmodel_info)
-{
-    if (pmodel_info->model_receive == scheduler_server_receive)
-    {
-#if 0
-        /* now we can remove */
-        if (NULL != pmodel_info->pargs)
-        {
-            plt_free(pmodel_info->pargs, RAM_TYPE_DATA_ON);
-            pmodel_info->pargs = NULL;
-        }
-#endif
-        pmodel_info->model_receive = NULL;
-    }
-}
-#endif
 
 bool scheduler_server_reg(uint8_t element_index, mesh_model_info_p pmodel_info)
 {
@@ -192,24 +172,11 @@ bool scheduler_server_reg(uint8_t element_index, mesh_model_info_p pmodel_info)
     pmodel_info->model_id = MESH_MODEL_SCHEDULER_SERVER;
     if (NULL == pmodel_info->model_receive)
     {
-#if 0
-		pmodel_info->pargs = plt_malloc(sizeof(scheduler_info_t), RAM_TYPE_DATA_ON);
-        if (NULL == pmodel_info->pargs)
-        {
-            printe("scheduler_server_reg: fail to allocate memory for the new model extension data!");
-            return FALSE;
-        }
-        memset(pmodel_info->pargs, 0, sizeof(scheduler_info_t));
-#endif
         pmodel_info->model_receive = scheduler_server_receive;
         if (NULL == pmodel_info->model_data_cb)
         {
             printw("scheduler_server_reg: missing model data process callback!");
         }
-
-#if MESH_MODEL_ENABLE_DEINIT
-		pmodel_info->model_deinit = scheduler_server_deinit;
-#endif
     }
 
     if (NULL == pmodel_info->model_pub_cb)

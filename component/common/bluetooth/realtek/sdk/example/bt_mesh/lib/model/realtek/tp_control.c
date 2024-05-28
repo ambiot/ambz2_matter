@@ -15,6 +15,7 @@
 #include <string.h>
 #include "trace.h"
 #include "tp.h"
+#include "mesh_data_dump.h"
 
 mesh_model_info_t tp_control;
 
@@ -32,7 +33,7 @@ struct tp_tx_ctx_t
 static mesh_msg_send_cause_t tp_control_send(uint16_t dst, uint8_t ttl, uint8_t *pmsg,
                                              uint16_t msg_len, uint16_t app_key_index)
 {
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = &tp_control;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = pmsg;
@@ -107,10 +108,8 @@ bool tp_control_receive(mesh_msg_p pmesh_msg)
 
 void tp_send_cb(mesh_model_info_p pmodel_info, mesh_msg_send_stat_t stat, uint32_t access_opcode)
 {
-    /* avoid gcc compile warning */
-    (void)pmodel_info;
-    (void)access_opcode;
-
+    UNUSED(pmodel_info);
+    UNUSED(access_opcode);
     if (stat == MESH_MSG_SEND_STAT_SENT || stat == MESH_MSG_SEND_STAT_ACKED ||
         stat == MESH_MSG_SEND_STAT_ACKED_OBO)
     {

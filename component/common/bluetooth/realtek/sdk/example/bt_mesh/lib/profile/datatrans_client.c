@@ -211,9 +211,7 @@ static void datatrans_disc_state_cb(uint8_t conn_id, T_DISCOVERY_STATE disc_stat
 static void datatrans_disc_result_cb(uint8_t conn_id, T_DISCOVERY_RESULT_TYPE result_type,
                                      T_DISCOVERY_RESULT_DATA result_data)
 {
-    /* avoid gcc compile warning */
-    (void)conn_id;
-
+    UNUSED(conn_id);
     printi("datatrans_discover_result_cb: result_type = %d", result_type);
     switch (result_type)
     {
@@ -332,10 +330,8 @@ static void datatrans_read_result_cb(uint8_t conn_id,  uint16_t cause, uint16_t 
 static void datatrans_write_result_cb(uint8_t conn_id, T_GATT_WRITE_TYPE type, uint16_t handle,
                                       uint16_t cause, uint8_t credits)
 {
-    /* avoid gcc compile warning */
-    (void)type;
-    (void)credits;
-
+    UNUSED(type);
+    UNUSED(credits);
     /** if write req success, branch to fetch value and send to application */
     if (handle == datatrans_hdl_cache[HDL_DATATRANS_DATA_IN])
     {
@@ -397,9 +393,7 @@ static T_APP_RESULT datatrans_notify_indicate_result_cb(uint8_t conn_id, bool no
  */
 static void datatrans_disconnect_cb(uint8_t conn_id)
 {
-    /* avoid gcc compile warning */
-    (void)conn_id;
-    
+    UNUSED(conn_id);
     /* seset some params, when disconnection occurs. */
     datatrans_end_handle_idx = HDL_DATATRANS_CACHE_LEN;
     datatrans_cccd_disc_state = DATATRANS_CCCD_DISC_START;

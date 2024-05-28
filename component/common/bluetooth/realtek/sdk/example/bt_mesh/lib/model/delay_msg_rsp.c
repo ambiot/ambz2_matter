@@ -24,8 +24,8 @@
 
 uint32_t delay_msg_get_rsp_delay(uint16_t dst_addr)
 {
-    int delay = rand();
-    uint32_t real_delay = delay;
+    uint32_t real_delay = 0;
+    plt_rand((uint8_t *)&real_delay, sizeof(real_delay));
     if (MESH_IS_UNICAST_ADDR(dst_addr))
     {
         /* random delay 10-50ms */
@@ -73,7 +73,8 @@ uint32_t delay_msg_get_trans_delay(uint32_t delay_time, generic_transition_time_
         {
             delay_pub_time = DELAY_MSG_TRANS_DELAY_MIN;
         }
-        if (!ack)
+        /* if ack rsp and delay msg, pub delay time may add the extra rsp delay time */
+        if (ack)
         {
             delay_pub_time += delay_rsp_time;
         }
@@ -86,7 +87,8 @@ uint32_t delay_msg_get_trans_delay(uint32_t delay_time, generic_transition_time_
             {
                 delay_pub_time = DELAY_MSG_TRANS_DELAY_MIN;
             }
-            if (!ack)
+            /* if ack rsp and delay msg, pub delay time may add the extra rsp delay time */
+            if (ack)
             {
                 delay_pub_time += delay_rsp_time;
             }

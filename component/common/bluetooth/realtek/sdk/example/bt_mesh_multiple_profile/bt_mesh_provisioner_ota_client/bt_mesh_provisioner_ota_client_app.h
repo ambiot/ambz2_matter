@@ -23,6 +23,14 @@ extern "C" {
 #include <profile_server.h>
 #include "app_msg.h"
 #include "bt_mesh_provisioner_ota_client_app_flags.h"
+#include "gap_manufacture_adv.h"
+#if F_BT_MESH_1_1_MBT_SUPPORT
+#include "blob_client_app.h"
+#endif
+#if F_BT_MESH_1_1_DFU_SUPPORT
+#include "dfu_distributor_app.h"
+#include "dfu_initiator_app.h"
+#endif
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 #include "bt_mesh_provisioner_api.h"
 #endif
@@ -31,7 +39,6 @@ extern "C" {
  *                              Variables
  *============================================================================*/
 
-#define BLE_PRINT	printf
 #define BD_ADDR_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
 #define BD_ADDR_ARG(x) (x)[5],(x)[4],(x)[3],(x)[2],(x)[1],(x)[0]
 #define UUID_128_FORMAT "0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X"
@@ -106,7 +113,16 @@ void fn_cb(uint8_t frnd_index, fn_cb_type_t type, uint16_t lpn_addr);
 void lpn_cb(uint8_t frnd_index, lpn_cb_type_t type, uint16_t fn_addr);
 void hb_cb(hb_data_type_t type, void *pargs);
 void bt_mesh_provisioner_ota_client_app_vendor_callback(uint8_t cb_type, void *p_cb_data);
-
+#if F_BT_MESH_1_1_DF_SUPPORT
+uint16_t df_cb(uint8_t type, void *pdata);
+#endif
+#if F_BT_MESH_1_1_MBT_SUPPORT
+void blob_client_cb(blob_transfer_cb_data_t *pcb_data);
+#endif
+#if F_BT_MESH_1_1_DFU_SUPPORT
+void dfu_dist_cb(dfu_dist_cb_data_t *pcb_data);
+void dfu_init_cb(dfu_init_cb_data_t *pcb_data);
+#endif
 #ifdef __cplusplus
 }
 #endif

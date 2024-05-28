@@ -63,12 +63,17 @@ generic_transition_time_t time_to_generic_transition_time(uint32_t time)
 {
     generic_transition_time_t trans_time;
     uint8_t index = 0;
-    for (; index < sizeof(trans_time_map_max) / sizeof(uint32_t); ++index)
+    for (; index < sizeof(trans_time_map_max) / sizeof(trans_time_map_max[0]); ++index)
     {
         if (time <= trans_time_map_max[index])
         {
             break;
         }
+    }
+
+    if (index >= sizeof(trans_time_map_max) / sizeof(trans_time_map_max[0]))
+    {
+        index = sizeof(trans_time_map_max) / sizeof(trans_time_map_max[0]) - 1;
     }
 
     uint8_t steps = time / trans_time_tick_map[index];
@@ -126,6 +131,8 @@ static bool trans_time_insert(const mesh_model_info_p pmodel_info,
 
 #if MODEL_ENABLE_MULTI_THREAD
     plt_mutex_take(trans_mutex, TRANS_INFINITE_WAIT);
+#else
+    plt_sched_suspend();
 #endif
 
     /* sort insert */
@@ -149,6 +156,8 @@ static bool trans_time_insert(const mesh_model_info_p pmodel_info,
 
 #if MODEL_ENABLE_MULTI_THREAD
     plt_mutex_give(trans_mutex);
+#else
+    plt_sched_resume();
 #endif
 
     return TRUE;
@@ -179,6 +188,8 @@ static void trans_time_timeout_handle(void)
 {
 #if MODEL_ENABLE_MULTI_THREAD
     plt_mutex_take(trans_mutex, TRANS_INFINITE_WAIT);
+#else
+    MESH_SW_TIMER_ENTER_CRITICAL();
 #endif
 
     trans_list_p pcur = trans_list_head.next;
@@ -226,6 +237,8 @@ static void trans_time_timeout_handle(void)
 
 #if MODEL_ENABLE_MULTI_THREAD
     plt_mutex_give(trans_mutex);
+#else
+    MESH_SW_TIMER_EXIT_CRITICAL();
 #endif
 
     /* check empty */
@@ -265,6 +278,8 @@ void generic_transition_timer_stop(const mesh_model_info_p pmodel_info,
     /* remove specified model timer */
 #if MODEL_ENABLE_MULTI_THREAD
     plt_mutex_take(trans_mutex, TRANS_INFINITE_WAIT);
+#else
+    plt_sched_suspend();
 #endif
 
     trans_list_p pcur = trans_list_head.next;
@@ -281,6 +296,8 @@ void generic_transition_timer_stop(const mesh_model_info_p pmodel_info,
 
 #if MODEL_ENABLE_MULTI_THREAD
     plt_mutex_give(trans_mutex);
+#else
+    plt_sched_resume();
 #endif
 }
 
@@ -290,6 +307,8 @@ generic_transition_time_t generic_transition_time_get(const mesh_model_info_p pm
 {
 #if MODEL_ENABLE_MULTI_THREAD
     plt_mutex_take(trans_mutex, TRANS_INFINITE_WAIT);
+#else
+    plt_sched_suspend();
 #endif
     trans_list_p pcur = trans_list_head.next;
     trans_time_remain_p ptime = NULL;
@@ -312,6 +331,8 @@ generic_transition_time_t generic_transition_time_get(const mesh_model_info_p pm
 
 #if MODEL_ENABLE_MULTI_THREAD
     plt_mutex_give(trans_mutex);
+#else
+    plt_sched_resume();
 #endif
 
     return remaining_time;

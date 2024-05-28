@@ -98,8 +98,7 @@ static int32_t light_ctl_temperature_trans_step_change(const mesh_model_info_p p
                                                        generic_transition_time_t total_time,
                                                        generic_transition_time_t remaining_time)
 {
-    /* avoid gcc compile warning */
-    (void)type;
+    UNUSED(type);
     int32_t ret = 0;
     light_ctl_server_set_temperature_t trans_set_data;
     light_ctl_temperature_info_p ptemp_info = pmodel_info->pargs;
@@ -377,8 +376,7 @@ static bool light_ctl_temperature_server_receive(mesh_msg_p pmesh_msg)
 
 static int32_t light_ctl_temperature_server_publish(mesh_model_info_p pmodel_info, bool retrans)
 {
-    /* avoid gcc compile warning */
-    (void)retrans;
+    UNUSED(retrans);
     light_ctl_server_get_temperature_t get_data = get_present_temperature(pmodel_info);;
     generic_transition_time_t trans_time = {0, 0};
     light_ctl_temperature_stat(pmodel_info, 0, 0, get_data.temperature, get_data.delta_uv, FALSE, 0, 0,

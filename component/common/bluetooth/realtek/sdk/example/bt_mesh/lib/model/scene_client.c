@@ -16,7 +16,7 @@
 static mesh_msg_send_cause_t scene_client_send(const mesh_model_info_p pmodel_info,
                                                uint16_t dst, uint16_t app_key_index, uint8_t *pmsg, uint16_t msg_len)
 {
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = pmodel_info;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = pmsg;
@@ -143,7 +143,7 @@ static bool scene_client_receive(mesh_msg_p pmesh_msg)
     case MESH_MSG_SCENE_REGISTER_STATUS:
         {
             scene_register_status_t *pmsg = (scene_register_status_t *)pbuffer;
-            scene_client_register_status_t status_data = {pmesh_msg->src, (scene_status_code_t)(pmsg->status), pmsg->current_scene, pmsg->scenes};
+            scene_client_register_status_t status_data = {pmesh_msg->src, (scene_status_code_t)(pmsg->status), pmsg->current_scene, pmsg->scenes, 0};
             status_data.scene_array_len = (pmesh_msg->msg_len - MEMBER_OFFSET(scene_register_status_t,
                                                                               scenes)) / sizeof(uint16_t);
             if (NULL != pmodel_info->model_data_cb)

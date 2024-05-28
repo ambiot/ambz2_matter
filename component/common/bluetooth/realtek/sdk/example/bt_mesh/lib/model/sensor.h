@@ -272,7 +272,7 @@ typedef struct
  */
 #define SENSOR_SERVER_GET                                      0 //!< @ref sensor_server_get_t
 #define SENSOR_SERVER_GET_COLUMN                               1 //!< @ref sensor_server_get_column_t
-#define SENSOR_SERVER_GET_SERIES                               2 //!< @ref sensor_server_get_series_t   
+#define SENSOR_SERVER_GET_SERIES                               2 //!< @ref sensor_server_get_series_t
 #define SENSOR_SERVER_SET_CADENCE                              3 //!< @ref sensor_server_set_cadence_t
 #define SENSOR_SERVER_SET_SETTING                              4 //!< @ref sensor_server_set_setting_t
 #define SENSOR_SERVER_COMPARE_CADENCE                          5 //!< @ref sensor_server_compare_cadence_t

@@ -14,6 +14,7 @@
 /* Add Includes here */
 #include "test_cmd.h"
 #include "mesh_api.h"
+#include "mesh_data_dump.h"
 
 user_cmd_parse_result_t user_cmd_node_state_set(user_cmd_parse_value_t *pparse_value)
 {
@@ -76,7 +77,7 @@ user_cmd_parse_result_t user_cmd_app_key_set(user_cmd_parse_value_t *pparse_valu
 user_cmd_parse_result_t user_cmd_dev_key_set(user_cmd_parse_value_t *pparse_value)
 {
     uint8_t index = pparse_value->dw_parameter[0];
-    uint8_t unicast_addr = pparse_value->dw_parameter[1];
+    uint16_t unicast_addr = pparse_value->dw_parameter[1];
     uint8_t element_num = pparse_value->dw_parameter[2];
     uint8_t dev_key[16];
     plt_hex_to_bin(dev_key, (uint8_t *)pparse_value->pparameter[3], sizeof(dev_key));
@@ -127,19 +128,16 @@ user_cmd_parse_result_t user_cmd_iv_index_mode(user_cmd_parse_value_t *pparse_va
 
 user_cmd_parse_result_t user_cmd_nmc_clear(user_cmd_parse_value_t *pparse_value)
 {
-    /* avoid gcc compile warning */
-    (void)pparse_value;
-    
+    UNUSED(pparse_value);
     nmc_init();
+    tsmc_init();
     data_uart_debug("Net Msg Cache are cleared.\r\n");
     return USER_CMD_RESULT_OK;
 }
 
 user_cmd_parse_result_t user_cmd_rpl_clear(user_cmd_parse_value_t *pparse_value)
 {
-    /* avoid gcc compile warning */
-    (void)pparse_value;
-    
+    UNUSED(pparse_value);
     rpl_clear();
     rpl_clear();
     return USER_CMD_RESULT_OK;
@@ -172,7 +170,7 @@ user_cmd_parse_result_t user_cmd_test_send(user_cmd_parse_value_t *pparse_value)
     {
         app_msg[loop] = loop;
     }
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = NULL;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = app_msg;
@@ -193,7 +191,7 @@ user_cmd_parse_result_t user_cmd_test_data(user_cmd_parse_value_t *pparse_value)
     uint8_t app_msg1[] = {0x80, 0x11, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0, 0, 0, 0};
     uint8_t app_msg2[] = {0x80, 0x11, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0, 0, 0, 0};
     uint8_t app_msg3[] = {0x01, 0x02, 0, 0, 0, 0, 0, 0, 0, 0};
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = NULL;
     mesh_msg.msg_offset = 0;
 

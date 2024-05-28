@@ -16,15 +16,6 @@
 #include "delay_msg_rsp.h"
 #endif
 
-#if 0
-typedef struct
-{
-    uint8_t tid;
-#if MODEL_ENABLE_DELAY_MSG_RSP
-    uint32_t delay_pub_time;
-#endif
-} time_info_t;
-#endif
 
 int16_t tai_utc_delta_convert(uint16_t delta)
 {
@@ -52,7 +43,7 @@ static mesh_msg_send_cause_t time_server_send(mesh_model_info_p pmodel_info,
                                               uint16_t dst, void *pmsg, uint16_t msg_len, uint16_t app_key_index,
                                               uint32_t delay_time)
 {
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = pmodel_info;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = pmsg;
@@ -70,7 +61,6 @@ mesh_msg_send_cause_t time_status(mesh_model_info_p pmodel_info, uint16_t dst,
     ACCESS_OPCODE_BYTE(msg.opcode, MESH_MSG_TIME_STATUS);
 
     uint8_t zero_tai_seconds[5] = {0, 0, 0, 0, 0};
-    /* avoid gcc compile warning */
     uint8_t *temp = msg.tai_seconds;
     *((tai_time_t *)(temp)) = time;
     uint16_t msg_len = sizeof(time_status_t);
@@ -79,7 +69,7 @@ mesh_msg_send_cause_t time_status(mesh_model_info_p pmodel_info, uint16_t dst,
         msg_len = MEMBER_OFFSET(time_status_t, subsecond);
     }
 
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = pmodel_info;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = (uint8_t *)&msg;
@@ -103,8 +93,7 @@ mesh_msg_send_cause_t time_zone_status(mesh_model_info_p pmodel_info, uint16_t d
 {
     time_zone_status_t msg;
     ACCESS_OPCODE_BYTE(msg.opcode, MESH_MSG_TIME_ZONE_STATUS);
-    /* avoid gcc compile warning */
-    uint8_t *temp = (uint8_t *)&(msg.time_zone_offset_current);
+    uint8_t *temp = (uint8_t *) & (msg.time_zone_offset_current);
     *((time_zone_t *)temp) = time_zone;
 
     return time_server_send(pmodel_info, dst, &msg, sizeof(time_zone_status_t), app_key_index,
@@ -205,10 +194,9 @@ static bool time_server_receive(mesh_msg_p pmesh_msg)
 
             if (TIME_ROLE_RELAY == get_role.role)
             {
-                /* avoid gcc compile warning */
-                uint8_t *temp = pmsg->tai_seconds;
                 /* publish time */
-                time_publish(pmodel_info, *((tai_time_t *)(temp)));
+                uint8_t *temp = pmsg->tai_seconds;
+                time_publish(pmodel_info, *((tai_time_t *)temp));
             }
         }
         break;
@@ -256,29 +244,10 @@ static bool time_server_receive(mesh_msg_p pmesh_msg)
 
 static int32_t time_server_publish(mesh_model_info_p pmodel_info, bool retrans)
 {
-    /* avoid gcc compile warning */
-    (void)retrans;
+    UNUSED(retrans);
     time_status(pmodel_info, 0, 0, get_present_time(pmodel_info), 0);
     return 0;
 }
-
-#if MESH_MODEL_ENABLE_DEINIT
-static void time_server_deinit(mesh_model_info_t *pmodel_info)
-{
-    if (pmodel_info->model_receive == time_server_receive)
-    {
-#if 0
-        /* now we can remove */
-        if (NULL != pmodel_info->pargs)
-        {
-            plt_free(pmodel_info->pargs, RAM_TYPE_DATA_ON);
-            pmodel_info->pargs = NULL;
-        }
-#endif
-        pmodel_info->model_receive = NULL;
-    }
-}
-#endif
 
 bool time_server_reg(uint8_t element_index, mesh_model_info_p pmodel_info)
 {
@@ -290,23 +259,11 @@ bool time_server_reg(uint8_t element_index, mesh_model_info_p pmodel_info)
     pmodel_info->model_id = MESH_MODEL_TIME_SERVER;
     if (NULL == pmodel_info->model_receive)
     {
-#if 0
-        pmodel_info->pargs = plt_malloc(sizeof(time_info_t), RAM_TYPE_DATA_ON);
-        if (NULL == pmodel_info->pargs)
-        {
-            printe("time_server_reg: fail to allocate memory for the new model extension data!");
-            return FALSE;
-        }
-        memset(pmodel_info->pargs, 0, sizeof(time_info_t));
-#endif
         pmodel_info->model_receive = time_server_receive;
         if (NULL == pmodel_info->model_data_cb)
         {
             printw("time_server_reg: missing model data process callback!");
         }
-#if MESH_MODEL_ENABLE_DEINIT
-        pmodel_info->model_deinit = time_server_deinit;
-#endif
     }
 
     if (NULL == pmodel_info->model_pub_cb)

@@ -13,7 +13,6 @@
 extern "C" {
 #endif      /* __cplusplus */
 
-#include "mesh_data_uart.h"
 #include "mesh_user_cmd_parse.h"
 #include "mesh_config.h"
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API

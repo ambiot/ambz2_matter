@@ -85,7 +85,7 @@ static uint8_t health_server_fault_count_internal(const uint32_t *faults)
 static mesh_msg_send_cause_t health_server_send(mesh_msg_p pmesh_msg, uint8_t *pmsg, uint16_t len,
                                                 uint32_t delay_time)
 {
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = pmesh_msg->pmodel_info;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = pmsg;
@@ -112,7 +112,7 @@ static mesh_msg_send_cause_t health_curt_stat(mesh_model_info_p pmodel_info, uin
     phealth_curt_stat->company_id = company_id;
     health_server_fill_fault(phealth_curt_stat->fault_array, fault_array);
 
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = pmodel_info;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = (uint8_t *)phealth_curt_stat;
@@ -170,8 +170,7 @@ static bool is_health_server_has_fault(const mesh_model_info_p pmodel_info)
  */
 static int32_t health_server_publish(mesh_model_info_p pmodel_info, bool retrans)
 {
-    /* avoid gcc compile warning */
-    (void)retrans;
+    UNUSED(retrans);
     health_info_p phealth_info = pmodel_info->pargs;
 
     health_curt_stat(pmodel_info, phealth_info->recently_test_id, phealth_info->company_id,
@@ -473,7 +472,7 @@ bool health_server_reg(uint16_t element_index, mesh_model_info_p pmodel_info)
         pmodel_info->model_deinit = health_server_deinit;
 #endif
     }
-    
+
     if (NULL == pmodel_info->model_pub_cb)
     {
         pmodel_info->model_pub_cb = health_server_publish;

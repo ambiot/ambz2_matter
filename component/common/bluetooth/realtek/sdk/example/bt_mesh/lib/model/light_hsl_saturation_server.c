@@ -53,7 +53,7 @@ static mesh_msg_send_cause_t light_hsl_saturation_server_send(mesh_model_info_p 
                                                               uint16_t dst, uint8_t *pmsg, uint16_t msg_len, uint16_t app_key_index,
                                                               uint32_t delay_time)
 {
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = pmodel_info;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = pmsg;
@@ -142,8 +142,7 @@ static int32_t light_hsl_saturation_trans_step_change(const mesh_model_info_p pm
                                                       generic_transition_time_t total_time,
                                                       generic_transition_time_t remaining_time)
 {
-    /* avoid gcc compile warning */
-    (void)type;
+    UNUSED(type);
     int32_t ret = 0;
     light_hsl_server_set_saturation_t trans_set_data;
     light_hsl_saturation_info_t *psaturation_info = pmodel_info->pargs;
@@ -419,8 +418,7 @@ static bool light_hsl_saturation_server_receive(mesh_msg_p pmesh_msg)
 
 static int32_t light_saturation_server_publish(mesh_model_info_p pmodel_info, bool retrans)
 {
-    /* avoid gcc compile warning */
-    (void)retrans;
+    UNUSED(retrans);
     generic_transition_time_t trans_time = {0, 0};
     light_hsl_saturation_stat(pmodel_info, 0, 0, get_present_saturation(pmodel_info), FALSE, 0,
                               trans_time, 0);

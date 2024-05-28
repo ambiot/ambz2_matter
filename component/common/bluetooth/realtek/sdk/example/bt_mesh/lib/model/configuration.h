@@ -17,6 +17,7 @@
 
 /* Add Includes here */
 #include "mesh_api.h"
+#include "generic_types.h"
 
 BEGIN_DECLS
 
@@ -119,29 +120,6 @@ BEGIN_DECLS
  */
 
 /** @brief message status */
-enum
-{
-    MESH_MSG_STAT_SUCCESS,
-    MESH_MSG_STAT_INVALID_ADDR,
-    MESH_MSG_STAT_INVALID_MODEL,
-    MESH_MSG_STAT_INVALID_APP_KEY_INDEX,
-    MESH_MSG_STAT_INVALID_NET_KEY_INDEX,
-    MESH_MSG_STAT_INSUFFICIENT_RESOURCES,
-    MESH_MSG_STAT_KEY_INDEX_ALREADY_STORED,
-    MESH_MSG_STAT_INVALID_PUB_PARAMS,
-    MESH_MSG_STAT_NOT_SUB_MODEL, //8, TODO: What is not a sub model?
-    MESH_MSG_STAT_STORAGE_FAIL,
-    MESH_MSG_STAT_FEATURE_NOT_SUPPORTED,
-    MESH_MSG_STAT_CANNOT_UPDATE,
-    MESH_MSG_STAT_CANNOT_REMOVE,
-    MESH_MSG_STAT_CANNOT_BIND,
-    MESH_MSG_STAT_TEMP_UNABLE_CHANGE_STATE,
-    MESH_MSG_STAT_CANNOT_SET,
-    MESH_MSG_STAT_UNSPECIFIED_ERROR, //16
-    MESH_MSG_STAT_INVALID_BINDING,
-} _SHORT_ENUM_;
-typedef uint8_t mesh_msg_stat_t;
-
 typedef struct
 {
     uint8_t opcode[ACCESS_OPCODE_SIZE(MESH_MSG_CFG_BEACON_GET)];
@@ -169,7 +147,7 @@ typedef struct
 {
     uint8_t opcode[ACCESS_OPCODE_SIZE(MESH_MSG_CFG_COMPO_DATA_STAT)];
     uint8_t page;
-    uint8_t data[2]; //!< variable length
+    uint8_t data[0]; //!< variable length
 } _PACKED4_ cfg_compo_data_stat_t, *cfg_compo_data_stat_p;
 
 typedef struct
@@ -256,9 +234,16 @@ typedef struct
 
 typedef struct
 {
-    uint16_t app_key_index: 12; //!< global index
-    uint16_t frnd_flag: 1;
-    uint16_t rfu: 3;
+    union
+    {
+        uint16_t value;
+        struct
+        {
+            uint16_t app_key_index: 12; //!< global index
+            uint16_t frnd_flag: 1;
+            uint16_t rfu: 3;
+        };
+    };
 } _PACKED4_ pub_key_info_t, *pub_key_info_p;
 
 typedef struct
@@ -409,7 +394,7 @@ typedef struct
 typedef struct
 {
     uint8_t opcode[ACCESS_OPCODE_SIZE(MESH_MSG_CFG_NET_KEY_LIST)];
-    uint8_t net_key_indexes[2]; //!< variable length
+    uint8_t net_key_indexes[0]; //!< variable length
 } _PACKED4_ cfg_net_key_list_t, *cfg_net_key_list_p;
 
 typedef struct
@@ -450,7 +435,7 @@ typedef struct
     uint8_t opcode[ACCESS_OPCODE_SIZE(MESH_MSG_CFG_APP_KEY_LIST)];
     mesh_msg_stat_t stat;
     uint16_t net_key_index;
-    uint8_t app_key_indexes[2]; //!< variable length
+    uint8_t app_key_indexes[0]; //!< variable length
 } _PACKED4_ cfg_app_key_list_t, *cfg_app_key_list_p;
 
 typedef struct
@@ -663,8 +648,8 @@ bool cfg_server_receive(mesh_msg_p pmesh_msg);
 void cfg_server_resp_with_seg_msg(bool seg);
 
 /**
-  * @brief the cfg server may response need to use seperated network transimit
-  * @param[in] count: retransimit count
+  * @brief the cfg server may response need to use separated network transmit
+  * @param[in] count: retransmit count
   * @param[in] steps: retransmit steps
   * @return none
   */

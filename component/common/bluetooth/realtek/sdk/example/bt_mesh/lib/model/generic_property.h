@@ -258,7 +258,7 @@ typedef struct
  * @brief Data types and structure used by data process callback
  * @{
  */
-#define GENERIC_USER_PROPERIES_CLIENT_STATUS                                    0 //!< @ref generic_properties_client_status_t
+#define GENERIC_USER_PROPERTIES_CLIENT_STATUS                                   0 //!< @ref generic_properties_client_status_t
 #define GENERIC_USER_PROPERTY_CLIENT_STATUS                                     1 //!< @ref generic_property_client_status_t
 #define GENERIC_ADMIN_PROPERTIES_CLIENT_STATUS                                  2 //!< @ref generic_properties_client_status_t
 #define GENERIC_ADMIN_PROPERTY_CLIENT_STATUS                                    3 //!< @ref generic_property_client_status_t

@@ -102,8 +102,56 @@ static const mesh_cmd_entry mesh_cmd_table[] = {
 	PARAM_MESH_CODE("sd", "\r sd [dst] [scene number] [ack] [app_key_index]", "\r scene delete\n\r", GEN_MESH_CODE(_scene_delete))
 	PARAM_MESH_CODE("scheg", "\r scheg [dst] [app_key_index]", "\r scheduler get\n\r", GEN_MESH_CODE(_scheduler_get))
 	PARAM_MESH_CODE("scheag", "\r scheag [dst] [index] [app_key_index]", "\r scheduler action get\n\r", GEN_MESH_CODE(_scheduler_action_get))
-	PARAM_MESH_CODE("scheas", "\r scheag [dst] [index] [app_key_index]", "\r scheduler action get\n\r", GEN_MESH_CODE(_scheduler_action_set))
-#if defined(MESH_RPR) && MESH_RPR
+    PARAM_MESH_CODE("scheas", "\r scheas [dst] [index] [year] [month] [day] [hour] [minute] [second] [day of week] [action] [steps] [resolution] [scene number] [app_key_index]", "\r scheduler action set\n\r", GEN_MESH_CODE(_scheduler_action_set))
+    /**********new model test*************/
+    PARAM_MESH_CODE("gdttg", "\r gdttg [dst address] [app key index]", "\r generic default transition time get\n\r", GEN_MESH_CODE(_gdtt_get))
+    PARAM_MESH_CODE("gdtts", "\r gdtts [dst address] [steps] [resolution] [ack] [app key index]", "\r generic default transition time set\n\r", GEN_MESH_CODE(_gdtt_set))
+    PARAM_MESH_CODE("glg", "\r glg [dst] [app_key_index]", "\r generic level get\n\r", GEN_MESH_CODE(_generic_level_get))
+    PARAM_MESH_CODE("gls", "\r gls [dst] [level] [ack] [app_key_index] [steps] [resolution] [delay]", "\r generic level set\n\r", GEN_MESH_CODE(_generic_level_set))
+    PARAM_MESH_CODE("gds", "\r gds [dst] [positive] [delta] [ack] [app_key_index] [steps] [resolution] [delay]", "\r generic delta set\n\r", GEN_MESH_CODE(_generic_delta_set))
+    PARAM_MESH_CODE("gms", "\r gms [dst] [positive] [move] [ack] [app_key_index] [steps] [resolution] [delay]", "\r generic move set\n\r", GEN_MESH_CODE(_generic_move_set))
+    PARAM_MESH_CODE("gopug", "\r gopug [dst] [app_key_index]", "\r generic on power up get\n\r", GEN_MESH_CODE(_generic_on_powerup_get))
+    PARAM_MESH_CODE("gopus", "\r gopus [dst] [power] [ack] [app_key_index]", "\r generic on power up set\n\r", GEN_MESH_CODE(_generic_on_powerup_set))
+    PARAM_MESH_CODE("gplg", "\r gplg [dst] [app_key_index]", "\r generic power level get\n\r", GEN_MESH_CODE(_generic_power_level_get))
+    PARAM_MESH_CODE("gpls", "\r gpls [dst] [level] [ack] [app_key_index] [steps] [resolution] [delay]", "\r generic power level set\n\r", GEN_MESH_CODE(_generic_power_level_set))
+    PARAM_MESH_CODE("gpllg", "\r gpllg [dst] [app_key_index]", "\r generic power last get\n\r", GEN_MESH_CODE(_generic_power_last_get))
+    PARAM_MESH_CODE("gpdg", "\r gpdg [dst] [app_key_index]", "\r generic power default get\n\r", GEN_MESH_CODE(_generic_power_default_get))
+    PARAM_MESH_CODE("gpds", "\r gpds [dst] [power] [ack] [app_key_index]", "\r generic power default set\n\r", GEN_MESH_CODE(_generic_power_default_set))
+    PARAM_MESH_CODE("gprg", "\r gprg [dst] [app_key_index]", "\r generic power range get\n\r", GEN_MESH_CODE(_generic_power_range_get))
+    PARAM_MESH_CODE("gprs", "\r gprs [dst] [min] [max] [ack] [app_key_index]", "\r generic power range set\n\r", GEN_MESH_CODE(_generic_power_range_set))
+    PARAM_MESH_CODE("gbg", "\r gprs gbg [dst] [app_key_index]", "\r generic battery get\n\r", GEN_MESH_CODE(_generic_battery_get))
+    PARAM_MESH_CODE("sdg", "\r sdg [dst] [property id] [app_key_index]", "\r sensor descriptor get\n\r", GEN_MESH_CODE(_sensor_descriptor_get))
+    PARAM_MESH_CODE("scg", "\r scg [dst] [property id] [app_key_index]", "\r sensor cadence get\n\r", GEN_MESH_CODE(_sensor_cadence_get))
+    PARAM_MESH_CODE("scs", "\r scs [dst] [property id] [divisor] [tirgger type] [trigger delta] [min interval] [fast cadence] [ack] [app_key_index]", "\r sensor cadence set\n\r", GEN_MESH_CODE(_sensor_cadence_set))
+    PARAM_MESH_CODE("sssg", "\r sssg [dst] [property id] [app_key_index]", "\r sensor settings get\n\r", GEN_MESH_CODE(_sensor_settings_get))
+    PARAM_MESH_CODE("sss", "\r sss [dst] [property id] [setting property id] [raw data] [ack] [app_key_index]", "\r sensor setting set\n\r", GEN_MESH_CODE(_sensor_setting_set))
+    PARAM_MESH_CODE("ssg", "\r ssg [dst] [property id] [setting property id] [app_key_index]", "\r sensor setting get\n\r", GEN_MESH_CODE(_sensor_setting_get))
+    PARAM_MESH_CODE("seg", "\r seg [dst] [property id] [app_key_index]", "\r sensor get\n\r", GEN_MESH_CODE(_sensor_get))
+    PARAM_MESH_CODE("scog", "\r scog [dst] [property id] [raw value x] [app_key_index]", "\r sensor column get\n\r", GEN_MESH_CODE(_sensor_column_get))
+    PARAM_MESH_CODE("sseg", "\r sseg [dst] [property id] [raw value xn] [app_key_index]", "\r sensor series get\n\r", GEN_MESH_CODE(_sensor_series_get))
+    PARAM_MESH_CODE("glgg", "\r glgg [dst] [app key index]", "\r generic location global get\n\r", GEN_MESH_CODE(_generic_location_global_get))
+    PARAM_MESH_CODE("glgs", "\r glgs [dst] [latitude] [longitude] [altitude] [ack] [app key index]", "\r generic location global set\n\r", GEN_MESH_CODE(_generic_location_global_set))
+    PARAM_MESH_CODE("gllg", "\r gllg [dst] [app key index]", "\r generic location local get\n\r", GEN_MESH_CODE(_generic_location_local_get))
+    PARAM_MESH_CODE("glls", "\r glls [dst] [north] [east] [altitude] [floor] [sationary] [update time] [precision] [ack] [app key index]", "\r generic location local set\n\r", GEN_MESH_CODE(_generic_location_local_set))
+    PARAM_MESH_CODE("gupsg", "\r gupsg [dst] [app key index]", "\r generic user properties get\n\r", GEN_MESH_CODE(_generic_user_properties_get))
+    PARAM_MESH_CODE("gupg", "\r gupg [dst] [property id] [app key index]", "\r generic user property get\n\r", GEN_MESH_CODE(_generic_user_property_get))
+    PARAM_MESH_CODE("gups", "\r gups [dst] [app key index] [ack] [property id] [property value...]", "\r generic user property set\n\r", GEN_MESH_CODE(_generic_user_property_set))
+    PARAM_MESH_CODE("gapsg", "\r gapsg [dst] [app key index]", "\r generic admin properties get\n\r", GEN_MESH_CODE(_generic_admin_properties_get))
+    PARAM_MESH_CODE("gapg", "\r gapg [dst] [property id] [app key index]", "\r generic admin property get\n\r", GEN_MESH_CODE(_generic_admin_property_get))
+    PARAM_MESH_CODE("gaps", "\r gaps [dst] [app key index] [ack] [property id] [property access] [property value...]", "\r generic admin property set\n\r", GEN_MESH_CODE(_generic_admin_property_set))
+    PARAM_MESH_CODE("gmpsg", "\r gmpsg [dst] [app key index]", "\r generic manufacturer properties get\n\r", GEN_MESH_CODE(_generic_manufacturer_properties_get))
+    PARAM_MESH_CODE("gmpg", "\r gmpg [dst] [property id] [app key index]", "\r generic manufacturer property get\n\r", GEN_MESH_CODE(_generic_manufacturer_property_get))
+    PARAM_MESH_CODE("gmps", "\r gmps [dst] [app key index] [ack] [property id] [property access]", "\r generic manufacturer property set\n\r", GEN_MESH_CODE(_generic_manufacturer_property_set))
+    PARAM_MESH_CODE("gcpsg", "\r gcpsg [dst] [app key index] [property id]", "\r generic client properties get\n\r", GEN_MESH_CODE(_generic_client_properties_get))
+    PARAM_MESH_CODE("llcmg", "\r llcmg [dst] [app_key_index]", "\r light lc mode get\n\r", GEN_MESH_CODE(_light_lc_mode_get))
+    PARAM_MESH_CODE("llcms", "\r llcms [dst] [mode] [app_key_index] [ack]", "\r light lc mode set\n\r", GEN_MESH_CODE(_light_lc_mode_set))
+    PARAM_MESH_CODE("llcomg", "\r llcomg [dst] [app_key_index]", "\r light lc om get\n\r", GEN_MESH_CODE(_light_lc_om_get))
+    PARAM_MESH_CODE("llcoms", "\r llcoms [dst] [mode] [app_key_index] [ack]", "\r light lc om set\n\r", GEN_MESH_CODE(_light_lc_om_set))
+    PARAM_MESH_CODE("llcloog", "\r llcloog [dst] [app_key_index]", "\r light lc light on off get\n\r", GEN_MESH_CODE(_light_lc_light_on_off_get))
+    PARAM_MESH_CODE("llcloos", "\r llcloos [dst] [on off] [ack] [app_key_index] [steps] [resolution] [delay]", "\r light lc light on off set\n\r", GEN_MESH_CODE(_light_lc_light_on_off_set))
+    PARAM_MESH_CODE("llcpg", "\r llcpg [dst] [property id] [app_key_index]", "\r light lc property get\n\r", GEN_MESH_CODE(_light_lc_property_get))
+    PARAM_MESH_CODE("llcps", "\r llcps [dst] [app_key_index] [ack] [property id] [property value...]", "\r light lc property set\n\r", GEN_MESH_CODE(_light_lc_property_set))
+#if F_BT_MESH_1_1_RPR_SUPPORT
 	PARAM_MESH_CODE("rmtscan", "\r rmtscan [dst] [net key index] [scanned items limit] [scan timeout] [dev uuid]", "\r romte provision scan start\n\r", GEN_MESH_CODE(_rmt_prov_client_scan_start))
 	PARAM_MESH_CODE("rmtcon", "\r rmtcon [dst] [net key index] [dev uuid] [link open timeout]", "\r romte link open for provision\n\r", GEN_MESH_CODE(_rmt_prov_client_link_open_prov))
 	PARAM_MESH_CODE("rmtdisc", "\r rmtdisc [dst] [net_key_index] [reason]", "\r romte link close for provision\n\r", GEN_MESH_CODE(_rmt_prov_client_close))
@@ -113,16 +161,32 @@ static const mesh_cmd_entry mesh_cmd_table[] = {
     PARAM_MESH_CODE("fus", "\r fus [dst] [app_key_index] [update ttl] [update timeout base] [blob id] [fw image idx] [fw metadata] [metadata len]", "\r firmware update start\n\r", GEN_MESH_CODE(_fw_update_start))
     PARAM_MESH_CODE("fuc", "\r fuc [dst] [app_key_index]\n\r", "\r firmware update cancel\n\r", GEN_MESH_CODE(_fw_update_cancel))
 #endif
+#if F_BT_MESH_1_1_DF_SUPPORT
+    PARAM_MESH_CODE("dcs", "\r dcs [dst] [net key index] [net key index df] [forwarding] [relay] [proxy] [proxy use directed default] [friend]\n\r", "\r directed control set\n\r",  GEN_MESH_CODE(_directed_control_set))
+    PARAM_MESH_CODE("dpps", "\r dpps [dst] [net key index] [policy] [elem addr] [model id]\n\r", "\r directed publish policy set\n\r", GEN_MESH_CODE(_directed_publish_policy_set))
+    PARAM_MESH_CODE("fta", "\r fta [dst] [net key index] [net key index df] [unicast dst] [backward path valid] [origin addr] [ori second elem num] [target addr] [tar second elem num] [bearer toward origin] [bearer toward target]\n\r", "\r forwarding table add\n\r", GEN_MESH_CODE(_forwarding_table_add))
+    PARAM_MESH_CODE("ftda", "\r ftda [dst] [net key index] [net key index df] [path origin] [path target] [do_list_size] [dt_list_size] [addr] [second elem num]...\n\r", "\r forwarding table dependents add\n\r", GEN_MESH_CODE(_forwarding_table_dependents_add))
+    PARAM_MESH_CODE("ftd", "\r ftd [dst] [net key index] [net key index df] [path origin] [dst]\n\r", "\r forwarding table delete\n\r", GEN_MESH_CODE(_forwarding_table_delete))
+    PARAM_MESH_CODE("ftdd", "\r ftdd [dst] [net key index] [net key index df] [path origin] [path target] [do_list_size] [dt_list_size] [addr] [second elem num]...\n\r", "\r forwarding table delete\n\r", GEN_MESH_CODE(_forwarding_table_dependents_delete))
+    PARAM_MESH_CODE("wls", "\r wls [dst] [net key index] [net key index df] [wanted lanes]\n\r", "\r wanted lanes set\n\r", GEN_MESH_CODE(_wanted_lanes_set))
+    PARAM_MESH_CODE("twps", "\r twps [dst] [net key index] [net key index df] [two way path]\n\r", "\r two way path set\n\r", GEN_MESH_CODE(_two_way_path_set))
+    PARAM_MESH_CODE("rssits", "\r rssits [dst] [net key index] [rssi margin]\n\r", "\r rssi threshold set\n\r", GEN_MESH_CODE(_rssi_threshold_set))
+    PARAM_MESH_CODE("dtcs", "\r dtcs [dst] [net key index] [net key index df] [max concurrent init]\n\r", "\r discovery table capabilities set\n\r", GEN_MESH_CODE(_discovery_table_capabilities_set))
+    PARAM_MESH_CODE("peis", "\r peis [dst] [net key index] [net key index df] [unicast echo interval] [multicast echo interval]\n\r", "\r path echo interval set\n\r", GEN_MESH_CODE(_path_echo_interval_set))
+    PARAM_MESH_CODE("pms", "\r pms [dst] [net key index] [net key index df] [metric type] [lifetime]\n\r", "\r path metric set\n\r", GEN_MESH_CODE(_path_metric_set))
+#endif
 #endif
 #if (defined(CONFIG_BT_MESH_DEVICE) && CONFIG_BT_MESH_DEVICE || \
     defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE)
     PARAM_MESH_CODE("nr", "\r nr [mode]\n\r", "\r node reset\n\r", GEN_MESH_CODE(_node_reset))
     PARAM_MESH_CODE("pcs", "\r pcs [public key oob] [static oob] [output size] [output action] [input size] [input action]\n\r", "\r provision capability set\n\r", GEN_MESH_CODE(_prov_capa_set)) 
+#if defined(MESH_LPN) && MESH_LPN
     PARAM_MESH_CODE("lpninit", "\r lpninit [fn_num]\n\r", "\r low power node init\n\r", GEN_MESH_CODE(_lpn_init)) 
     PARAM_MESH_CODE("lpndeinit", "\r lpndeinit\n\r", "\r low power node deinit\n\r", GEN_MESH_CODE(_lpn_deinit)) 
     PARAM_MESH_CODE("lpnreq", "\r lpnreq [fn_index] [net_key_index] [poll int(100ms)] [poll to(100ms)] [rx delay(ms)] [rx widen(ms)]\n\r", "\r LPN request to estabish a friendship\n\r", GEN_MESH_CODE(_lpn_req)) 
     PARAM_MESH_CODE("lpnsub", "\r lpnsub [fn_index] [addr] [add/rm]\n\r", "\r LPN subsript list add or rm\n\r", GEN_MESH_CODE(_lpn_sub)) 
     PARAM_MESH_CODE("lpnclear", "\r lpnclear [fn_index]\n\r", "\r LPN clear\n\r", GEN_MESH_CODE(_lpn_clear)) 
+#endif
     PARAM_MESH_CODE("dtn", "\r dtn [conn_id] [value...]\n\r", "\r data transmission notify\n\r", GEN_MESH_CODE(_data_transmission_notify))
 #endif
     PARAM_MESH_CODE("dtw", "\r dtw [dst] [data...] [app_key_index] [ack]", "\r data transmission write data\n\r", GEN_MESH_CODE(_datatrans_write))
@@ -131,8 +195,15 @@ static const mesh_cmd_entry mesh_cmd_table[] = {
     PARAM_MESH_CODE("disc", "\r disc [conn id]", "\r disconnect to remote device\n\r", GEN_MESH_CODE(_disconnect))
     PARAM_MESH_CODE("ls", "\r ls\n\r", "\rlist node state info\n\r", GEN_MESH_CODE(_list))
     PARAM_MESH_CODE("dis", "\r dis [1 on/0 off]\n\r", "\rdevice information show\n\r", GEN_MESH_CODE(_dev_info_show))
+#if defined(MESH_FN) && MESH_FN
     PARAM_MESH_CODE("fninit", "\r fninit [lpn num] [queue size] [rx window(ms)]\n\r", "\r friend node init\n\r", GEN_MESH_CODE(_fn_init))
     PARAM_MESH_CODE("fndeinit", "\r fndeinit\n\r", "\r friend node deinit\n\r", GEN_MESH_CODE(_fn_deinit))
+#endif
+#if F_BT_MESH_1_1_DF_SUPPORT
+    PARAM_MESH_CODE("dfpdis", "\r dfpdis [master key index] [target addr] [dependent addr] [dependent elem num]\n\r", "\rdirected forwarding path discovery\n\r", GEN_MESH_CODE(_df_path_discovery))
+    PARAM_MESH_CODE("dfpsol", "\r dfpsol [master key index] [addr1] [addr2] ...\n\r", "\rdirected forwarding path solicitation\n\r", GEN_MESH_CODE(_df_path_solicitation))
+    PARAM_MESH_CODE("dfpdupt", "\r dfpdupt [type: 0 remove, 1 add] [endpoint addr] [dependent addr] [dependent elem num]\n\r", "\rdirected forwarding path dependents update\n\r", GEN_MESH_CODE(_df_path_dependents_update))
+#endif
 };
 
 void bt_mesh_io_msg_handler(T_IO_MSG io_msg)
@@ -144,7 +215,7 @@ void bt_mesh_io_msg_handler(T_IO_MSG io_msg)
     pmeshCmdItem_s = (CMD_ITEM_S *)io_msg.u.buf;
     puserItem = (PUSER_ITEM)pmeshCmdItem_s->pmeshCmdItem->userData;
     if ((btMeshCmdPriv.meshMode != BT_MESH_PROVISIONER) && (btMeshCmdPriv.meshMode != BT_MESH_DEVICE)) {
-        printf("[BT_MESH] %s(): Error BT MESH mode %d \r\n",__func__);
+        printf("[BT_MESH] %s(): Error BT MESH mode %d \r\n",__func__,btMeshCmdPriv.meshMode);
         goto exit;
     }  
 #if (defined(CONFIG_BT_MESH_PROVISIONER) && CONFIG_BT_MESH_PROVISIONER || \
@@ -216,7 +287,7 @@ uint8_t bt_mesh_user_cmd_hdl(uint16_t mesh_code, CMD_ITEM_S *pmesh_cmd_item_s)
     pmeshCmdItem = pmeshCmdItem_s->pmeshCmdItem;
     puserItem = (PUSER_ITEM)pmeshCmdItem->userData;
     if ((btMeshCmdPriv.meshMode != BT_MESH_PROVISIONER) && (btMeshCmdPriv.meshMode != BT_MESH_DEVICE)) {
-        printf("[BT_MESH] %s(): Error BT MESH mode %d \r\n",__func__);
+        printf("[BT_MESH] %s(): Error BT MESH mode %d \r\n",__func__,btMeshCmdPriv.meshMode);
         goto exit;
     }
     if (pmeshCmdItem_s->msgRecvFlag) {
@@ -300,7 +371,7 @@ uint8_t bt_mesh_enqueue_cmd(struct list_head *queue, uint8_t head_or_tail)
     }
 #endif
     else {
-        printf("[BT_MESH] %s(): Mesh user command is disabled\r\n");
+        printf("[BT_MESH] %s(): Mesh user command is disabled\r\n", __func__);
         return 2;
     }
     
@@ -333,7 +404,7 @@ CMD_ITEM_S* bt_mesh_cmdreg(uint16_t mesh_code, user_cmd_parse_value_t *pparse_va
     CMD_ITEM_S *pmeshCmdItem_s = NULL;
 
     if (!btMeshCmdPriv.meshCmdEnable) {
-        printf("[BT_MESH] %s(): Mesh user command is disabled!\r\n");
+        printf("[BT_MESH] %s(): Mesh user command is disabled!\r\n", __func__);
 		return NULL;
     }
     puserItem = (PUSER_ITEM)user_data;
@@ -390,11 +461,11 @@ user_api_parse_result_t bt_mesh_set_user_cmd(uint16_t mesh_code, user_cmd_parse_
 
     puserItem = (PUSER_ITEM)user_data;
     if (!puserItem) {
-        printf("[BT_MESH] %s(): puserItem is null!\r\n");
+        printf("[BT_MESH] %s(): puserItem is null!\r\n", __func__);
         return USER_API_RESULT_ERROR;
     }
     if (!btMeshCmdPriv.meshCmdEnable) {
-        printf("[BT_MESH] %s(): Mesh user command is disabled!\r\n");
+        printf("[BT_MESH] %s(): Mesh user command is disabled!\r\n", __func__);
         ret = USER_API_RESULT_NOT_ENABLE;
         goto exit;
     }
@@ -407,7 +478,7 @@ user_api_parse_result_t bt_mesh_set_user_cmd(uint16_t mesh_code, user_cmd_parse_
             goto exit;
         }
     } else {
-        printf("[BT_MESH] %s(): Error BT MESH mode %d \r\n",__func__);
+        printf("[BT_MESH] %s(): Error BT MESH mode %d \r\n",__func__,btMeshCmdPriv.meshMode);
         ret = USER_API_RESULT_ERROR_MESH_MODE;
         goto exit;
     }
@@ -420,7 +491,7 @@ user_api_parse_result_t bt_mesh_set_user_cmd(uint16_t mesh_code, user_cmd_parse_
             goto exit;
         }
     } else {
-        printf("[BT_MESH] %s(): Error BT MESH mode %d \r\n",__func__);
+        printf("[BT_MESH] %s(): Error BT MESH mode %d \r\n",__func__,btMeshCmdPriv.meshMode);
         ret = USER_API_RESULT_ERROR_MESH_MODE;
         goto exit;
     }
@@ -533,7 +604,7 @@ user_api_parse_result_t bt_mesh_indication(uint16_t mesh_code, uint8_t state, vo
         return USER_API_RESULT_TIMEOUT;
     }
     if (!pmeshCmdItem_s->msgRecvFlag) {
-        printf("[BT_MESH] %s(): This indication is not matched !\r\n", __func__, mesh_code);
+        printf("[BT_MESH] %s(): This indication is not matched !\r\n", __func__);
         os_mutex_give(btMeshCmdPriv.cmdItemsMutex);
         return USER_API_RESULT_ERROR;
     }
@@ -629,9 +700,9 @@ static void mesh_user_cmd_list(void)
     /* find command in table */
     for (i = 0; i < sizeof(mesh_cmd_table) / sizeof(mesh_cmd_table[0]); i ++)
     {
-        data_uart_debug(mesh_cmd_table[i].poption);
-        data_uart_debug("  *");
-        data_uart_debug(mesh_cmd_table[i].phelp);
+        printf(mesh_cmd_table[i].poption);
+        printf("  *");
+        printf(mesh_cmd_table[i].phelp);
     };
     
     return;
@@ -728,9 +799,9 @@ void bt_mesh_param_user_cmd(unsigned int argc, char **argv)
 		if (strcmp((const char *)argv[1], (const char *)(mesh_cmd_table[i].pcommand)) == 0) {
             if (argc > 2) {
                 if (strcmp(argv[2], "?") == 0) {
-                    data_uart_debug(mesh_cmd_table[i].poption);
-                    data_uart_debug("  *");
-                    data_uart_debug(mesh_cmd_table[i].phelp);
+                    printf(mesh_cmd_table[i].poption);
+                    printf("  *");
+                    printf(mesh_cmd_table[i].phelp);
                     return;
                 }
             }
@@ -790,7 +861,7 @@ void user_cmd_array2string(uint8_t *buf, unsigned int buflen, char *out)
 #include "firmware_distribution.h"
 #include "dfudep_service.h"
 
-#if defined(MESH_DFU) && MESH_DFU
+#if F_BT_MESH_1_1_DFU_SUPPORT
 uint8_t metadata_client[] = {
     0x1F,
     0xEE

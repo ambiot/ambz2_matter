@@ -234,8 +234,8 @@ typedef struct
  * @brief Data types and structure used by data process callback
  * @{
  */
-#define HEALTH_CLIENT_STATUS_CURRENT                 0 //!< @ref health_client_status_t 
-#define HEALTH_CLIENT_STATUS_REGISTERED              1 //!< @ref health_client_status_t 
+#define HEALTH_CLIENT_STATUS_CURRENT                 0 //!< @ref health_client_status_t
+#define HEALTH_CLIENT_STATUS_REGISTERED              1 //!< @ref health_client_status_t
 #define HEALTH_CLIENT_STATUS_PERIOD                  2 //!< @ref health_client_status_period_t
 #define HEALTH_CLIENT_STATUS_ATTENTION               3 //!< @ref health_client_status_attention_t
 

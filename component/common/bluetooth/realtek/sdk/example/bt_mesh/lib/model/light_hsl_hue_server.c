@@ -56,7 +56,7 @@ static mesh_msg_send_cause_t light_hsl_hue_server_send(mesh_model_info_p pmodel_
                                                        uint8_t *pmsg, uint16_t msg_len, uint16_t app_key_index,
                                                        uint32_t delay_time)
 {
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = pmodel_info;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = pmsg;
@@ -143,8 +143,7 @@ static int32_t light_hsl_hue_trans_step_change(const mesh_model_info_p pmodel_in
                                                generic_transition_time_t total_time,
                                                generic_transition_time_t remaining_time)
 {
-    /* avoid gcc compile warning */
-    (void)type;
+    UNUSED(type);
     int32_t ret = MODEL_SUCCESS;
     light_hsl_server_set_hue_t trans_set_data;
     light_hsl_hue_info_t *phue_info = pmodel_info->pargs;
@@ -408,8 +407,7 @@ static bool light_hsl_hue_server_receive(mesh_msg_p pmesh_msg)
 
 static int32_t light_hue_server_publish(mesh_model_info_p pmodel_info, bool retrans)
 {
-    /* avoid gcc compile warning */
-    (void)retrans;
+    UNUSED(retrans);
     generic_transition_time_t trans_time = {0, 0};
     light_hsl_hue_stat(pmodel_info, 0, 0, get_present_hue(pmodel_info), FALSE, 0, trans_time, 0);
     return 0;

@@ -33,7 +33,7 @@ static mesh_msg_send_cause_t generic_user_property_send(mesh_model_info_p pmodel
                                                         uint16_t app_key_index,
                                                         uint8_t *pmsg, uint16_t msg_len, uint16_t delay_time)
 {
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = pmodel_info;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = pmsg;
@@ -149,10 +149,10 @@ static mesh_msg_send_cause_t generic_user_property_status(mesh_model_info_p pmod
                                                           uint16_t property_id, uint16_t delay_time)
 {
     generic_property_db_t *pdb = generic_user_property_find(pmodel_info, property_id);
-    bool send_value = TRUE;
-    if (GENERIC_PROPERTY_ACCESS_WRITE == pdb->property_access)
+    bool send_value = FALSE;
+    if (pdb != NULL && GENERIC_PROPERTY_ACCESS_WRITE != pdb->property_access)
     {
-        send_value = FALSE;
+        send_value = TRUE;
     }
     return generic_user_property_status_internal(pmodel_info, dst, app_key_index, property_id, pdb,
                                                  send_value, delay_time);

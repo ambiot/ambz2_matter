@@ -23,7 +23,7 @@
     (defined CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE))
 #include "bt_mesh_device_api.h"
 #endif
-
+#include "mesh_data_dump.h"
 #if defined(CONFIG_BT_MESH_PROVISIONER_RTK_DEMO) && CONFIG_BT_MESH_PROVISIONER_RTK_DEMO
 #include "bt_mesh_app_list_intf.h"
 #endif
@@ -79,7 +79,7 @@ resolution(%d)\r\n", pdata->src, pdata->present_on_off, pdata->target_on_off,
                         ret = bt_mesh_indication(GEN_MESH_CODE(_generic_on_off_set), BT_MESH_GOO_ON, (void *)pdata);
                         if (ret != USER_API_RESULT_OK) {
                             if (ret != USER_API_RESULT_INCORRECT_CODE) {
-                                data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_generic_on_off_set));
+                                printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_generic_on_off_set));
                                 break;
                             }  
                         } else {
@@ -88,7 +88,7 @@ resolution(%d)\r\n", pdata->src, pdata->present_on_off, pdata->target_on_off,
                         ret = bt_mesh_indication(GEN_MESH_CODE(_generic_on_off_get), BT_MESH_GOO_ON, (void *)pdata);
                         if (ret != USER_API_RESULT_OK) {
                             if (ret != USER_API_RESULT_INCORRECT_CODE) {
-                                data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_generic_on_off_get));
+                                printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_generic_on_off_get));
                                 break;
                             }
                         } else {
@@ -101,7 +101,7 @@ resolution(%d)\r\n", pdata->src, pdata->present_on_off, pdata->target_on_off,
                         ret = bt_mesh_indication(GEN_MESH_CODE(_generic_on_off_set), BT_MESH_GOO_OFF, (void *)pdata);
                         if (ret != USER_API_RESULT_OK) {
                             if (ret != USER_API_RESULT_INCORRECT_CODE) {
-                                data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_generic_on_off_set));
+                                printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_generic_on_off_set));
                                 break;
                             }  
                         } else {
@@ -110,7 +110,7 @@ resolution(%d)\r\n", pdata->src, pdata->present_on_off, pdata->target_on_off,
                         ret = bt_mesh_indication(GEN_MESH_CODE(_generic_on_off_get), BT_MESH_GOO_OFF, (void *)pdata);
                         if (ret != USER_API_RESULT_OK) {
                             if (ret != USER_API_RESULT_INCORRECT_CODE) {
-                                data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_generic_on_off_get));
+                                printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_generic_on_off_get));
                                 break;
                             }  
                         } else {
@@ -139,7 +139,7 @@ static int32_t generic_default_transition_time_client_data(const mesh_model_info
     case GENERIC_DEFAULT_TRANSITION_TIME_CLIENT_STATUS:
         {
             generic_default_transition_time_client_status_t *pdata = pargs;
-            data_uart_debug("gdtt client receive: src = %d, steps = %d, resolution = %d\r\n",
+            printf("gdtt client receive: src = %d, steps = %d, resolution = %d\r\n",
                           pdata->src, pdata->trans_time.num_steps, pdata->trans_time.step_resolution);
         }
         break;
@@ -161,7 +161,7 @@ static int32_t generic_level_client_data(const mesh_model_info_p pmodel_info,
             generic_level_client_status_t *pdata = pargs;
             if (pdata->optional)
             {
-                data_uart_debug("genric level client receive: src = %d, present = %d, target = %d, remain time = step(%d), \
+                data_uart_debug("generic level client receive: src = %d, present = %d, target = %d, remain time = step(%d), \
 resolution(%d)\r\n", pdata->src, pdata->present_level, pdata->target_level,
                                 pdata->remaining_time.num_steps,
                                 pdata->remaining_time.step_resolution);
@@ -189,7 +189,7 @@ static int32_t generic_battery_client_data(const mesh_model_info_p pmodel_info,
     case GENERIC_BATTERY_CLIENT_STATUS:
         {
             generic_battery_client_status_t *pdata = pargs;
-            data_uart_debug("genric battery client receive: src = %d, battery level = %d, time to discharge = %d, \
+            data_uart_debug("generic battery client receive: src = %d, battery level = %d, time to discharge = %d, \
 time to charge = %d, presence = %d, indicator = %d, charging = %d, serviceability = %d\r\n",
                             pdata->src,
                             pdata->battery_level,
@@ -236,7 +236,7 @@ static int32_t generic_power_level_client_data(const mesh_model_info_p pmodel_in
             generic_power_level_client_status_t *pdata = pargs;
             if (pdata->optional)
             {
-                data_uart_debug("genric power level client receive: src = %d, present = %d, target = %d, remain time = step(%d), \
+                data_uart_debug("generic power level client receive: src = %d, present = %d, target = %d, remain time = step(%d), \
 resolution(%d)\r\n", pdata->src, pdata->present_power, pdata->target_power,
                                 pdata->remaining_time.num_steps,
                                 pdata->remaining_time.step_resolution);
@@ -331,9 +331,9 @@ time_zone_offset = %d\r\n", pdata->src, pdata->tai_time.tai_seconds[4],
                             pdata->tai_time.time_authority, pdata->tai_time.tai_utc_delta, pdata->tai_time.time_zone_offset);
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_time_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_time_get));  
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_time_get));  
 			}
-#endif			
+#endif
         }
         break;
     case TIME_CLIENT_STATUS_ZONE:
@@ -346,9 +346,9 @@ time_zone_offset_new = %d, tai_of_zone_change = 0x%02x%02x%02x%02x%02x\r\n",
                             pdata->tai_of_zone_change[0]);
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_time_zone_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_time_zone_get));  
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_time_zone_get));  
 			}
-#endif			
+#endif
         }
         break;
     case TIME_CLIENT_STATUS_TAI_UTC_DELTA:
@@ -361,9 +361,9 @@ tai_of_delta_change = 0x%02x%02x%02x%02x%02x\r\n", pdata->tai_utc_delta_current,
                             pdata->tai_of_delta_change[1], pdata->tai_of_delta_change[0]);
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_time_tai_utc_delta_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_time_tai_utc_delta_get));  
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_time_tai_utc_delta_get));  
 			}
-#endif			
+#endif
         }
         break;
     case TIME_CLIENT_STATUS_ROLE:
@@ -372,9 +372,9 @@ tai_of_delta_change = 0x%02x%02x%02x%02x%02x\r\n", pdata->tai_utc_delta_current,
             data_uart_debug("time client receive: role = %d\r\n", pdata->role);
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_time_role_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_time_role_get));  
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_time_role_get));  
 			}
-#endif			
+#endif
         }
         break;
     default:
@@ -404,11 +404,11 @@ remain time = step(%d), resolution(%d)\r\n", pdata->src, pdata->status, pdata->c
             {
                 data_uart_debug("scene client receive: status = %d, current = %d\r\n", pdata->status,
                                 pdata->current_scene);
-            }			
+            }
 
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_scene_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_scene_get));  
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_scene_get));  
 			}
 #endif
         }
@@ -426,7 +426,7 @@ remain time = step(%d), resolution(%d)\r\n", pdata->src, pdata->status, pdata->c
 
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_scene_register_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_scene_register_get));  
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_scene_register_get));  
 			}
 #endif
         }
@@ -455,7 +455,7 @@ static int32_t sensor_client_data(const mesh_model_info_p pmodel_info,
             {
                 for (uint16_t i = 0; i < pdata->num_descriptors; ++i)
                 {
-                    data_uart_debug("sensor client receive: property id = %d, positive rolerance = %d, negative tolerance = %d, sampling function = %d, measurement period = %d, updata_interval = %d\r\n",
+                    data_uart_debug("sensor client receive: property id = %d, positive tolerance = %d, negative tolerance = %d, sampling function = %d, measurement period = %d, update_interval = %d\r\n",
                                     pdata->descriptors[i].property_id, pdata->descriptors[i].positive_tolerance,
                                     pdata->descriptors[i].negative_tolerance, pdata->descriptors[i].sampling_function,
                                     pdata->descriptors[i].measurement_period, pdata->descriptors[i].update_interval);
@@ -570,7 +570,7 @@ static int32_t scheduler_client_data(const mesh_model_info_p pmodel_info,
 
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_scheduler_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_scheduler_get));	
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_scheduler_get));	
 			}
 #endif
         }
@@ -588,7 +588,7 @@ day_of_week = %d, action = %d, num_steps = %d, step_resolution = %d, scene_numbe
 
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 			if (bt_mesh_indication(GEN_MESH_CODE(_scheduler_action_get), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-				data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_scheduler_action_get)); 
+				printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_scheduler_action_get)); 
 			}
 #endif
         }
@@ -617,7 +617,7 @@ static int32_t generic_location_client_data(const mesh_model_info_p pmodel_info,
     case SCHEDULER_CLIENT_STATUS_ACTION:
         {
             generic_location_client_status_local_t *pdata = pargs;
-            data_uart_debug("generic location client receive: src = %d, north = %d, east = %d, altitude = %d, floor = %d, stationary = %d, updata time = %d, precision = %d\r\n",
+            data_uart_debug("generic location client receive: src = %d, north = %d, east = %d, altitude = %d, floor = %d, stationary = %d, update time = %d, precision = %d\r\n",
                             pdata->src, pdata->local.local_north, pdata->local.local_east, pdata->local.local_altitude,
                             pdata->local.floor_num,
                             pdata->local.uncertainty.stationary, pdata->local.uncertainty.update_time,
@@ -638,7 +638,7 @@ static int32_t generic_property_client_data(const mesh_model_info_p pmodel_info,
     UNUSED(pmodel_info);
     switch (type)
     {
-    case GENERIC_USER_PROPERIES_CLIENT_STATUS:
+    case GENERIC_USER_PROPERTIES_CLIENT_STATUS:
         {
             generic_properties_client_status_t *pdata = pargs;
             data_uart_debug("generic property client receive: src = %d", pdata->src);
@@ -800,5 +800,4 @@ void generic_client_models_init(void)
     generic_property_client_reg(0, &model_gp_client);
 #endif
 }
-
 

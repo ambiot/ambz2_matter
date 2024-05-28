@@ -25,7 +25,6 @@
 #include "trace_app.h"
 #include "gap_wrapper.h"
 #include "mesh_api.h"
-#include "mesh_data_uart.h"
 #include "mesh_user_cmd_parse.h"
 #include "device_cmd.h"
 #include "mesh_cmd.h"
@@ -35,7 +34,7 @@
 #include "bt_mesh_device_app_flags.h"
 #include "vendor_cmd.h"
 #include "vendor_cmd_bt.h"
-
+#include "mesh_data_dump.h"
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 #include "bt_mesh_user_api.h"
 #include "bt_mesh_device_api.h"
@@ -90,6 +89,22 @@ void bt_mesh_device_app_handle_io_msg(T_IO_MSG io_msg)
     case PING_APP_TIMEOUT_MSG:
         ping_app_handle_timeout();
         break;
+#if F_BT_MESH_1_1_MBT_SUPPORT
+    case BLOB_CLIENT_PROCEDURE_TIMEOUT:
+        blob_client_handle_procedure_timeout();
+        break;
+    case BLOB_CLIENT_RETRY_TIMEOUT:
+        blob_client_handle_retry_timeout();
+        break;
+    case BLOB_CLIENT_CHUNK_TRANSFER:
+        blob_client_active_chunk_transfer();
+        break;
+#endif
+#if F_BT_MESH_1_1_DFU_SUPPORT
+    case DFU_DIST_APP_TIMEOUT_MSG:
+        dfu_dist_handle_timeout();
+        break;
+#endif
     default:
         break;
     }
@@ -115,7 +130,7 @@ void bt_mesh_device_app_handle_dev_state_evt(T_GAP_DEV_STATE new_state, uint16_t
             APP_PRINT_INFO0("GAP stack ready");
             uint8_t bt_addr[6];
             gap_get_param(GAP_PARAM_BD_ADDR, bt_addr);
-            data_uart_debug("bt addr: 0x%02x%02x%02x%02x%02x%02x\r\n>",
+            printf("bt addr: 0x%02x%02x%02x%02x%02x%02x\r\n",
                             bt_addr[5], bt_addr[4], bt_addr[3],
                             bt_addr[2], bt_addr[1], bt_addr[0]);
         }
@@ -155,14 +170,14 @@ void bt_mesh_device_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE 
                 APP_PRINT_ERROR2("bt_mesh_device_app_handle_conn_state_evt: connection lost, conn_id %d, cause 0x%x", conn_id,
                                  disc_cause);
             }
-            data_uart_debug("Disconnect conn_id %d\r\n", conn_id);
+            printf("Disconnect conn_id %d\r\n", conn_id);
             mesh_device_conn_state = 0;
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
             uint8_t ret = USER_API_RESULT_ERROR;
             ret = bt_mesh_indication(GEN_MESH_CODE(_connect), BT_MESH_USER_CMD_FAIL, NULL);
             if (ret != USER_API_RESULT_OK) {
                 if (ret != USER_API_RESULT_INCORRECT_CODE) {
-                    data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_connect));
+                    printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_connect));
                     memset(&app_link_table[conn_id], 0, sizeof(T_APP_LINK));
                     break;
                 }  
@@ -173,7 +188,7 @@ void bt_mesh_device_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE 
             ret = bt_mesh_indication(GEN_MESH_CODE(_disconnect), BT_MESH_USER_CMD_FAIL, NULL);
             if (ret != USER_API_RESULT_OK) {
                 if (ret != USER_API_RESULT_INCORRECT_CODE) {
-                    data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_disconnect));
+                    printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_disconnect));
                     memset(&app_link_table[conn_id], 0, sizeof(T_APP_LINK));
                     break;
                 }  
@@ -200,11 +215,11 @@ void bt_mesh_device_app_handle_conn_state_evt(uint8_t conn_id, T_GAP_CONN_STATE 
             APP_PRINT_INFO5("GAP_CONN_STATE_CONNECTED:remote_bd %s, remote_addr_type %d, conn_interval 0x%x, conn_latency 0x%x, conn_supervision_timeout 0x%x",
                             TRACE_BDADDR(app_link_table[conn_id].bd_addr), app_link_table[conn_id].bd_type,
                             conn_interval, conn_latency, conn_supervision_timeout);
-            data_uart_debug("Connected success conn_id %d\r\n", conn_id);
+            printf("Connected success conn_id %d\r\n", conn_id);
             mesh_device_conn_state = 1;
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
             if (bt_mesh_indication(GEN_MESH_CODE(_connect), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-                data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_connect));  
+                printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_connect));  
             }
 #endif
 #if F_BT_LE_5_0_SET_PHY_SUPPORT
@@ -254,13 +269,13 @@ void bt_mesh_device_app_handle_authen_state_evt(uint8_t conn_id, uint8_t new_sta
         {
             if (cause == GAP_SUCCESS)
             {
-                data_uart_debug("Pair success\r\n");
+                printf("Pair success\r\n");
                 APP_PRINT_INFO0("bt_mesh_device_app_handle_authen_state_evt: GAP_AUTHEN_STATE_COMPLETE pair success");
 
             }
             else
             {
-                data_uart_debug("Pair failed: cause 0x%x\r\n", cause);
+                printf("Pair failed: cause 0x%x\r\n", cause);
                 APP_PRINT_INFO0("bt_mesh_device_app_handle_authen_state_evt: GAP_AUTHEN_STATE_COMPLETE pair failed");
             }
         }
@@ -443,7 +458,7 @@ void bt_mesh_device_app_handle_gap_msg(T_IO_MSG *p_gap_msg)
             conn_id = gap_msg.msg_data.gap_bond_passkey_input.conn_id;
             APP_PRINT_INFO2("GAP_MSG_LE_BOND_PASSKEY_INPUT: conn_id %d, key_press %d",
                             conn_id, gap_msg.msg_data.gap_bond_passkey_input.key_press);
-            data_uart_debug("GAP_MSG_LE_BOND_PASSKEY_INPUT: conn_id %d\r\n", conn_id);
+            printf("GAP_MSG_LE_BOND_PASSKEY_INPUT: conn_id %d\r\n", conn_id);
             //le_bond_passkey_input_confirm(conn_id, passkey, GAP_CFM_CAUSE_ACCEPT);
         }
         break;
@@ -722,21 +737,25 @@ void device_info_cb(uint8_t bt_addr[6], uint8_t bt_addr_type, int8_t rssi, devic
     {
         return;
     }
-    data_uart_debug("bt addr=0x%02x%02x%02x%02x%02x%02x type=%d rssi=%d ", bt_addr[5], bt_addr[4],
+    printf("bt addr=0x%02x%02x%02x%02x%02x%02x type=%d rssi=%d ", bt_addr[5], bt_addr[4],
                     bt_addr[3], bt_addr[2], bt_addr[1], bt_addr[0], bt_addr_type, rssi);
     switch (pinfo->type)
     {
     case DEVICE_INFO_UDB:
-        data_uart_debug("udb=");
-        data_uart_dump(pinfo->pbeacon_udb->dev_uuid, 16);
+        printf("udb=");
+        mesh_data_dump(pinfo->pbeacon_udb->dev_uuid, 16);
+        break;
+    case DEVICE_INFO_SNB:
+        printf("snb=");
+        mesh_data_dump(pinfo->pbeacon_snb->net_id, 8);
         break;
     case DEVICE_INFO_PROV_ADV:
-        data_uart_debug("prov=");
-        data_uart_dump(pinfo->pservice_data->provision.dev_uuid, 16);
+        printf("prov=");
+        mesh_data_dump(pinfo->pservice_data->provision.dev_uuid, 16);
         break;
     case DEVICE_INFO_PROXY_ADV:
-        data_uart_debug("proxy=");
-        data_uart_dump((uint8_t *)&pinfo->pservice_data->proxy, pinfo->len);
+        printf("proxy=");
+        mesh_data_dump((uint8_t *)&pinfo->pservice_data->proxy, pinfo->len);
         break;
     default:
         break;
@@ -760,23 +779,23 @@ bool prov_cb(prov_cb_type_t cb_type, prov_cb_data_t cb_data)
         switch (cb_data.pb_generic_cb_type)
         {
         case PB_GENERIC_CB_LINK_OPENED:
-            data_uart_debug("PB-ADV Link Opened!\r\n>");
+            printf("PB-ADV Link Opened!\r\n");
             break;
         case PB_GENERIC_CB_LINK_OPEN_FAILED:
-            data_uart_debug("PB-ADV Link Open Failed!\r\n>");
+            printf("PB-ADV Link Open Failed!\r\n");
             break;
         case PB_GENERIC_CB_LINK_CLOSED:
-            data_uart_debug("PB-ADV Link Closed!\r\n>");
+            printf("PB-ADV Link Closed!\r\n");
             break;
         default:
             break;
         }
         break;
     case PROV_CB_TYPE_UNPROV:
-        data_uart_debug("unprov device!\r\n>");
+        printf("unprov device!\r\n");
         break;
     case PROV_CB_TYPE_START:
-        data_uart_debug("being prov-ed!\r\n");
+        printf("being prov-ed!\r\n");
         break;
     case PROV_CB_TYPE_PUBLIC_KEY:
         {
@@ -792,7 +811,7 @@ bool prov_cb(prov_cb_type_t cb_type, prov_cb_data_t cb_data)
             prov_start_p pprov_start = cb_data.pprov_start;
             prov_auth_value_type = prov_auth_value_type_get(pprov_start);
             /* use cmd to set auth data */
-            data_uart_debug("auth method=%d[nsoi] action=%d size=%d type=%d[nbNa]\r\n>",
+            printf("auth method=%d[nsoi] action=%d size=%d type=%d[nbNa]\r\n",
                             pprov_start->auth_method,
                             pprov_start->auth_action, pprov_start->auth_size, prov_auth_value_type);
             //uint8_t auth_data[16] = {1};
@@ -821,15 +840,15 @@ bool prov_cb(prov_cb_type_t cb_type, prov_cb_data_t cb_data)
         {
             mesh_node.iv_timer_count = MESH_IV_INDEX_48W;
             prov_data_p pprov_data = cb_data.pprov_data;
-            data_uart_debug("been prov-ed with addr 0x%04x!\r\n", pprov_data->unicast_address);
+            printf("been prov-ed with addr 0x%04x!\r\n", pprov_data->unicast_address);
         }
         break;
     case PROV_CB_TYPE_FAIL:
-        data_uart_debug("provision fail, type=%d!\r\n", cb_data.prov_fail.fail_type);
+        printf("provision fail, type=%d!\r\n", cb_data.prov_fail.fail_type);
         break;
     case PROV_CB_TYPE_PROV:
         /* stack ready */
-        data_uart_debug("ms addr: 0x%04x\r\n>", mesh_node.unicast_addr);
+        printf("ms addr: 0x%04x\r\n", mesh_node.unicast_addr);
         break;
     default:
         break;
@@ -851,7 +870,7 @@ void fn_cb(uint8_t frnd_index, fn_cb_type_t type, uint16_t lpn_addr)
     /* avoid gcc compile warning */
     (void)frnd_index;
     char *string[] = {"establishing with lpn 0x%04x\r\n", "no poll from 0x%04x\r\n", "established with lpn 0x%04x\r\n", "lpn 0x%04x lost\r\n"};
-    data_uart_debug(string[type], lpn_addr);
+    printf(string[type], lpn_addr);
     if (type == FN_CB_TYPE_ESTABLISH_SUCCESS || type == FN_CB_TYPE_FRND_LOST)
     {
         user_cmd_time(NULL);
@@ -872,7 +891,7 @@ void lpn_cb(uint8_t frnd_index, lpn_cb_type_t type, uint16_t fn_addr)
     /* avoid gcc compile warning */
     (void)frnd_index;
     char *string[] = {"established with fn 0x%04x\r\n", "no frnd offer\r\n", "no frnd update\r\n", "fn 0x%04x lost\r\n"};
-    data_uart_debug(string[type], fn_addr);
+    printf(string[type], fn_addr);
     if (type == LPN_CB_TYPE_ESTABLISH_SUCCESS || type == LPN_CB_TYPE_FRIENDSHIP_LOST)
     {
         user_cmd_time(NULL);
@@ -911,11 +930,11 @@ void hb_cb(hb_data_type_t type, void *pargs)
             hb_data_timer_state_t *pdata = pargs;
             if (HB_TIMER_STATE_START == pdata->state)
             {
-                data_uart_debug("heartbeat publish timer start, period = %d\r\n", pdata->period);
+                printf("heartbeat publish timer start, period = %d\r\n", pdata->period);
             }
             else
             {
-                data_uart_debug("heartbeat publish timer stop\r\n");
+                printf("heartbeat publish timer stop\r\n");
             }
         }
         break;
@@ -924,30 +943,30 @@ void hb_cb(hb_data_type_t type, void *pargs)
             hb_data_timer_state_t *pdata = pargs;
             if (HB_TIMER_STATE_START == pdata->state)
             {
-                data_uart_debug("heartbeat subscription timer start, period = %d\r\n", pdata->period);
+                printf("heartbeat subscription timer start, period = %d\r\n", pdata->period);
             }
             else
             {
-                data_uart_debug("heartbeat subscription timer stop\r\n");
+                printf("heartbeat subscription timer stop\r\n");
             }
         }
         break;
     case HB_DATA_PUB_COUNT_UPDATE:
         {
             hb_data_pub_count_update_t *pdata = pargs;
-            data_uart_debug("heartbeat publish count update: %d\r\n", pdata->count);
+            printf("heartbeat publish count update: %d\r\n", pdata->count);
         }
         break;
     case HB_DATA_SUB_PERIOD_UPDATE:
         {
             hb_data_sub_period_update_t *pdata = pargs;
-            data_uart_debug("heartbeat subscription period update: %d\r\n", pdata->period);
+            printf("heartbeat subscription period update: %d\r\n", pdata->period);
         }
         break;
     case HB_DATA_SUB_RECEIVE:
         {
             hb_data_sub_receive_t *pdata = pargs;
-            data_uart_debug("receive heartbeat: src = %d, init_ttl = %d, features = %d-%d-%d-%d, ttl = %d\r\n",
+            printf("receive heartbeat: src = %d, init_ttl = %d, features = %d-%d-%d-%d, ttl = %d\r\n",
                             pdata->src, pdata->init_ttl, pdata->features.relay, pdata->features.proxy,
                             pdata->features.frnd, pdata->features.lpn, pdata->ttl);
         }
@@ -1002,3 +1021,130 @@ void bt_mesh_device_app_vendor_callback(uint8_t cb_type, void *p_cb_data)
 
     return;
 }
+
+/******************************************************************
+ * @fn      rpl_cb
+ * @brief   rpl check fail callbacks are handled in this function.
+ *
+ * @param[in] type:       fail type
+ * @param[in] rpl_loop:   loop of rpl list
+ * @param[in] src:        mesh address in received msg
+ * @param[in] iv_index:   iv index in received msg
+ * @param[in] rpl_seq:    seq stored in rpl list
+ * @param[in] seq:        seq used in received msg
+ * @return ignore rpl check, true: ignore rpl check fail, receive message normally; false: don't receive the message
+ */
+bool rpl_cb(mesh_rpl_fail_type_t type, uint8_t rpl_loop, uint16_t src, uint32_t iv_index,
+            uint32_t rpl_seq, uint32_t seq)
+{
+    return false;
+}
+
+#if F_BT_MESH_1_1_DF_SUPPORT
+/******************************************************************
+ * @fn      df_cb
+ * @brief   df callbacks are handled in this function.
+ *
+ * @param   type
+ * @param   pdata
+ * @return  result
+ */
+uint16_t df_cb(uint8_t type, void *pdata)
+{
+    switch (type)
+    {
+    case MESH_MSG_DF_PATH_ACTION:
+        {
+            df_path_action_t *paction = (df_path_action_t *)pdata;
+            char *state_str[] = {"discovering", "discovery failed", "established", "path released"};
+            char *path_str =
+                "master key index %d\r\nsrc 0x%04x(%d) [0x%04x(%d)] --> dst 0x%04x(%d) [0x%04x(%d)]\r\n";
+            char info[120];
+            sprintf(info, "%s, %s", state_str[paction->action_type], path_str);
+            printf(info, paction->master_key_index,
+                            paction->path_src, paction->path_src_sec_elem_num,
+                            paction->dp_src, paction->dp_src_sec_elem_num,
+                            paction->path_dst, paction->path_dst_sec_elem_num,
+                            paction->dp_dst, paction->dp_dst_sec_elem_num);
+            if (paction->action_type == DF_PATH_ACTION_TYPE_DISCOVERING ||
+                paction->action_type == DF_PATH_ACTION_TYPE_DISCOVERY_FAIL ||
+                paction->action_type == DF_PATH_ACTION_TYPE_ESTABLISHED ||
+                paction->action_type == DF_PATH_ACTION_TYPE_PATH_RELEASE)
+            {
+                user_cmd_time(NULL);
+            }
+        }
+        break;
+    default:
+        break;
+    }
+
+    return 0x00;
+}
+#endif
+
+#if F_BT_MESH_1_1_MBT_SUPPORT
+/******************************************************************
+ * @fn      blob_client_cb
+ * @brief   blob client callbacks are handled in this function.
+ *
+ * @param   pcb_data
+ * @return  void
+ */
+void blob_client_cb(blob_transfer_cb_data_t *pcb_data)
+{
+    char *procedure_str[] = {"caps retrieve", "transfer", "cancel"};
+    char *type_str[] = {"node fail", "success", "fail", "progress"};
+    char info[30];
+    sprintf(info, "%s, %s\r\n", procedure_str[pcb_data->procedure], type_str[pcb_data->type]);
+    printf(info);
+    printf("client phase %d\r\n", pcb_data->client_phase);
+
+    if (pcb_data->type == BLOB_CB_TYPE_NODE_FAIL)
+    {
+        printf("addr 0x%04x", pcb_data->addr);
+    }
+    else if (pcb_data->type == BLOB_CB_TYPE_PROGRESS)
+    {
+        printf("---------- %d%% ---------", pcb_data->progress);
+    }
+
+    printf("\r\n");
+}
+#endif
+
+#if F_BT_MESH_1_1_DFU_SUPPORT
+/******************************************************************
+ * @fn      dfu_dist_cb
+ * @brief   dfu distributor callbacks are handled in this function.
+ *
+ * @param   pcb_data
+ * @return  void
+ */
+void dfu_dist_cb(dfu_dist_cb_data_t *pcb_data)
+{
+    char *type_str[] = {"node fail", "transfer progress", "transfer success", "transfer fail", "verify", "complete"};
+    printf("type %s, client phase %d\r\n", type_str[pcb_data->type], pcb_data->dist_phase);
+
+    if (pcb_data->type == DFU_DIST_CB_TYPE_NODE_FAIL)
+    {
+        printf("addr 0x%04x", pcb_data->paddr[0]);
+    }
+    else if (pcb_data->type == DFU_DIST_CB_TYPE_TRANSFER_PROGRESS)
+    {
+        printf("---------- %d%% ---------", pcb_data->progress);
+    }
+    else if (pcb_data->type == DFU_DIST_CB_TYPE_TRANSFER_SUCCESS ||
+             pcb_data->type == DFU_DIST_CB_TYPE_VERIFY ||
+             pcb_data->type == DFU_DIST_CB_TYPE_COMPLETE)
+    {
+        uint8_t i = 0;
+        while (i < pcb_data->addr_num)
+        {
+            printf("0x%04x ", pcb_data->paddr[i++]);
+        }
+    }
+
+    printf("\r\n");
+}
+#endif

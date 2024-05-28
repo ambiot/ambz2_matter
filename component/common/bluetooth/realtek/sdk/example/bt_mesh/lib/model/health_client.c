@@ -20,7 +20,7 @@ static mesh_msg_send_cause_t health_client_send(const mesh_model_info_p pmodel_i
                                                 uint16_t app_key_index, uint8_t *pmsg,
                                                 uint16_t len)
 {
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = pmodel_info;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = pmsg;
@@ -151,7 +151,7 @@ static bool health_client_receive(mesh_msg_p pmesh_msg)
     case MESH_MSG_HEALTH_CURT_STAT:
         {
             health_curt_stat_p pmsg = (health_curt_stat_p)pbuffer;
-            health_client_status_t status_data = {pmesh_msg->src, pmsg->company_id, pmsg->test_id, pmsg->fault_array};
+            health_client_status_t status_data = {pmesh_msg->src, pmsg->test_id, pmsg->company_id, pmsg->fault_array};
             status_data.fault_array_len = pmesh_msg->msg_len - MEMBER_OFFSET(health_curt_stat_t, fault_array);
             if (NULL != pmodel_info->model_data_cb)
             {
@@ -163,7 +163,7 @@ static bool health_client_receive(mesh_msg_p pmesh_msg)
     case MESH_MSG_HEALTH_FAULT_STAT:
         {
             health_fault_stat_p pmsg = (health_fault_stat_p)pbuffer;
-            health_client_status_t status_data = {pmesh_msg->src, pmsg->company_id, pmsg->test_id, pmsg->fault_array};
+            health_client_status_t status_data = {pmesh_msg->src, pmsg->test_id, pmsg->company_id, pmsg->fault_array};
             status_data.fault_array_len = pmesh_msg->msg_len - MEMBER_OFFSET(health_fault_stat_t, fault_array);
             if (NULL != pmodel_info->model_data_cb)
             {

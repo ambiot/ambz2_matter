@@ -17,6 +17,7 @@
 #include "mesh_api.h"
 #include "configuration.h"
 #include "platform_opts.h"
+#include "mesh_data_dump.h"
 
 mesh_model_info_t cfg_client;
 uint16_t cfg_client_key_index; //!< NetKey or AppKey depends on the mesh_node.features.cfg_model_use_app_key
@@ -28,7 +29,7 @@ extern struct BT_MESH_LIB_PRIV bt_mesh_lib_priv;
 
 static mesh_msg_send_cause_t cfg_client_send(uint16_t dst, uint8_t *pmsg, uint16_t len)
 {
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = &cfg_client;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = pmsg;
@@ -166,9 +167,7 @@ mesh_msg_send_cause_t cfg_model_pub_set(uint16_t dst, uint16_t element_addr, boo
     memcpy(pbuffer + index, pub_addr, va_flag ? 16 : 2);
     index += va_flag ? 16 : 2;
     pub_key_info.rfu = 0;
-    /* to avoid gcc compile warning */
-    pub_key_info_p temp = &pub_key_info;
-    LE_WORD2EXTRN(pbuffer + index, *(uint16_t *)temp);
+    LE_WORD2EXTRN(pbuffer + index, pub_key_info.value);
     pbuffer[index + 2] = pub_ttl;
     pbuffer[index + 3] = *(uint8_t *)&pub_period;
     pbuffer[index + 4] = *(uint8_t *)&pub_retrans_info;
@@ -650,7 +649,7 @@ compo_data_end:
 #endif
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
                 if (bt_mesh_indication(GEN_MESH_CODE(_model_pub_set), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-                    data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_pub_set));  
+                    printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_pub_set));  
                 }
 #endif
             }
@@ -665,7 +664,7 @@ compo_data_end:
 #endif
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
                 if (bt_mesh_indication(GEN_MESH_CODE(_model_pub_set), BT_MESH_USER_CMD_FAIL, NULL) != USER_API_RESULT_OK) {
-                    data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_pub_set));  
+                    printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_pub_set));  
                 }
 #endif
             }
@@ -690,7 +689,7 @@ compo_data_end:
                     ret = bt_mesh_indication(GEN_MESH_CODE(_model_sub_add), BT_MESH_USER_CMD_SUCCESS, (void *)&pmesh_msg->src);
                     if (ret != USER_API_RESULT_OK) {
                         if (ret != USER_API_RESULT_INCORRECT_CODE) {
-                            data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_sub_add));
+                            printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_sub_add));
                             break;
                         }  
                     } else {
@@ -699,7 +698,7 @@ compo_data_end:
                     ret = bt_mesh_indication(GEN_MESH_CODE(_model_sub_delete), BT_MESH_USER_CMD_SUCCESS, (void *)&pmesh_msg->src);
                     if (ret != USER_API_RESULT_OK) {
                         if (ret != USER_API_RESULT_INCORRECT_CODE) {
-                            data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_sub_delete));
+                            printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_sub_delete));
                             break;
                         }  
                     } else {
@@ -723,7 +722,7 @@ compo_data_end:
                     ret = bt_mesh_indication(GEN_MESH_CODE(_model_sub_add), BT_MESH_USER_CMD_FAIL, (void *)&pmesh_msg->src);
                     if (ret != USER_API_RESULT_OK) {
                         if (ret != USER_API_RESULT_INCORRECT_CODE) {
-                            data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_sub_add));
+                            printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_sub_add));
                             break;
                         }  
                     } else {
@@ -732,7 +731,7 @@ compo_data_end:
                     ret = bt_mesh_indication(GEN_MESH_CODE(_model_sub_delete), BT_MESH_USER_CMD_FAIL, (void *)&pmesh_msg->src);
                     if (ret != USER_API_RESULT_OK) {
                         if (ret != USER_API_RESULT_INCORRECT_CODE) {
-                            data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_sub_delete));
+                            printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_sub_delete));
                             break;
                         }  
                     } else {
@@ -844,7 +843,7 @@ compo_data_end:
 #endif
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
                     if (bt_mesh_indication(GEN_MESH_CODE(_app_key_add), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-                        data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_app_key_add));  
+                        printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_app_key_add));  
                     }
 #endif
                 }
@@ -859,7 +858,7 @@ compo_data_end:
 #endif
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
                     if (bt_mesh_indication(GEN_MESH_CODE(_app_key_add), BT_MESH_USER_CMD_FAIL, NULL) != USER_API_RESULT_OK) {
-                        data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_app_key_add));  
+                        printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_app_key_add));  
                     }
 #endif
                 }
@@ -931,7 +930,7 @@ compo_data_end:
 #endif
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
                 if (bt_mesh_indication(GEN_MESH_CODE(_model_app_bind), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-                    data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_app_bind));  
+                    printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_app_bind));  
                 }
 #endif
             }
@@ -946,7 +945,7 @@ compo_data_end:
 #endif
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
                 if (bt_mesh_indication(GEN_MESH_CODE(_model_app_bind), BT_MESH_USER_CMD_FAIL, NULL) != USER_API_RESULT_OK) {
-                    data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_app_bind));  
+                    printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_model_app_bind));  
                 }
 #endif
             }
@@ -995,6 +994,7 @@ compo_data_end:
         {
             parse = TRUE;
             data_uart_debug("Node 0x%04x reseted!\r\n", pmesh_msg->src);
+            /* the device key of the node can be deleted here */
 #if defined(CONFIG_EXAMPLE_BT_MESH_DEMO) && CONFIG_EXAMPLE_BT_MESH_DEMO
             if (bt_mesh_lib_priv.connect_device_nr_sema && bt_mesh_lib_priv.connect_device_nr_mesh_addr == pmesh_msg->src) {
                 rtw_up_sema(&bt_mesh_lib_priv.connect_device_nr_sema);
@@ -1007,22 +1007,22 @@ compo_data_end:
 #if defined(CONFIG_BT_MESH_PROVISIONER_RTK_DEMO) && CONFIG_BT_MESH_PROVISIONER_RTK_DEMO
             if (bt_mesh_lib_priv.connect_device_nr_mesh_addr == pmesh_msg->src) {
                 if (bt_mesh_indication(GEN_MESH_CODE(_node_reset), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-                    data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_node_reset));  
+                    printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_node_reset));  
                 }
                 break;
             }
             if (bt_mesh_lib_priv.delete_node_mesh_addr == pmesh_msg->src) {
                 if (bt_mesh_indication(GEN_MESH_CODE(_node_reset), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-                    data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_node_reset));  
+                    printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_node_reset));  
                 }
                 break;
             }
             if (bt_mesh_indication(GEN_MESH_CODE(_node_reset), BT_MESH_USER_CMD_FAIL, NULL) != USER_API_RESULT_OK) {
-                data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_node_reset));  
+                printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_node_reset));  
             }
 #else
             if (bt_mesh_indication(GEN_MESH_CODE(_node_reset), BT_MESH_USER_CMD_SUCCESS, NULL) != USER_API_RESULT_OK) {
-                data_uart_debug("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_node_reset));  
+                printf("[BT_MESH] %s(): user cmd %d fail !\r\n", __func__, GEN_MESH_CODE(_node_reset));  
             }
 #endif
 #endif

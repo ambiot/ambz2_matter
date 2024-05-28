@@ -41,7 +41,7 @@ typedef struct
 static mesh_msg_send_cause_t light_hsl_server_send(mesh_model_info_p pmodel_info, uint16_t dst,
                                                    uint8_t *pmsg, uint16_t msg_len, uint16_t app_key_index, uint32_t delay_time)
 {
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = pmodel_info;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = pmsg;
@@ -81,8 +81,7 @@ mesh_msg_send_cause_t light_hsl_delay_publish(const mesh_model_info_p pmodel_inf
                                               uint16_t lightness,
                                               uint16_t hue, uint16_t saturation, uint32_t delay_time)
 {
-    /* avoid gcc compile warning */
-    (void)delay_time;
+    UNUSED(delay_time);
     mesh_msg_send_cause_t ret = MESH_MSG_SEND_CAUSE_INVALID_DST;
     if (mesh_model_pub_check(pmodel_info))
     {
@@ -156,10 +155,10 @@ mesh_msg_send_cause_t light_hsl_range_stat(mesh_model_info_p pmodel_info, uint16
                                            uint16_t app_key_index, generic_stat_t stat, uint16_t hue_range_min, uint16_t hue_range_max,
                                            uint16_t saturation_range_min, uint16_t saturation_range_max, uint32_t delay_time)
 {
-    /* avoid gcc compile warning */
-    (void)stat;
+    UNUSED(stat);
     light_hsl_range_stat_t msg;
     ACCESS_OPCODE_BYTE(msg.opcode, MESH_MSG_LIGHT_HSL_RANGE_STAT);
+    msg.stat = stat;
     msg.hue_range_min = hue_range_min;
     msg.hue_range_max = hue_range_max;
     msg.saturation_range_min = saturation_range_min;
@@ -184,8 +183,7 @@ static int32_t light_hsl_trans_step_change(const mesh_model_info_p pmodel_info,
                                            generic_transition_time_t total_time,
                                            generic_transition_time_t remaining_time)
 {
-    /* avoid gcc compile warning */
-    (void)type;
+    UNUSED(type);
     int32_t ret = 0;
     light_hsl_server_set_t trans_set_data;
     light_hsl_info_t *phsl_info = pmodel_info->pargs;
@@ -546,8 +544,7 @@ static bool light_hsl_server_receive(mesh_msg_p pmesh_msg)
 
 static int32_t light_hsl_server_publish(mesh_model_info_p pmodel_info, bool retrans)
 {
-    /* avoid gcc compile warning */
-    (void)retrans;
+    UNUSED(retrans);
     light_hsl_server_get_t get_data = get_present_hsl(pmodel_info);
     generic_transition_time_t trans_time = {0, 0};
     light_hsl_stat(pmodel_info, 0, 0, get_data.lightness, get_data.hue, get_data.saturation, FALSE,

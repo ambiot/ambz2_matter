@@ -49,7 +49,7 @@
 #include "vendor_cmd.h"
 #include "vendor_cmd_bt.h"
 #include "wifi_constants.h"
-#if defined(MESH_RPR) && MESH_RPR
+#if F_BT_MESH_1_1_RPR_SUPPORT
 #include "rmt_prov_client_app.h"
 #endif
 #if defined(MESH_DFU) && MESH_DFU
@@ -140,18 +140,35 @@ void bt_mesh_provisioner_stack_init(void)
         .snb = 1,
         .bg_scan = 1,
         .flash = 1,
-        .flash_rpl = 1
+        .flash_rpl = 1,
+#if F_BT_MESH_1_1_PRB_SUPPORT
+        .prb = 1,
+        .private_proxy = 1,
+#endif
+#if F_BT_MESH_1_1_SBR_SUPPORT
+        .sbr = 0,
+#endif
+#if F_BT_MESH_1_1_DF_SUPPORT
+        .df = 1,
+#endif
     };
 
     mesh_node_cfg_t node_cfg =
     {
         .dev_key_num = 20,
         .net_key_num = 10,
+        .master_key_num = 5, // shall <= net_key_num
         .app_key_num = 3,
         .vir_addr_num = 3,
         .rpl_num = 20,
         .sub_addr_num = 5,
-        .proxy_num = 1
+        .proxy_num = 1,
+#if F_BT_MESH_1_1_SBR_SUPPORT
+        .bridging_table_size = 5,
+#endif
+#if F_BT_MESH_1_1_DF_SUPPORT
+        .df_fixed_path_size = 5,
+#endif
     };
 
 #if defined(CONFIG_BT_MESH_TEST) && CONFIG_BT_MESH_TEST
@@ -168,27 +185,40 @@ void bt_mesh_provisioner_stack_init(void)
     mesh_node.relay_retrans_count = 2;
     mesh_node.trans_retrans_count = 4;
     mesh_node.ttl = 5;
-
+#if F_BT_MESH_1_1_SUPPORT
+    mesh_node.flash_size = 2200;
+#endif
     /** create elements and register models */
     mesh_element_create(GATT_NS_DESC_UNKNOWN);
     mesh_element_create(GATT_NS_DESC_UNKNOWN);
-    cfg_client_reg();  
+    cfg_client_reg();
+#if F_BT_MESH_1_1_PRB_SUPPORT
+    private_beacon_client_reg(0);
+#endif
+#if F_BT_MESH_1_1_DF_SUPPORT
+    directed_forwarding_client_reg(0);
+#endif  
     generic_client_models_init();
 #if defined(CONFIG_BT_MESH_PROVISIONER_RTK_DEMO) && CONFIG_BT_MESH_PROVISIONER_RTK_DEMO
     init_bt_mesh_priv();
 #else
-    tp_control_reg(tp_reveive);
+    tp_control_reg(tp_receive);
     ping_control_reg(ping_app_ping_cb, pong_receive);
+#if MESH_SUPPORT_TRANS_PING
     trans_ping_pong_init(ping_app_ping_cb, pong_receive);
+#endif
     light_client_models_init();
 	datatrans_model_init();
 #endif
-#if defined(MESH_DFU) && MESH_DFU
+#if F_BT_MESH_1_1_DFU_SUPPORT
     dfu_dist_models_init();
 #endif
-#if defined(MESH_RPR) && MESH_RPR
+#if F_BT_MESH_1_1_RPR_SUPPORT
     rmt_prov_client_init();
-#endif 
+#endif
+#if F_BT_MESH_1_1_SBR_SUPPORT
+    subnet_bridge_client_reg(0);
+#endif
     compo_data_page0_header_t compo_data_page0_header = {COMPANY_ID, PRODUCT_ID, VERSION_ID};
     compo_data_page0_gen(&compo_data_page0_header);
 
@@ -198,11 +228,15 @@ void bt_mesh_provisioner_stack_init(void)
     /** register udb/provision adv/proxy adv callback */
 #if defined(CONFIG_BT_MESH_PROVISIONER_RTK_DEMO) && CONFIG_BT_MESH_PROVISIONER_RTK_DEMO	
 	device_info_cb_reg(bt_mesh_example_device_info_cb);
-    hb_init(hb_cb);
     generic_on_off_client_subscribe();
-#else	
+#else
     device_info_cb_reg(device_info_cb);
+#endif
+#if MESH_HB
     hb_init(hb_cb);
+#endif
+#if F_BT_MESH_1_1_DF_SUPPORT
+    df_cb_reg(df_cb);
 #endif
 }
 
@@ -335,7 +369,7 @@ void bt_mesh_provisioner_stack_config_init(void)
  */
 int bt_mesh_provisioner_app_main(void)
 {
-	bt_trace_init();
+    bt_trace_init();
     bt_mesh_provisioner_stack_config_init();
     bte_init();
     bt_mesh_provisioner_board_init();
@@ -350,8 +384,6 @@ int bt_mesh_provisioner_app_main(void)
     return 0;
 }
 
-typedef unsigned long rtw_interface_t;
-extern int wifi_is_up(rtw_interface_t interface);
 extern void bt_coex_init(void);
 
 int bt_mesh_provisioner_app_init(void)
@@ -366,7 +398,7 @@ int bt_mesh_provisioner_app_init(void)
 	le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
 	if (new_state.gap_init_state == GAP_INIT_STATE_STACK_READY) {
 		bt_stack_already_on = 1;
-		printf("[BT Mesh Provisioner]BT Stack already on\n\r");
+		printf("[BT Mesh Provisioner]BT Stack already on\r\n");
 		return 0;
 	}
 	else
@@ -386,7 +418,7 @@ int bt_mesh_provisioner_app_init(void)
         uint8_t app_key[16] = MESH_APP_KEY;
         uint8_t app_key1[16] = MESH_APP_KEY1;
         gap_get_param(GAP_PARAM_BD_ADDR, bt_addr);
-        data_uart_debug("bt addr: 0x%02x%02x%02x%02x%02x%02x\r\n>",
+        printf("bt addr: 0x%02x%02x%02x%02x%02x%02x\r\n",
                         bt_addr[5], bt_addr[4], bt_addr[3],
                         bt_addr[2], bt_addr[1], bt_addr[0]);
 
@@ -406,7 +438,7 @@ int bt_mesh_provisioner_app_init(void)
 
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
     if (bt_mesh_provisioner_api_init()) {
-        printf("[BT Mesh Provisioner] bt_mesh_provisioner_api_init fail ! \n\r");
+        printf("[BT Mesh Provisioner] bt_mesh_provisioner_api_init fail ! \r\n");
         return 1;
     }
 #endif
@@ -429,17 +461,19 @@ void bt_mesh_provisioner_app_deinit(void)
     bt_mesh_provisioner_task_deinit();
     le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
 	if (new_state.gap_init_state != GAP_INIT_STATE_STACK_READY) {
-		printf("[BT Mesh Provisioner] BT Stack is not running\n\r");
+		printf("[BT Mesh Provisioner] BT Stack is not running\r\n");
         mesh_initial_state = FALSE;
         return;
 	}
 #if F_BT_DEINIT
 	else {
 		bte_deinit();
-		printf("[BT Mesh Provisioner] BT Stack deinitalized\n\r");
+		printf("[BT Mesh Provisioner] BT Stack deinitalized\r\n");
 	}
 #endif
     mesh_deinit();
+    prov_client_deinit();
+    proxy_client_deinit();
     bt_trace_uninit();
 
     mesh_initial_state = FALSE;

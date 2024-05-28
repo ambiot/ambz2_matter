@@ -11,6 +11,7 @@
 *************************************************************************************************************
 */
 #include <string.h>
+#include <stdio.h>
 #include "trace.h"
 #include "gap_wrapper.h"
 #include "mesh_cmd.h"
@@ -95,7 +96,7 @@ static user_cmd_parse_result_t user_cmd_lpn_req(user_cmd_parse_value_t *pparse_v
 
     if(le_get_active_link_num() != 0)
     {
-        data_uart_debug("Have BLE active link, cannot establish friendship\n\r");
+        printf("Have BLE active link, cannot establish friendship\r\n");
         return (USER_CMD_RESULT_ERROR);
     }
 

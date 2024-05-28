@@ -30,7 +30,6 @@
 
 #include "mesh_api.h"
 #include "provisioner_app.h"
-#include "mesh_data_uart.h"
 #include "mesh_user_cmd_parse.h"
 #include "provisioner_cmd.h"
 #include "platform_opts.h"
@@ -67,6 +66,7 @@
 void *bt_mesh_provisioner_app_task_handle;   //!< APP Task handle
 void *bt_mesh_provisioner_evt_queue_handle;  //!< Event queue handle
 void *bt_mesh_provisioner_io_queue_handle;   //!< IO queue handle
+extern T_GAP_DEV_STATE bt_mesh_provisioner_gap_dev_state;
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
 void *bt_mesh_provisioner_user_cmd_io_queue_handle;   //!< user cmd queue handle
 #endif
@@ -87,6 +87,19 @@ void app_send_uart_msg(uint8_t data)
     }
     else if (os_msg_send(bt_mesh_provisioner_evt_queue_handle, &event, 0) == false)
     {
+    }
+}
+
+void common_send_io_msg_to_app(T_IO_MSG msg)
+{
+    uint8_t event = EVENT_IO_TO_APP;
+    if (os_msg_send(bt_mesh_provisioner_io_queue_handle, &msg, 0) == false)
+    {
+        printf("[%s] Send msg to bt_mesh_provisioner_io_queue_handle fail\r\n", __func__);
+    }
+    else if (os_msg_send(bt_mesh_provisioner_evt_queue_handle, &event, 0) == false)
+    {
+        printf("[%s] Send msg to bt_mesh_provisioner_evt_queue_handle fail\r\n", __func__);
     }
 }
 
@@ -159,7 +172,6 @@ void bt_mesh_provisioner_app_main_task(void *p_param)
 
     mesh_start(EVENT_MESH, EVENT_IO_TO_APP, bt_mesh_provisioner_evt_queue_handle, bt_mesh_provisioner_io_queue_handle);
 
-    mesh_data_uart_init(UART_TX, UART_RX, app_send_uart_msg);
     mesh_user_cmd_init("MeshProvisioner");
 
     while (true)
@@ -230,6 +242,11 @@ void bt_mesh_provisioner_app_task_deinit(void)
 	bt_mesh_provisioner_io_queue_handle = NULL;
 	bt_mesh_provisioner_evt_queue_handle = NULL;
 	bt_mesh_provisioner_app_task_handle = NULL;
+    bt_mesh_provisioner_gap_dev_state.gap_init_state = 0;
+	bt_mesh_provisioner_gap_dev_state.gap_adv_sub_state = 0;
+	bt_mesh_provisioner_gap_dev_state.gap_adv_state = 0;
+	bt_mesh_provisioner_gap_dev_state.gap_scan_state = 0;
+	bt_mesh_provisioner_gap_dev_state.gap_conn_state = 0;
     mesh_user_cmd_deinit("MeshProvisioner");
 }
 

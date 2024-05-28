@@ -23,11 +23,17 @@ extern "C" {
 #include "app_msg.h"
 #include "mesh_api.h"
 #include "bt_mesh_device_matter_app_flags.h"
+#if F_BT_MESH_1_1_MBT_SUPPORT
+#include "blob_client_app.h"
+#endif
+#if F_BT_MESH_1_1_DFU_SUPPORT
+#include "dfu_distributor_app.h"
+#include "dfu_initiator_app.h"
+#endif
 
 /*============================================================================*
  *                              Variables
  *============================================================================*/
-#define BLE_PRINT	printf
 #define BD_ADDR_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
 #define BD_ADDR_ARG(x) (x)[5],(x)[4],(x)[3],(x)[2],(x)[1],(x)[0]
 #define UUID_128_FORMAT "0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X:0x%2X"
@@ -139,6 +145,17 @@ void fn_cb(uint8_t frnd_index, fn_cb_type_t type, uint16_t lpn_addr);
 void lpn_cb(uint8_t frnd_index, lpn_cb_type_t type, uint16_t fn_addr);
 void hb_cb(hb_data_type_t type, void *pargs);
 void bt_mesh_device_matter_app_vendor_callback(uint8_t cb_type, void *p_cb_data);
+bool rpl_cb(mesh_rpl_fail_type_t type, uint8_t rpl_loop, uint16_t src, uint32_t iv_index,
+            uint32_t rpl_seq, uint32_t seq);
+#if F_BT_MESH_1_1_DF_SUPPORT
+uint16_t df_cb(uint8_t type, void *pdata);
+#endif
+#if F_BT_MESH_1_1_MBT_SUPPORT
+void blob_client_cb(blob_transfer_cb_data_t *pcb_data);
+#endif
+#if F_BT_MESH_1_1_DFU_SUPPORT
+void dfu_dist_cb(dfu_dist_cb_data_t *pcb_data);
+#endif
 #ifdef __cplusplus
 }
 #endif

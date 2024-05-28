@@ -18,11 +18,12 @@
 extern "C" {
 #endif
 
+#if F_BT_MESH_1_1_DFU_SUPPORT
+
 #include "mesh_api.h"
 #include "firmware_update.h"
 #include "blob_transfer.h"
-
-#if MESH_DFU
+#include "ftl_map.h"
 
 /**
  * @addtogroup DFU_UPDATER_APP
@@ -30,7 +31,7 @@ extern "C" {
  */
 #define DFU_UPDATER_SUPPORT_POWER_OFF_GO_ON     0
 
-/* Attention: shall not be overlapped with other datas */
+/* Attention: shall not be overlapped with other data */
 #define DFU_UPDATER_NVM_OFFSET                  FTL_MAP_MESH_DFU_UPDATER_OFFSET
 
 /**
@@ -38,7 +39,7 @@ extern "C" {
  * @brief
  * @{
  */
-void dfu_updater_models_init(void);
+void dfu_updater_models_init(uint8_t element_index);
 
 #if DFU_UPDATER_SUPPORT_POWER_OFF_GO_ON
 void dfu_updater_load(void);
@@ -48,7 +49,7 @@ void dfu_updater_clear(void);
 /** @} */
 /** @} */
 
-#endif /* MESH_DFU */
+#endif /* F_BT_MESH_1_1_DFU_SUPPORT */
 
 #ifdef __cplusplus
 }

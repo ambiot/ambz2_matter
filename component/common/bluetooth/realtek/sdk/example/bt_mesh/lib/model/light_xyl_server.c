@@ -70,7 +70,7 @@ static mesh_msg_send_cause_t light_xyl_server_send(mesh_model_info_p pmodel_info
                                                    uint16_t dst, uint8_t *pmsg, uint16_t msg_len, uint16_t app_key_index,
                                                    uint32_t delay_time)
 {
-    mesh_msg_t mesh_msg;
+    mesh_msg_t mesh_msg = {0};
     mesh_msg.pmodel_info = pmodel_info;
     access_cfg(&mesh_msg);
     mesh_msg.pbuffer = pmsg;
@@ -206,8 +206,7 @@ static int32_t light_xyl_trans_step_change(const mesh_model_info_p pmodel_info,
                                            generic_transition_time_t total_time,
                                            generic_transition_time_t remaining_time)
 {
-    /* avoid gcc compile warning */
-    (void)type;
+    UNUSED(type);
     int32_t ret = MODEL_SUCCESS;
     light_xyl_server_set_t set_data;
     light_xyl_info_t *pxyl_info = pmodel_info->pargs;
@@ -556,8 +555,7 @@ static bool light_xyl_server_receive(mesh_msg_p pmesh_msg)
 
 static int32_t light_xyl_server_publish(mesh_model_info_p pmodel_info, bool retrans)
 {
-    /* avoid gcc compile warning */
-    (void)retrans;
+    UNUSED(retrans);
     generic_transition_time_t remaining_time = {0, 0};
     light_xyl_status(pmodel_info, 0, 0, get_present_xyl(pmodel_info), FALSE,
                      remaining_time, 0);

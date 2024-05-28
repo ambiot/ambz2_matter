@@ -46,17 +46,26 @@ typedef enum
 
 typedef enum
 {
-    TRANS_SEG_ACK,
-    TRANS_FRND_POLL,
-    TRANS_FRND_UPDATE,
-    TRANS_FRND_REQ,
-    TRANS_FRND_OFFER,
-    TRANS_FRND_CLEAR,
-    TRANS_FRND_CLEAR_CONF,
-    TRANS_FRND_SUB_LIST_ADD,
-    TRANS_FRND_SUB_LIST_RM,
-    TRANS_FRND_SUB_LIST_CONF,
-    TRANS_HB,
+    TRANS_SEG_ACK = 0,
+    TRANS_FRND_POLL = 1,
+    TRANS_FRND_UPDATE = 2,
+    TRANS_FRND_REQ = 3,
+    TRANS_FRND_OFFER = 4,
+    TRANS_FRND_CLEAR = 5,
+    TRANS_FRND_CLEAR_CONF = 6,
+    TRANS_FRND_SUB_LIST_ADD = 7,
+    TRANS_FRND_SUB_LIST_RM = 8,
+    TRANS_FRND_SUB_LIST_CONF = 9,
+    TRANS_HB = 10,
+#if MESH_DF
+    TRANS_PATH_REQ = 11,
+    TRANS_PATH_REPLY = 12,
+    TRANS_PATH_CFM = 13,
+    TRANS_PATH_ECHO_REQ = 14,
+    TRANS_PATH_ECHO_REPLY = 15,
+    TRANS_DEP_NODE_UPDATE = 16,
+    TRANS_PATH_REQ_SOLI = 17,
+#endif
 #if MESH_SUPPORT_TRANS_PING
     TRANS_PING = 0x50,
     TRANS_PONG,
@@ -286,6 +295,14 @@ typedef void (*pf_pong_cb_t)(uint16_t src, uint16_t dst, uint8_t hops_forward,
   * @brief
   * @{
   */
+
+///@cond
+void tsmc_init(void);
+void tsmc_deinit(void);
+void tsmc_clear(void);
+bool tsmc_check(uint32_t iv_index, uint16_t src, uint32_t seq);
+void tsmc_update(uint32_t iv_index, uint16_t src, uint32_t seq);
+///@endcond
 
 ///@cond
 void trans_init(void);

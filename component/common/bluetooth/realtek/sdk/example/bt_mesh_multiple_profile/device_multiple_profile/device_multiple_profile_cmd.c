@@ -1,3 +1,5 @@
+enum { __FILE_NUM__ = 0 };
+
 /**
 ************************************************************************************************************
 *               Copyright(c) 2014, Realtek Semiconductor Corporation. All rights reserved.
@@ -11,6 +13,7 @@
 *************************************************************************************************************
 */
 #include <string.h>
+#include <stdio.h>
 #include "trace.h"
 #include "gap_wrapper.h"
 #include "mesh_cmd.h"
@@ -22,6 +25,8 @@
 #include "datatrans_app.h"
 #include "generic_on_off.h"
 #include "datatrans_server.h"
+#include "provision_client.h"
+#include "remote_provisioning.h"
 
 extern mesh_model_info_t health_server_model;
 extern mesh_model_info_t generic_on_off_server_model;
@@ -48,7 +53,7 @@ static user_cmd_parse_result_t user_cmd_node_reset(user_cmd_parse_value_t *ppars
 
 user_cmd_parse_result_t user_cmd_prov_capa_set(user_cmd_parse_value_t *pparse_value)
 {
-    prov_capabilities_t prov_capabilities;
+    prov_capabilities_t prov_capabilities = {0};
     prov_capabilities.algorithm = PROV_CAP_ALGO_FIPS_P256_ELLIPTIC_CURVE;
     prov_capabilities.public_key = pparse_value->dw_parameter[0] ? PROV_CAP_PUBLIC_KEY_OOB : 0;
     prov_capabilities.static_oob = pparse_value->dw_parameter[1] ? PROV_CAP_STATIC_OOB : 0;
@@ -91,11 +96,10 @@ static user_cmd_parse_result_t user_cmd_lpn_req(user_cmd_parse_value_t *pparse_v
 {
     uint8_t fn_index = pparse_value->dw_parameter[0];
     uint16_t net_key_index = pparse_value->dw_parameter[1];
-    lpn_req_params_t req_params = {50, 100, {1, 0, 0, 0}};
-
+    lpn_req_params_t req_params = {50, 100, {1, 0, 0}, NULL};
     if(le_get_active_link_num() != 0)
     {
-        data_uart_debug("Have BLE active link, cannot establish friendship\n\r");
+        printf("Have BLE active link, cannot establish friendship\r\n");
         return (USER_CMD_RESULT_ERROR);
     }
 
@@ -136,34 +140,27 @@ static user_cmd_parse_result_t user_cmd_lpn_clear(user_cmd_parse_value_t *pparse
 }
 #endif
 
-#if MESH_RMT_PRO_CLIENT
-static user_cmd_parse_result_t user_cmd_rmt_pro_scan(user_cmd_parse_value_t *pparse_value)
+#if F_BT_MESH_1_1_RPR_SUPPORT
+static user_cmd_parse_result_t user_cmd_rmt_prov_discovery(user_cmd_parse_value_t *pparse_value)
 {
-    uint16_t dst = pparse_value->dw_parameter[0];
-    uint8_t mode = 0;
-    if (pparse_value->para_count > 1)
-    {
-        mode = pparse_value->dw_parameter[1];
-    }
-    switch (mode)
-    {
-    case 0:
-        RmtProClient_ScanStart(dst);
-        break;
-    case 1:
-        {
-            uint8_t dev_uuid[16] = MESH_DEVICE_UUID;
-            RmtProClient_ScanStartWithFilter(dst, dev_uuid);
-        }
-        break;
-    case 2:
-        RmtProClient_ScanUnproDeviceNum(dst, 3);
-        break;
-    default:
-        break;
-    }
-
+    prov_client_start_discovery(pparse_value->dw_parameter[0]);
     return (USER_CMD_RESULT_OK);
+}
+
+static user_cmd_parse_result_t user_cmd_rmt_prov_link_close(user_cmd_parse_value_t *pparse_value)
+{
+    rmt_prov_server_link_close(pparse_value->dw_parameter[0], pparse_value->dw_parameter[1]);
+    return (USER_CMD_RESULT_OK);
+}
+
+#define COMPANY_ID        0x005D
+#define VERSION_ID        0x0000
+static user_cmd_parse_result_t user_cmd_set_product_id(user_cmd_parse_value_t *pparse_value)
+{
+    uint16_t product_id = pparse_value->dw_parameter[0];
+    compo_data_page0_header_t compo_data_page0_header = {COMPANY_ID, product_id, VERSION_ID};
+    compo_data_page128_gen(&compo_data_page0_header);
+    return USER_CMD_RESULT_OK;
 }
 #endif
 
@@ -172,10 +169,10 @@ static user_cmd_parse_result_t user_cmd_data_transmission_notify(user_cmd_parse_
 {
     uint8_t conn_id = pparse_value->dw_parameter[0];
     uint8_t data_len = pparse_value->para_count - 1;
-    uint8_t data[20];
-    if (data_len > 20)
+    uint8_t data[USER_CMD_MAX_PARAMETERS - 1];
+    if (data_len > USER_CMD_MAX_PARAMETERS - 1)
     {
-        data_len = 20;
+        data_len = USER_CMD_MAX_PARAMETERS - 1;
     }
 
     for (uint8_t i = 0; i < data_len; ++i)
@@ -282,12 +279,24 @@ const user_cmd_table_entry_t device_cmd_table[] =
         user_cmd_lpn_clear
     },
 #endif
-#if MESH_RMT_PRO_CLIENT
+#if F_BT_MESH_1_1_RPR_SUPPORT
     {
-        "rmtproscan",
-        "rmtproscan [dst addr]\n\r",
-        "command remote server to scan\n\r",
-        user_cmd_rmt_pro_scan
+        "rmtprovdis",
+        "rmtprovdis [conn_id]\n\r",
+        "remote provision discovery service\n\r",
+        user_cmd_rmt_prov_discovery
+    },
+    {
+        "rmtprovlc",
+        "rmtprovlc [status] [reason]\n\r",
+        "remote provision link close\n\r",
+        user_cmd_rmt_prov_link_close
+    },
+    {
+        "pids",
+        "pids [product id]\n\r",
+        "set product id\n\r",
+        user_cmd_set_product_id
     },
 #endif
     {
@@ -341,6 +350,11 @@ const struct bt_mesh_api_hdl devicecmds[] =
     GEN_MESH_HANDLER(_disconnect)
     GEN_MESH_HANDLER(_list)
     GEN_MESH_HANDLER(_dev_info_show)
+#if F_BT_MESH_1_1_DF_SUPPORT
+    GEN_MESH_HANDLER(_df_path_discovery)
+    GEN_MESH_HANDLER(_df_path_solicitation)
+    GEN_MESH_HANDLER(_df_path_dependents_update)
+#endif
 };
 #endif
 

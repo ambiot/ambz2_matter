@@ -67,7 +67,7 @@
 #include "dfu_updater_app.h"
 #endif
 #include <gcs_client.h>
-#include <ble_scatternet_link_mgr.h>
+//#include <ble_scatternet_link_mgr.h>
 #include "trace_uart.h"
 #include <gap_le_types.h>
 #include <wifi/wifi_conf.h>
@@ -134,8 +134,8 @@ generic_on_off_t current_on_off = GENERIC_OFF;
 /*============================================================================*
  *                              Functions
  *============================================================================*/
-#if defined(MESH_DFU) && MESH_DFU
-    extern void blob_transfer_server_caps_set(blob_server_capabilites_t *pcaps);
+#if F_BT_MESH_1_1_DFU_SUPPORT
+extern void blob_transfer_server_caps_set(blob_server_capabilities_t *pcaps);
 #endif
 
 void bt_mesh_device_matter_adv_timer_handler(void *FunctionContext)
@@ -237,7 +237,11 @@ void bt_mesh_device_matter_stack_init(void)
     /** configure provisioning parameters */
     prov_capabilities_t prov_capabilities =
     {
-        .algorithm = PROV_CAP_ALGO_FIPS_P256_ELLIPTIC_CURVE,
+        .algorithm = PROV_CAP_ALGO_FIPS_P256_ELLIPTIC_CURVE
+#if F_BT_MESH_1_1_EPA_SUPPORT
+        | PROV_CAP_ALGO_BTM_ECDH_P256_HMAC_SHA256_AES_CCM
+#endif
+        ,
         .public_key = 0,
         .static_oob = 0,
         .output_oob_size = 0,
@@ -261,13 +265,24 @@ void bt_mesh_device_matter_stack_init(void)
         .snb = 1,
         .bg_scan = 1,
         .flash = 1,
-        .flash_rpl = 1
+        .flash_rpl = 1,
+#if F_BT_MESH_1_1_PRB_SUPPORT
+        .prb = 1,
+        .private_proxy = 1,
+#endif
+#if F_BT_MESH_1_1_SBR_SUPPORT
+        .sbr = 1,
+#endif
+#if F_BT_MESH_1_1_DF_SUPPORT
+        .df = 1,
+#endif
     };
 
     mesh_node_cfg_t node_cfg =
     {
         .dev_key_num = 2,
         .net_key_num = 10,
+        .master_key_num = 3, // shall <= net_key_num
         .app_key_num = 3,
         .vir_addr_num = 3,
         .rpl_num = 20,
@@ -275,7 +290,13 @@ void bt_mesh_device_matter_stack_init(void)
         .proxy_num = 1,
         .prov_interval = 2,
         .udb_interval = 2,
-        .proxy_interval = 5
+        .proxy_interval = 5,
+#if F_BT_MESH_1_1_SBR_SUPPORT
+        .bridging_table_size = 5,
+#endif
+#if F_BT_MESH_1_1_DF_SUPPORT
+        .df_fixed_path_size = 5,
+#endif
     };
 
     mesh_node_cfg(features, &node_cfg);
@@ -284,6 +305,9 @@ void bt_mesh_device_matter_stack_init(void)
     mesh_node.relay_retrans_count = 2;
     mesh_node.trans_retrans_count = 4;
     mesh_node.ttl = 5;
+#if F_BT_MESH_1_1_SUPPORT
+    mesh_node.flash_size = 2200;
+#endif
 #if MESH_LPN
     mesh_node.frnd_poll_retry_times = 32;
 #endif
@@ -297,8 +321,10 @@ void bt_mesh_device_matter_stack_init(void)
     health_server_reg(0, &health_server_model);
     health_server_set_company_id(&health_server_model, COMPANY_ID);
     ping_control_reg(ping_app_ping_cb, pong_receive);
+#if MESH_SUPPORT_TRANS_PING
     trans_ping_pong_init(ping_app_ping_cb, pong_receive);
-    tp_control_reg(tp_reveive);
+#endif
+    tp_control_reg(tp_receive);
     datatrans_model_init();
     light_server_models_init();
     time_server_models_init();
@@ -308,9 +334,9 @@ void bt_mesh_device_matter_stack_init(void)
 
     generic_on_off_server_model_init();
 
-#if defined(MESH_DFU) && MESH_DFU
+#if F_BT_MESH_1_1_DFU_SUPPORT
     dfu_updater_models_init();
-    blob_server_capabilites_t caps = {
+    blob_server_capabilities_t caps = {
         6,                  //BLOB_TRANSFER_CPAS_MIN_BLOCK_SIZE_LOG
         12,                 //BLOB_TRANSFER_CPAS_MAX_BLOCK_SIZE_LOG
         20,                 //BLOB_TRANSFER_CPAS_MAX_TOTAL_CHUNKS
@@ -337,7 +363,13 @@ void bt_mesh_device_matter_stack_init(void)
 
     /** register proxy adv callback */
     device_info_cb_reg(device_info_cb);
+#if MESH_HB
     hb_init(hb_cb);
+#endif
+    rpl_cb_reg(rpl_cb);
+#if F_BT_MESH_1_1_DF_SUPPORT
+    df_cb_reg(df_cb);
+#endif
 }
 
 /**
@@ -458,9 +490,10 @@ void bt_mesh_device_matter_app_le_gap_init(void)
         le_bond_set_param(GAP_PARAM_BOND_SEC_REQ_REQUIREMENT, sizeof(auth_sec_req_flags),
                           &auth_sec_req_flags);
 
-#if F_BT_LE_USE_STATIC_RANDOM_ADDR
         T_APP_STATIC_RANDOM_ADDR random_addr;
         bool gen_addr = true;
+        // set static random address parameters
+        //uint8_t static_random_addr[6] = {0};
         uint8_t local_bd_type = GAP_LOCAL_ADDR_LE_RANDOM;
 #if 0
         if (ble_scatternet_app_load_static_random_address(&random_addr) == 0)
@@ -492,10 +525,8 @@ void bt_mesh_device_matter_app_le_gap_init(void)
         //only for peripheral,broadcaster
         le_adv_set_param(GAP_PARAM_ADV_LOCAL_ADDR_TYPE, sizeof(local_bd_type), &local_bd_type);
         //only for central,observer
-#if 0
         le_scan_set_param(GAP_PARAM_SCAN_LOCAL_ADDR_TYPE, sizeof(local_bd_type), &local_bd_type);
-#endif
-#endif
+
 #if F_BT_GAPS_CHAR_WRITEABLE
         uint8_t appearance_prop = GAPS_PROPERTY_WRITE_ENABLE;
         uint8_t device_name_prop = GAPS_PROPERTY_WRITE_ENABLE;
@@ -685,6 +716,9 @@ void bt_mesh_device_matter_app_deinit(void)
     }
 #endif
     mesh_deinit();
+#if F_BT_MESH_1_1_RPR_SUPPORT
+    prov_client_deinit();
+#endif
     bt_trace_uninit();
 
 #if defined(CONFIG_BT_MESH_IDLE_CHECK) && CONFIG_BT_MESH_IDLE_CHECK

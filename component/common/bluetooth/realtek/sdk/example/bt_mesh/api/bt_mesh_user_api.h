@@ -19,9 +19,9 @@
 #include "osdep_service.h"
 #include "os_task.h"
 #include "platform_os.h"
-#include "mesh_data_uart.h"
 #include "app_msg.h"
 #include "mesh_config.h"
+#include "mesh_api.h"
 
 #define BT_MESH_PROVISIONER 1
 #define BT_MESH_DEVICE      2

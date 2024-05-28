@@ -17,29 +17,6 @@
 #include "app_msg.h"
 #include "ping_app.h"
 
-#if defined(CONFIG_BT_MESH_PROVISIONER) && CONFIG_BT_MESH_PROVISIONER
-extern void *bt_mesh_provisioner_evt_queue_handle; //!< Event queue handle
-extern void *bt_mesh_provisioner_io_queue_handle; //!< IO queue handle
-#elif defined(CONFIG_BT_MESH_DEVICE) && CONFIG_BT_MESH_DEVICE 
-extern void *bt_mesh_device_evt_queue_handle; //!< Event queue handle
-extern void *bt_mesh_device_io_queue_handle; //!< IO queue handle
-#elif defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE 
-#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
-extern void *bt_mesh_device_matter_evt_queue_handle;
-extern void *bt_mesh_device_matter_io_queue_handle;
-#else
-extern void *bt_mesh_device_multiple_profile_evt_queue_handle;  //!< Event queue handle
-extern void *bt_mesh_device_multiple_profile_io_queue_handle;   //!< IO queue handle
-#endif
-#elif defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE 
-#if defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
-extern void *bt_mesh_provisioner_ota_client_evt_queue_handle;  //!< Event queue handle
-extern void *bt_mesh_provisioner_ota_client_io_queue_handle;   //!< IO queue handle
-#else
-extern void *bt_mesh_provisioner_multiple_profile_evt_queue_handle;  //!< Event queue handle
-extern void *bt_mesh_provisioner_multiple_profile_io_queue_handle;   //!< IO queue handle
-#endif
-#endif
 static plt_timer_t pong_timer;
 static uint16_t pong_dst;
 static uint8_t pong_ttl;
@@ -53,56 +30,10 @@ static void ping_app_timeout_cb(void *ptimer)
     /* avoid gcc compile warning */
     (void)ptimer;
     
-    uint8_t event = EVENT_IO_TO_APP;
     T_IO_MSG msg;
     msg.type = PING_APP_TIMEOUT_MSG;
-#if defined(CONFIG_BT_MESH_PROVISIONER) && CONFIG_BT_MESH_PROVISIONER
-    if (os_msg_send(bt_mesh_provisioner_io_queue_handle, &msg, 0) == false)
-    {
-    }
-    else if (os_msg_send(bt_mesh_provisioner_evt_queue_handle, &event, 0) == false)
-    {
-    }
-#elif defined(CONFIG_BT_MESH_DEVICE) && CONFIG_BT_MESH_DEVICE
-    if (os_msg_send(bt_mesh_device_io_queue_handle, &msg, 0) == false)
-    {
-    }
-    else if (os_msg_send(bt_mesh_device_evt_queue_handle, &event, 0) == false)
-    {
-    }
-#elif defined(CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE 
-#if defined(CONFIG_BT_MESH_DEVICE_MATTER) && CONFIG_BT_MESH_DEVICE_MATTER
-    if (os_msg_send(bt_mesh_device_matter_io_queue_handle, &msg, 0) == false)
-    {
-    }
-    else if (os_msg_send(bt_mesh_device_matter_evt_queue_handle, &event, 0) == false)
-    {
-    }
-#else
-    if (os_msg_send(bt_mesh_device_multiple_profile_io_queue_handle, &msg, 0) == false)
-    {
-    }
-    else if (os_msg_send(bt_mesh_device_multiple_profile_evt_queue_handle, &event, 0) == false)
-    {
-    }
-#endif
-#elif defined(CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE) && CONFIG_BT_MESH_PROVISIONER_MULTIPLE_PROFILE 
-#if defined(CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT) && CONFIG_BT_MESH_PROVISIONER_OTA_CLIENT
-    if (os_msg_send(bt_mesh_provisioner_ota_client_io_queue_handle, &msg, 0) == false)
-    {
-    }
-    else if (os_msg_send(bt_mesh_provisioner_ota_client_evt_queue_handle, &event, 0) == false)
-    {
-    }
-#else
-    if (os_msg_send(bt_mesh_provisioner_multiple_profile_io_queue_handle, &msg, 0) == false)
-    {
-    }
-    else if (os_msg_send(bt_mesh_provisioner_multiple_profile_evt_queue_handle, &event, 0) == false)
-    {
-    }
-#endif
-#endif
+    // Call timer callback function through app main task
+    common_send_io_msg_to_app(msg);
 }
 
 void ping_app_handle_timeout(void)
@@ -112,9 +43,11 @@ void ping_app_handle_timeout(void)
     printi("pong_timeout_process: delayed %d0ms pong right now!", pong_delay);
     switch (pong_type)
     {
+#if MESH_SUPPORT_TRANS_PING
     case PING_PONG_TYPE_TRANSPORT:
         trans_pong(pong_dst, pong_ttl, pong_key_index, pong_hops_forward, pong_delay);
         break;
+#endif
     case PING_PONG_TYPE_ACCESS:
         pong(pong_dst, pong_ttl, pong_key_index, pong_hops_forward, pong_delay);
         break;
@@ -129,16 +62,16 @@ void ping_app_handle_timeout(void)
 void ping_app_ping_cb(uint16_t src, uint16_t dst, uint8_t hops_forward, ping_pong_type_t type,
                       uint8_t init_ttl, uint8_t key_index, uint16_t pong_max_delay)
 {
-    /* avoid gcc compile warning */
-    (void)dst;
-    
+    UNUSED(dst);
     if (pong_max_delay == 0 || pong_timer)
     {
         switch (type)
         {
+#if MESH_SUPPORT_TRANS_PING
         case PING_PONG_TYPE_TRANSPORT:
             trans_pong(src, init_ttl, key_index, hops_forward, 0);
             break;
+#endif
         case PING_PONG_TYPE_ACCESS:
             pong(src, init_ttl, key_index, hops_forward, 0);
             break;

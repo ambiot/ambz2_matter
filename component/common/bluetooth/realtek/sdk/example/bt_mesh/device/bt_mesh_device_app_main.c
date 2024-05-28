@@ -265,8 +265,8 @@ void light_init(void)
 }
 #endif
 
-#if defined(MESH_DFU) && MESH_DFU
-extern void blob_transfer_server_caps_set(blob_server_capabilites_t *pcaps);
+#if F_BT_MESH_1_1_DFU_SUPPORT
+extern void blob_transfer_server_caps_set(blob_server_capabilities_t *pcaps);
 #endif
 
 /******************************************************************
@@ -299,7 +299,11 @@ void bt_mesh_device_stack_init(void)
     /** configure provisioning parameters */
     prov_capabilities_t prov_capabilities =
     {
-        .algorithm = PROV_CAP_ALGO_FIPS_P256_ELLIPTIC_CURVE,
+        .algorithm = PROV_CAP_ALGO_FIPS_P256_ELLIPTIC_CURVE
+#if F_BT_MESH_1_1_EPA_SUPPORT
+        | PROV_CAP_ALGO_BTM_ECDH_P256_HMAC_SHA256_AES_CCM
+#endif
+        ,
         .public_key = 0,
         .static_oob = 0,
         .output_oob_size = 0,
@@ -323,13 +327,24 @@ void bt_mesh_device_stack_init(void)
         .snb = 1,
         .bg_scan = 1,
         .flash = 1,
-        .flash_rpl = 1
+        .flash_rpl = 1,
+#if F_BT_MESH_1_1_PRB_SUPPORT
+        .prb = 1,
+        .private_proxy = 1,
+#endif
+#if F_BT_MESH_1_1_SBR_SUPPORT
+        .sbr = 1,
+#endif
+#if F_BT_MESH_1_1_DF_SUPPORT
+        .df = 1,
+#endif
     };
 
     mesh_node_cfg_t node_cfg =
     {
         .dev_key_num = 2,
         .net_key_num = 10,
+        .master_key_num = 3, // shall <= net_key_num
         .app_key_num = 3,
         .vir_addr_num = 3,
         .rpl_num = 20,
@@ -337,7 +352,13 @@ void bt_mesh_device_stack_init(void)
         .proxy_num = 1,
         .prov_interval = 2,
         .udb_interval = 2,
-        .proxy_interval = 5
+        .proxy_interval = 5,
+#if F_BT_MESH_1_1_SBR_SUPPORT
+        .bridging_table_size = 5,
+#endif
+#if F_BT_MESH_1_1_DF_SUPPORT
+        .df_fixed_path_size = 5,
+#endif
     };
 
 #if defined(CONFIG_BT_MESH_TEST) && CONFIG_BT_MESH_TEST
@@ -351,6 +372,9 @@ void bt_mesh_device_stack_init(void)
     mesh_node.relay_retrans_count = 2;
     mesh_node.trans_retrans_count = 4;
     mesh_node.ttl = 5;
+#if F_BT_MESH_1_1_SUPPORT
+    mesh_node.flash_size = 2200;
+#endif
 #if MESH_LPN
     mesh_node.frnd_poll_retry_times = 32;
 #endif
@@ -361,18 +385,23 @@ void bt_mesh_device_stack_init(void)
     health_server_reg(0, &health_server_model);
     health_server_set_company_id(&health_server_model, COMPANY_ID);
     ping_control_reg(ping_app_ping_cb, pong_receive);
+#if MESH_SUPPORT_TRANS_PING
     trans_ping_pong_init(ping_app_ping_cb, pong_receive);
-    tp_control_reg(tp_reveive);
+#endif
+    tp_control_reg(tp_receive);
     datatrans_model_init();
     light_server_models_init();
 	time_server_models_init();
 	scene_server_model_init();
 	scheduler_server_model_init();
+    /***new model test****/
+    generic_server_models_init();
+    sensor_server_models_init();
 #endif
     generic_on_off_server_model_init();
-#if defined(MESH_DFU) && MESH_DFU
+#if F_BT_MESH_1_1_DFU_SUPPORT
     dfu_updater_models_init();
-    blob_server_capabilites_t caps = {
+    blob_server_capabilities_t caps = {
         6,                  //BLOB_TRANSFER_CPAS_MIN_BLOCK_SIZE_LOG
         12,                 //BLOB_TRANSFER_CPAS_MAX_BLOCK_SIZE_LOG
         20,                 //BLOB_TRANSFER_CPAS_MAX_TOTAL_CHUNKS
@@ -394,7 +423,7 @@ void bt_mesh_device_stack_init(void)
     light_button_init();
     device_publish_timer = plt_timer_create("device_publish_timer", 0xFFFFFFFF, FALSE, NULL, device_publish_timer_handler);
     if (!device_publish_timer) {
-        printf("[BT Mesh Device] Create device publish timer failed\n\r");
+        printf("[BT Mesh Device] Create device publish timer failed\r\n");
     }
     datatrans_model_init();
 #endif
@@ -406,7 +435,13 @@ void bt_mesh_device_stack_init(void)
 
     /** register proxy adv callback */
     device_info_cb_reg(device_info_cb);
+#if MESH_HB
     hb_init(hb_cb);
+#endif
+    rpl_cb_reg(rpl_cb);
+#if F_BT_MESH_1_1_DF_SUPPORT
+    df_cb_reg(df_cb);
+#endif
 }
 
 /**
@@ -550,7 +585,6 @@ int bt_mesh_device_app_main(void)
     return 0;
 }
 
-extern int wifi_is_up(rtw_interface_t interface);
 extern void bt_coex_init(void);
 
 int bt_mesh_device_app_init(void)
@@ -567,7 +601,7 @@ int bt_mesh_device_app_init(void)
 	le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
 	if (new_state.gap_init_state == GAP_INIT_STATE_STACK_READY) {
 		//bt_stack_already_on = 1;
-		printf("[BT Mesh Device]BT Stack already on\n\r");
+		printf("[BT Mesh Device]BT Stack already on\r\n");
 		return 0;
 	}
 	else
@@ -582,7 +616,7 @@ int bt_mesh_device_app_init(void)
 
 #if defined(CONFIG_BT_MESH_USER_API) && CONFIG_BT_MESH_USER_API
     if (bt_mesh_device_api_init()) {
-        printf("[BT Mesh Device] bt_mesh_device_api_init fail ! \n\r");
+        printf("[BT Mesh Device] bt_mesh_device_api_init fail ! \r\n");
         return 1;
     }
 #endif
@@ -609,17 +643,20 @@ void bt_mesh_device_app_deinit(void)
     bt_mesh_device_task_deinit();
     le_get_gap_param(GAP_PARAM_DEV_STATE , &new_state);
 	if (new_state.gap_init_state != GAP_INIT_STATE_STACK_READY) {
-		printf("[BT Mesh Device] BT Stack is not running\n\r");
+		printf("[BT Mesh Device] BT Stack is not running\r\n");
         mesh_initial_state = FALSE;
         return;
 	}
 #if F_BT_DEINIT
 	else {
 		bte_deinit();
-		printf("[BT Mesh Device] BT Stack deinitalized\n\r");
+		printf("[BT Mesh Device] BT Stack deinitalized\r\n");
 	}
 #endif
     mesh_deinit();
+#if F_BT_MESH_1_1_RPR_SUPPORT
+    prov_client_deinit();
+#endif
     bt_trace_uninit();
 
 #if defined(CONFIG_BT_MESH_IDLE_CHECK) && CONFIG_BT_MESH_IDLE_CHECK

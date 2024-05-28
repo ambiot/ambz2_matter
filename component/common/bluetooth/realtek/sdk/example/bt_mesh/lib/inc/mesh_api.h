@@ -39,6 +39,12 @@
 #include "provision_adv.h"
 #include "mesh_flash.h"
 #include "private_beacon_model.h"
+#include "subnet_bridge.h"
+#include "subnet_bridge_model.h"
+#include "directed_forwarding.h"
+#include "directed_forwarding_model.h"
+#include "app_mesh_flags.h"
+#include "mesh_data_dump.h"
 
 BEGIN_DECLS
 END_DECLS
