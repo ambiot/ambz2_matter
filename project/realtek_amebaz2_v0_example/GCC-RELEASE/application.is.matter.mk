@@ -842,7 +842,7 @@ LIBFLAGS += -Wl,--start-group -L../../../component/soc/realtek/8710c/misc/bsp/li
 RAMALL_BIN =
 OTA_BIN = 
 
-include toolchain.mk
+include $(MATTER_BUILDDIR)/toolchain.app.mk
 
 # Compile
 # -------------------------------------------------------------------

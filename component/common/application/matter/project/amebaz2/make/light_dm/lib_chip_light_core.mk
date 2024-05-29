@@ -23,8 +23,6 @@ GDB = $(CROSS_COMPILE)gdb
 OBJCOPY = $(CROSS_COMPILE)objcopy
 OBJDUMP = $(CROSS_COMPILE)objdump
 
-OS := $(shell uname)
-
 # Initialize target name and target object files
 # -------------------------------------------------------------------
 
@@ -67,6 +65,7 @@ INCLUDES += -I$(SDKROOTDIR)/component/common/network/lwip/lwip_v2.1.2/port/realt
 INCLUDES += -I$(SDKROOTDIR)/component/common/network/lwip/lwip_v2.1.2/port/realtek/freertos
 INCLUDES += -I$(SDKROOTDIR)/component/common/network/ssl/mbedtls-2.28.1/include
 INCLUDES += -I$(SDKROOTDIR)/component/common/network/ssl/mbedtls-2.28.1/include/mbedtls
+INCLUDES += -I$(SDKROOTDIR)/component/common/network/ssl/ssl_ram_map/rom
 INCLUDES += -I$(SDKROOTDIR)/component/common/drivers/wlan/realtek/include
 INCLUDES += -I$(SDKROOTDIR)/component/common/drivers/wlan/realtek/src/osdep
 INCLUDES += -I$(SDKROOTDIR)/component/common/drivers/wlan/realtek/src/core/option
@@ -180,32 +179,10 @@ else
 CFLAGS += -DCONFIG_SYSTEM_TIME64=0
 endif
 
-# for matter blemgr adapter
-#CFLAGS += -DCONFIG_MATTER_BLEMGR_ADAPTER=1
-
 # CHIP options
 # -------------------------------------------------------------------
-CFLAGS += -DCHIP_PROJECT=1
-CFLAGS += -DCONFIG_MATTER=1
-CFLAGS += -DCONFIG_BT=1
-
-CFLAGS += -DCONFIG_ENABLE_AMEBA_FACTORY_DATA=0
-CFLAGS += -DCHIP_DEVICE_LAYER_TARGET=Ameba
-CFLAGS += -DMBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"
-
-CFLAGS += -DLWIP_IPV6_ND=1
-CFLAGS += -DLWIP_IPV6_SCOPES=0
-CFLAGS += -DLWIP_PBUF_FROM_CUSTOM_POOLS=0
-CFLAGS += -DLWIP_IPV6_ROUTE_TABLE_SUPPORT=1
-
-CFLAGS += -DCHIP_DEVICE_LAYER_NONE=0
-CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_ZEPHYR_NET_IF=0
-CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_BSD_IFADDRS=0
-CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_ZEPHYR_SOCKET_EXTENSIONS=0
-
-CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_LWIP=1
-CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_SOCKETS=0
-CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_NETWORK_FRAMEWORK=0
+# common flags
+include matter_common_flags.mk
 
 CXXFLAGS += -DFD_SETSIZE=10
 

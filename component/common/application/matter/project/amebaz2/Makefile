@@ -3,9 +3,9 @@ all: all_clusters
 OS := $(shell uname)
 LBITS := $(shell getconf LONG_BIT)
 
-BASEDIR				:= $(shell pwd)
-SDKROOTDIR			:= $(BASEDIR)/../../../../../..
-CHIPDIR				= $(SDKROOTDIR)/third_party/connectedhomeip
+BASEDIR			:= $(shell pwd)
+SDKROOTDIR		:= $(BASEDIR)/../../../../../..
+CHIPDIR			= $(SDKROOTDIR)/third_party/connectedhomeip
 MATTER_MAKEDIR		= $(BASEDIR)/make
 MATTER_TOOLDIR		= $(SDKROOTDIR)/tools/matter
 MATTER_EXAMPLEDIR	= $(SDKROOTDIR)/component/common/application/matter/example
@@ -36,14 +36,29 @@ ALL_CLUSTERS_FILE	= $(CHIPDIR)/examples/all-clusters-app/ameba/build/chip/codege
 ALL_CLUSTERS_ZAP	= $(CHIPDIR)/examples/all-clusters-app/all-clusters-common/all-clusters-app.zap
 AIR_PURIFIER_FILE	= $(CHIPDIR)/examples/air-purifier-app/ameba/build/chip/codegen/cluster-file.txt
 AIR_PURIFIER_ZAP	= $(CHIPDIR)/examples/air-purifier-app/air-purifier-common/air-purifier-app.zap
-CHEF_FILE			= $(CHIPDIR)/examples/chef/ameba/build/chip/codegen/cluster-file.txt
-CHEF_ZAP			= $(CHIPDIR)/examples/chef/devices/$(SAMPLE_NAME).zap
+CHEF_FILE		= $(CHIPDIR)/examples/chef/ameba/build/chip/codegen/cluster-file.txt
+CHEF_ZAP		= $(CHIPDIR)/examples/chef/devices/$(SAMPLE_NAME).zap
 LIGHTING_FILE		= $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/cluster-file.txt
 LIGHTING_ZAP		= $(CHIPDIR)/examples/lighting-app/lighting-common/lighting-app.zap
 LIGHT_SWITCH_FILE	= $(CHIPDIR)/examples/light-switch-app/ameba/build/chip/codegen/cluster-file.txt
 LIGHT_SWITCH_ZAP	= $(CHIPDIR)/examples/light-switch-app/light-switch-common/light-switch-app.zap
-OTAR_FILE			= $(CHIPDIR)/examples/ota-requestor-app/ameba/build/chip/codegen/cluster-file.txt
-OTAR_ZAP			= $(CHIPDIR)/examples/ota-requestor-app/ota-requestor-common/ota-requestor-app.zap
+OTAR_FILE		= $(CHIPDIR)/examples/ota-requestor-app/ameba/build/chip/codegen/cluster-file.txt
+OTAR_ZAP		= $(CHIPDIR)/examples/ota-requestor-app/ota-requestor-common/ota-requestor-app.zap
+
+AIRCON_FILE		= $(MATTER_MAKEDIR)/aircon/build/chip/codegen/cluster-file.txt
+AIRCON_ZAP		= $(MATTER_EXAMPLEDIR)/aircon/aircon-app.zap
+BRIDGE_DM_FILE		= $(MATTER_MAKEDIR)/bridge_dm/build/chip/codegen/cluster-file.txt
+BRIDGE_DM_ZAP		= $(MATTER_EXAMPLEDIR)/bridge_dm/bridge-app.zap
+DISHWASHER_FILE		= $(MATTER_MAKEDIR)/dishwasher/build/chip/codegen/cluster-file.txt
+DISHWASHER_ZAP		= $(MATTER_EXAMPLEDIR)/dishwasher/dishwasher-app.zap
+FAN_FILE		= $(MATTER_MAKEDIR)/fan/build/chip/codegen/cluster-file.txt
+FAN_ZAP			= $(MATTER_EXAMPLEDIR)/fan/fan-app.zap
+LAUNDRYWASHER_FILE	= $(MATTER_MAKEDIR)/laundrywasher/build/chip/codegen/cluster-file.txt
+LAUNDRYWASHER_ZAP	= $(MATTER_EXAMPLEDIR)/laundrywasher/laundrywasher-app.zap
+REFRIGERATOR_FILE	= $(MATTER_MAKEDIR)/refrigerator/build/chip/codegen/cluster-file.txt
+REFRIGERATOR_ZAP	= $(MATTER_EXAMPLEDIR)/refrigerator/refrigerator-app.zap
+THERMOSTAT_FILE		= $(CHIPDIR)/examples/thermostat/ameba/build/chip/codegen/cluster-file.txt
+THERMOSTAT_ZAP		= $(CHIPDIR)/examples/thermostat/thermostat-common/thermostat.zap
 
 #*****************************************************************************#
 #                      RULES TO MAKE MATTER DIRS                              #
@@ -97,31 +112,6 @@ $(OTAR_FILE): $(OTAR_ZAP)
 	@python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $^ > $(CHIPDIR)/examples/ota-requestor-app/ameba/build/chip/codegen/cluster-file.txt
 	@python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $@ --chip_path $(CHIPDIR)
 
-#*****************************************************************************#
-#                       MATTER Porting Layer ZAP files                        #
-#*****************************************************************************#
-AIRCON_FILE			= $(MATTER_MAKEDIR)/aircon/build/chip/codegen/cluster-file.txt
-AIRCON_ZAP			= $(MATTER_EXAMPLEDIR)/aircon/aircon-app.zap
-BRIDGE_DM_FILE		= $(MATTER_MAKEDIR)/bridge_dm/build/chip/codegen/cluster-file.txt
-BRIDGE_DM_ZAP		= $(MATTER_EXAMPLEDIR)/bridge_dm/bridge-app.zap
-DISHWASHER_FILE		= $(MATTER_MAKEDIR)/dishwasher/build/chip/codegen/cluster-file.txt
-DISHWASHER_ZAP		= $(MATTER_EXAMPLEDIR)/dishwasher/dishwasher-app.zap
-FAN_FILE			= $(MATTER_MAKEDIR)/fan/build/chip/codegen/cluster-file.txt
-FAN_ZAP				= $(MATTER_EXAMPLEDIR)/fan/fan-app.zap
-LAUNDRYWASHER_FILE	= $(MATTER_MAKEDIR)/laundrywasher/build/chip/codegen/cluster-file.txt
-LAUNDRYWASHER_ZAP	= $(MATTER_EXAMPLEDIR)/laundrywasher/laundrywasher-app.zap
-REFRIGERATOR_FILE	= $(MATTER_MAKEDIR)/refrigerator/build/chip/codegen/cluster-file.txt
-REFRIGERATOR_ZAP	= $(MATTER_EXAMPLEDIR)/refrigerator/refrigerator-app.zap
-LIGHTING_FILE		= $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/cluster-file.txt
-LIGHTING_ZAP		= $(CHIPDIR)/examples/lighting-app/lighting-common/lighting-app.zap
-LIGHTING_DM_FILE	= $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/cluster-file.txt
-LIGHTING_DM_ZAP		= $(CHIPDIR)/examples/lighting-app/lighting-common/lighting-app.zap
-THERMOSTAT_FILE		= $(CHIPDIR)/examples/thermostat/ameba/build/chip/codegen/cluster-file.txt
-THERMOSTAT_ZAP		= $(CHIPDIR)/examples/thermostat/thermostat-common/thermostat.zap
-#*****************************************************************************#
-#                RULES TO MAKE MATTER DIRS FOR PORTING LAYER                  #
-#*****************************************************************************#
-
 $(AIRCON_FILE): $(AIRCON_ZAP)
 	@mkdir -p $(MATTER_MAKEDIR)/aircon/build/chip/codegen/zap-generated
 	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl-server.json -z $(CHIPDIR)/src/app/zap-templates/zcl/zcl.json --output-dir $(MATTER_MAKEDIR)/aircon/build/chip/codegen/zap-generated  $^
@@ -164,24 +154,6 @@ $(LAUNDRYWASHER_FILE): $(LAUNDRYWASHER_ZAP)
 	@python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $^ > $@
 	@python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $@ --chip_path $(CHIPDIR)
 
-$(LIGHTING_FILE): $(LIGHTING_ZAP)
-	@mkdir -p $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/zap-generated
-	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl-server.json --output-dir examples/lighting-app/ameba/build/chip/codegen/zap-generated  $^
-	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/lighting-app/ameba/build/chip/codegen/zap-generated $^
-	@python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(CHIPDIR)/examples/lighting-app/lighting-common/lighting-app.matter
-	@python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $^ > $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/cluster-file.txt
-	@python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $@ --chip_path $(CHIPDIR)
-
-$(LIGHTING_DM_FILE): $(LIGHTING_DM_ZAP)
-	@mkdir -p $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/zap-generated
-	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl-server.json --output-dir examples/lighting-app/ameba/build/chip/codegen/zap-generated  $^
-	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json --output-dir examples/lighting-app/ameba/build/chip/codegen/zap-generated $^
-	@python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(CHIPDIR)/examples/lighting-app/lighting-common/lighting-app.matter
-	@python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $^ > $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/cluster-file.txt
-	@python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $@ --chip_path $(CHIPDIR)
-	@cp $(MATTER_EXAMPLEDIR)/light_dm/endpoint_config.h $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/zap-generated
-	@cp $(MATTER_EXAMPLEDIR)/light_dm/gen_config.h $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/zap-generated
-
 $(REFRIGERATOR_FILE): $(REFRIGERATOR_ZAP)
 	@mkdir -p $(MATTER_MAKEDIR)/refrigerator/build/chip/codegen/zap-generated
 	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl-server.json -z $(CHIPDIR)/src/app/zap-templates/zcl/zcl.json --output-dir $(MATTER_MAKEDIR)/refrigerator/build/chip/codegen/zap-generated  $^
@@ -197,6 +169,10 @@ $(THERMOSTAT_FILE): $(THERMOSTAT_ZAP)
 	@python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(CHIPDIR)/examples/thermostat/ameba/build/chip/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(CHIPDIR)/examples/thermostat/thermostat-common/thermostat.matter
 	@python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $^ > $(CHIPDIR)/examples/thermostat/ameba/build/chip/codegen/cluster-file.txt
 	@python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $@ --chip_path $(CHIPDIR)
+
+copy_gen_files_light_dm:
+	@cp $(MATTER_EXAMPLEDIR)/light_dm/endpoint_config.h $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/zap-generated
+	@cp $(MATTER_EXAMPLEDIR)/light_dm/gen_config.h $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/zap-generated
 
 #*****************************************************************************#
 #                         MATTER MAKE DEFINES                                 #
@@ -242,7 +218,7 @@ light: toolchain  $(LIGHTING_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/light/lib_chip_light_main.mk all
 
 .PHONY: light_dm
-light_dm: toolchain  $(LIGHTING_DM_FILE)
+light_dm: toolchain  $(LIGHTING_FILE) copy_gen_files_light_dm
 	$(MAKE) -f $(MATTER_MAKEDIR)/light_dm/lib_chip_light_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/light_dm/lib_chip_light_main.mk all
 
@@ -279,32 +255,33 @@ chef: toolchain $(CHEF_FILE)
 .PHONY: clean_matter_libs
 clean_matter_libs:
 	@$(MAKE) -f $(MATTER_MAKEDIR)/all_clusters/lib_chip_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/all_clusters/lib_chip.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/aircon/lib_chip_aircon_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/aircon/lib_chip_aircon_core.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/air_purifier/lib_chip_air_purifier_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/air_purifier/lib_chip_air_purifier_core.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/bridge_dm/lib_chip_bridge_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/bridge_dm/lib_chip_bridge_core.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/chef/lib_chip_chef_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/chef/lib_chip_chef_core.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/dishwasher/lib_chip_dishwasher_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/dishwasher/lib_chip_dishwasher_core.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/fan/lib_chip_fan_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/fan/lib_chip_fan_core.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/laundrywasher/lib_chip_laundrywasher_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/laundrywasher/lib_chip_laundrywasher_core.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/light/lib_chip_light_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/light/lib_chip_light_core.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/light_dm/lib_chip_light_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/light_dm/lib_chip_light_core.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/light_port/lib_chip_light_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/light_port/lib_chip_light_core.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/otar/lib_chip_otar_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/otar/lib_chip_otar_core.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/refrigerator/lib_chip_refrigerator_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/refrigerator/lib_chip_refrigerator_core.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/light_switch/lib_chip_switch_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/light_switch/lib_chip_switch_core.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/otar/lib_chip_otar_main.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/refrigerator/lib_chip_refrigerator_main.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/thermostat/lib_chip_thermostat_main.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/all_clusters/lib_chip.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/aircon/lib_chip_aircon_core.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/air_purifier/lib_chip_air_purifier_core.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/bridge_dm/lib_chip_bridge_core.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/chef/lib_chip_chef_core.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/dishwasher/lib_chip_dishwasher_core.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/fan/lib_chip_fan_core.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/laundrywasher/lib_chip_laundrywasher_core.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/light/lib_chip_light_core.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/light_dm/lib_chip_light_core.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/light_port/lib_chip_light_core.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/light_switch/lib_chip_switch_core.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/otar/lib_chip_otar_core.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/refrigerator/lib_chip_refrigerator_core.mk clean
+	@$(MAKE) -f $(MATTER_MAKEDIR)/thermostat/lib_chip_thermostat_core.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/thermostat/lib_chip_thermostat_core.mk clean
