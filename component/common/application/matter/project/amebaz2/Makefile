@@ -14,8 +14,8 @@ MATTER_EXAMPLEDIR	= $(SDKROOTDIR)/component/common/application/matter/example
 #                         Toolchain Extraction                                #
 #*****************************************************************************#
 
-.PHONY: toolchain
-toolchain:
+.PHONY: toolchain_matter
+toolchain_matter:
 	@echo Toolchain unzipping...
 
 ifeq ($(findstring Linux, $(OS)), Linux)
@@ -178,77 +178,77 @@ copy_gen_files_light_dm:
 #                         MATTER MAKE DEFINES                                 #
 #*****************************************************************************#
 .PHONY: all_clusters
-all_clusters: toolchain $(ALL_CLUSTERS_FILE)
+all_clusters: toolchain_matter $(ALL_CLUSTERS_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/all_clusters/lib_chip.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/all_clusters/lib_chip_main.mk all
 
 .PHONY: aircon_port
-aircon_port: toolchain  $(AIRCON_FILE)
+aircon_port: toolchain_matter  $(AIRCON_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/aircon/lib_chip_aircon_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/aircon/lib_chip_aircon_main.mk all
 
 .PHONY: air_purifier
-air_purifier: toolchain $(AIR_PURIFIER_FILE)
+air_purifier: toolchain_matter $(AIR_PURIFIER_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/air_purifier/lib_chip_air_purifier_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/air_purifier/lib_chip_air_purifier_main.mk all
 
 .PHONY: bridge_dm
-bridge_dm: toolchain  $(BRIDGE_DM_FILE)
+bridge_dm: toolchain_matter  $(BRIDGE_DM_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/bridge_dm/lib_chip_bridge_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/bridge_dm/lib_chip_bridge_main.mk all
 
 .PHONY: dishwasher_port
-dishwasher_port: toolchain  $(DISHWASHER_FILE)
+dishwasher_port: toolchain_matter  $(DISHWASHER_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/dishwasher/lib_chip_dishwasher_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/dishwasher/lib_chip_dishwasher_main.mk all
 
 .PHONY: fan_port
-fan_port: toolchain  $(FAN_FILE)
+fan_port: toolchain_matter  $(FAN_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/fan/lib_chip_fan_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/fan/lib_chip_fan_main.mk all
 
 .PHONY: laundrywasher_port
-laundrywasher_port: toolchain  $(LAUNDRYWASHER_FILE)
+laundrywasher_port: toolchain_matter  $(LAUNDRYWASHER_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/laundrywasher/lib_chip_laundrywasher_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/laundrywasher/lib_chip_laundrywasher_main.mk all
 
 .PHONY: light
-light: toolchain  $(LIGHTING_FILE)
+light: toolchain_matter  $(LIGHTING_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/light/lib_chip_light_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/light/lib_chip_light_main.mk all
 
 .PHONY: light_dm
-light_dm: toolchain  $(LIGHTING_FILE) copy_gen_files_light_dm
+light_dm: toolchain_matter  $(LIGHTING_FILE) copy_gen_files_light_dm
 	$(MAKE) -f $(MATTER_MAKEDIR)/light_dm/lib_chip_light_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/light_dm/lib_chip_light_main.mk all
 
 .PHONY: light_port
-light_port: toolchain  $(LIGHTING_FILE)
+light_port: toolchain_matter  $(LIGHTING_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/light_port/lib_chip_light_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/light_port/lib_chip_light_main.mk all
 
 .PHONY: light_switch
-light_switch: toolchain $(LIGHT_SWITCH_FILE)
+light_switch: toolchain_matter $(LIGHT_SWITCH_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/light_switch/lib_chip_switch_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/light_switch/lib_chip_switch_main.mk all
 
 .PHONY: refrigerator_port
-refrigerator_port: toolchain  $(REFRIGERATOR_FILE)
+refrigerator_port: toolchain_matter  $(REFRIGERATOR_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/refrigerator/lib_chip_refrigerator_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/refrigerator/lib_chip_refrigerator_main.mk all
 
 .PHONY: thermostat_port
-thermostat_port: toolchain $(THERMOSTAT_FILE)
+thermostat_port: toolchain_matter $(THERMOSTAT_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/thermostat/lib_chip_thermostat_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/thermostat/lib_chip_thermostat_main.mk all
 
 .PHONY: otar
-otar: toolchain $(OTAR_FILE)
+otar: toolchain_matter $(OTAR_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/otar/lib_chip_otar_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/otar/lib_chip_otar_main.mk all
 
 .PHONY: chef
-chef: toolchain $(CHEF_FILE)
+chef: toolchain_matter $(CHEF_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/chef/lib_chip_chef_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/chef/lib_chip_chef_main.mk all
 
