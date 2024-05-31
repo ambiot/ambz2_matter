@@ -6,7 +6,7 @@ LBITS := $(shell getconf LONG_BIT)
 BASEDIR = $(shell pwd)
 MATTER_BUILDDIR = $(shell pwd)/../../../component/common/application/matter/project/amebaz2
 
-include $(MATTER_BUILDDIR)/toolchain.app.mk
+include toolchain.mk
 
 .PHONY: is
 is: toolchain
@@ -32,8 +32,12 @@ setup:
 #*****************************************************************************#
 #                         MATTER MAKE DEFINES                                 #
 #*****************************************************************************#
+.PHONY: toolchain_matter
+toolchain_matter:
+	@$(MAKE) -C $(MATTER_BUILDDIR) toolchain_matter
+
 .PHONY: is_matter
-is_matter: toolchain
+is_matter: toolchain_matter
 	cp $(MATTER_BUILDDIR)/partition_matter.json partition.json
 	@$(MAKE) -f application.is.matter.mk
 
