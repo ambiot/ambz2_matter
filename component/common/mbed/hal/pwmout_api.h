@@ -124,6 +124,19 @@ void pwmout_pulsewidth_ms(pwmout_t* obj, int ms);
   */
 void pwmout_pulsewidth_us(pwmout_t* obj, int us);
 
+/**
+  * @brief  Start the pulse width of the specified channel in microseconds.
+  * @param  obj: PWM object define in application software.
+  * @retval none
+  */
+void pwmout_start(pwmout_t *obj);
+
+/**
+  * @brief  Stop the pulse width of the specified channel.
+  * @param  obj: PWM object define in application software.
+  * @retval none
+  */
+void pwmout_stop(pwmout_t *obj);
 ///@}
 
 /*\@}*/
