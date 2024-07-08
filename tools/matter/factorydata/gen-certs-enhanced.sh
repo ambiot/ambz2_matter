@@ -120,7 +120,7 @@ certification_type=1
 	
 	read -p 'How many DAC do you want to generate? ' number
 
-	for (( i=1; i<$number; i++ ))
+	for (( i=1; i<=$number; i++ ))
 	do
 		dac_key_file="$dest_dir/Chip-Test-DAC-$vid-$pid-Key-$i"
 		dac_cert_file="$dest_dir/Chip-Test-DAC-$vid-$pid-Cert-$i"
