@@ -21,6 +21,7 @@
 #define MICROSECONDS_PER_SECOND    ( 1000000LL )                                   /**< Microseconds per second. */
 #define NANOSECONDS_PER_SECOND     ( 1000000000LL )                                /**< Nanoseconds per second. */
 #define NANOSECONDS_PER_TICK       ( NANOSECONDS_PER_SECOND / configTICK_RATE_HZ ) /**< Nanoseconds per FreeRTOS tick. */
+#define HOUR_PER_MILLISECOND       ( 3600 * 1000 )
 
 #define US_OVERFLOW_MAX            (0xFFFFFFFF)
 #define MATTER_SW_RTC_TIMER_ID     TIMER5
@@ -132,6 +133,65 @@ int _vTaskDelay( const TickType_t xTicksToDelay )
     return 0;
 }
 
+extern uint8_t matter_get_total_operational_hour(uint32_t *totalOperationalHours);
+extern uint8_t matter_set_total_operational_hour(uint32_t time);
+static void hourly_update_thread(void *pvParameters)
+{
+    uint32_t cur_hour = 0, prev_hour = 0;
+    uint8_t ret = 0;
+    char key[] = "temp_hour";
+
+    // 1. Check if "temp_hour" exist in NVS
+    if (checkExist(key, key) != DCT_SUCCESS)
+    {
+        // 2. If "temp_hour" exist, get "temp_hour" and set as "total_hour" into NVS
+        if (getPref_u32_new(key, key, &prev_hour) == DCT_SUCCESS)
+        {
+            ret = matter_set_total_operational_hour(prev_hour);
+            if (ret != 0)
+            {
+                printf("matter_store_total_operational_hour failed, ret=%d\n", ret);
+                goto loop;
+            }
+            // 3. Delete "temp_hour" from NVS
+            deleteKey(key, key);
+        }
+        else
+        {
+            printf("getPref_u32_new: %s not found\n", key);
+            goto loop;
+        }
+    }
+
+loop:
+    while (1)
+    {
+        // 4. Every hour get Total operational hour
+        ret = matter_get_total_operational_hour(&cur_hour);
+        if (ret == 0)
+        {
+            // 5. If "prev_hour" and "cur_hour" differs, enter and store new value into NVS using "temp_hour"
+            if (prev_hour != cur_hour)
+            {
+                prev_hour = cur_hour;
+                if (setPref_new(key, key, (uint8_t *) &cur_hour, sizeof(cur_hour)) != DCT_SUCCESS)
+                {
+                    printf("setPref_new: temp_hour Failed\n");
+                }
+            }
+        }
+        vTaskDelay(HOUR_PER_MILLISECOND);
+    }
+
+    xTaskDelete(NULL);
+}
+
+void start_hourly_timer(void)
+{
+    if(xTaskCreate(hourly_update_thread, ((const char*)"hourly_update_thread"), 2048, NULL, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
+        printf("\n\r%s xTaskCreate(hourly_update_thread) failed", __FUNCTION__);
+}
+
 void matter_rtc_init()
 {
     rtc_init();
@@ -165,7 +225,9 @@ void matter_timer_init(void)
     gtimer_init(&matter_rtc_timer, MATTER_SW_RTC_TIMER_ID);
     hal_timer_set_cntmode(&matter_rtc_timer.timer_adp, 0); //use count up
     gtimer_start_periodical(&matter_rtc_timer, US_OVERFLOW_MAX, (void *)matter_timer_rtc_callback, (uint32_t) &matter_rtc_timer);
+    start_hourly_timer();
 }
+
 
 #ifdef __cplusplus
 }

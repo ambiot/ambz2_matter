@@ -183,6 +183,8 @@ CHIP_ERROR matter_core_init()
         ConnectivityMgr().SetBLEAdvertisingEnabled(true);
     }
 
+    matter_timer_init();
+
     // Start a task to run the CHIP Device event loop.
     err = PlatformMgr().StartEventLoopTask();
     SuccessOrExit(err);
@@ -201,7 +203,6 @@ exit:
 
 CHIP_ERROR matter_core_start()
 {
-    matter_timer_init();
     return matter_core_init();
     // matter_core_init_server();
 }

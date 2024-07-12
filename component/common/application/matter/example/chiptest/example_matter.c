@@ -17,8 +17,9 @@ static void example_matter_task_thread(void *pvParameters)
     while(!(wifi_is_up(RTW_STA_INTERFACE) || wifi_is_up(RTW_AP_INTERFACE))) {
         //waiting for Wifi to be initialized
     }
-    matter_timer_init();
+
     ChipTest();
+    matter_timer_init();
 
     vTaskDelete(NULL);
     return;

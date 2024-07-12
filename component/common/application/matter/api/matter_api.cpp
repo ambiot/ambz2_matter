@@ -6,12 +6,48 @@
 #include <credentials/DeviceAttestationCredsProvider.h>
 #include <platform/CommissionableDataProvider.h>
 #include <platform/DeviceInstanceInfoProvider.h>
+#include <platform/Ameba/DiagnosticDataProviderImpl.h>
 
 #include <platform_stdlib.h>
 #include "matter_api.h"
 
 using namespace ::chip::Credentials;
 using namespace ::chip::DeviceLayer;
+
+extern "C" uint8_t matter_get_total_operational_hour(uint32_t *totalOperationalHours)
+{
+    if (totalOperationalHours == nullptr)
+    {
+        printf("%s: nullptr\n", __FUNCTION__);
+        return -1;
+    }
+
+    CHIP_ERROR err;
+    DiagnosticDataProvider & diagProvider = chip::DeviceLayer::GetDiagnosticDataProviderImpl();
+
+    if (&diagProvider != NULL)
+    {
+        err = diagProvider.GetTotalOperationalHours(*totalOperationalHours);
+        if (err != CHIP_NO_ERROR)
+        {
+             printf("%s: GetTotalOperationalHours Failed err=%d\n", __FUNCTION__, err);
+             return -1;
+        }
+    }
+    else
+    {
+        printf("%s: DiagnosticDataProvider is invalid\n", __FUNCTION__);
+        return -1;
+    }
+    return 0;
+}
+
+extern "C" uint8_t matter_set_total_operational_hour(uint32_t time)
+{
+    CHIP_ERROR err = ConfigurationMgr().StoreTotalOperationalHours(time);
+
+    return (err == CHIP_NO_ERROR) ? 0 : -1;
+}
 
 bool matter_server_is_commissioned()
 {
