@@ -26,6 +26,7 @@ s32 getPref_u32_new(const char *domain, const char *key, u32 *val);
 s32 getPref_u64_new(const char *domain, const char *key, u64 *val);
 s32 getPref_str_new(const char *domain, const char *key, char * buf, size_t bufSize, size_t *outLen);
 s32 getPref_bin_new(const char *domain, const char *key, u8 * buf, size_t bufSize, size_t *outLen);
+void dct_update(uint32_t old_address, uint32_t new_address, uint16_t module_num);
 
 #ifdef __cplusplus
 }

@@ -462,7 +462,16 @@
 #define BT_FTL_PHY_ADDR1		(0x400000 - 0x3000)  // 0x3FD000
 #define BT_FTL_BKUP_ADDR		(0x400000 - 0x4000)  // 0x3FC000
 #define UART_SETTING_SECTOR		(0x400000 - 0x5000)  // 0x3FB000
+
 #define DCT_BEGIN_ADDR			(0x400000 - 0x13000) // 0x3ED000 ~ 0x3FB000 : 56K 
-#define DCT_BEGIN_ADDR2 		(0x400000 - 0x1A000) // 0x3E6000 ~ 0x3ED000 : 24K
-#define MATTER_FACTORY_DATA     (0x3FF000)           // last 4KB of external flash - write protection is supported in this region
+#define DCT_BEGIN_ADDR2			(0x400000 - 0x1E000) // 0x3E6000 ~ 0x3ED000 : 24K
+
+/* For any upgrades in DCT */
+#define DCT_UPDATE_ENABLE		0
+#if defined(DCT_UPDATE_ENABLE) && DCT_UPDATE_ENABLE
+#define DCT_BEGIN_ADDR_OLD		(0x400000 - 0x13000)
+#define DCT_BEGIN_ADDR2_OLD 	(0x400000 - 0x1E000)
+#endif
+
+#define MATTER_FACTORY_DATA		(0x3FF000)           // last 4KB of external flash - write protection is supported in this region
 #endif /* CHIP_PROJECT */
