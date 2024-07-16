@@ -21,10 +21,20 @@ void MatterFan::setFanMode(uint8_t mode)
     mMode = mode;
 }
 
+uint8_t MatterFan::getPrevFanSpeedPercent(void)
+{
+    return this->mPrevPercent;
+}
+
 void MatterFan::setFanSpeedPercent(uint8_t percent)
 {
     if (mPercent == percent)
         return;
+
+    if (percent == 0)
+    {
+        mPrevPercent = mPercent;
+    }
 
     ChipLogProgress(DeviceLayer, "Setting fan speed to %d\%", percent);
     mPercent = percent;

@@ -119,6 +119,8 @@ void matter_driver_uplink_update_handler(AppEvent *aEvent)
     VerifyOrExit(aEvent->path.mEndpointId == 1,
                  ChipLogError(DeviceLayer, "Unexpected EndPoint ID: `0x%02x'", path.mEndpointId));
 
+    ChipLogProgress(DeviceLayer, "Uplink: ClusterId=%x AttributeId=%x\n", path.mClusterId, path.mAttributeId);
+
     switch(path.mClusterId)
     {
     case Clusters::OnOff::Id:
