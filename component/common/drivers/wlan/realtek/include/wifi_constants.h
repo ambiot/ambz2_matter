@@ -46,6 +46,7 @@ extern "C" {
 #define WSEC_SWFLAG        0x0008
 #define AES_CMAC_ENABLED        0x0010
 #define ENTERPRISE_ENABLED			0x0020
+#define OWE_ENABLED			0x0040
 
 #define SHARED_ENABLED  0x00008000
 #define WPA_SECURITY    0x00200000
@@ -53,12 +54,42 @@ extern "C" {
 #define WPA3_SECURITY		0x00800000
 #define WPS_ENABLED     0x10000000
 
-#define RTW_WPA2_MAX_PSK_LEN		(64)
-#define RTW_WPA3_MAX_PSK_LEN		(128)
-#define RTW_MAX_PSK_LEN		RTW_WPA3_MAX_PSK_LEN
-#define RTW_MIN_PSK_LEN		(8)
+#define RTW_WPA2_MAX_PSK_LEN    (64)                  /**< wpa2 maximum psk length */
+#define RTW_WPA3_MAX_PSK_LEN    (128)                 /**< wpa3 maximum psk length */
+#define RTW_MAX_PSK_LEN         RTW_WPA3_MAX_PSK_LEN  /**< maximum psk length */
+#define RTW_MIN_PSK_LEN         (8)                   /**< minimum psk length */
+#define RTW_MAX_SSID_LEN        (32)                  /**< maximum ssid length */
+#define RTW_MIN_SSID_LEN        (0)                   /**< minimum ssid length */
+#define RTW_OWE_KEY_LEN         32
+#define MCSSET_LEN              16                    /**<mcsset length */
 
-#define MCSSET_LEN			16
+/**
+  * @}defgroup WLAN_Reason_Defs
+  */
+#define REASON_4WAY_HNDSHK_TIMEOUT               15     /**< Fourway handshake timeout */
+#define REASON_AP_UNABLE_TO_HANDLE_NEW_STA       17     /**< AP denied due to max sta */
+#define REASON_SAE_HASH_TO_ELEMENT               126    /**< Special status code to indicate H2E extension*/
+#define REASON_SAE_CONFIRM_MISMATCH              65529  /**< SAE confirm mismatch */
+#define REASON_SA_QUERY_TIMEOUT                  65530  /**< SA Query Timeout */
+#define REASON_STA_IN_BLACKLIST                  65531  /**< STA gets blacklisted by AP */
+#define REASON_AP_BEACON_CHANGED                 65534  /**< AP configuration changed causing beacon info changed */
+#define REASON_EXPIRATION_CHK                    65535  /**< STA disconnected due to no beacon for a long time */
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
+
+/** @addtogroup WIFI_Exported_Types WIFI Exported Types
+  * @{
+  */
+
+/** @addtogroup Enums
+  * @{
+  */
 
 /**
   * @brief  The enumeration lists the results of the function.
@@ -159,6 +190,7 @@ enum {
 
     RTW_SECURITY_WPA3_AES_PSK 	           = ( WPA3_SECURITY | AES_ENABLED ),                                                    /**< WPA3-SAE with AES security                                  */
     RTW_SECURITY_WPA2_WPA3_MIXED           = ( WPA2_SECURITY | WPA3_SECURITY | AES_ENABLED ),                                    /**< WPA3-SAE/WPA2 with AES security                             */
+    RTW_SECURITY_WPA3_OWE                  = ( WPA3_SECURITY | OWE_ENABLED ),                                                    /**< WPA3 OWE security */
 
 #ifdef CHIP_PROJECT
     RTW_SECURITY_WPA_WPA2_MIXED            = ( WPA_SECURITY | WPA2_SECURITY | TKIP_ENABLED | AES_ENABLED ),                      /**< WPA/WPA2 Security                                           */

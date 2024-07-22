@@ -87,8 +87,9 @@ int wext_set_sta_num(unsigned char ap_sta_num);
 int wext_del_station(const char *ifname, unsigned char* hwaddr);
 int wext_init_mac_filter(void);
 int wext_deinit_mac_filter(void);
-int wext_add_mac_filter(unsigned char* hwaddr);
-int wext_del_mac_filter(unsigned char* hwaddr);
+int wext_add_mac_filter(unsigned char *hwaddr);
+int wext_del_mac_filter(unsigned char *hwaddr);
+void wext_wifi_connect_monitor_mgnt(int enable);
 void wext_set_indicate_mgnt(int enable);
 #ifdef CONFIG_SW_MAILBOX_EN
 int wext_mailbox_to_wifi(const char *ifname, char *buf, __u16 buf_len);

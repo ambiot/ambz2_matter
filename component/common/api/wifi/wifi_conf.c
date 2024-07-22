@@ -88,6 +88,7 @@ extern unsigned char dhcp_mode_sta;
 static int _wifi_is_on = 0;
 void* param_indicator;
 struct task_struct wifi_autoreconnect_task;
+struct rtw_connection_info sta_conn_status;
 /******************************************************
  *               Variables Definitions
  ******************************************************/
@@ -210,6 +211,7 @@ static int wifi_connect_local(rtw_network_info_t *pWifi)
 	if(!pWifi) return -1;
 	switch(pWifi->security_type){
 		case RTW_SECURITY_OPEN:
+		case RTW_SECURITY_WPA3_OWE:
 			ret = wext_set_key_ext(WLAN0_NAME, IW_ENCODE_ALG_NONE, NULL, 0, 0, 0, 0, NULL, 0);
 			break;
 		case RTW_SECURITY_WEP_PSK:
@@ -271,6 +273,7 @@ static int wifi_connect_bssid_local(rtw_network_info_t *pWifi)
 	if(!pWifi) return -1;
 	switch(pWifi->security_type){
 		case RTW_SECURITY_OPEN:
+		case RTW_SECURITY_WPA3_OWE:
 			ret = wext_set_key_ext(WLAN0_NAME, IW_ENCODE_ALG_NONE, NULL, 0, 0, 0, 0, NULL, 0);
 			break;
 		case RTW_SECURITY_WEP_PSK:
@@ -381,6 +384,7 @@ static void wifi_connected_hdl( char* buf, int buf_len, int flags, void* userdat
 #ifdef CONFIG_SAE_SUPPORT
 									||(join_user_data->network_info.security_type == RTW_SECURITY_WPA3_AES_PSK)
 									||(join_user_data->network_info.security_type == RTW_SECURITY_WPA2_WPA3_MIXED)
+									||(join_user_data->network_info.security_type == RTW_SECURITY_WPA3_OWE)
 #endif
 									)){
 		rtw_join_status = JOIN_COMPLETE | JOIN_SECURITY_COMPLETE | JOIN_ASSOCIATED | JOIN_AUTHENTICATED | JOIN_LINK_READY | JOIN_CONNECTING;
@@ -404,9 +408,9 @@ static void wifi_handshake_done_hdl( char* buf, int buf_len, int flags, void* us
  * To use the event, user needs to enable the mgnt indicate as following code.
  * => wifi_set_indicate_mgnt(1);
  * User can register the WIFI_EVENT_RX_MGNT event handler to use, as following code.
- * => wifi_reg_event_handler(WIFI_EVENT_RX_MGNT, rx_mgnt_hdl, NULL);
+ * => wifi_reg_event_handler(WIFI_EVENT_RX_MGNT, wifi_rx_mgnt_hdl,, NULL);
  */
-static void rx_mgnt_hdl( char* buf, int buf_len, int flags, void* userdata)
+static void wifi_rx_mgnt_hdl(char *buf, int buf_len, int flags, void *userdata)
 {
 	/* To avoid gcc warnings */
 	( void ) buf_len;
@@ -414,36 +418,57 @@ static void rx_mgnt_hdl( char* buf, int buf_len, int flags, void* userdata)
 	( void ) userdata;
 
 	/* buf detail: mgnt frame*/
-
+	unsigned char *mac;
 	u16 status_code;
 	u8 subframe_type;
 
 	subframe_type = (u8)(*(u8 *)buf) & 0xfc;
+	mac = LwIP_GetMAC(&xnetif[0]);
 
-	switch(subframe_type)
-	{
-		case 0x10:
-			//Assoc frame: MAC_hdr(24) + Cap_info(2) + status_code(2)
-			status_code = (u16)(*(u16 *)(buf + 24 + 2));
-			printf("Recv AssocRsp with status_code=%d\n",status_code);
-			break;
-		case 0xa0:
-			//Disassoc frame: MAC_hdr(24) + status_code(2)
-			status_code = (u16)(*(u16 *)(buf + 24));
-			printf("Recv Disassoc with status_code=%d\n",status_code);
-			break;
-		case 0xb0:
-			//Auth frame: MAC_hdr(24) + Auth_algo(2) + Auth_seq(2) + status_code(2)
-			status_code = (u16)(*(u16 *)(buf + 24 + 2 + 2));
-			printf("Recv Auth with status_code=%d\n",status_code);
-			break;
-		case 0xc0:
-			//Deauth frame: MAC_hdr(24) + status_code(2)
-			status_code = (u16)(*(u16 *)(buf + 24));
-			printf("Recv Deauth with status_code=%d\n",status_code);
-			break;
-		default:
-			break;
+	/* MAC_hdr: frame_type(1) + flags(1) + Duration(2) + DA(6) + SA(6) + BSSID(6) + Seq_Frag_No(2) */
+	/* If DA same as netif[0], packet is for STA mode */
+	if (memcmp(buf + 4, mac, ETH_ALEN) != 0) {
+		return;
+	}
+
+	switch (subframe_type) {
+	case 0x10:
+		//Assoc frame: MAC_hdr(24) + Cap_info(2) + status_code(2)
+		status_code = (u16)(*(u16 *)(buf + 24 + 2));
+		if (rtw_join_status == JOIN_CONNECTING && status_code != 0) {
+			sta_conn_status.assoc_code = status_code;
+			printf("Recv AssocRsp with status_code=%d\n", status_code);
+		}
+		break;
+	case 0xa0:
+		//Disassoc frame: MAC_hdr(24) + status_code(2)
+		status_code = (u16)(*(u16 *)(buf + 24));
+		if (rtw_join_status == JOIN_CONNECTING && status_code != 0) {
+			sta_conn_status.disassoc_code = status_code;
+			printf("Recv Disassoc with status_code=%d\n", status_code);
+		}
+		break;
+	case 0xb0:
+		//Auth frame: MAC_hdr(24) + Auth_algo(2) + Auth_seq(2) + status_code(2)
+		status_code = (u16)(*(u16 *)(buf + 24 + 2 + 2));
+		if (rtw_join_status == JOIN_CONNECTING) {
+			sta_conn_status.auth_alg = (u16)(*(u16 *)(buf + 24));
+			if (status_code != 0 && status_code != REASON_SAE_HASH_TO_ELEMENT) {
+				sta_conn_status.auth_code = status_code;
+				printf("Recv Auth with status_code=%d\n", status_code);
+			}
+		}
+		break;
+	case 0xc0:
+		//Deauth frame: MAC_hdr(24) + status_code(2)
+		status_code = (u16)(*(u16 *)(buf + 24));
+		if (rtw_join_status == JOIN_CONNECTING && status_code != 0) {
+			sta_conn_status.disassoc_code = status_code;
+			printf("Recv Deauth with status_code=%d\n", status_code);
+		}
+		break;
+	default:
+		break;
 	}
 }
 
@@ -484,7 +509,7 @@ static void wifi_link_err_parse(u16 reason_code)
 		printf("scan stage, no beacon while connecting\n");
 	} else if(link_err & BIT(3)) {
 		printf("auth stage, auth timeout\n");
-		if(reason_code == 65531) {
+		if (reason_code == REASON_STA_IN_BLACKLIST) {
 			printf("request has been declined\n");
 		}
 	} else if(link_err & BIT(4)) {
@@ -497,14 +522,17 @@ static void wifi_link_err_parse(u16 reason_code)
 		printf("auth stage, auth fail (auth rsp status > 0)\n");
 	} else if(link_err & BIT(10)){
 		printf("scan stage, scan timeout\n");
-	} else if(link_err & BIT(11)) {
+	}
+#ifdef CONFIG_SAE_SUPPORT
+	else if (link_err & BIT(11)) {
 		printf("auth stage, WPA3 auth fail, ");
-		if(reason_code == 65531) {
+		if (reason_code == REASON_STA_IN_BLACKLIST) {
 			printf("request has been declined\n");
 		} else {
 			printf("password error\n");
 		}
 	}
+#endif
 
 	if(link_err & (BIT(0) | BIT(1))) {
 		if(link_err & BIT(20)) {
@@ -522,21 +550,21 @@ static void wifi_link_err_parse(u16 reason_code)
 		}
 	}
 
-	switch(reason_code) {
-		case 17:
-			printf("auth stage, ap auth full\n");
-			break;
-		case 65530:
-			printf("SA query timeout\n");
-			break;
-		case 65534:
-			printf("connected stage, ap changed\n");
-			break;
-		case 65535:
-			printf("connected stage, loss beacon\n");
-			break;
-		default:
-			break;
+	switch (reason_code) {
+	case REASON_AP_UNABLE_TO_HANDLE_NEW_STA:
+		printf("auth stage, ap auth full\n");
+		break;
+	case REASON_SA_QUERY_TIMEOUT:
+		printf("SA query timeout\n");
+		break;
+	case REASON_AP_BEACON_CHANGED:
+		printf("connected stage, ap changed\n");
+		break;
+	case REASON_EXPIRATION_CHK:
+		printf("connected stage, loss beacon\n");
+		break;
+	default:
+		break;
 	}
 
 	rltk_wlan_set_link_err(0);
@@ -631,26 +659,33 @@ static void wifi_disconn_hdl( char* buf, int buf_len, int flags, void* userdata)
 #ifdef CONFIG_SAE_SUPPORT
 				||join_user_data->network_info.security_type == RTW_SECURITY_WPA3_AES_PSK
 				||join_user_data->network_info.security_type == RTW_SECURITY_WPA2_WPA3_MIXED
+				||join_user_data->network_info.security_type == RTW_SECURITY_WPA3_OWE
 #endif
 				){
 
-			if(rtw_join_status & JOIN_NO_NETWORKS)
+			if(rtw_join_status & JOIN_NO_NETWORKS){
 				error_flag = RTW_NONE_NETWORK;
-
-			else if(rtw_join_status == JOIN_CONNECTING)
-			{
-				if(-1 == cnnctfail_reason)
-					{error_flag = RTW_AUTH_FAIL;}
-				else if(-4 == cnnctfail_reason)
-					{error_flag = RTW_ASSOC_FAIL;}
-				else if(-2 == cnnctfail_reason)
-					{error_flag = RTW_DEAUTH_DEASSOC;}
-				else
-					{error_flag = RTW_CONNECT_FAIL;}
-			}
-			else if(rtw_join_status == (JOIN_COMPLETE | JOIN_SECURITY_COMPLETE | JOIN_ASSOCIATED | JOIN_AUTHENTICATED | JOIN_LINK_READY | JOIN_CONNECTING))
-			{
-				if(disconn_reason == REASON_4WAY_HNDSHK_TIMEOUT)
+			} else if (rtw_join_status == JOIN_CONNECTING) {
+				if (-1 == cnnctfail_reason) {
+#ifdef CONFIG_SAE_SUPPORT
+					if ((sta_conn_status.auth_alg == 3) &&
+						(sta_conn_status.auth_code == 1 || sta_conn_status.auth_code == 15 || disconn_reason == REASON_SAE_CONFIRM_MISMATCH)) {
+						error_flag = RTW_WRONG_PASSWORD;
+					} else if (sta_conn_status.auth_code != 0) {
+						error_flag = RTW_AUTH_FAIL;
+					}
+#else
+					error_flag = RTW_AUTH_FAIL;
+#endif
+				} else if (-4 == cnnctfail_reason) {
+					error_flag = RTW_ASSOC_FAIL;
+				} else if (-2 == cnnctfail_reason) {
+					error_flag = RTW_DEAUTH_DEASSOC;
+				} else {
+					error_flag = RTW_CONNECT_FAIL;
+				}
+			} else if (rtw_join_status == (JOIN_COMPLETE | JOIN_SECURITY_COMPLETE | JOIN_ASSOCIATED | JOIN_AUTHENTICATED | JOIN_LINK_READY | JOIN_CONNECTING)) {
+				if (disconn_reason == REASON_4WAY_HNDSHK_TIMEOUT)
 					error_flag = RTW_4WAY_HANDSHAKE_TIMEOUT;
 				else
 					error_flag = RTW_WRONG_PASSWORD;
@@ -660,6 +695,7 @@ static void wifi_disconn_hdl( char* buf, int buf_len, int flags, void* userdata)
 		if(error_flag == RTW_NO_ERROR) //wifi_disconn_hdl will be dispatched one more time after join_user_data = NULL add by frankie
 			error_flag = RTW_UNKNOWN;
 	}
+
 	
 #if CONFIG_LWIP_LAYER
 #if defined(CONFIG_MBED_ENABLED) || defined(CONFIG_PLATFOMR_CUSTOMER_RTOS)
@@ -832,6 +868,7 @@ int wifi_connect(
 	}
 
 	error_flag = RTW_UNKNOWN ;//clear for last connect status
+	rtw_memset(&sta_conn_status, 0, sizeof(sta_conn_status));
 	rtw_memset(ap_bssid, 0, ETH_ALEN);
 	if ( ( ( ( password_len >  RTW_MAX_PSK_LEN ) ||
 		( password_len <  RTW_MIN_PSK_LEN ) ) &&
@@ -897,9 +934,9 @@ int wifi_connect(
 	join_result->network_info.password_len = password_len;
 	if(password_len) {
 		/* add \0 to the end */
-		join_result->network_info.password = rtw_zmalloc(password_len + 1);
-		if(!join_result->network_info.password) {
-			result =(rtw_result_t) RTW_NOMEM;
+		join_result->network_info.password = rtw_zmalloc(password_len);
+		if (!join_result->network_info.password) {
+			result = (rtw_result_t) RTW_NOMEM;
 			goto error;
 		}
 		if (0 == wep_hex)
@@ -927,6 +964,8 @@ int wifi_connect(
 	wifi_reg_event_handler(WIFI_EVENT_DISCONNECT, wifi_disconn_hdl, NULL);
 	wifi_reg_event_handler(WIFI_EVENT_FOURWAY_HANDSHAKE_DONE, wifi_handshake_done_hdl, NULL);
 	wifi_reg_event_handler(WIFI_EVENT_TARGET_SSID_RSSI, wifi_rssi_report_hdl, NULL);
+	wifi_connect_monitor_mgnt(1);
+	wifi_reg_event_handler(WIFI_EVENT_RX_MGNT, wifi_rx_mgnt_hdl, NULL);
 
 // if is connected to ap, would trigger disconn_hdl but need to make sure it is invoked before setting join_user_data
 #if CONFIG_WIFI_IND_USE_THREAD
@@ -1014,6 +1053,8 @@ error:
 	wifi_unreg_event_handler(WIFI_EVENT_NO_NETWORK,wifi_no_network_hdl);
 	wifi_unreg_event_handler(WIFI_EVENT_FOURWAY_HANDSHAKE_DONE, wifi_handshake_done_hdl);
 	wifi_unreg_event_handler(WIFI_EVENT_TARGET_SSID_RSSI, wifi_rssi_report_hdl);
+	wifi_unreg_event_handler(WIFI_EVENT_RX_MGNT, wifi_rx_mgnt_hdl);
+	wifi_connect_monitor_mgnt(0);
 	rtw_join_status &= ~JOIN_CONNECTING;
 	return result;
 }
@@ -1138,7 +1179,17 @@ int wifi_connect_bssid(
 	wifi_reg_event_handler(WIFI_EVENT_CONNECT, wifi_connected_hdl, NULL);
 	wifi_reg_event_handler(WIFI_EVENT_DISCONNECT, wifi_disconn_hdl, NULL);
 	wifi_reg_event_handler(WIFI_EVENT_FOURWAY_HANDSHAKE_DONE, wifi_handshake_done_hdl, NULL);
+	wifi_reg_event_handler(WIFI_EVENT_TARGET_SSID_RSSI, wifi_rssi_report_hdl, NULL);
+	wifi_connect_monitor_mgnt(1);
+	wifi_reg_event_handler(WIFI_EVENT_RX_MGNT, wifi_rx_mgnt_hdl, NULL);
+// if is connected to ap, would trigger disconn_hdl but need to make sure it is invoked before setting join_user_data
+#if CONFIG_WIFI_IND_USE_THREAD
+	if (wifi_is_connected_to_ap() == RTW_SUCCESS) {
+		rtw_init_sema(&disconnect_sema, 0);
+	}
+#endif
 
+	/* connect with bssid */
 	rtw_join_status = JOIN_CONNECTING;
 	wifi_connect_bssid_local(&join_result->network_info);
 
@@ -1191,6 +1242,9 @@ error:
 	wifi_unreg_event_handler(WIFI_EVENT_CONNECT, wifi_connected_hdl);
 	wifi_unreg_event_handler(WIFI_EVENT_NO_NETWORK,wifi_no_network_hdl);
 	wifi_unreg_event_handler(WIFI_EVENT_FOURWAY_HANDSHAKE_DONE, wifi_handshake_done_hdl);
+	wifi_unreg_event_handler(WIFI_EVENT_TARGET_SSID_RSSI, wifi_rssi_report_hdl);
+	wifi_unreg_event_handler(WIFI_EVENT_RX_MGNT, wifi_rx_mgnt_hdl);
+	wifi_connect_monitor_mgnt(0);
 	rtw_join_status &= ~JOIN_CONNECTING;
 	return result;
 }
@@ -3373,6 +3427,16 @@ int wifi_set_ch_deauth(__u8 enable)
 	return wext_set_ch_deauth(WLAN1_NAME, enable);
 }
 #endif
+
+void wifi_connect_monitor_mgnt(int enable)
+{
+	if (rltk_wlan_running(WLAN0_IDX)) {
+		wext_wifi_connect_monitor_mgnt(enable);
+	} else {
+		printf("\nWiFi Disabled: Cannot set indicate mgnt\n");
+	}
+	return;
+}
 
 void wifi_set_indicate_mgnt(int enable)
 {

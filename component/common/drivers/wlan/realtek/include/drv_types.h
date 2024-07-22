@@ -155,6 +155,9 @@ typedef struct _ADAPTER _adapter, ADAPTER,*PADAPTER;
 #ifdef CONFIG_SAE_SUPPORT
 #include "rtw_sae.h"
 #endif
+#ifdef CONFIG_OWE_SUPPORT
+#include "rtw_owe.h"
+#endif
 #ifdef CONFIG_PMKSA_CACHING
 #include "rtw_pmksa_cache.h"
 #endif
@@ -1037,6 +1040,10 @@ struct _ADAPTER{
 	struct wifi_display_info wfd_info;
 #endif //CONFIG_WFD
 
+#ifdef CONFIG_OWE_SUPPORT
+	struct owe_priv		owepriv;
+#endif
+
 	PVOID		HalData;
 	u32 		hal_data_sz;
 	struct hal_ops	HalFunc;
@@ -1268,6 +1275,9 @@ struct _ADAPTER{
 #define adapter_mac_addr(adapter) (adapter->eeprompriv.mac_addr)
 #define adapter_to_chset(adapter) (adapter->mlmeextpriv.channel_set)
 #define adapter_to_phydm(adapter) (&(GET_HAL_DATA(adapter)->odmpriv))
+#ifdef CONFIG_OWE_SUPPORT
+#define rtw_get_owepriv(padapter)		(&(padapter->owepriv))
+#endif
 
 #define rtw_get_intf_type(adapter) (((PADAPTER)adapter)->interface_type)
 

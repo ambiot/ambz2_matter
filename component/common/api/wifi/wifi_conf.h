@@ -1084,6 +1084,16 @@ int wifi_get_antenna_info(unsigned char *antenna);
 #endif // #ifdef CONFIG_ANTENNA_DIVERSITY
 
 /**
+ * @brief      SW reporting mgnt packets to wifi_indication() during wifi_connect().
+ * @param[in]  enable:
+ *                - 0: disable mode(default), SW doesn't report
+ *                - 1: enable mode, SW reports mgnt packets
+ * @return     None
+ * @note       Please make sure the Wi-Fi is enabled before invoking this function. (@ref wifi_on())
+ */
+void wifi_connect_monitor_mgnt(int enable);
+
+/**
   * @brief:	config mode of HW indicating packets(mgnt and data) and SW reporting packets to wifi_indication().
   * @param[in]	
   *		0: disable mode(default), HW only indicate bssid-matched pkts and SW don't report.

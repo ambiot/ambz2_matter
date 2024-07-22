@@ -150,7 +150,7 @@ extern int rtw_join_status;
 static rtw_network_info_t wifi = {0};
 
 static rtw_ap_info_t ap = {0};
-static unsigned char password[65] = {0};
+static unsigned char password[129] = {0};
 #ifdef CONFIG_FPGA
 int security = -1;
 #endif
@@ -235,6 +235,7 @@ static void print_scan_result( rtw_scan_result_t* record )
 #ifdef CONFIG_SAE_SUPPORT
 			( record->security == RTW_SECURITY_WPA3_AES_PSK) ? "WPA3-SAE AES" :
 			( record->security == RTW_SECURITY_WPA2_WPA3_MIXED) ? "WPA2/WPA3-SAE AES" :
+			( record->security == RTW_SECURITY_WPA3_OWE) ? "WAP3 OWE" :
 #endif
 			"Unknown",
             record->signal_strength, MAC_ARG(record->BSSID.octet)   );
