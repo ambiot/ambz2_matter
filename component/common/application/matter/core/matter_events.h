@@ -24,6 +24,15 @@ struct AppEvent
         kEventType_Downlink_DW_Alarm_Reset,
         kEventType_Downlink_Refrigerator_Mode,
         kEventType_Downlink_Refrigerator_Alarm_State,
+
+        /*Switch Cluster Event*/
+        kEventType_Downlink_SwitchLatched,
+        kEventType_Downlink_SwitchInitialPress,
+        kEventType_Downlink_SwitchLongPress,
+        kEventType_Downlink_SwitchShortRelease,
+        kEventType_Downlink_SwitchLongRelease,
+        kEventType_Downlink_SwitchMultiPressOngoing,
+        kEventType_Downlink_SwitchMultiPressComplete,
     };
 
     uint16_t Type;

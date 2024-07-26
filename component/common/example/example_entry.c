@@ -377,6 +377,8 @@
 #include <dishwasher/example_matter_dishwasher.h>
 #elif defined(CONFIG_EXAMPLE_MATTER_FAN) && (CONFIG_EXAMPLE_MATTER_FAN == 1)
 #include <fan/example_matter_fan.h>
+#elif defined(CONFIG_EXAMPLE_MATTER_GENERIC_SWITCH) && (CONFIG_EXAMPLE_MATTER_GENERIC_SWITCH == 1)
+#include <generic_switch/example_matter_generic_switch.h>
 #endif
 #endif
 
@@ -882,6 +884,9 @@ example_hilink();
 #elif defined(CONFIG_EXAMPLE_MATTER_FAN) && (CONFIG_EXAMPLE_MATTER_FAN == 1)
     extern void example_matter_fan();
     example_matter_fan();
+#elif defined(CONFIG_EXAMPLE_MATTER_GENERIC_SWITCH) && (CONFIG_EXAMPLE_MATTER_GENERIC_SWITCH == 1)
+    extern void example_matter_generic_switch();
+    example_matter_generic_switch();
 #endif
 #endif
 
