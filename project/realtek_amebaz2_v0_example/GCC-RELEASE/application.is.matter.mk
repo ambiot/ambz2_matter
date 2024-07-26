@@ -419,6 +419,9 @@ SRC_C += ../../../component/common/application/matter/common/port/matter_wifis.c
 SRC_C += ../../../component/common/application/matter/example/chiptest/example_matter.c
 SRC_C += ../../../component/common/application/matter/common/atcmd/atcmd_matter.c
 SRC_C += ../../../component/common/application/matter/common/mbedtls/net_sockets.c
+SRC_C += ../../../component/common/application/matter/common/port/matter_flashfs_fat.c
+SRC_C += ../../../component/common/application/matter/common/port/matter_flashfs_nofat.c
+SRC_C += ../../../component/common/application/matter/common/port/matter_flashfs.c
 
 #network - app - mqtt
 SRC_C += ../../../component/common/application/mqtt/MQTTClient/MQTTClient.c
@@ -669,6 +672,7 @@ SRC_C += ../../../component/common/file_system/fatfs/r0.10c/src/diskio.c
 SRC_C += ../../../component/common/file_system/fatfs/r0.10c/src/ff.c
 SRC_C += ../../../component/common/file_system/fatfs/r0.10c/src/option/ccsbcs.c
 SRC_C += ../../../component/common/file_system/fatfs/disk_if/src/flash_fatfs.c
+SRC_C += ../../../component/common/file_system/fatfs/fatfs_flash_api.c
 
 #utilities - example
 #SRC_C += ../../../component/common/example/amazon_awsiot/example_amazon_awsiot.c

@@ -36,6 +36,11 @@
 #include <support/CodeUtils.h>
 #include <core/ErrorStr.h>
 
+/* for log interception */
+#if defined(CONFIG_AMEBA_MATTER_ERROR_FORMATTER) && (CONFIG_AMEBA_MATTER_ERROR_FORMATTER == 1)
+#include <driver/ameba_logging_redirect_handler.h>
+#endif
+
 #if CONFIG_ENABLE_CHIP_SHELL
 #include <shell/launch_shell.h>
 #endif
@@ -160,13 +165,20 @@ void matter_core_init_server(intptr_t context)
 
 CHIP_ERROR matter_core_init()
 {
-    CHIP_ERROR err = CHIP_NO_ERROR;
-    err = Platform::MemoryInit();
+    //CHIP_ERROR err = CHIP_NO_ERROR;
+    CHIP_ERROR err = ChipError(0, NULL, 0);
+    auto & instance = AmebaLogRedirectHandler::GetInstance();
+
+    err = Platform::MemoryInit(nullptr, 0);
     SuccessOrExit(err);
 
     // Initialize the CHIP stack.
     err = PlatformMgr().InitChipStack();
     SuccessOrExit(err);
+
+#if defined(CONFIG_AMEBA_MATTER_ERROR_FORMATTER) && (CONFIG_AMEBA_MATTER_ERROR_FORMATTER == 1)
+    instance.RegisterAmebaErrorFormatter();
+#endif // CONFIG_AMEBA_MATTER_ERROR_FORMATTER
 
     err = mFactoryDataProvider.Init();
     if (err != CHIP_NO_ERROR)
