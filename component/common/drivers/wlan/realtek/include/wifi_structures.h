@@ -272,24 +272,55 @@ typedef struct wowlan_pattern {
 	unsigned char mask[5];
 } wowlan_pattern_t;
 
-#ifdef CONFIG_MCC_STA_AP_MODE
-typedef struct rtw_fw_txrpt_stats {
+typedef struct {
 	unsigned long tx_pass_cnt;            // tx pass packet count
 	unsigned long tx_drop_cnt;            // tx drop packet count
 	unsigned long tx_rty_cnt;             // tx retry count (due to HW limit, the retry times >=4 is calculated as 4)
 	int txrpt_drop_cnt_ready;             // used to sync txrpt pass & drop count ready
 	int txrpt_rty_cnt_ready;              // used to sync txrpt retry count ready
-}rtw_fw_txrpt_stats_t;
+} rtw_fw_txrpt_stats_t;
 
-typedef struct rtw_fw_txrpt_retry {
+typedef struct {
 	unsigned long tx_pass_cnt;           // tx pass packet count
 	unsigned long tx_pass_rty_cnt;       // tx pass packet retry count
 	unsigned long tx_drop_cnt;           // tx drop packet count
 	unsigned long tx_drop_rty_cnt;       // tx drop packet retry count
 	int enable_spe_txrpt;                // enable specific tx report
 	int spe_txrpt_ifid;                  // the interface to enable specific tx report
-}rtw_fw_txrpt_retry_t;
+} rtw_fw_txrpt_retry_t;
+
+typedef struct {
+	unsigned char data_rt_count;       // data packet retry limit count
+	unsigned char mgnt_rt_count;       // management packet retry limit count
+	int data_rt_en;                    // enable to modify of hw retry limit of data packet
+	int mgnt_rt_en;                    // enable to modify of hw retry limit of management packet
+} rtw_set_hw_retry_t;
+
+#if defined(CONFIG_RX_FRAME_INFO_INDICATE) && (CONFIG_RX_FRAME_INFO_INDICATE == 1)
+struct rtw_rx_frame_info {
+	unsigned int recv_time; // unit is 25ns
+	signed char rssi;
+	signed char snr;
+};
 #endif
+
+/**
+  * @brief This structure is used to describe the connection status and status code for management frames only
+  */
+struct rtw_connection_info {
+	unsigned char auth_alg;             // authentication algorithm
+	unsigned char auth_code;            // authentication status code
+	unsigned char assoc_code;           // association status code
+	unsigned char disassoc_code;        // deauthentication/disassociation status code
+};
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #ifdef	__cplusplus
 }
