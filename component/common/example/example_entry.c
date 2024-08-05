@@ -882,6 +882,12 @@ example_hilink();
 #elif defined(CONFIG_EXAMPLE_MATTER_FAN) && (CONFIG_EXAMPLE_MATTER_FAN == 1)
     extern void example_matter_fan();
     example_matter_fan();
+#elif defined(CONFIG_EXAMPLE_MATTER_LIGHT_LOGREDIRECT) && (CONFIG_EXAMPLE_MATTER_LIGHT_LOGREDIRECT == 1)
+	extern void example_matter_light_logredirect();
+	example_matter_light_logredirect();
+#elif defined(CONFIG_EXAMPLE_MATTER_TEMPSENSOR_DIAGNOSTICLOGS) && (CONFIG_EXAMPLE_MATTER_TEMPSENSOR_DIAGNOSTICLOGS == 1)
+	extern void example_matter_tempsensor_diagnosticlogs();
+	example_matter_tempsensor_diagnosticlogs();
 #endif
 #endif
 

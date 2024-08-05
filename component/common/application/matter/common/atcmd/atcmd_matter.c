@@ -15,6 +15,8 @@ extern u32 deinitPref(void);
 extern void amebaQueryImageCmdHandler();
 extern void amebaApplyUpdateCmdHandler();
 #endif
+
+extern void ChipDiagLogInsertSector(void);
 #endif
 
 // Queue for matter shell
@@ -73,6 +75,22 @@ void fATmattershell(void *arg)
     } 
 }
 
+void fATcrash(void *arg)
+{
+#if defined(CONFIG_AMEBA_DEBUG_FORCE_CRASH_ATCMD) && (CONFIG_AMEBA_DEBUG_FORCE_CRASH_ATCMD == 1)
+printf("!@#$ FORCE CRASHING CORE !@#$\n");
+	((void (*)(void))2)();
+#endif // CONFIG_AMEBA_DEBUG_FORCE_CRASH_ATCMD
+}
+
+void fATinsertlog(void* arg)
+{
+#if defined(CONFIG_EXAMPLE_MATTER_LIGHT_LOGREDIRECT) && (CONFIG_EXAMPLE_MATTER_LIGHT_LOGREDIRECT == 1)
+	(void)arg;
+	ChipDiagLogInsertSector();	// debug
+#endif
+}
+
 log_item_t at_matter_items[] = {
 #ifndef CONFIG_INIC_NO_FLASH
 #if ATCMD_VER == ATVER_1
@@ -80,6 +98,8 @@ log_item_t at_matter_items[] = {
     {"ATM%", fATchipapp1},
     {"ATM^", fATchipapp2},
     {"ATMS", fATmattershell},
+	{"@@@@", fATcrash},
+	{.log_cmd="####", fATinsertlog},
 #endif // end of #if ATCMD_VER == ATVER_1
 #endif
 };
