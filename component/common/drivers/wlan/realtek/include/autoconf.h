@@ -236,6 +236,7 @@
 #endif
 /* For WPA3 */
 #define CONFIG_IEEE80211W
+#define CONFIG_OWE_SUPPORT
 #define CONFIG_SAE_SUPPORT
 
 #ifdef CONFIG_SAE_SUPPORT

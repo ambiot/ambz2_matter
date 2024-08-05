@@ -1663,6 +1663,13 @@ int wext_del_mac_filter(unsigned char* hwaddr)
 	return -1;
 }
 
+extern void rtw_connect_monitor_mgnt(int enable);
+void wext_wifi_connect_monitor_mgnt(int enable)
+{
+	rtw_wifi_connect_monitor_mgnt(enable);
+	return;
+}
+
 extern void rtw_set_indicate_mgnt(int enable);
 void wext_set_indicate_mgnt(int enable)
 {
