@@ -554,9 +554,9 @@ void fATWx(void *arg){
 #if CONFIG_LWIP_LAYER
 	u8 *mac = LwIP_GetMAC(&xnetif[0]);
 	u8 *ip = LwIP_GetIP(&xnetif[0]);
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #if LWIP_IPV6
 	u8 *ipv6_0 = LwIP_GetIPv6_linklocal(&xnetif[0]);
+#if LWIP_IPV6_DHCP6 && (LWIP_VERSION_MAJOR >= 2) && (LWIP_VERSION_MINOR >= 1)
 	u8 *ipv6_1 = LwIP_GetIPv6_global(&xnetif[0]);
 #endif
 #endif
@@ -579,9 +579,9 @@ void fATWx(void *arg){
 #if CONFIG_LWIP_LAYER
 			mac = LwIP_GetMAC(&xnetif[i]);
 			ip = LwIP_GetIP(&xnetif[i]);
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #if LWIP_IPV6
 			ipv6_0 = LwIP_GetIPv6_linklocal(&xnetif[i]);
+#if LWIP_IPV6_DHCP6 && (LWIP_VERSION_MAJOR >= 2) && (LWIP_VERSION_MINOR >= 1)
 			ipv6_1 = LwIP_GetIPv6_global(&xnetif[i]);
 #endif
 #endif
@@ -612,18 +612,19 @@ void fATWx(void *arg){
 			printf("\n\r==============================");
 			printf("\n\r\tMAC             => %02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]) ;
 			printf("\n\r\tIP              => %d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
+			printf("\n\r\tGW              => %d.%d.%d.%d\n\r", gw[0], gw[1], gw[2], gw[3]);
+			printf("\n\r\tmsk             => %d.%d.%d.%d\n\r", msk[0], msk[1], msk[2], msk[3]);
+
 #if LWIP_IPV6
 			printf("\n\r\tLink-local IPV6 => %02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
 				ipv6_0[0], ipv6_0[1],  ipv6_0[2],  ipv6_0[3],  ipv6_0[4],  ipv6_0[5],  ipv6_0[6], ipv6_0[7],
 				ipv6_0[8], ipv6_0[9], ipv6_0[10], ipv6_0[11], ipv6_0[12], ipv6_0[13], ipv6_0[14], ipv6_0[15]);
-			printf("\n\r\tIPV6            => %02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
+#if LWIP_IPV6_DHCP6 && (LWIP_VERSION_MAJOR >= 2) && (LWIP_VERSION_MINOR >= 1)
+			printf("\n\r\tIPV6            => %02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x\n\r",
 				ipv6_1[0], ipv6_1[1],  ipv6_1[2],  ipv6_1[3],  ipv6_1[4],  ipv6_1[5],  ipv6_1[6], ipv6_1[7],
 				ipv6_1[8], ipv6_1[9], ipv6_1[10], ipv6_1[11], ipv6_1[12], ipv6_1[13], ipv6_1[14], ipv6_1[15]);
 #endif
 #endif
-			printf("\n\r\tGW              => %d.%d.%d.%d\n\r", gw[0], gw[1], gw[2], gw[3]);
-			printf("\n\r\tmsk             => %d.%d.%d.%d\n\r", msk[0], msk[1], msk[2], msk[3]);
 #endif
 			if(setting.mode == RTW_MODE_AP || i == 1)
 			{
@@ -1260,8 +1261,8 @@ void fATWC(void *arg){
 #if CONFIG_LWIP_LAYER
 		/* Start DHCPClient */
 		LwIP_DHCP(0, DHCP_START);
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #if LWIP_IPV6
+#if LWIP_IPV6_DHCP6 && (LWIP_VERSION_MAJOR >= 2) && (LWIP_VERSION_MINOR >= 1)
 		LwIP_DHCP6(0, DHCP6_START);
 #endif
 #endif

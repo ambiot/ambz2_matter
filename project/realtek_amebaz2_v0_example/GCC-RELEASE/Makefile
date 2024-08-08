@@ -32,79 +32,13 @@ setup:
 #*****************************************************************************#
 #                         MATTER MAKE DEFINES                                 #
 #*****************************************************************************#
-.PHONY: toolchain_matter
-toolchain_matter:
-	@$(MAKE) -C $(MATTER_BUILDDIR) toolchain_matter
+include $(MATTER_BUILDDIR)/Makefile
 
 .PHONY: is_matter
 is_matter: toolchain_matter
 	cp $(MATTER_BUILDDIR)/partition_matter.json partition.json
 	@$(MAKE) -f application.is.matter.mk
 
-.PHONY: all_clusters
-all_clusters:
-	@$(MAKE) -C $(MATTER_BUILDDIR) all_clusters
-
-.PHONY: aircon_port
-aircon_port:
-	@$(MAKE) -C $(MATTER_BUILDDIR) aircon_port
-
-.PHONY: air_purifier
-air_purifier:
-	@$(MAKE) -C $(MATTER_BUILDDIR) air_purifier
-
-.PHONY: bridge_dm
-bridge_dm:
-	$(MAKE) -C $(MATTER_BUILDDIR) bridge_dm
-
-.PHONY: dishwasher_port
-dishwasher_port:
-	$(MAKE) -C $(MATTER_BUILDDIR) dishwasher_port
-
-.PHONY: fan_port
-fan_port:
-	$(MAKE) -C $(MATTER_BUILDDIR) fan_port
-
-.PHONY: chef
-chef:
-	@$(MAKE) -C $(MATTER_BUILDDIR) chef
-
-.PHONY: laundrywasher_port
-laundrywasher_port:
-	@$(MAKE) -C $(MATTER_BUILDDIR) laundrywasher_port
-
-.PHONY: light
-light:
-	@$(MAKE) -C $(MATTER_BUILDDIR) light
-
-.PHONY: light_dm
-light_dm:
-	@$(MAKE) -C $(MATTER_BUILDDIR) light_dm
-
-.PHONY: light_port
-light_port:
-	@$(MAKE) -C $(MATTER_BUILDDIR) light_port
-
-.PHONY: light_switch
-light_switch:
-	@$(MAKE) -C $(MATTER_BUILDDIR) light_switch
-
-.PHONY: otar
-otar:
-	@$(MAKE) -C $(MATTER_BUILDDIR) otar
-
-.PHONY: refrigerator_port
-refrigerator_port:
-	@$(MAKE) -C $(MATTER_BUILDDIR) refrigerator_port
-
-.PHONY: thermostat_port
-thermostat_port:
-	@$(MAKE) -C $(MATTER_BUILDDIR) thermostat_port
-
 .PHONY: clean_matter
 clean_matter:
 	@$(MAKE) -f application.is.matter.mk clean
-
-.PHONY: clean_matter_libs
-clean_matter_libs:
-	@$(MAKE) -C $(MATTER_BUILDDIR) clean_matter_libs

@@ -40,12 +40,11 @@ extern "C" {
 
 #define MAX_REGISRABLE_SERVICE_NUMBER 12
 
-#if CONFIG_BLE_MATTER_MULTI_ADV
 #define MAX_ADV_NUMBER     2
 #define MATTER_MULTI_TASK_STACK_SIZE  256*10
 #define MATTER_MULTI_TASK_PRIORITY  4
 #define MATTER_MULTI_ADV_DATA_QUEUE_SIZE  0x60
-#endif
+
 /*============================================================================*
  *                              Variables
  *============================================================================*/
@@ -99,14 +98,12 @@ typedef enum
 	BT_MATTER_SEND_CB_MSG_IND_NTF_ENABLE,
 	BT_MATTER_SEND_CB_MSG_IND_NTF_DISABLE,
 	BT_MATTER_SEND_CB_MSG_WRITE_CHAR,
-#if CONFIG_BLE_MATTER_MULTI_ADV
 	BLE_MATTER_MSG_CONNECTED_MULTI_ADV,
 	BLE_MATTER_MSG_DISCONNECTED_MULTI_ADV,
 	BLE_MATTER_MSG_WRITE_CHAR_MULTI_ADV,
 	BLE_MATTER_MSG_CCCD_RECV_ENABLE_MULTI_ADV,
 	BLE_MATTER_MSG_CCCD_RECV_DISABLE_MULTI_ADV,
 	BLE_MATTER_MSG_SEND_DATA_COMPLETE_MULTI_ADV,
-#endif
 } BT_MATTER_SEND_MSG_TYPE;
 
 typedef enum
@@ -116,7 +113,6 @@ typedef enum
 	CB_GAP_MSG_CONN_EVENT = 0x3, /**< bt_matter_adapter_app_handle_gap_msg */
 } T_CHIP_BLEMGR_CALLBACK_TYPE;
 
-#if CONFIG_BLE_MATTER_MULTI_ADV
 typedef struct {
 	uint8_t 	 adv_datalen;
 	uint8_t 	 scanrsp_datalen;
@@ -143,12 +139,10 @@ typedef struct {
 	uint8_t matter_sta_sto_flag;   //for matter
 	uint8_t adv_id;
 } T_MULTI_ADV_CONCURRENT;
-#endif
 /*============================================================================*
  *                              Functions
  *============================================================================*/
-#if CONFIG_BLE_MATTER_MULTI_ADV
-uint8_t matter_get_unused_adv_index(void);
+uint8_t matter_get_unused_adv_index(int type);
 
 bool matter_matter_ble_adv_stop_by_adv_id(uint8_t *adv_id);
 
@@ -167,7 +161,7 @@ void ble_matter_adapter_send_multi_adv_msg(uint8_t adv_id);
 void ble_matter_adapter_legacy_start_adv_callback(void *data);
 
 void ble_matter_adapter_delete_adv(uint8_t adv_id);
-#endif
+
 
 int ble_matter_adapter_app_handle_upstream_msg(uint16_t subtype, void *pdata);
 
@@ -212,9 +206,7 @@ T_APP_RESULT ble_matter_adapter_app_client_callback(T_CLIENT_ID client_id, uint8
 
 T_APP_RESULT ble_matter_adapter_app_profile_callback(T_SERVER_ID service_id, void *p_data);
 
-#if CONFIG_BLE_MATTER_MULTI_ADV
 void ble_matter_adapter_app_vendor_callback(uint8_t cb_type, void *p_cb_data);
-#endif
 
 #if F_BT_GAPS_CHAR_WRITEABLE
 T_APP_RESULT ble_matter_adapter_gap_service_callback(T_SERVER_ID service_id, void *p_para)
@@ -225,4 +217,3 @@ T_APP_RESULT ble_matter_adapter_gap_service_callback(T_SERVER_ID service_id, voi
 #endif
 
 #endif
-

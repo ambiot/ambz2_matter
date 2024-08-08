@@ -43,8 +43,8 @@ typedef enum
 	DHCP_TIMEOUT
 } DHCP_State_TypeDef;
 
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
 #if LWIP_IPV6
+#if LWIP_IPV6_DHCP6 && (LWIP_VERSION_MAJOR >= 2) && (LWIP_VERSION_MINOR >= 1)
 typedef enum 
 {
 	DHCP6_START=0,
@@ -68,14 +68,14 @@ void wifi_rx_beacon_hdl( char* buf, int buf_len, int flags, void* userdata);
 void LwIP_Init(void);
 void LwIP_ReleaseIP(uint8_t idx);
 uint8_t LwIP_DHCP(uint8_t idx, uint8_t dhcp_state);
-unsigned char* LwIP_GetMAC(struct netif *pnetif);
-unsigned char* LwIP_GetIP(struct netif *pnetif);
-#if LWIP_VERSION_MAJOR >= 2
 #if LWIP_IPV6
-unsigned char* LwIP_GetIPv6(struct netif *pnetif);
+#if LWIP_IPV6_DHCP6 && (LWIP_VERSION_MAJOR >= 2) && (LWIP_VERSION_MINOR >= 1)
+uint8_t LwIP_DHCP6(uint8_t idx, uint8_t dhcp_state);
 #endif
 #endif
-unsigned char* LwIP_GetGW(struct netif *pnetif);
+uint8_t* LwIP_GetMAC(struct netif *pnetif);
+uint8_t* LwIP_GetIP(struct netif *pnetif);
+uint8_t* LwIP_GetGW(struct netif *pnetif);
 uint8_t* LwIP_GetMASK(struct netif *pnetif);
 uint8_t* LwIP_GetBC(struct netif *pnetif);
 #if LWIP_DNS
@@ -87,12 +87,8 @@ void LwIP_UseStaticIP(struct netif *pnetif);
 void LwIP_AUTOIP(struct netif *pnetif);
 #endif
 #if LWIP_IPV6
-void LwIP_AUTOIP_IPv6(struct netif *pnetif);
-#endif
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
-#if LWIP_IPV6
-uint8_t LwIP_DHCP6(uint8_t idx, uint8_t dhcp_state);
 uint8_t* LwIP_GetIPv6_linklocal(struct netif *pnetif);
+#if LWIP_IPV6_DHCP6 && (LWIP_VERSION_MAJOR >= 2) && (LWIP_VERSION_MINOR >= 1)
 uint8_t* LwIP_GetIPv6_global(struct netif *pnetif);
 #endif
 #endif

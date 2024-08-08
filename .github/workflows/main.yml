@@ -6,7 +6,7 @@ on:
 jobs:
     build:
         runs-on: ubuntu-latest
-        
+
         steps:
             - name: Free Disk Space (Ubuntu)
               uses: jlumbroso/free-disk-space@main
@@ -31,13 +31,21 @@ jobs:
                   ref: master
                   submodules: recursive
                   path: connectedhomeip
-                  
+
             - name: checkout ambz2_matter main branch
               uses: actions/checkout@v3
               with:
                   ref: ${{ github.event.pull_request.head.sha }}
                   path: ambz2_matter
-                    
+
+            - name: checkout ameba-rtos-matter main branch
+              uses: actions/checkout@v3
+              with:
+                  repository: Ameba-AIoT/ameba-rtos-matter
+                  ref: main
+                  submodules: recursive
+                  path: ambz2_matter/component/common/application/matter
+
             - name: Build all-clusters-app
               run: |
                     echo "Setting up build environment"

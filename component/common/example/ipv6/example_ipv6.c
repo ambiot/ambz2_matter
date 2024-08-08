@@ -415,7 +415,7 @@ static void example_ipv6_thread(void *param)
     if(rtw_down_timeout_sema(&ipv6_semaphore, IPV6_SEMA_TIMEOUT) == RTW_FALSE) {
         rtw_free_sema(&ipv6_semaphore);
     }
-    LwIP_AUTOIP_IPv6(&xnetif[0]);
+
     //Wait for ipv6 addr process conflict done
     while(!ip6_addr_isvalid(netif_ip6_addr_state(&xnetif[0],0)))
         vTaskDelay(100); /*GCC: To avoid busy loop*/

@@ -135,6 +135,17 @@ int32_t dct_close_module(dct_handle_t *dct_handle);
 int32_t dct_set_variable(dct_handle_t *dct_handle, char *variable_name, char *variable_value);
 
 /**
+ * @brief      Write variable name and value in opened module.
+ * @param[in]  dct_handle : dct handler
+ * @param[in]  variable_name : variable name which you want to store in module
+ * @param[in]  variable_value : variable value which you want to store in module
+ * @param[in]  variable_value_length : variable value length which you want to store in module
+ * @return     0  : SUCCESS
+ * @return     <0 : ERROR
+ */
+int32_t dct_set_variable_new(dct_handle_t *dct_handle, char *variable_name, char *variable_value, uint16_t variable_value_length);
+
+/**
  * @brief      read value of variable name in opened module.
  * @param[in]  dct_handle : dct handler
  * @param[in]  variable_name : variable name which you want to get from module
@@ -162,11 +173,6 @@ int32_t dct_delete_variable(dct_handle_t *dct_handle, char *variable_name);
  */
 int32_t dct_remain_variable(dct_handle_t *dct_handle);
 
-#if defined(CONFIG_MATTER) && CONFIG_MATTER
-#include <dct2.h>
-#endif
-
 /*\@}*/
 
 #endif // #ifndef __RTK_DCT_H__
-
