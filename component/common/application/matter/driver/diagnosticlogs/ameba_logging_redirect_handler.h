@@ -1,8 +1,6 @@
 #pragma once
 
 #include <platform_stdlib.h>
-#include <map>
-#include <vector>
 #include <string>
 #include "arch/cc.h"
 #include "platform_opts_matter.h"
@@ -38,11 +36,23 @@ class AmebaLogRedirectHandler {
         void DeregisterAmebaLogRedirect(void);
         void DeregisterAmebaErrorFormatter(void);
 
-        static inline bool GetAmebaLogRedirectInited(void) {
+        static inline void InitAmebaLogSubsystem(void) 
+        {
+            bAmebaUseLogSubsystem = true;
+        }
+
+        static inline bool GetAmebaLogSubsystemInited(void)
+        {
+            return bAmebaUseLogSubsystem;
+        }
+
+        static inline bool GetAmebaLogRedirectInited(void) 
+        {
             return bAmebaLogRedirected;
         }
 
-        static inline bool GetAmebaErrorFormatterInited(void) {
+        static inline bool GetAmebaErrorFormatterInited(void) 
+        {
             return bAmebaCustomFormatterSet;
         }
 
@@ -60,4 +70,5 @@ class AmebaLogRedirectHandler {
 
         static inline bool bAmebaLogRedirected = false;
         static inline bool bAmebaCustomFormatterSet = false;
+        static inline bool bAmebaUseLogSubsystem = false;
 };

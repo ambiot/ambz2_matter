@@ -61,6 +61,8 @@ INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/dct
 INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/fatfs
 INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/fatfs/r0.10c/include
 INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/ftl
+INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/littlefs
+INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/littlefs/r2.50
 INCLUDES += -I$(SDKROOTDIR)/component/common/utilities
 INCLUDES += -I$(SDKROOTDIR)/component/common/mbed/hal
 INCLUDES += -I$(SDKROOTDIR)/component/common/mbed/hal_ext
@@ -157,6 +159,7 @@ INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/bluetooth
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/mbedtls
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/port
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/include
+INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/driver/diagnosticlogs
 
 # CHIP Include folder list
 # -------------------------------------------------------------------
@@ -205,8 +208,8 @@ SRC_CPP += $(CHIPDIR)/src/app/util/attribute-table.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/binding-table.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/DataModelHandler.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/ember-compatibility-functions.cpp
-SRC_CPP += $(CHIPDIR)/src/app/util/ember-global-attribute-access-interface.cpp
-SRC_CPP += $(CHIPDIR)/src/app/util/ember-io-storage.cpp
+#SRC_CPP += $(CHIPDIR)/src/app/util/ember-global-attribute-access-interface.cpp
+#SRC_CPP += $(CHIPDIR)/src/app/util/ember-io-storage.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/generic-callback-stubs.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/util.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/privilege-storage.cpp
@@ -231,12 +234,18 @@ SRC_CPP += $(CHIPDIR)/examples/air-purifier-app/air-purifier-common/src/air-qual
 SRC_CPP += $(CHIPDIR)/examples/air-purifier-app/air-purifier-common/src/filter-delegates.cpp
 SRC_CPP += $(CHIPDIR)/examples/air-purifier-app/air-purifier-common/src/thermostat-manager.cpp
 
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnosticlogs/ameba_diagnosticlogs_provider_delegate_impl_fat.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnosticlogs/ameba_diagnosticlogs_provider_delegate_impl_nofat.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnosticlogs/ameba_logging_faultlog.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnosticlogs/ameba_logging_redirect_handler.cpp
+
 ifeq ($(CHIP_ENABLE_OTA_REQUESTOR), true)
 SRC_CPP += $(CHIPDIR)/examples/platform/ameba/ota/OTAInitializer.cpp
 endif
 SRC_CPP += $(CHIPDIR)/examples/providers/DeviceInfoProviderImpl.cpp
 
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_api.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_log_api.cpp
 
 #lib_version
 VER_C += $(TARGET)_version.c

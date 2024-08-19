@@ -54,6 +54,8 @@ INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/dct
 INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/fatfs
 INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/fatfs/r0.10c/include
 INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/ftl
+INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/littlefs
+INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/littlefs/r2.50
 INCLUDES += -I$(SDKROOTDIR)/component/common/utilities
 INCLUDES += -I$(SDKROOTDIR)/component/common/mbed/hal
 INCLUDES += -I$(SDKROOTDIR)/component/common/mbed/hal_ext
@@ -150,6 +152,9 @@ INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/bluetooth
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/mbedtls
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/port
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/include
+
+INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/driver
+INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/driver/diagnosticlogs
 
 # CHIP Include folder list
 # -------------------------------------------------------------------

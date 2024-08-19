@@ -1,7 +1,7 @@
 
 #include "ameba_diagnosticlogs_provider_delegate_impl.h"
 #include "chip_porting.h"
-#include "matter_flashfs.h"
+#include "matter_fs.h"
 #include "platform_opts_matter.h"
 #include <flash_api.h>
 #include <device_lock.h>

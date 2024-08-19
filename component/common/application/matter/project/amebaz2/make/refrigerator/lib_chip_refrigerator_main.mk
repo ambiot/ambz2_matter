@@ -61,6 +61,8 @@ INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/dct
 INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/fatfs
 INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/fatfs/r0.10c/include
 INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/ftl
+INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/littlefs
+INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/littlefs/r2.50
 INCLUDES += -I$(SDKROOTDIR)/component/common/utilities
 INCLUDES += -I$(SDKROOTDIR)/component/common/mbed/hal
 INCLUDES += -I$(SDKROOTDIR)/component/common/mbed/hal_ext
@@ -160,6 +162,7 @@ INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/port
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/include
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/core
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/driver
+INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/driver/diagnosticlogs
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/example/refrigerator
 
 # CHIP Include folder list
@@ -204,8 +207,8 @@ SRC_CPP += $(CHIPDIR)/src/app/util/attribute-table.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/binding-table.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/DataModelHandler.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/ember-compatibility-functions.cpp
-SRC_CPP += $(CHIPDIR)/src/app/util/ember-global-attribute-access-interface.cpp
-SRC_CPP += $(CHIPDIR)/src/app/util/ember-io-storage.cpp
+#SRC_CPP += $(CHIPDIR)/src/app/util/ember-global-attribute-access-interface.cpp
+#SRC_CPP += $(CHIPDIR)/src/app/util/ember-io-storage.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/generic-callback-stubs.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/util.cpp
 SRC_CPP += $(CHIPDIR)/src/app/util/privilege-storage.cpp
@@ -223,8 +226,14 @@ SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/attribut
 SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/cluster-objects.cpp
 SRC_CPP += $(CHIPDIR)/examples/providers/DeviceInfoProviderImpl.cpp
 
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnosticlogs/ameba_diagnosticlogs_provider_delegate_impl_fat.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnosticlogs/ameba_diagnosticlogs_provider_delegate_impl_nofat.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnosticlogs/ameba_logging_faultlog.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnosticlogs/ameba_logging_redirect_handler.cpp
+
 # Custom light-app src files with porting layer
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_api.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_log_api.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_core.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_interaction.cpp
 ifeq ($(CHIP_ENABLE_OTA_REQUESTOR), true)

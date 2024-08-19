@@ -6,8 +6,6 @@
 #include <platform_stdlib.h>
 #include "platform_opts_matter.h"
 
-#if defined(CONFIG_AMEBA_MATTER_ERROR_FORMATTER) && (CONFIG_AMEBA_MATTER_ERROR_FORMATTER == 1)
-
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -27,7 +25,5 @@ void matter_c_intf_chip_logging(MatterLogType logtype, char* msg, char* file, ui
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-
-#endif // CONFIG_AMEBA_MATTER_ERROR_FORMATTER
 
 #endif // AMEBA_MATTER_API_LOG_H

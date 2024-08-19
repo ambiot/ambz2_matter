@@ -37,9 +37,7 @@
 #include <core/ErrorStr.h>
 
 /* for log interception */
-#if defined(CONFIG_AMEBA_MATTER_ERROR_FORMATTER) && (CONFIG_AMEBA_MATTER_ERROR_FORMATTER == 1)
-#include <driver/ameba_logging_redirect_handler.h>
-#endif
+#include <driver/diagnosticlogs/ameba_logging_redirect_handler.h>
 
 #if CONFIG_ENABLE_CHIP_SHELL
 #include <shell/launch_shell.h>
@@ -176,9 +174,9 @@ CHIP_ERROR matter_core_init()
     err = PlatformMgr().InitChipStack();
     SuccessOrExit(err);
 
-#if defined(CONFIG_AMEBA_MATTER_ERROR_FORMATTER) && (CONFIG_AMEBA_MATTER_ERROR_FORMATTER == 1)
-    instance.RegisterAmebaErrorFormatter();
-#endif // CONFIG_AMEBA_MATTER_ERROR_FORMATTER
+    if(instance.GetAmebaLogSubsystemInited()) {
+        instance.RegisterAmebaErrorFormatter(); // only register the custom error formatter if the log subsystem was inited.
+    }
 
     err = mFactoryDataProvider.Init();
     if (err != CHIP_NO_ERROR)

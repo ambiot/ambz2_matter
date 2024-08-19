@@ -1,22 +1,31 @@
 #include "ameba_diagnosticlogs_provider_delegate_impl.h"
 #include "chip_porting.h"
-#include "matter_flashfs.h"
+//#include "matter_flashfs.h"
+#include "lfs.h"
+#include "matter_fs.h"
 #include "platform_opts_matter.h"
 #include <flash_api.h>
 #include <device_lock.h>
 
-#if defined(CONFIG_AMEBA_LOGS_USE_FATFS) && (CONFIG_AMEBA_LOGS_USE_FATFS == 0)
-
-size_t GetFileSize(char* path, void* fpp)
-{
-    uint sz = matter_flashfs_file_size(fpp);
-    matter_flashfs_file_close(fpp);
-    ChipLogProgress(DeviceLayer, "sz: %d", sz);
-    return sz;
-}
+#include <app/clusters/diagnostic-logs-server/diagnostic-logs-server.h>
 
 using namespace chip;
 using namespace chip::app::Clusters::DiagnosticLogs;
+
+/* Attach the log provider delegate to the server via callback */
+void emberAfDiagnosticLogsClusterInitCallback(chip::EndpointId endpoint) {
+    auto & logProvider = AmebaDiagnosticLogsProvider::GetInstance();
+    DiagnosticLogsServer::Instance().SetDiagnosticLogsProviderDelegate(endpoint, &logProvider);
+}
+
+#if defined(CONFIG_AMEBA_LOGS_USE_FATFS) && (CONFIG_AMEBA_LOGS_USE_FATFS == 0)
+
+size_t GetFileSize(char *path, void *fpp)
+{
+    uint sz = matter_fs_fsize(fpp);
+    ChipLogProgress(DeviceLayer, "sz: %d", sz);
+    return sz;
+}
 
 namespace {
     bool IsValidIntent(IntentEnum intent) 
@@ -29,18 +38,16 @@ AmebaDiagnosticLogsProvider::AmebaDiagnosticLogsProvider()
 {
     if(AmebaDiagnosticLogsProvider::bInitedFs == false)
     {
-        // init filesystem
-        int res = matter_flashfs_get_inited();
+        int res = matter_fs_get_init();
         if(res < 0) 
         {
             ChipLogError(DeviceLayer, "Fail to init flash fs for logging! %" CHIP_ERROR_FORMAT, CHIP_ERROR_PERSISTED_STORAGE_FAILED);
         } 
-        else 
+        else
         {
-            matter_flashfs_scanfiles("0:/");
-            matter_flashfs_file_open(NULL, &fpUserLog, 0);
-            matter_flashfs_file_open(NULL, &fpNetdiagLog, 0);
-            matter_flashfs_file_open(NULL, &fpCrashLog, 0);
+            matter_fs_fopen(USER_LOG_FILENAME,     &fpUserLog,     LFS_O_RDWR | LFS_O_CREAT);
+            matter_fs_fopen(NET_LOG_FILENAME,      &fpNetdiagLog,  LFS_O_RDWR | LFS_O_CREAT);
+            matter_fs_fopen(CRASH_LOG_FILENAME,    &fpCrashLog,    LFS_O_RDWR | LFS_O_CREAT);
 
             AmebaDiagnosticLogsProvider::bInitedFs = true;
             ChipLogProgress(DeviceLayer, "Ameba LogProvider ready!");
@@ -87,7 +94,7 @@ CHIP_ERROR AmebaDiagnosticLogsProvider::StartLogCollection(IntentEnum intent, Lo
 
     int err;
 
-    amb_fsctx_t* fp;
+    lfs_file_t* fp;
 
     switch(intent)
     {
@@ -106,6 +113,9 @@ CHIP_ERROR AmebaDiagnosticLogsProvider::StartLogCollection(IntentEnum intent, Lo
 
     VerifyOrReturnValue(nullptr != fp, CHIP_ERROR_INTERNAL);                    // handle could not be opened (fp is null)
 
+    // seek file back to top to read
+    matter_fs_fseek(fp, 0, LFS_SEEK_SET);
+
     mLogSessionHandle++;
     // If the session handle rolls over to UINT16_MAX which is invalid, reset to 0.
     VerifyOrDo(mLogSessionHandle != kInvalidLogSessionHandle, mLogSessionHandle = 0);
@@ -122,11 +132,12 @@ CHIP_ERROR AmebaDiagnosticLogsProvider::EndLogCollection(LogSessionHandle sessio
     VerifyOrReturnValue(sessionHandle != kInvalidLogSessionHandle, CHIP_ERROR_INVALID_ARGUMENT);
     VerifyOrReturnValue(mLogFiles.count(sessionHandle), CHIP_ERROR_INVALID_ARGUMENT);
 
-    amb_fsctx_t* fp;
+    lfs_file_t* fp;
 
     fp = mLogFiles[sessionHandle];
 
-    matter_flashfs_file_reset(fp);
+    // WARNING: if handle is closed, it needs to be reopened or assert in LFS layer when a future call is made
+    matter_fs_fclear(fp);   // because the file has been read it is safe to clear it
 
     mLogFiles.erase(sessionHandle);
 
@@ -137,27 +148,23 @@ CHIP_ERROR AmebaDiagnosticLogsProvider::EndLogCollection(LogSessionHandle sessio
 
 CHIP_ERROR AmebaDiagnosticLogsProvider::CollectLog(LogSessionHandle sessionHandle, MutableByteSpan & outBuffer, bool & outIsEndOfLog)
 {
-    /**
-     * Read the file here based on which handle was provided
-     * Context for tracking read operation is not required because we fallback to using f_tell in the fs driver
-     */
-
-    amb_fsctx_t* fp;
+    lfs_file_t* fp;
 
     fp = mLogFiles[sessionHandle];                                                 // obtain the file handle
-    int filesize = matter_flashfs_file_size(fp);                                   // get the filesize
+    int filesize = matter_fs_fsize(fp);                                             // get the filesize
     int count = min<int>(filesize, outBuffer.size());                              // clamp the size we want to read
 
     uint bytesRead = 0;
-    int err = matter_flashfs_file_read(fp, matter_flashfs_file_tell(fp), count, outBuffer.data(), outBuffer.size(), &bytesRead);    // start from the fp position
+    printf("Cur/max: %d / %d \n", matter_fs_ftell(fp), matter_fs_fsize(fp));
+    int err = matter_fs_fread(fp, matter_fs_ftell(fp), count, outBuffer.data(), outBuffer.size(), &bytesRead);
     VerifyOrReturnError(err == 0, CHIP_ERROR_INTERNAL, outBuffer.reduce_size(0));
 
     outBuffer.reduce_size(bytesRead);                                              // truncate remainder buffer space
 
     /* required for BDX transaction to tell it when to read next block */
-    outIsEndOfLog = filesize == matter_flashfs_file_tell(fp) - FLASH_SIZE_HEADER_LEN;
+    outIsEndOfLog = filesize == matter_fs_ftell(fp);
 
-    return CHIP_NO_ERROR;    
+    return CHIP_NO_ERROR; 
 }
 
 CHIP_ERROR AmebaDiagnosticLogsProvider::GetLogForIntent(IntentEnum intent, MutableByteSpan & outBuffer, Optional<uint64_t> & outTimeStamp, Optional<uint64_t> & outTimeSinceBoot)

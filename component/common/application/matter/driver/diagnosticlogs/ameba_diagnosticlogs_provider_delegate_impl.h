@@ -4,7 +4,9 @@
 #include <map>
 
 #include "ff.h"
-#include "matter_flashfs.h"
+//#include "matter_flashfs.h"
+#include "lfs.h"
+#include "matter_fs.h"
 #include "platform_opts_matter.h"
 
 size_t GetFileSize(char* path, void* fpp);
@@ -37,9 +39,14 @@ public:
                                Optional<uint64_t> & outTimeSinceBoot);
 
 #if defined(CONFIG_AMEBA_LOGS_USE_FATFS) && (CONFIG_AMEBA_LOGS_USE_FATFS == 0)
-    static inline amb_fsctx_t* GetFpUserLog() { return &fpUserLog; }
+    /*static inline amb_fsctx_t* GetFpUserLog() { return &fpUserLog; }
     static inline amb_fsctx_t* GetFpNetdiagLog() { return &fpNetdiagLog; }
     static inline amb_fsctx_t* GetFpCrashLog() { return &fpCrashLog; }
+    */
+
+    static inline lfs_file_t* GetFpUserLog() { return &fpUserLog; }
+    static inline lfs_file_t* GetFpNetdiagLog() { return &fpNetdiagLog; }
+    static inline lfs_file_t* GetFpCrashLog() { return &fpCrashLog; }
 #endif
 
 private:
@@ -67,7 +74,7 @@ private:
         fptr        -> always set this to the start of the region
         fsize       -> always 0, this is automatically calculated by the API
     */
-
+/*
     static inline amb_fsctx_t fpUserLog = {
         .label =        "LOG_USER", 
         .addr_start =   USER_LOG_ADDR,      
@@ -91,6 +98,12 @@ private:
     };
 
     std::map<LogSessionHandle, amb_fsctx_t *> mLogFiles;
+*/
+    static inline lfs_file_t fpUserLog;
+    static inline lfs_file_t fpCrashLog;
+    static inline lfs_file_t fpNetdiagLog;
+
+    std::map<LogSessionHandle, lfs_file_t *> mLogFiles;
 #endif
     LogSessionHandle mLogSessionHandle = kInvalidLogSessionHandle;
 

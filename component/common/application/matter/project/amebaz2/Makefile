@@ -60,11 +60,6 @@ REFRIGERATOR_ZAP	= $(MATTER_EXAMPLEDIR)/refrigerator/refrigerator-app.zap
 THERMOSTAT_FILE		= $(CHIPDIR)/examples/thermostat/ameba/build/chip/codegen/cluster-file.txt
 THERMOSTAT_ZAP		= $(CHIPDIR)/examples/thermostat/thermostat-common/thermostat.zap
 
-TEMPSENSDIAG_FILE   = $(MATTER_MAKEDIR)/tempsensor_diagnosticlogs/build/chip/codegen/cluster-file.txt
-TEMPSENSDIAG_ZAP	= $(MATTER_EXAMPLEDIR)/tempsensor_diagnosticlogs/tempsensor_diagnosticlogs-app.zap
-LIGHTREDIRECT_FILE  = $(MATTER_MAKEDIR)/light_logredirect/build/chip/codegen/cluster-file.txt
-LIGHTREDIRECT_ZAP	= $(MATTER_EXAMPLEDIR)/light_logredirect/light_logredirect-app.zap
-
 #*****************************************************************************#
 #                      RULES TO MAKE MATTER DIRS                              #
 #*****************************************************************************#
@@ -175,22 +170,6 @@ $(THERMOSTAT_FILE): $(THERMOSTAT_ZAP)
 	@python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $^ > $(CHIPDIR)/examples/thermostat/ameba/build/chip/codegen/cluster-file.txt
 	@python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $@ --chip_path $(CHIPDIR)
 
-$(TEMPSENSDIAG_FILE): $(TEMPSENSDIAG_ZAP)
-	@mkdir -p $(MATTER_MAKEDIR)/tempsensor_diagnosticlogs/build/chip/codegen/zap-generated
-	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl-server.json -z $(CHIPDIR)/src/app/zap-templates/zcl/zcl.json --output-dir $(MATTER_MAKEDIR)/tempsensor_diagnosticlogs/build/chip/codegen/zap-generated  $^
-	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json -z $(CHIPDIR)/src/app/zap-templates/zcl/zcl.json --output-dir $(MATTER_MAKEDIR)/tempsensor_diagnosticlogs/build/chip/codegen/zap-generated $^
-	@python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(MATTER_MAKEDIR)/tempsensor_diagnosticlogs/build/chip/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(MATTER_EXAMPLEDIR)/tempsensor_diagnosticlogs/tempsensor_diagnosticlogs-app.matter
-	@python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $^ > $@
-	@python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $@ --chip_path $(CHIPDIR)
-
-$(LIGHTREDIRECT_FILE): $(LIGHTREDIRECT_ZAP)
-	@mkdir -p $(MATTER_MAKEDIR)/light_logredirect/build/chip/codegen/zap-generated
-	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/matter-idl-server.json -z $(CHIPDIR)/src/app/zap-templates/zcl/zcl.json --output-dir $(MATTER_MAKEDIR)/light_logredirect/build/chip/codegen/zap-generated  $^
-	@python3 $(CHIPDIR)/scripts/tools/zap/generate.py --no-prettify-output --templates src/app/zap-templates/app-templates.json -z $(CHIPDIR)/src/app/zap-templates/zcl/zcl.json --output-dir $(MATTER_MAKEDIR)/light_logredirect/build/chip/codegen/zap-generated $^
-	@python3 $(CHIPDIR)/scripts/codegen.py --generator cpp-app --output-dir $(MATTER_MAKEDIR)/light_logredirect/build/chip/codegen --expected-outputs $(MATTER_TOOLDIR)/codegen_helpers/expected.outputs $(MATTER_EXAMPLEDIR)/light_logredirect/light_logredirect-app.matter
-	@python3 $(CHIPDIR)/src/app/zap_cluster_list.py --zap_file $^ > $@
-	@python3 $(MATTER_TOOLDIR)/codegen_helpers/parse_clusters.py --cluster_file $@ --chip_path $(CHIPDIR)
-
 copy_gen_files_light_dm:
 	@cp $(MATTER_EXAMPLEDIR)/light_dm/endpoint_config.h $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/zap-generated
 	@cp $(MATTER_EXAMPLEDIR)/light_dm/gen_config.h $(CHIPDIR)/examples/lighting-app/ameba/build/chip/codegen/zap-generated
@@ -273,16 +252,6 @@ chef: toolchain_matter $(CHEF_FILE)
 	$(MAKE) -f $(MATTER_MAKEDIR)/chef/lib_chip_chef_core.mk all
 	$(MAKE) -f $(MATTER_MAKEDIR)/chef/lib_chip_chef_main.mk all
 
-.PHONY: tempsensor_diagnosticlogs
-tempsensor_diagnosticlogs: toolchain_matter $(TEMPSENSDIAG_FILE)
-	$(MAKE) -f $(MATTER_MAKEDIR)/tempsensor_diagnosticlogs/lib_chip_tempsensor_diagnosticlogs_core.mk all
-	$(MAKE) -f $(MATTER_MAKEDIR)/tempsensor_diagnosticlogs/lib_chip_tempsensor_diagnosticlogs_main.mk all
-
-.PHONY: light_logredirect
-light_logredirect: toolchain_matter $(LIGHTREDIRECT_FILE)
-	$(MAKE) -f $(MATTER_MAKEDIR)/light_logredirect/lib_chip_light_logredirect_core.mk all
-	$(MAKE) -f $(MATTER_MAKEDIR)/light_logredirect/lib_chip_light_logredirect_main.mk all
-
 .PHONY: clean_matter_libs
 clean_matter_libs:
 	@$(MAKE) -f $(MATTER_MAKEDIR)/all_clusters/lib_chip_main.mk clean
@@ -300,8 +269,6 @@ clean_matter_libs:
 	@$(MAKE) -f $(MATTER_MAKEDIR)/otar/lib_chip_otar_main.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/refrigerator/lib_chip_refrigerator_main.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/thermostat/lib_chip_thermostat_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/tempsensor_diagnosticlogs/lib_chip_tempsensor_diagnosticlogs_main.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/light_logredirect/lib_chip_light_logredirect_main.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/all_clusters/lib_chip.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/aircon/lib_chip_aircon_core.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/air_purifier/lib_chip_air_purifier_core.mk clean
@@ -318,5 +285,3 @@ clean_matter_libs:
 	@$(MAKE) -f $(MATTER_MAKEDIR)/refrigerator/lib_chip_refrigerator_core.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/thermostat/lib_chip_thermostat_core.mk clean
 	@$(MAKE) -f $(MATTER_MAKEDIR)/thermostat/lib_chip_thermostat_core.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/tempsensor_diagnosticlogs/lib_chip_tempsensor_diagnosticlogs_core.mk clean
-	@$(MAKE) -f $(MATTER_MAKEDIR)/light_logredirect/lib_chip_light_logredirect_core.mk clean

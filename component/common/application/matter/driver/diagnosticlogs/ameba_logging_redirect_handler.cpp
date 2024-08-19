@@ -10,22 +10,22 @@
 #include <deque>
 #include <support/logging/TextOnlyLogging.h>
 #include <platform/logging/LogV.h>
-#include "matter_flashfs_nofat.h"
+//#include "matter_flashfs_nofat.h"
+#include "lfs.h"
 #include "platform_opts_matter.h"
 #include <stdlib.h>
 #include <sys/time.h>
 
 /* filesystem */
-#include "matter_flashfs.h"
+//#include "matter_flashfs.h"
+#include "matter_fs.h"
 
 #define EMPTY_PADDING_BYTE 0xCC
 
 using namespace chip;
 using namespace chip::Logging;
 
-#if defined(CONFIG_AMEBA_MATTER_ERROR_FORMATTER) && (CONFIG_AMEBA_MATTER_ERROR_FORMATTER == 1)
-
-std::deque<amebalog_t> mLogBuffer;
+//std::deque<amebalog_t> mLogBuffer;
 
 // hack. manually extend std namespace with own impl that does nothing (std::__throw_bad_array_new_length)
 namespace std {
@@ -35,8 +35,6 @@ namespace std {
         return;
     }
 }
-
-#endif // CONFIG_AMEBA_MATTER_ERROR_FORMATTER
 
 AmebaLogRedirectHandler::AmebaLogRedirectHandler() { }
 
@@ -75,7 +73,7 @@ DLL_EXPORT void chip::FormatError(char * buf, uint16_t bufSize, const char * sub
     (void) snprintf(buf, bufSize, "AMB>> %s%sError 0x%08" PRIX32 "%s%s", subsys, subsysSep, err.AsInteger(), descSep, desc);
 }
 #endif
-
+/*
 static uint32_t GetLogBufferByteSize()
 {
     uint32_t size = 0;
@@ -87,13 +85,14 @@ static uint32_t GetLogBufferByteSize()
     }
 
     return size;
-}
+}*/
 
 /**
     Flush the log buffer to backing filesystem when threshold is reached. TODO change threshold
 
     @return true on success, false on error
 */
+#if 0
 static bool FlushBufferIfReady() 
 {
     if(matter_flashfs_get_inited() == false)
@@ -166,6 +165,37 @@ static bool FlushBufferIfReady()
 
     return false;
 }
+#endif
+
+static bool ClearLogStrategy(void* fp)
+{
+    lfs_file_t* lfs_fp = (lfs_file_t*)fp;
+
+    // step 1: seek the most recent N logs
+    int pos = matter_fs_ftell(lfs_fp);
+    int region_size = (sizeof(amebalog_t) * RETAIN_NLOGS_WHEN_FULL);
+    int pos_to_read_from = pos - region_size; // assuming that this lands on the start of a new AmebaLog_t message
+    matter_fs_fseek(fp, pos_to_read_from, LFS_SEEK_SET);
+
+    // step 2: read into temp buffer
+    void* tmp = malloc(region_size);
+    uint out_num = 0;
+    if(tmp == NULL) {
+        return false;
+    }
+    matter_fs_fread(lfs_fp, pos_to_read_from, region_size, tmp, region_size, &out_num);
+
+    // step 3: truncate the file
+    matter_fs_fclear(lfs_fp);
+
+    // step 4: rewrite the copied contents back
+    matter_fs_fwrite(fp, tmp, region_size, 0, 0, 0, &out_num);
+
+    // step 5: free
+    free(tmp);
+
+    return true;
+}
 
 /**
     Custom ErrorFormatter to intercept ChipLogErrors before they get transformed into the human-friendly string
@@ -178,8 +208,17 @@ static bool FlushBufferIfReady()
 */
 bool AmebaErrorFormatter(char* buf, uint16_t bufSize, CHIP_ERROR err)
 {
+    // bypass all custom handling if the log subsystem was not Inited 
+    if(AmebaLogRedirectHandler::GetAmebaLogSubsystemInited() == false) {
+        return false;
+    }
+
+    // bypass file ops if the filesystem was not inited
+    if(matter_fs_get_init() == false) {
+        return false;
+    }
+
     // warning: do NOT call err.Format() here as it will throw the format processor into infinite recursion
-#if defined(CONFIG_AMEBA_MATTER_ERROR_FORMATTER) && (CONFIG_AMEBA_MATTER_ERROR_FORMATTER == 1)
     if(!(
         err.IsPart(chip::ChipError::SdkPart::kBLE) ||
         err.IsPart(chip::ChipError::SdkPart::kInet) ||
@@ -235,11 +274,38 @@ bool AmebaErrorFormatter(char* buf, uint16_t bufSize, CHIP_ERROR err)
 
 #endif // CONFIG_AMEBA_MATTER_SHORT_LOG_FMT
 
-    mLogBuffer.push_back(log);
+    //mLogBuffer.push_back(log);
 
-    FlushBufferIfReady();
-
-#endif // CONFIG_AMEBA_MATTER_ERROR_FORMATTER
+    //FlushBufferIfReady();
+    // write directly to FS
+    auto fp = app::Clusters::DiagnosticLogs::AmebaDiagnosticLogsProvider::GetFpNetdiagLog();
+    uint numWrite = 0;
+    int status = matter_fs_fwrite(fp, &log, log.LogLen, 0, 0, true, &numWrite);
+    if(status < 0) 
+    {
+        if(status == LFS_ERR_NOSPC) 
+        {
+            // no space left on device, attempt clear strategy
+            if(ClearLogStrategy(fp) == false)
+            {
+                ChipLogError(DeviceLayer, "Failed to execute log clear strategy\n");
+                return false;
+            }
+            else 
+            {
+                // reattempt the write
+                matter_fs_fwrite(fp, &log, log.LogLen, 0, 0, true, &numWrite);
+            }
+        }
+        else 
+        {
+            ChipLogError(DeviceLayer, "Error writing log to file: %d", status);
+        }
+    }
+    else 
+    {
+        ChipLogProgress(DeviceLayer, "fs wrote %d bytes\n", numWrite);
+    }
     
     return false;                                                                       // always return false because we need other formatters to parse
 }
@@ -253,7 +319,11 @@ bool AmebaErrorFormatter(char* buf, uint16_t bufSize, CHIP_ERROR err)
 */
 void AmebaLogRedirectHandler::AmebaEarlyError(char* buf, uint16_t bufSize, CHIP_ERROR err)
 {
-    AmebaErrorFormatter(buf, bufSize, err);
+    // bypass all custom handling if the log subsystem was not Inited 
+    if(AmebaLogRedirectHandler::GetAmebaLogSubsystemInited() == true) {
+        AmebaErrorFormatter(buf, bufSize, err);
+    }
+    
     ChipLogError(DeviceLayer, "%s %" CHIP_ERROR_FORMAT, buf, err.Format());
     return;
 }
@@ -304,12 +374,10 @@ ErrorFormatter AmebaLogRedirectHandler::sAmebaErrorFormatter = { AmebaErrorForma
 
 void AmebaLogRedirectHandler::RegisterAmebaErrorFormatter(void)
 {
-#if defined(CONFIG_AMEBA_MATTER_ERROR_FORMATTER) && (CONFIG_AMEBA_MATTER_ERROR_FORMATTER == 1)
     if(this->bAmebaCustomFormatterSet) return;
 
     RegisterErrorFormatter(&sAmebaErrorFormatter);
 
     printf("[AMEBA] Ameba Error Formatter registered\n");
     this->bAmebaCustomFormatterSet = true;
-#endif // CONFIG_AMEBA_MATTER_ERROR_FORMATTER
 }

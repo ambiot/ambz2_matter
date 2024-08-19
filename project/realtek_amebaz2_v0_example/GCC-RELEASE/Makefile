@@ -101,14 +101,6 @@ refrigerator_port:
 thermostat_port:
 	@$(MAKE) -C $(MATTER_BUILDDIR) thermostat_port
 
-.PHONY: tempsensor_diagnosticlogs
-tempsensor_diagnosticlogs:
-	@$(MAKE) -C $(MATTER_BUILDDIR) tempsensor_diagnosticlogs
-
-.PHONY: light_logredirect
-light_logredirect:
-	@$(MAKE) -C $(MATTER_BUILDDIR) light_logredirect
-
 .PHONY: clean_matter
 clean_matter:
 	@$(MAKE) -f application.is.matter.mk clean

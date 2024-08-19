@@ -6,8 +6,6 @@
 #include "ameba_logging_redirect_handler.h"
 #include "platform_opts_matter.h"
 
-#if defined(CONFIG_AMEBA_MATTER_ERROR_FORMATTER) && (CONFIG_AMEBA_MATTER_ERROR_FORMATTER == 1)
-
 using namespace std;
 using CHIP_ERROR = ::chip::ChipError;
 using Range = ::chip::ChipError::Range;
@@ -61,5 +59,3 @@ void matter_c_intf_chip_logging(MatterLogType logtype, char* content, char* file
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-
-#endif // CONFIG_AMEBA_MATTER_ERROR_FORMATTER

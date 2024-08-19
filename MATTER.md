@@ -43,6 +43,21 @@ Make sure ambz2_matter and connectedhomeip are on the same directory level
 	├── ambz2_matter
 	└── connectedhomeip
 	
+## Configuration for Flash Filesystem
+
+### LittleFS
+If using LittleFS, please adjust the following values in platform_opts_matter.h
+
+    #define LITTLEFS_MAX_SIZE           0x20000                             // change this to increase the flash working area for the filesystem
+    #define LITTLEFS_START_ADDR         DCT_BEGIN_ADDR2 - LITTLEFS_MAX_SIZE // change this to your partition layout
+
+### FATFS
+If using FATFS, please adjust the following value in component/common/file_system/fatfs/r0.10c/include/ffconf.h is set to your Flash chip's sector size
+
+    #define	_MIN_SS		512
+    #define	_MAX_SS		4096
+    #define FLASH_APP_BASE    (0x400000 - 0x9A000) 
+
 ## Set Matter Build Environment 
 
     > Find more details to setup linux build environment

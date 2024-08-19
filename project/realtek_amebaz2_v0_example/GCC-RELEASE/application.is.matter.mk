@@ -88,6 +88,8 @@ INCLUDES += -I../../../component/common/file_system/dct
 INCLUDES += -I../../../component/common/file_system/fatfs
 INCLUDES += -I../../../component/common/file_system/fatfs/r0.10c/include
 INCLUDES += -I../../../component/common/file_system/ftl
+INCLUDES += -I../../../component/common/file_system/littlefs
+INCLUDES += -I../../../component/common/file_system/littlefs/r2.50
 INCLUDES += -I../../../component/common/utilities
 INCLUDES += -I../../../component/common/mbed/hal
 INCLUDES += -I../../../component/common/mbed/hal_ext
@@ -199,6 +201,8 @@ INCLUDES += -I../../../component/common/application/matter/common/protobuf/nanop
 INCLUDES += -I../../../component/common/application/matter/common/include
 INCLUDES += -I../../../component/common/application/matter/example
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/src/app/hrp/gap
+
+INCLUDES += -I../../../component/common/application/matter/driver/diagnosticlogs
 
 # Source file list
 # -------------------------------------------------------------------
@@ -416,12 +420,13 @@ SRC_C += ../../../component/common/application/matter/common/port/matter_ota.c
 SRC_C += ../../../component/common/application/matter/common/port/matter_timers.c
 SRC_C += ../../../component/common/application/matter/common/port/matter_utils.c
 SRC_C += ../../../component/common/application/matter/common/port/matter_wifis.c
+SRC_C += ../../../component/common/application/matter/common/port/matter_fs.c
 SRC_C += ../../../component/common/application/matter/example/chiptest/example_matter.c
 SRC_C += ../../../component/common/application/matter/common/atcmd/atcmd_matter.c
 SRC_C += ../../../component/common/application/matter/common/mbedtls/net_sockets.c
-SRC_C += ../../../component/common/application/matter/common/port/matter_flashfs_fat.c
-SRC_C += ../../../component/common/application/matter/common/port/matter_flashfs_nofat.c
-SRC_C += ../../../component/common/application/matter/common/port/matter_flashfs.c
+#SRC_C += ../../../component/common/application/matter/common/port/matter_flashfs_fat.c
+#SRC_C += ../../../component/common/application/matter/common/port/matter_flashfs_nofat.c
+#SRC_C += ../../../component/common/application/matter/common/port/matter_flashfs.c
 
 #network - app - mqtt
 SRC_C += ../../../component/common/application/mqtt/MQTTClient/MQTTClient.c
@@ -673,6 +678,11 @@ SRC_C += ../../../component/common/file_system/fatfs/r0.10c/src/ff.c
 SRC_C += ../../../component/common/file_system/fatfs/r0.10c/src/option/ccsbcs.c
 SRC_C += ../../../component/common/file_system/fatfs/disk_if/src/flash_fatfs.c
 SRC_C += ../../../component/common/file_system/fatfs/fatfs_flash_api.c
+
+#file_system - littlefs
+SRC_C += ../../../component/common/file_system/littlefs/littlefs_adapter.c
+SRC_C += ../../../component/common/file_system/littlefs/r2.50/lfs.c
+SRC_C += ../../../component/common/file_system/littlefs/r2.50/lfs_util.c
 
 #utilities - example
 #SRC_C += ../../../component/common/example/amazon_awsiot/example_amazon_awsiot.c

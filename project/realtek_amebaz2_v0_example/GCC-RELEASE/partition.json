@@ -16,7 +16,6 @@
             },
             "key_exp_op": 2,
             "user_len": 256,
-            "user_ext": "FFFFFFFFFFFFFFFFFFFFFFFF",
             "user_bin":"user.bin",
             "items":["boot","fw1","fw2"]
         },
@@ -29,14 +28,14 @@
         },
         "fw1":{
             "start_addr" : "0xC000",
-            "length" : "0xF8000",
+            "length" : "0x1AC000",
             "type": "FW1",
             "dbg_skip": false,
             "hash_key":"000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E5F"
         },
         "fw2":{
-            "start_addr" : "0x104000",
-            "length" : "0xF8000",
+            "start_addr" : "0x1B8000",
+            "length" : "0x1AC000",
             "type": "FW2",
             "dbg_skip": false,
             "hash_key":"000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E5F"

@@ -10,43 +10,29 @@
 /* chip wide*/
 /* logging functionality */
 // See ./sdk-ameba-v7.1d/third_party/connectedhomeip/src/platform/Ameba/CHIPPlatformConfig.h for CHIP_CONFIG_ERROR_SOURCE macro
-#define CONFIG_AMEBA_MATTER_ERROR_FORMATTER     1  // 1 to enable diagnostic log subsystem. see CONFIG_EXAMPLE_MATTER_LIGHT_LOGREDIRECT for additional flags
 #define CONFIG_AMEBA_MATTER_SHORT_LOG_FMT       0  // 0 -> file name and line number stored, but will take up more flash!
                                                    // 1 -> file name and line number will NOT be stored, but flash usage is reduced
 #if defined(CONFIG_AMEBA_MATTER_SHORT_LOG_FMT) && (CONFIG_AMEBA_MATTER_SHORT_LOG_FMT == 0)
 #define CONFIG_AMEBA_MATTER_LOG_FILENAME_MAXSZ  32
 #endif
 #define CHIP_CONFIG_ERROR_FORMAT_AS_STRING      1
+#define CHIP_CONFIG_ENABLE_BDX_LOG_TRANSFER     1   // must be enabled to transfer full log to controller
+#define CONFIG_AMEBA_DEBUG_FORCE_CRASH_ATCMD    1   // used to generate test crash log via atcmd @@@@
+#define CONFIG_AMEBA_LOGS_USE_FATFS             0   // 0 -> direct flash operation, 1 -> use fatfs driver
 
 /* For Matter */
 #define CONFIG_EXAMPLE_MATTER                   1
-#define CONFIG_EXAMPLE_MATTER_CHIPTEST          0
-#define CONFIG_EXAMPLE_MATTER_AIRCON            0
-#define CONFIG_EXAMPLE_MATTER_BRIDGE            0
-#define CONFIG_EXAMPLE_MATTER_DISHWASHER        0
-#define CONFIG_EXAMPLE_MATTER_FAN               0
-#define CONFIG_EXAMPLE_MATTER_LIGHT             0
-#define CONFIG_EXAMPLE_MATTER_LAUNDRY_WASHER    0
+#define CONFIG_EXAMPLE_MATTER_CHIPTEST          1
+#define CONFIG_EXAMPLE_MATTER_AIRCON            0   // build ok
+#define CONFIG_EXAMPLE_MATTER_BRIDGE            0   // build ok
+#define CONFIG_EXAMPLE_MATTER_DISHWASHER        0   // build ok
+#define CONFIG_EXAMPLE_MATTER_FAN               0   // build ok
+#define CONFIG_EXAMPLE_MATTER_LIGHT             0   // build ok (light_port)
+#define CONFIG_EXAMPLE_MATTER_LAUNDRY_WASHER    0   // build ok
 #define CONFIG_EXAMPLE_MATTER_MICROWAVE_OVEN    0
-#define CONFIG_EXAMPLE_MATTER_REFRIGERATOR      0
-#define CONFIG_EXAMPLE_MATTER_THERMOSTAT        0
-
-/* Temperature Sensor w/ Diagnostic Logs example */
-#define CONFIG_EXAMPLE_MATTER_TEMPSENSOR_DIAGNOSTICLOGS 0
-#if defined(CONFIG_EXAMPLE_MATTER_TEMPSENSOR_DIAGNOSTICLOGS) && (CONFIG_EXAMPLE_MATTER_TEMPSENSOR_DIAGNOSTICLOGS == 1)
-#define CONFIG_AMEBA_ENABLE_DIAGNOSTIC_LOGS     1
-#define CONFIG_AMEBA_LOGS_USE_FATFS             0   // 0 -> direct flash operation, 1 -> use fatfs driver
-#define CHIP_CONFIG_ENABLE_BDX_LOG_TRANSFER     1
-#endif
-
-/* Light with Log redirection example */
-#define CONFIG_EXAMPLE_MATTER_LIGHT_LOGREDIRECT 1
-#if defined(CONFIG_EXAMPLE_MATTER_LIGHT_LOGREDIRECT) && (CONFIG_EXAMPLE_MATTER_LIGHT_LOGREDIRECT == 1)
-#define CONFIG_AMEBA_ENABLE_DIAGNOSTIC_LOGS     1   // must be enabled. Also ensure that ZAP config has Diagnostic Log cluster enabled
-#define CONFIG_AMEBA_LOGS_USE_FATFS             0   // 0 -> direct flash operation, 1 -> use fatfs driver
-#define CHIP_CONFIG_ENABLE_BDX_LOG_TRANSFER     1   // must be enabled to transfer full log to controller
-#define CONFIG_AMEBA_DEBUG_FORCE_CRASH_ATCMD    1   // used to generate crash log via atcmd ATMCRASH
-#endif
+#define CONFIG_EXAMPLE_MATTER_REFRIGERATOR      0   // build ok
+#define CONFIG_EXAMPLE_MATTER_THERMOSTAT        0   // build ok
+#define CONFIG_EXAMPLE_MATTER_LIGHT_LOGREDIRECT 0
 
 #if defined(CONFIG_EXAMPLE_MATTER) && (CONFIG_EXAMPLE_MATTER == 1)
 
@@ -85,6 +71,9 @@
 #undef SECTOR_SIZE_FLASH
 #define SECTOR_SIZE_FLASH	        4096
 #define FAULT_FLASH_SECTOR_SIZE	   (SECTOR_SIZE_FLASH)
+#define USER_LOG_FILENAME           "user.log"
+#define NET_LOG_FILENAME            "net.log"
+#define CRASH_LOG_FILENAME          "crash.log"
 
 #if defined(CONFIG_AMEBA_LOGS_USE_FATFS) && (CONFIG_AMEBA_LOGS_USE_FATFS == 1)
 
@@ -103,19 +92,17 @@
 
 
 #elif defined(CONFIG_AMEBA_LOGS_USE_FATFS) && (CONFIG_AMEBA_LOGS_USE_FATFS == 0)
-/* Flash-backed write related parameters */
-#define USER_LOG_MAXSZ              0x10000             // user log 65K
-#define NETDIAG_LOG_MAXSZ           0x10000             // netdiag log 65K
-#define CRASH_LOG_MAXSZ             0x4000              // crash log 16K
-#define USER_LOG_ADDR               (DCT_BEGIN_ADDR2 - USER_LOG_MAXSZ)
-#define NETDIAG_LOG_ADDR            (DCT_BEGIN_ADDR2 - USER_LOG_MAXSZ - NETDIAG_LOG_MAXSZ)
-#define CRASH_LOG_ADDR              (DCT_BEGIN_ADDR2 - USER_LOG_MAXSZ - NETDIAG_LOG_MAXSZ - CRASH_LOG_MAXSZ)
+/* littlefs related parameters */
+#define LITTLEFS_MAX_SIZE           0x20000
+#define LITTLEFS_START_ADDR         DCT_BEGIN_ADDR2 - LITTLEFS_MAX_SIZE
+#define LITTLEFS_NUM_BLOCKS         (LITTLEFS_MAX_SIZE / SECTOR_SIZE_FLASH)
 
-#define FAULT_LOG1                  (CRASH_LOG_ADDR - 0x2000)
-#define FAULT_LOG2                  (CRASH_LOG_ADDR - 0x4000)
+#define RETAIN_NLOGS_WHEN_FULL      40  // most recent N logs will be kept, the rest cleared  
+
+#define FAULT_LOG1                  (LITTLEFS_START_ADDR - 0x1000)
+#define FAULT_LOG2                  (LITTLEFS_START_ADDR - 0x2000)
 
 #endif
-
 
 
 #define MATTER_FACTORY_DATA        (0x3FF000)                 // last 4KB of external flash - write protection is supported in this region

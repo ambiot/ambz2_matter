@@ -1,4 +1,5 @@
 #include "FreeRTOS.h"
+#include "lfs.h"
 #include "platform/platform_stdlib.h"
 #include "platform_opts.h"
 #include <flash_api.h>
@@ -7,7 +8,9 @@
 #include <string>
 
 #include "ameba_diagnosticlogs_provider_delegate_impl.h"
-#include  "matter_flashfs.h"
+//#include  "matter_flashfs.h"
+#include "matter_fs.h"
+#include "platform_opts_matter.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -96,28 +99,29 @@ void read_last_fault_log(void)
 #if 1
 void write_debug_userlog(char* msg)
 {
-    amb_fsctx_t* fp = chip::app::Clusters::DiagnosticLogs::AmebaDiagnosticLogsProvider::GetFpUserLog();
+    lfs_file_t* fp = chip::app::Clusters::DiagnosticLogs::AmebaDiagnosticLogsProvider::GetFpUserLog();
 
-    int err = matter_flashfs_file_open("user.log", fp, FA_CREATE_ALWAYS);          // always make a new crash.log file
+    int err = matter_fs_fopen(USER_LOG_FILENAME, fp, LFS_O_RDWR | LFS_O_CREAT);
     if(err != 0) {
         ChipLogError(DeviceLayer, "open err: %d", err);
         return;
     }
 
     uint writeNum = 0;
-    err = matter_flashfs_file_write(fp, msg, strlen(msg), 0, 0, true, &writeNum); // write to FS
+    err = matter_fs_fwrite(fp, msg, strlen(msg), 0, 0, 0, &writeNum);
+    matter_fs_fclose(fp);
 }
 #endif
 
 void read_last_fault_log(void)
 {
 	flash_t	fault_flash;
-    amb_fsctx_t* fp = chip::app::Clusters::DiagnosticLogs::AmebaDiagnosticLogsProvider::GetFpCrashLog();
+    lfs_file_t* fp = chip::app::Clusters::DiagnosticLogs::AmebaDiagnosticLogsProvider::GetFpCrashLog();
     int res;
     uint unused_writecount = 0;
     uint readsize = 0;
 
-    int err = matter_flashfs_file_open("crash.log", fp, FA_CREATE_ALWAYS);          // always make a new crash.log file
+    int err = matter_fs_fopen(CRASH_LOG_FILENAME, fp, LFS_O_RDWR | LFS_O_CREAT);          // always make a new crash.log file
     if(err != 0) {
         ChipLogError(DeviceLayer, "open err: %d", err);
         return;
@@ -141,15 +145,15 @@ void read_last_fault_log(void)
             if(readsize == FAULT_FLASH_SECTOR_SIZE) break;
         }
 
-        res = matter_flashfs_file_write(fp, log, readsize, 0, 0, false, &unused_writecount); // write to FS
-        if(res == 0) 
+        res = matter_fs_fwrite(fp, log, readsize, 0, 0, false, &unused_writecount); // write to FS
+        if(res >= 0) 
         {
             ChipLogProgress(DeviceLayer, "wrote %d bytes to crashlog", unused_writecount);
         }
         else
         {
-            ChipLogError(DeviceLayer, "write error!");
-            matter_flashfs_file_close(fp);
+            ChipLogError(DeviceLayer, "write error! %d", res);
+            matter_fs_fclose(fp);
             return;
         }
 	}
@@ -168,21 +172,21 @@ void read_last_fault_log(void)
             if(readsize == FAULT_FLASH_SECTOR_SIZE) break;
         }
 
-        res = matter_flashfs_file_write(fp, log, readsize, 0, 0, true, &unused_writecount);
-        if(res == 0) 
+        res = matter_fs_fwrite(fp, log, readsize, 0, 0, true, &unused_writecount);
+        if(res >= 0) 
         {
             ChipLogProgress(DeviceLayer, "wrote %d bytes to crashlog", unused_writecount);
         }
         else
         {
-            ChipLogError(DeviceLayer, "write error!");
-            matter_flashfs_file_close(fp);
+            ChipLogError(DeviceLayer, "write error! %d", res);
+            matter_fs_fclose(fp);
             return;
         }
 	}
 
 	free(log);
-    matter_flashfs_file_close(fp);
+    matter_fs_fclose(fp);
 
     // erase fault log area for new log
     device_mutex_lock(RT_DEV_LOCK_FLASH);
@@ -190,6 +194,7 @@ void read_last_fault_log(void)
 	flash_erase_sector(&fault_flash, FAULT_LOG2);
 	device_mutex_unlock(RT_DEV_LOCK_FLASH);
 
+    return;
 }
 
 #endif
