@@ -22,16 +22,16 @@
 
 /* For Matter */
 #define CONFIG_EXAMPLE_MATTER                   1
-#define CONFIG_EXAMPLE_MATTER_CHIPTEST          1
-#define CONFIG_EXAMPLE_MATTER_AIRCON            0   // build ok
-#define CONFIG_EXAMPLE_MATTER_BRIDGE            0   // build ok
-#define CONFIG_EXAMPLE_MATTER_DISHWASHER        0   // build ok
-#define CONFIG_EXAMPLE_MATTER_FAN               0   // build ok
-#define CONFIG_EXAMPLE_MATTER_LIGHT             0   // build ok (light_port)
-#define CONFIG_EXAMPLE_MATTER_LAUNDRY_WASHER    0   // build ok
+#define CONFIG_EXAMPLE_MATTER_CHIPTEST          0
+#define CONFIG_EXAMPLE_MATTER_AIRCON            0
+#define CONFIG_EXAMPLE_MATTER_BRIDGE            0
+#define CONFIG_EXAMPLE_MATTER_DISHWASHER        0
+#define CONFIG_EXAMPLE_MATTER_FAN               0
+#define CONFIG_EXAMPLE_MATTER_LIGHT             0
+#define CONFIG_EXAMPLE_MATTER_LAUNDRY_WASHER    0
 #define CONFIG_EXAMPLE_MATTER_MICROWAVE_OVEN    0
-#define CONFIG_EXAMPLE_MATTER_REFRIGERATOR      0   // build ok
-#define CONFIG_EXAMPLE_MATTER_THERMOSTAT        0   // build ok
+#define CONFIG_EXAMPLE_MATTER_REFRIGERATOR      0
+#define CONFIG_EXAMPLE_MATTER_THERMOSTAT        0
 #define CONFIG_EXAMPLE_MATTER_LIGHT_LOGREDIRECT 0
 
 #if defined(CONFIG_EXAMPLE_MATTER) && (CONFIG_EXAMPLE_MATTER == 1)
