@@ -1,91 +1,137 @@
-#include "temp_hum_sensor_driver.h"
 #include <FreeRTOS.h>
-#include "task.h"
-#include <platform/CHIPDeviceLayer.h>
+#include <task.h>
+
+#include <temp_hum_sensor_driver.h>
 #include <app-common/zap-generated/attributes/Accessors.h>
+#include <platform/CHIPDeviceLayer.h>
 #include <support/logging/CHIPLogging.h>
 
+using namespace ::chip;
 using namespace ::chip::app;
 
-int32_t readTemperature()
+void MatterTemperatureHumiditySensor::SetTempSensorEp(EndpointId ep)
+{
+    mTempSensorEp = ep;
+}
+
+EndpointId MatterTemperatureHumiditySensor::GetTempSensorEp(void)
+{
+    return mTempSensorEp;
+}
+
+void MatterTemperatureHumiditySensor::Init(PinName pin)
+{
+    gpio_init(&gpio_device, pin);
+    gpio_dir(&gpio_device, PIN_INPUT);
+    gpio_mode(&gpio_device, PullUp);
+
+    measuredTemperature = 0;
+    minMeasuredTemperature = 0;
+    maxMeasuredTemperature = 0;
+}
+
+void MatterTemperatureHumiditySensor::deInit(void)
+{
+    // deinit temperature sensor
+}
+
+gpio_t MatterTemperatureHumiditySensor::getDevice(void)
+{
+    return gpio_device;
+}
+
+int16_t MatterTemperatureHumiditySensor::readTemperature(void)
 {
     // replace with own temperature sensor reading
-    return 37;
+    return 5;
 }
 
-uint16_t readHumidity()
+void MatterTemperatureHumiditySensor::setMeasuredTemperature(int16_t temp)
 {
-    // replace with own humidity sensor reading
-    return 80;
-}
-
-void pollingTask(void *pvParameters)
-{
-    MatterTemperatureHumiditySensor *psensor = (MatterTemperatureHumiditySensor*) pvParameters;
-
-    while(1)
+    if ((temp >= minMeasuredTemperature) && (temp <= maxMeasuredTemperature))
     {
-        // read temperature and set
-        psensor->setMeasuredTemperature(readTemperature());
-
-        // read humidity and set
-        psensor->setMeasuredHumidity(readHumidity());
-
-        // sent downlink event for temperature and humidity attribute update
-        chip::DeviceLayer::PlatformMgr().LockChipStack();
-        Clusters::TemperatureMeasurement::Attributes::MeasuredValue::Set(1, psensor->getMeasuredTemperature());
-        Clusters::RelativeHumidityMeasurement::Attributes::MeasuredValue::Set(1, psensor->getMeasuredHumidity());
-        chip::DeviceLayer::PlatformMgr().UnlockChipStack();
-
-        // Delay till next poll
-        vTaskDelay(psensor->getPollingFrequency() * 1000);
+        measuredTemperature = temp;
+    }
+    else
+    {
+        ChipLogProgress(DeviceLayer, "Temperature must be set between %i and %i", minMeasuredTemperature, maxMeasuredTemperature);
     }
 }
 
-void  MatterTemperatureHumiditySensor::Init()
-{
-    // init tempearture sensor
-}
-
-void MatterTemperatureHumiditySensor::deInit()
-{
-    // init humidity sensor
-}
-
-int16_t MatterTemperatureHumiditySensor::getMeasuredTemperature()
+int16_t MatterTemperatureHumiditySensor::getMeasuredTemperature(void)
 {
     return measuredTemperature;
 }
 
-uint16_t MatterTemperatureHumiditySensor::getMeasuredHumidity()
+void MatterTemperatureHumiditySensor::setMinMeasuredTemperature(int16_t temp)
 {
-    return measuredHumidity;
+    minMeasuredTemperature = temp;
 }
 
-uint16_t MatterTemperatureHumiditySensor::getPollingFrequency()
+int16_t MatterTemperatureHumiditySensor::getMinMeasuredTemperature(void)
 {
-    return pollingFrequency;
+    return minMeasuredTemperature;
 }
 
-void MatterTemperatureHumiditySensor::setMeasuredTemperature(int16_t newTemp)
+void MatterTemperatureHumiditySensor::setMaxMeasuredTemperature(int16_t temp)
 {
-    measuredTemperature = newTemp;
+    maxMeasuredTemperature = temp;
+}
+
+int16_t MatterTemperatureHumiditySensor::getMaxMeasuredTemperature(void)
+{
+    return maxMeasuredTemperature;
+}
+
+void MatterTemperatureHumiditySensor::SetHumSensorEp(EndpointId ep)
+{
+    mHumSensorEp = ep;
+}
+
+EndpointId MatterTemperatureHumiditySensor::GetHumSensorEp(void)
+{
+    return mHumSensorEp;
+}
+
+uint16_t MatterTemperatureHumiditySensor::readHumidity(void)
+{
+    // replace with own humidity sensor reading
+    return 10;
 }
 
 void MatterTemperatureHumiditySensor::setMeasuredHumidity(uint16_t newHum)
 {
-    measuredHumidity = newHum;
-}
-
-void MatterTemperatureHumiditySensor::setPollingFrequency(uint16_t newPollingFrequency)
-{
-    pollingFrequency = newPollingFrequency;
-}
-
-void MatterTemperatureHumiditySensor::startPollingTask()
-{
-    if (xTaskCreate(pollingTask, "temphum_polling_task", 1024, this, tskIDLE_PRIORITY + 1, NULL) != pdPASS)
+    if ((newHum >= minMeasuredHumidity) && (newHum <= maxMeasuredHumidity))
     {
-        ChipLogError(DeviceLayer, "failed to create temperature & humidity polling task");
+        measuredHumidity = newHum;
     }
+    else
+    {
+        ChipLogProgress(DeviceLayer, "Humidity must be set between %i and %i", minMeasuredHumidity, maxMeasuredHumidity);
+    }
+}
+
+uint16_t MatterTemperatureHumiditySensor::getMeasuredHumidity(void)
+{
+    return measuredHumidity;
+}
+
+void MatterTemperatureHumiditySensor::setMinMeasuredHumidity(uint16_t newHum)
+{
+    minMeasuredHumidity = newHum;
+}
+
+uint16_t MatterTemperatureHumiditySensor::getMinMeasuredHumidity(void)
+{
+    return minMeasuredHumidity;
+}
+
+void MatterTemperatureHumiditySensor::setMaxMeasuredHumidity(uint16_t newHum)
+{
+    maxMeasuredHumidity = newHum;
+}
+
+uint16_t MatterTemperatureHumiditySensor::getMaxMeasuredHumidity(void)
+{
+    return maxMeasuredHumidity;
 }

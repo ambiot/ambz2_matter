@@ -8,11 +8,11 @@
 using namespace ::chip;
 using namespace ::chip::app;
 
-class MatterTemperatureHumiditySensor
+class MatterTemperatureSensor
 {
 public:
-    void SetTempSensorEp(EndpointId ep);
-    EndpointId GetTempSensorEp(void);
+    void SetEp(EndpointId ep);
+    EndpointId GetEp(void);
 
     void Init(PinName pin);
     void deInit(void);
@@ -32,32 +32,10 @@ public:
     void setMaxMeasuredTemperature(int16_t temp);
     int16_t getMaxMeasuredTemperature(void);
 
-    void SetHumSensorEp(EndpointId ep);
-    EndpointId GetHumSensorEp(void);
-
-    uint16_t readHumidity(void);
-
-    // Attribute (0x0000) MeasuredHumidity
-    void setMeasuredHumidity(uint16_t newHum);
-    uint16_t getMeasuredHumidity(void);
-
-    // Attribute (0x0001) MinMeasuredHumidity
-    void setMinMeasuredHumidity(uint16_t newHum);
-    uint16_t getMinMeasuredHumidity(void);
-
-    // Attribute (0x0002) MaxMeasuredHumidity
-    void setMaxMeasuredHumidity(uint16_t newHum);
-    uint16_t getMaxMeasuredHumidity(void);
-
 private:
     gpio_t gpio_device;
-    EndpointId mTempSensorEp;
+    EndpointId mEp;
     int16_t measuredTemperature;
     int16_t minMeasuredTemperature;
     int16_t maxMeasuredTemperature;
-
-    EndpointId mHumSensorEp;
-    uint16_t measuredHumidity;
-    uint16_t minMeasuredHumidity;
-    uint16_t maxMeasuredHumidity;
 };

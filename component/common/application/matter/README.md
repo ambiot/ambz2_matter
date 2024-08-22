@@ -19,3 +19,8 @@ The goal of this porting layer is to make it easier for users to design their ow
     - Driver interface (see `light/matter_drivers.cpp`)
     - Makefiles to build the Matter libraries
 4. More details on how it works will be explained in the examples themselves
+
+**Notes**: Explore the `example/template` directory; it contains a template you can use to easily design your Matter application.
+It can serve as a starting point for creating your own device type.
+Likewise, check out the other examples for more details and reference.
+

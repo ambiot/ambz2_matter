@@ -24,6 +24,8 @@ struct AppEvent
         kEventType_Downlink_DW_Alarm_Reset,
         kEventType_Downlink_Refrigerator_Mode,
         kEventType_Downlink_Refrigerator_Alarm_State,
+        kEventType_Downlink_Temperature,
+        kEventType_Downlink_Humidity,
     };
 
     uint16_t Type;

@@ -12,6 +12,7 @@ CHIPDIR             = $(SDKROOTDIR)/third_party/connectedhomeip
 OUTPUT_DIR          = $(BASEDIR)/build/chip
 CODEGENDIR          = $(OUTPUT_DIR)/codegen
 
+
 # Initialize tool chain
 # -------------------------------------------------------------------
 
@@ -29,8 +30,6 @@ LD = $(CROSS_COMPILE)gcc
 GDB = $(CROSS_COMPILE)gdb
 OBJCOPY = $(CROSS_COMPILE)objcopy
 OBJDUMP = $(CROSS_COMPILE)objdump
-
-OS := $(shell uname)
 
 # Initialize target name and target object files
 # -------------------------------------------------------------------
@@ -168,7 +167,7 @@ INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/mbedtls
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/port
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/core
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/driver
-INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/example/aircon
+INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/example/temperature_sensor
 
 # CHIP Include folder list
 # -------------------------------------------------------------------
@@ -230,19 +229,18 @@ SRC_CPP += $(CODEGENDIR)/zap-generated/IMClusterCommandHandler.cpp
 SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/attributes/Accessors.cpp
 SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/cluster-objects.cpp
 
-# porting layer src files
-SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_api.cpp
+# porting layer source files
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_core.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_interaction.cpp
 ifeq ($(CHIP_ENABLE_OTA_REQUESTOR), true)
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_ota_initializer.cpp
 endif
 
-# device driver
-SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/room_aircon_driver.cpp
-SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/temp_hum_sensor_driver.cpp
-SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/aircon/example_matter_aircon.cpp
-SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/aircon/matter_drivers.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/temp_sensor_driver.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/temperature_sensor/example_matter_temp_sensor.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/temperature_sensor/matter_drivers.cpp
+
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_api.cpp
 
 #lib_version
 VER_C += $(TARGET)_version.c
@@ -267,7 +265,7 @@ DEPENDENCY_LIST += $(addprefix $(OBJ_DIR)/,$(patsubst %.cpp,%_$(TARGET).d,$(SRC_
 
 CFLAGS =
 CFLAGS += -march=armv8-m.main+dsp -mthumb -mcmse -mfloat-abi=soft -D__thumb2__ -g -gdwarf-3 -Os
-CFLAGS += -D__ARM_ARCH_8M_MAIN__=1 -gdwarf-3 -fstack-usage -fdata-sections -ffunction-sections 
+CFLAGS += -D__ARM_ARCH_8M_MAIN__=1 -gdwarf-3 -fstack-usage -fdata-sections -ffunction-sections
 CFLAGS += -fdiagnostics-color=always -Wall -Wpointer-arith -Wno-write-strings 
 CFLAGS += -Wno-maybe-uninitialized --save-temps -c -MMD
 CFLAGS += -DCONFIG_PLATFORM_8710C -DCONFIG_BUILD_RAM=1

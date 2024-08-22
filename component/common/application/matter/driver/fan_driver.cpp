@@ -1,7 +1,6 @@
 #include <fan_driver.h>
 #include <support/logging/CHIPLogging.h>
 
-
 void MatterFan::Init(PinName pin)
 {
     mPwm_obj                        = (pwmout_t*) pvPortMalloc(sizeof(pwmout_t));
