@@ -9,6 +9,8 @@ CHIPDIR = $(SDKROOTDIR)/third_party/connectedhomeip
 OUTPUT_DIR = $(BASEDIR)/build/chip
 MATTER_TOOLDIR = $(SDKROOTDIR)/tools/matter
 
+CHIP_ENABLE_AMEBA_DLOG = $(shell grep "#define CONFIG_ENABLE_AMEBA_DLOG" $(SDKROOTDIR)/project/realtek_amebaz2_v0_example/inc/platform_opts.h | tr -s '[:space:]' | cut -d' ' -f3)
+
 OS := $(shell uname)
 
 CROSS_COMPILE = $(ARM_GCC_TOOLCHAIN)/arm-none-eabi-
@@ -53,6 +55,8 @@ INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/dct
 INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/fatfs
 INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/fatfs/r0.10c/include
 INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/ftl
+INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/littlefs
+INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/littlefs/r2.9.1
 INCLUDES += -I$(SDKROOTDIR)/component/common/utilities
 INCLUDES += -I$(SDKROOTDIR)/component/common/mbed/hal
 INCLUDES += -I$(SDKROOTDIR)/component/common/mbed/hal_ext
@@ -143,10 +147,12 @@ INCLUDES += -I$(SDKROOTDIR)/component/os/freertos/freertos_v10.0.1/Source/includ
 INCLUDES += -I$(SDKROOTDIR)/component/os/freertos/freertos_v10.0.1/Source/portable/GCC/ARM_RTL8710C
 INCLUDES += -I$(SDKROOTDIR)/component/os/os_dep/include
 
+INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/api
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/bluetooth
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/bluetooth/bt_matter_adapter
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/mbedtls
 INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/common/port
+INCLUDES += -I$(SDKROOTDIR)/component/common/application/matter/driver
 
 # CHIP Include folder list
 # -------------------------------------------------------------------
@@ -202,6 +208,13 @@ CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_ZEPHYR_SOCKET_EXTENSIONS=0
 CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_LWIP=1
 CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_SOCKETS=0
 CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_NETWORK_FRAMEWORK=0
+
+ifeq ($(CHIP_ENABLE_AMEBA_DLOG), 1)
+# For Diagnostic Logs Support
+CFLAGS += -DCHIP_CONFIG_ERROR_SOURCE=1
+CFLAGS += -DCHIP_CONFIG_ERROR_FORMAT_AS_STRING=1
+CFLAGS += -DCHIP_CONFIG_ENABLE_BDX_LOG_TRANSFER=1
+endif
 
 CXXFLAGS += -DFD_SETSIZE=10
 

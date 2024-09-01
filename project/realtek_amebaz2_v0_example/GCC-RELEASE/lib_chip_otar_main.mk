@@ -10,6 +10,7 @@ OUTPUT_DIR = $(CHIPDIR)/examples/ota-requestor-app/ameba/build/chip
 CODEGENDIR = $(OUTPUT_DIR)/codegen
 
 CHIP_ENABLE_OTA_REQUESTOR = $(shell grep 'chip_enable_ota_requestor' $(OUTPUT_DIR)/args.gn | cut -d' ' -f3)
+CHIP_ENABLE_AMEBA_DLOG = $(shell grep "#define CONFIG_ENABLE_AMEBA_DLOG" $(BASEDIR)/../inc/platform_opts.h | tr -s '[:space:]' | cut -d' ' -f3)
 
 OS := $(shell uname)
 
@@ -60,6 +61,8 @@ INCLUDES += -I$(BASEDIR)/../../../component/common/file_system/dct
 INCLUDES += -I$(BASEDIR)/../../../component/common/file_system/fatfs
 INCLUDES += -I$(BASEDIR)/../../../component/common/file_system/fatfs/r0.10c/include
 INCLUDES += -I$(BASEDIR)/../../../component/common/file_system/ftl
+INCLUDES += -I$(BASEDIR)/../../../component/common/file_system/littlefs
+INCLUDES += -I$(BASEDIR)/../../../component/common/file_system/littlefs/r2.9.1
 INCLUDES += -I$(BASEDIR)/../../../component/common/utilities
 INCLUDES += -I$(BASEDIR)/../../../component/common/mbed/hal
 INCLUDES += -I$(BASEDIR)/../../../component/common/mbed/hal_ext
@@ -151,10 +154,12 @@ INCLUDES += -I$(BASEDIR)/../../../component/os/freertos/freertos_v10.0.1/Source/
 INCLUDES += -I$(BASEDIR)/../../../component/os/freertos/freertos_v10.0.1/Source/portable/GCC/ARM_RTL8710C
 INCLUDES += -I$(BASEDIR)/../../../component/os/os_dep/include
 
+INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/api
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/bluetooth
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/bluetooth/bt_matter_adapter
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/mbedtls
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/port
+INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/driver
 
 # CHIP Include folder list
 # -------------------------------------------------------------------
@@ -231,6 +236,11 @@ endif
 SRC_CPP += $(CHIPDIR)/examples/providers/DeviceInfoProviderImpl.cpp
 
 SRC_CPP += $(BASEDIR)/../../../component/common/application/matter/api/matter_api.cpp
+SRC_CPP += $(BASEDIR)/../../../component/common/application/matter/api/matter_log_api.cpp
+SRC_CPP += $(BASEDIR)/../../../component/common/application/matter/driver/diagnostic_logs/ameba_diagnosticlogs_provider_delegate_impl.cpp
+SRC_CPP += $(BASEDIR)/../../../component/common/application/matter/driver/diagnostic_logs/ameba_logging_faultlog.cpp
+SRC_CPP += $(BASEDIR)/../../../component/common/application/matter/driver/diagnostic_logs/ameba_logging_redirect_handler.cpp
+SRC_CPP += $(BASEDIR)/../../../component/common/application/matter/driver/diagnostic_logs/ameba_logging_redirect_wrapper.cpp
 
 #lib_version
 VER_C += $(TARGET)_version.c
@@ -285,6 +295,13 @@ CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_SOCKETS=0
 CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_NETWORK_FRAMEWORK=0
 CFLAGS += -DCHIP_SYSTEM_CONFIG_POSIX_LOCKING=0
 CFLAGS += -DINET_CONFIG_ENABLE_IPV4=0
+
+ifeq ($(CHIP_ENABLE_AMEBA_DLOG), 1)
+# For Diagnostic Logs Support
+CFLAGS += -DCHIP_CONFIG_ERROR_SOURCE=1
+CFLAGS += -DCHIP_CONFIG_ERROR_FORMAT_AS_STRING=1
+CFLAGS += -DCHIP_CONFIG_ENABLE_BDX_LOG_TRANSFER=1
+endif
 
 CFLAGS += -DUSE_ZAP_CONFIG
 CFLAGS += -DCHIP_HAVE_CONFIG_H

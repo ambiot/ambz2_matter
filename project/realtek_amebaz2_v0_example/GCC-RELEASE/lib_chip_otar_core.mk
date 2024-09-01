@@ -9,6 +9,8 @@ CHIPDIR = $(BASEDIR)/../../../third_party/connectedhomeip
 OUTPUT_DIR = $(CHIPDIR)/examples/ota-requestor-app/ameba/build/chip
 MATTER_TOOLDIR = $(BASEDIR)/../../../tools/matter
 
+CHIP_ENABLE_AMEBA_DLOG = $(shell grep "#define CONFIG_ENABLE_AMEBA_DLOG" $(BASEDIR)/../inc/platform_opts.h | tr -s '[:space:]' | cut -d' ' -f3)
+
 OS := $(shell uname)
 
 CROSS_COMPILE = $(ARM_GCC_TOOLCHAIN)/arm-none-eabi-
@@ -53,6 +55,8 @@ INCLUDES += -I$(BASEDIR)/../../../component/common/file_system/dct
 INCLUDES += -I$(BASEDIR)/../../../component/common/file_system/fatfs
 INCLUDES += -I$(BASEDIR)/../../../component/common/file_system/fatfs/r0.10c/include
 INCLUDES += -I$(BASEDIR)/../../../component/common/file_system/ftl
+INCLUDES += -I$(BASEDIR)/../../../component/common/file_system/littlefs
+INCLUDES += -I$(BASEDIR)/../../../component/common/file_system/littlefs/r2.9.1
 INCLUDES += -I$(BASEDIR)/../../../component/common/utilities
 INCLUDES += -I$(BASEDIR)/../../../component/common/mbed/hal
 INCLUDES += -I$(BASEDIR)/../../../component/common/mbed/hal_ext
@@ -144,10 +148,12 @@ INCLUDES += -I$(BASEDIR)/../../../component/os/freertos/freertos_v10.0.1/Source/
 INCLUDES += -I$(BASEDIR)/../../../component/os/freertos/freertos_v10.0.1/Source/portable/GCC/ARM_RTL8710C
 INCLUDES += -I$(BASEDIR)/../../../component/os/os_dep/include
 
+INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/api
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/bluetooth
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/bluetooth/bt_matter_adapter
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/mbedtls
 INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/common/port
+INCLUDES += -I$(BASEDIR)/../../../component/common/application/matter/driver
 
 # CHIP Include folder list
 # -------------------------------------------------------------------
