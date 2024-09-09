@@ -1,4 +1,4 @@
 [submodule "matter"]
 	path = component/common/application/matter
 	url = https://github.com/Ameba-AIoT/ameba-rtos-matter.git
-	branch  = main
+	branch  = v1.4_TE2_240812_ESF
