@@ -24,15 +24,15 @@ jobs:
                   docker-images: true
                   swap-storage: true
 
-            - name: checkout connectedhomeip master branch
+            - name: checkout connectedhomeip branch
               uses: actions/checkout@v3
               with:
                   repository: project-chip/connectedhomeip
-                  ref: master
+                  ref: 70d9a61475d31686f0fde8e7b56f352a0f59b299
                   submodules: recursive
                   path: connectedhomeip
                   
-            - name: checkout ambz2_matter main branch
+            - name: checkout ambz2_matter branch
               uses: actions/checkout@v3
               with:
                   ref: ${{ github.event.pull_request.head.sha }}
