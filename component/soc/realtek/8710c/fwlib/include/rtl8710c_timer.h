@@ -34,11 +34,6 @@
 extern "C" {
 #endif
 
-#ifdef CHIP_PROJECT
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
-
 #include "rtl8710c_tg_type.h"
 #include "rtl8710c_tm_type.h"
 
@@ -560,10 +555,6 @@ void hal_timer_event_deinit_rtl8710c (timer_id_t tid);
 
 #ifdef  __cplusplus
 }
-#endif
-
-#ifdef CHIP_PROJECT
-#pragma GCC diagnostic pop
 #endif
 
 /** @} */ /* End of group hs_hal_timer */

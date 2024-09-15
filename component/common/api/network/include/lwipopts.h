@@ -182,7 +182,7 @@ a lot of data that needs to be copied, this should be set high. */
 /* Support Multicast */
 #define LWIP_IGMP                   1
 #define LWIP_RAND()                 rand()
-#ifndef CHIP_PROJECT
+#ifndef CONFIG_MATTER
 extern unsigned int sys_now(void);
 #endif
 #define LWIP_SRAND()                srand(sys_now())
@@ -424,51 +424,8 @@ CONFIG_EXAMPLE_COAP_SERVER and CONFIG_EXAMPLE_COAP_CLIENT is defined in platform
 #define LWIP_NETIF_HOSTNAME             1
 #endif
 
-#ifdef CHIP_PROJECT
-#undef LWIP_TCPIP_CORE_LOCKING
-#define LWIP_TCPIP_CORE_LOCKING         1
-#undef LWIP_COMPAT_MUTEX_ALLOWED
-#define LWIP_COMPAT_MUTEX_ALLOWED       1
-#undef LWIP_IPV6_ND
-#define LWIP_IPV6_ND                    1
-#undef LWIP_IPV6_SCOPES
-#define LWIP_IPV6_SCOPES                0
-#undef LWIP_PBUF_FROM_CUSTOM_POOLS
-#define LWIP_PBUF_FROM_CUSTOM_POOLS     0
-#undef ERRNO
-#define ERRNO                           1
-#undef LWIP_SO_SNDTIMEO
-#define LWIP_SO_SNDTIMEO                1
-#undef LWIP_SOCKET_SET_ERRNO
-#define LWIP_SOCKET_SET_ERRNO           1
-
-#undef LWIP_IPV6
-#define LWIP_IPV6                       1
-#if LWIP_IPV6
-#undef LWIP_IPV6_MLD
-#define LWIP_IPV6_MLD                   1
-#undef LWIP_IPV6_AUTOCONFIG
-#define LWIP_IPV6_AUTOCONFIG            1
-#undef LWIP_ICMP6
-#define LWIP_ICMP6                      1
-#undef  MEMP_NUM_SYS_TIMEOUT
-#define MEMP_NUM_SYS_TIMEOUT            14
-#if LWIP_VERSION_MAJOR >= 2 && LWIP_VERSION_MINOR >= 1
-#undef LWIP_IPV6_DHCP6
-#define LWIP_IPV6_DHCP6                 1
-#endif
-#endif
-
-/* ---------- Hook options --------- */
-#define LWIP_HOOK_FILENAME              "lwip_default_hooks.h"
-#undef PBUF_POOL_SIZE
-#define PBUF_POOL_SIZE          40
-#undef PBUF_POOL_BUFSIZE
-#define PBUF_POOL_BUFSIZE       1500
-#undef MEMP_NUM_UDP_PCB
-#define MEMP_NUM_UDP_PCB        10
-#undef MEMP_NUM_MLD6_GROUP
-#define MEMP_NUM_MLD6_GROUP     6
+#if defined(CONFIG_MATTER) && CONFIG_MATTER
+#include "lwipopts_matter.h"
 #endif
 
 #endif /* LWIP_HDR_LWIPOPTS_H */

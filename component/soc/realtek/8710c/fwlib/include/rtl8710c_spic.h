@@ -29,11 +29,6 @@
 #ifndef RTL8710C_SPIC_H
 #define RTL8710C_SPIC_H
 
-#ifdef CHIP_PROJECT
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
-
 /**
 
         \addtogroup hs_hal_spic Flash Controller
@@ -351,10 +346,6 @@ void spic_flush_fifo_rtl8710c(SPIC_Type *spic_dev);
 /** *@} */ /* End of group hs_hal_spic_rom_func */
 
 /// @endcond /* End of condition DOXYGEN_ROM_HAL_API */
-
-#ifdef CHIP_PROJECT
-#pragma GCC diagnostic pop
-#endif
 
 /** *@} */ /* End of group hs_hal_spic */
 

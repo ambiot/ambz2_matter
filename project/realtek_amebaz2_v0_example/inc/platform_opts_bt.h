@@ -1,9 +1,7 @@
 #ifndef __PLATFORM_OPTS_BT_H__
 #define __PLATFORM_OPTS_BT_H__
 
-#ifdef CHIP_PROJECT
-#define CONFIG_BT		1
-#else
+#ifndef CONFIG_BT
 #define CONFIG_BT		0
 #endif
 
@@ -36,32 +34,10 @@
 /* For Google seamless setup FreeRTOS SDK example */
 #define CONFIG_BT_GOOGLE_SEAMLESS     0
 
-#ifdef CHIP_PROJECT
-/* For Matter Application */
-#ifdef CONFIG_BT_MESH_WITH_MATTER // this is defined in application.is.matter.mk
-#undef CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE
-#undef CONFIG_BT_MESH_DEVICE_MATTER
-#define CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE			1
-#define CONFIG_BT_MESH_DEVICE_MATTER				1
-
-#elif CONFIG_BLE_MATTER_ADAPTER // this is defined in application.is.matter.mk
-#undef CONFIG_BLE_MATTER_MULTI_ADV
-#define CONFIG_BLE_MATTER_MULTI_ADV				1
-
-#else
-#define CONFIG_BT_MATTER_ADAPTER				1
+#if defined(CONFIG_MATTER) && CONFIG_MATTER
+#include "platform_opts_bt_matter.h"
 #endif
 
-/* For Matter Mesh Application */
-#if (CONFIG_BT_MESH_DEVICE_MATTER && !CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE) || \
-	(!CONFIG_BT_MESH_DEVICE_MATTER && CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE)
-#error "Please enable both CONFIG_BT_MESH_DEVICE_MATTER & CONFIG_BT_MESH_DEVICE_MULTIPLE_PROFILE"
-#endif
-
-#if (!CONFIG_BT_MATTER_ADAPTER && !CONFIG_BLE_MATTER_ADAPTER && !CONFIG_BT_MESH_DEVICE_MATTER)
-#error "Please enable either CONFIG_BT_MATTER_ADAPTER or CONFIG_BLE_MATTER_ADAPTER or CONFIG_BT_MESH_DEVICE_MATTER"
-#endif
-#endif
 #endif // CONFIG_BT
 
 #if defined CONFIG_BT_SCATTERNET && CONFIG_BT_SCATTERNET

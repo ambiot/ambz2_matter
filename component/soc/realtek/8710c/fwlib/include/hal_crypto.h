@@ -42,7 +42,7 @@ extern "C" {
 #include "cmsis.h"
 #include <arm_cmse.h>   /* Use CMSE intrinsics */
 
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_MATTER) && CONFIG_MATTER
 #ifndef IN
 #define IN
 #endif
@@ -1726,7 +1726,7 @@ void rtl_crypto_set_debug(int val);
 }
 #endif
 
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_MATTER) && CONFIG_MATTER
 #ifndef IN
 #define IN
 #endif

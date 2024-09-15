@@ -8,6 +8,8 @@ void MatterLED::Init(PinName pin)
     mPwm_obj                        = (pwmout_t*) pvPortMalloc(sizeof(pwmout_t));
 
     pwmout_init(mPwm_obj, pin);
+    pwmout_period_us(mPwm_obj, 20000); //pwm period = 20ms
+    pwmout_start(mPwm_obj);
 
     mRgb                            = false;
     mState                          = false;
@@ -22,9 +24,18 @@ void MatterLED::Init(PinName redpin, PinName greenpin, PinName bluepin)
     mPwm_red                        = (pwmout_t*) pvPortMalloc(sizeof(pwmout_t));
     mPwm_green                      = (pwmout_t*) pvPortMalloc(sizeof(pwmout_t));
     mPwm_blue                       = (pwmout_t*) pvPortMalloc(sizeof(pwmout_t));
+
     pwmout_init(mPwm_red, redpin);
+    pwmout_period_us(mPwm_red, 20000); //pwm period = 20ms
+    pwmout_start(mPwm_red);
+
     pwmout_init(mPwm_green, bluepin);
+    pwmout_period_us(mPwm_green, 20000); //pwm period = 20ms
+    pwmout_start(mPwm_green);
+
     pwmout_init(mPwm_blue, greenpin);
+    pwmout_period_us(mPwm_blue, 20000); //pwm period = 20ms
+    pwmout_start(mPwm_blue);
 
     mRgb                            = true;
     mRgbw                           = false;
@@ -42,11 +53,26 @@ void MatterLED::Init(PinName redpin, PinName greenpin, PinName bluepin, PinName 
     mPwm_blue                       = (pwmout_t*) pvPortMalloc(sizeof(pwmout_t));
     mPwm_cwhite                     = (pwmout_t*) pvPortMalloc(sizeof(pwmout_t));
     mPwm_wwhite                     = (pwmout_t*) pvPortMalloc(sizeof(pwmout_t));
+
     pwmout_init(mPwm_red, redpin);
+    pwmout_period_us(mPwm_red, 20000); //pwm period = 20ms
+    pwmout_start(mPwm_red);
+
     pwmout_init(mPwm_green, bluepin);
+    pwmout_period_us(mPwm_green, 20000); //pwm period = 20ms
+    pwmout_start(mPwm_green);
+
     pwmout_init(mPwm_blue, greenpin);
+    pwmout_period_us(mPwm_blue, 20000); //pwm period = 20ms
+    pwmout_start(mPwm_blue);
+
     pwmout_init(mPwm_cwhite, cwhitepin);
+    pwmout_period_us(mPwm_cwhite, 20000); //pwm period = 20ms
+    pwmout_start(mPwm_cwhite);
+
     pwmout_init(mPwm_wwhite, wwhitepin);
+    pwmout_period_us(mPwm_wwhite, 20000); //pwm period = 20ms
+    pwmout_start(mPwm_wwhite);
 
     mRgb                            = true;
     mRgbw                           = true;

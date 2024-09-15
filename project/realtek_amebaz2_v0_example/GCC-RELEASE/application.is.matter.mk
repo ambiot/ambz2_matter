@@ -3,6 +3,7 @@ SHELL = /bin/bash
 # Initialize tool chain
 # -------------------------------------------------------------------
 
+MATTER_BUILDDIR = ../../../component/common/application/matter/project/amebaz2
 AMEBAZ2_TOOLDIR	= ../../../component/soc/realtek/8710c/misc/iar_utility
 AMEBAZ2_GCCTOOLDIR	= ../../../component/soc/realtek/8710c/misc/gcc_utility
 AMEBAZ2_BSPDIR = ../../../component/soc/realtek/8710c/misc/bsp
@@ -32,7 +33,7 @@ OBJDUMP = $(CROSS_COMPILE)objdump
 
 OS := $(shell uname)
 
-LDSCRIPT := ./rtl8710c_ram_matter.ld
+LDSCRIPT := $(MATTER_BUILDDIR)/rtl8710c_ram_matter.ld
 
 # Initialize target name and target object files
 # -------------------------------------------------------------------
@@ -67,10 +68,10 @@ ROMIMG =
 INCLUDES =
 INCLUDES += -I../inc
 
-INCLUDES += -I../../../component/common/network/ssl/mbedtls-matter/include
-INCLUDES += -I../../../component/common/network/ssl/mbedtls-matter/include/mbedtls
-INCLUDES += -I../../../component/common/network/ssl/mbedtls-matter/library
-INCLUDES += -I../../../component/common/network/ssl/mbedtls-matter
+INCLUDES += -I../../../component/common/network/ssl/mbedtls-2.28.1/include
+INCLUDES += -I../../../component/common/network/ssl/mbedtls-2.28.1/include/mbedtls
+INCLUDES += -I../../../component/common/network/ssl/mbedtls-2.28.1/library
+INCLUDES += -I../../../component/common/network/ssl/mbedtls-2.28.1
 
 INCLUDES += -I../../../component/common/api
 INCLUDES += -I../../../component/common/api/at_cmd
@@ -87,6 +88,8 @@ INCLUDES += -I../../../component/common/file_system/dct
 INCLUDES += -I../../../component/common/file_system/fatfs
 INCLUDES += -I../../../component/common/file_system/fatfs/r0.10c/include
 INCLUDES += -I../../../component/common/file_system/ftl
+INCLUDES += -I../../../component/common/file_system/littlefs
+INCLUDES += -I../../../component/common/file_system/littlefs/r2.50
 INCLUDES += -I../../../component/common/utilities
 INCLUDES += -I../../../component/common/mbed/hal
 INCLUDES += -I../../../component/common/mbed/hal_ext
@@ -195,8 +198,11 @@ INCLUDES += -I../../../component/common/application/matter/common/port
 INCLUDES += -I../../../component/common/application/matter/common/mbedtls
 INCLUDES += -I../../../component/common/application/matter/common/protobuf
 INCLUDES += -I../../../component/common/application/matter/common/protobuf/nanopb
+INCLUDES += -I../../../component/common/application/matter/common/include
 INCLUDES += -I../../../component/common/application/matter/example
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/src/app/hrp/gap
+
+INCLUDES += -I../../../component/common/application/matter/driver/diagnosticlogs
 
 # Source file list
 # -------------------------------------------------------------------
@@ -414,9 +420,13 @@ SRC_C += ../../../component/common/application/matter/common/port/matter_ota.c
 SRC_C += ../../../component/common/application/matter/common/port/matter_timers.c
 SRC_C += ../../../component/common/application/matter/common/port/matter_utils.c
 SRC_C += ../../../component/common/application/matter/common/port/matter_wifis.c
+SRC_C += ../../../component/common/application/matter/common/port/matter_fs.c
 SRC_C += ../../../component/common/application/matter/example/chiptest/example_matter.c
 SRC_C += ../../../component/common/application/matter/common/atcmd/atcmd_matter.c
 SRC_C += ../../../component/common/application/matter/common/mbedtls/net_sockets.c
+#SRC_C += ../../../component/common/application/matter/common/port/matter_flashfs_fat.c
+#SRC_C += ../../../component/common/application/matter/common/port/matter_flashfs_nofat.c
+#SRC_C += ../../../component/common/application/matter/common/port/matter_flashfs.c
 
 #network - app - mqtt
 SRC_C += ../../../component/common/application/mqtt/MQTTClient/MQTTClient.c
@@ -512,87 +522,87 @@ SRC_C += ../../../component/common/network/mDNS/mDNSPlatform.c
 
 #network - ssl - mbedtls
 #merge 2.4.0/net_sockets.c because MBEDTLS_NET_C
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/aes.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/aesni.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/arc4.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/aria.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/asn1parse.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/asn1write.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/base64.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/bignum.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/blowfish.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/camellia.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ccm.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/certs.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/chacha20.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/chachapoly.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/cipher.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/cipher_wrap.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/cmac.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/constant_time.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ctr_drbg.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/debug.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/des.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/dhm.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ecdh.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ecdsa.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ecjpake.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ecp.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ecp_curves.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/entropy.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/entropy_poll.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/error.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/gcm.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/havege.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/hkdf.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/hmac_drbg.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/md2.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/md4.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/md5.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/md.c
-#SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/md_wrap.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/memory_buffer_alloc.c
-#SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/net_sockets.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/nist_kw.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/oid.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/padlock.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/pem.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/pk.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/pkcs11.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/pkcs12.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/pkcs5.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/pkparse.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/pk_wrap.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/pkwrite.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/platform.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/platform_util.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/poly1305.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ripemd160.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/rsa.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/rsa_internal.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/sha1.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/sha256.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/sha512.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ssl_cache.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ssl_ciphersuites.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ssl_cli.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ssl_cookie.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ssl_msg.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ssl_srv.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ssl_ticket.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/ssl_tls.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/threading.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/timing.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/version.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/version_features.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/x509.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/x509_create.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/x509_crl.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/x509_crt.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/x509_csr.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/x509write_crt.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/x509write_csr.c
-SRC_C += ../../../component/common/network/ssl/mbedtls-matter/library/xtea.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/aes.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/aesni.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/arc4.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/aria.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/asn1parse.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/asn1write.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/base64.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/bignum.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/blowfish.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/camellia.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ccm.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/certs.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/chacha20.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/chachapoly.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/cipher.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/cipher_wrap.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/cmac.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/constant_time.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ctr_drbg.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/debug.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/des.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/dhm.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ecdh.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ecdsa.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ecjpake.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ecp.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ecp_curves.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/entropy.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/entropy_poll.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/error.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/gcm.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/havege.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/hkdf.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/hmac_drbg.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/md2.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/md4.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/md5.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/md.c
+#SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/md_wrap.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/memory_buffer_alloc.c
+#SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/net_sockets.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/nist_kw.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/oid.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/padlock.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/pem.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/pk.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/pkcs11.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/pkcs12.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/pkcs5.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/pkparse.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/pk_wrap.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/pkwrite.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/platform.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/platform_util.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/poly1305.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ripemd160.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/rsa.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/rsa_internal.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/sha1.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/sha256.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/sha512.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ssl_cache.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ssl_ciphersuites.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ssl_cli.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ssl_cookie.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ssl_msg.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ssl_srv.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ssl_ticket.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/ssl_tls.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/threading.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/timing.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/version.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/version_features.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/x509.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/x509_create.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/x509_crl.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/x509_crt.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/x509_csr.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/x509write_crt.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/x509write_csr.c
+SRC_C += ../../../component/common/network/ssl/mbedtls-2.28.1/library/xtea.c
 
 #network - ssl - ssl_ram_map
 SRC_C += ../../../component/common/network/ssl/ssl_ram_map/rom/rom_ssl_ram_map.c
@@ -667,6 +677,12 @@ SRC_C += ../../../component/common/file_system/fatfs/r0.10c/src/diskio.c
 SRC_C += ../../../component/common/file_system/fatfs/r0.10c/src/ff.c
 SRC_C += ../../../component/common/file_system/fatfs/r0.10c/src/option/ccsbcs.c
 SRC_C += ../../../component/common/file_system/fatfs/disk_if/src/flash_fatfs.c
+SRC_C += ../../../component/common/file_system/fatfs/fatfs_flash_api.c
+
+#file_system - littlefs
+SRC_C += ../../../component/common/file_system/littlefs/littlefs_adapter.c
+SRC_C += ../../../component/common/file_system/littlefs/r2.50/lfs.c
+SRC_C += ../../../component/common/file_system/littlefs/r2.50/lfs_util.c
 
 #utilities - example
 #SRC_C += ../../../component/common/example/amazon_awsiot/example_amazon_awsiot.c
@@ -774,7 +790,8 @@ ifdef BLE_MATTER_ADAPTER
 CFLAGS += -DCONFIG_BLE_MATTER_ADAPTER=1
 endif
 
-CFLAGS += -DCHIP_PROJECT=0
+CFLAGS += -DCONFIG_MATTER=1
+CFLAGS += -DCONFIG_BT=1
 CFLAGS += -DCONFIG_ENABLE_OTA_REQUESTOR=1
 CFLAGS += -DCONFIG_ENABLE_MATTER_PRNG=0
 CFLAGS += -DCONFIG_ENABLE_FACTORY_DATA_ENCRYPTION=0
@@ -839,7 +856,7 @@ LIBFLAGS += -Wl,--start-group -L../../../component/soc/realtek/8710c/misc/bsp/li
 RAMALL_BIN =
 OTA_BIN = 
 
-include toolchain.mk
+include $(MATTER_BUILDDIR)/toolchain.app.mk
 
 # Compile
 # -------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 Follow this guide to generate and use your own factory data instead of using test data
 
-### Prerequisites
+### Prerequisites (Linux)
 
 Build chip-cert tool
 
@@ -23,6 +23,15 @@ Build spake2p tool
 Install python dependency
 
     pip3 install protobuf==4.21.9
+    
+Make sure your firmware is built with `CONFIG_ENABLE_AMEBA_FACTORY_DATA` enabled in the **core** and **main** Matter library makefile
+
+### Prerequisites (Window)
+
+To use the Factory Data TOols in Window, ensure the follow software is installed in you Cygwin  Environment:
+1. Unzip 6.0-16 or above
+2. Zip 3.0-1 or above
+3. Python3 3.9.16 or above
 
 Make sure your firmware is built with `CONFIG_ENABLE_AMEBA_FACTORY_DATA` enabled in the **core** and **main** Matter library makefile
 
@@ -56,7 +65,7 @@ Generate the certs and keys
     ./gen-certs.sh <path to connectedhomeip> <path to chip-cert binary> <c-style filename>
     The certs and keys will be outputted in `connectedhomeip/myattestation`
     
-### Generate Factory Data Binary File 
+### Generate Factory Data Binary File (Linux)
 
 Navigate to below directory, if matter's environment is activated, deactivate it
 
@@ -88,6 +97,56 @@ Example command, run from `tools/matter/factorydata`
 
     python3 ameba_factory.py \
     --spake2p_path ../../../third_party/connectedhomeip/src/tools/spake2p/out/spake2p \
+    -d 3840 \
+    -p 20202021 \
+    --dac_cert ../../../third_party/connectedhomeip/myattestation/Chip-Test-DAC-8888-9999-Cert.der \
+    --dac_key ../../../third_party/connectedhomeip/myattestation/Chip-Test-DAC-8888-9999-Key.der \
+    --pai_cert ../../../third_party/connectedhomeip/myattestation/Chip-Test-PAI-8888-NoPID-Cert.der \
+    --cd ../../../third_party/connectedhomeip/myattestation/Chip-Test-CD-8888-9999.der \
+    --vendor-id 0x8888 \
+    --vendor-name ameba \
+    --product-id 0x9999 \
+    --product-name amebaz2 \
+    --hw-ver 1 \
+    --hw-ver-str "1.0" \
+    --mfg-date 2022-12-01 \
+    --serial-num 123456 \
+    --rd-id-uid 00112233445566778899aabbccddeeff \
+    --factorydata-key ff0102030405060708090a0b0c0d0e0fff0102030405060708090a0b0c0d0e0f \
+    --factorydata-iv ff0102030405060708090a0b0c0d0e0f
+    
+After running the script successfully, `ameba_factory.bin` should be generated in the same directory
+
+### Generate Factory Data Binary File (Window)
+
+Navigate to the directory where python script is stored.
+    
+Run the `ameba_factory_window.py` python script, passing in neccessary arguments
+
+    python3 ameba_factory_window.py \
+    --command gen-verifier \
+    -d <discriminator> \
+    -p <passcode> \
+    --dac_cert <path to DAC cert> \
+    --dac_key <path to DAC key> \
+    --pai_cert <path to PAI cert> \
+    --cd <path to CD> \
+    --vendor-id <vendor id> \
+    --vendor-name <vendor name> \
+    --product-id <product id> \
+    --product-name <product-name> \
+    --hw-ver <hardware version> \
+    --hw-ver-str <hardware version string> \
+    --mfg-date <manufacturing date> \
+    --serial-num <serial number> \
+    --rd-id-uid <rotating id unique id> \
+    --factorydata-key <32-bytes key to encrypt factorydata, hexstring, without "0x" in front> \
+    --factorydata-iv <16-bytes iv to encrypt factorydata, hexstring, without "0x" in front>
+    
+Example command, run from `tools/matter/factorydata`
+
+    python3 ameba_factory_window.py \
+    --command gen-verifier \
     -d 3840 \
     -p 20202021 \
     --dac_cert ../../../third_party/connectedhomeip/myattestation/Chip-Test-DAC-8888-9999-Cert.der \

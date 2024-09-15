@@ -14,6 +14,7 @@ extern "C" {
 #include <matter_timers.h>
 #include <matter_utils.h>
 #include <matter_wifis.h>
+#include <matter_fs.h>
 #include <cmsis_compiler.h>
 #include <stddef.h> /* for size_t */
 #include <stdarg.h>

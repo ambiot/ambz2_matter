@@ -11,10 +11,23 @@
 #include "matter_drivers.h"
 #include "matter_interaction.h"
 
+#include "matter_fs.h"
+#include "ameba_logging_faultlog.h"
+#include "ameba_logging_redirect_handler.h"
+
 #if defined(CONFIG_EXAMPLE_MATTER_REFRIGERATOR) && CONFIG_EXAMPLE_MATTER_REFRIGERATOR
 
 static void example_matter_refrigerator_task(void *pvParameters)
 {
+    int res = matter_fs_init();
+
+    /* init flash fs and read existing fault log into fs */
+    if(res == 0)
+    {
+        ChipLogProgress(DeviceLayer, "\n** Matter FlashFS ready! **\n");
+        read_last_fault_log();
+    }
+
     while(!(wifi_is_up(RTW_STA_INTERFACE) || wifi_is_up(RTW_AP_INTERFACE))) {
         vTaskDelay(500);
     }
@@ -24,6 +37,10 @@ static void example_matter_refrigerator_task(void *pvParameters)
     CHIP_ERROR err = CHIP_NO_ERROR;
 
     initPref();     // init NVS
+
+    // register log redirection
+    auto & instance = AmebaLogRedirectHandler::GetInstance();
+    instance.InitAmebaLogSubsystem();
     
     err = matter_core_start();
     if (err != CHIP_NO_ERROR)

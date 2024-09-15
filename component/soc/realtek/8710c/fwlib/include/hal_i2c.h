@@ -37,11 +37,6 @@ extern "C"
 {
 #endif
 
-#ifdef CHIP_PROJECT
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
-
 /**
  * @addtogroup hs_hal_i2c I2C
  * @ingroup 8710c_hal
@@ -214,10 +209,6 @@ hal_status_t hal_i2c_slv_recv (hal_i2c_adapter_t *phal_i2c_adapter);
 hal_status_t hal_i2c_slv_send (hal_i2c_adapter_t *phal_i2c_adapter);
 
 /** @} */ /* End of group hs_hal_i2c */
-
-#ifdef CHIP_PROJECT
-#pragma GCC diagnostic pop
-#endif
 
 #ifdef  __cplusplus
 }

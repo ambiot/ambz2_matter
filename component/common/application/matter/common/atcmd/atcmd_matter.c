@@ -4,7 +4,8 @@
 #include <platform_stdlib.h>
 #include <platform_opts.h>
 
-#ifdef CHIP_PROJECT
+#if defined(CONFIG_MATTER) && CONFIG_MATTER
+#include <main.h>
 #include <sys_api.h>
 #include "log_service.h"
 extern void ChipTest(void);
@@ -14,6 +15,8 @@ extern u32 deinitPref(void);
 extern void amebaQueryImageCmdHandler();
 extern void amebaApplyUpdateCmdHandler();
 #endif
+
+extern void ChipDiagLogInsertSector(void);
 #endif
 
 // Queue for matter shell
@@ -72,13 +75,31 @@ void fATmattershell(void *arg)
     } 
 }
 
+void fATcrash(void *arg)
+{
+#if defined(CONFIG_AMEBA_DEBUG_FORCE_CRASH_ATCMD) && (CONFIG_AMEBA_DEBUG_FORCE_CRASH_ATCMD == 1)
+printf("!@#$ FORCE CRASHING CORE !@#$\n");
+	((void (*)(void))2)();
+#endif // CONFIG_AMEBA_DEBUG_FORCE_CRASH_ATCMD
+}
+
+void fATinsertlog(void* arg)
+{
+#if defined(CONFIG_EXAMPLE_MATTER_LIGHT_LOGREDIRECT) && (CONFIG_EXAMPLE_MATTER_LIGHT_LOGREDIRECT == 1)
+	(void)arg;
+	ChipDiagLogInsertSector();	// debug
+#endif
+}
+
 log_item_t at_matter_items[] = {
 #ifndef CONFIG_INIC_NO_FLASH
 #if ATCMD_VER == ATVER_1
-    {"ATM$", fATchipapp, {NULL,NULL}},
-    {"ATM%", fATchipapp1, {NULL, NULL}},
-    {"ATM^", fATchipapp2, {NULL, NULL}},
-    {"ATMS", fATmattershell, {NULL, NULL}},
+    {"ATM$", fATchipapp},
+    {"ATM%", fATchipapp1},
+    {"ATM^", fATchipapp2},
+    {"ATMS", fATmattershell},
+	{"@@@@", fATcrash},
+	{.log_cmd="####", fATinsertlog},
 #endif // end of #if ATCMD_VER == ATVER_1
 #endif
 };
@@ -93,4 +114,4 @@ void at_matter_init(void)
 log_module_init(at_matter_init);
 #endif
 
-#endif /* CHIP_PROJECT */
+#endif /* CONFIG_MATTER */
