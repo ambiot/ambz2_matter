@@ -59,6 +59,14 @@
 #define BT_WHITELIST_BASE_1		(0x200000 - 0xA000)
 #define BT_WHITELIST_PAGE_SIZE		(0x1000)
 #define BT_WHITELIST_BASE_2		(BT_WHITELIST_BASE_1 + BT_WHITELIST_PAGE_SIZE)
+
+/**
+* For Fault Message Redirection
+*/
+#define FAULT_LOG1				(0x200000 - 0x64000) //Store fault log (Reserved max size: 8K)
+#define FAULT_LOG2				(0x200000 - 0x66000) //Store backtrace log (Reserved max size: 8K)
+#define FAULT_FLASH_SECTOR_SIZE	(6*1024)
+
 /**
  * For Wlan configurations
  */
