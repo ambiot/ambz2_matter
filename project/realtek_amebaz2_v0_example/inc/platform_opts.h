@@ -56,11 +56,19 @@
 #define UART_SETTING_SECTOR		(0x200000 - 0x5000)
 #define DCT_BEGIN_ADDR			(0x200000 - 0x29000) /*!< DCT begin address of flash, ex: 0x200000 = 2M, the default size of DCT is 24K; ; if backup enabled, the size is 48k; if wear leveling enabled, the size is 144k*/
 #define DCT_BEGIN_ADDR2			(0x200000 - 0x29000) /* dummy MACRO, will not be used, this will be redefined when CONFIG_EXAMPLE_MATTER is enabled */
-#define MATTER_FACTORY_DATA     (0x3FF000)           /* dummy MACRO, will not be used, this will be redefined when CONFIG_EXAMPLE_MATTER is enabled */
+#define MATTER_FACTORY_DATA		(0x3FF000)           /* dummy MACRO, will not be used, this will be redefined when CONFIG_EXAMPLE_MATTER is enabled */
 #define FLASH_APP_BASE			(0x200000 - 0xA9000) /*!< FATFS begin address, default size used is 512KB (can be adjusted based on user requirement)*/
 #define BT_WHITELIST_BASE_1		(0x200000 - 0xA000)
 #define BT_WHITELIST_PAGE_SIZE		(0x1000)
 #define BT_WHITELIST_BASE_2		(BT_WHITELIST_BASE_1 + BT_WHITELIST_PAGE_SIZE)
+
+/**
+* For Fault Message Redirection
+*/
+#define FAULT_LOG1				(0x200000 - 0x64000) //Store fault log (Reserved max size: 8K)
+#define FAULT_LOG2				(0x200000 - 0x66000) //Store backtrace log (Reserved max size: 8K)
+#define FAULT_FLASH_SECTOR_SIZE	(6*1024)
+
 /**
  * For Wlan configurations
  */
@@ -465,4 +473,48 @@
 #define DCT_BEGIN_ADDR			(0x400000 - 0x13000) // 0x3ED000 ~ 0x3FB000 : 56K 
 #define DCT_BEGIN_ADDR2 		(0x400000 - 0x1A000) // 0x3E6000 ~ 0x3ED000 : 24K
 #define MATTER_FACTORY_DATA     (0x3FF000)           // last 4KB of external flash - write protection is supported in this region
+
+/**
+ * CONFIG_ENABLE_AMEBA_DLOG==1: to support diagnosic logs.
+ * CONFIG_ENABLE_AMEBA_LFS==1: to enable Matter LittleFS.
+ * CONFIG_ENABLE_AMEBA_SHORT_LOGGING==1: file name and line number will NOT be stored,
+ * and reduce flash usage. On default this is disabled.
+ */
+#define CONFIG_ENABLE_AMEBA_DLOG    1
+#if defined(CONFIG_ENABLE_AMEBA_DLOG) && (CONFIG_ENABLE_AMEBA_DLOG==1)
+#define CONFIG_ENABLE_AMEBA_LFS     1
+#else
+#define CONFIG_ENABLE_AMEBA_LFS     0
+#endif
+
+#if defined(CONFIG_ENABLE_AMEBA_DLOG) && (CONFIG_ENABLE_AMEBA_DLOG == 1)
+#define CONFIG_ENABLE_AMEBA_SHORT_LOGGING   0 
+#if defined(CONFIG_ENABLE_AMEBA_SHORT_LOGGING) && (CONFIG_ENABLE_AMEBA_SHORT_LOGGING == 0)
+#define CONFIG_AMEBA_LOG_FILENAME_MAXSZ     32
+#endif /* CONFIG_ENABLE_AMEBA_SHORT_LOGGING */
+
+#define RETAIN_NLOGS_WHEN_FULL      40 // most recent N logs will be kept, the rest cleared
+
+#undef SECTOR_SIZE_FLASH
+#undef FAULT_FLASH_SECTOR_SIZE
+#define SECTOR_SIZE_FLASH           4096
+#define FAULT_FLASH_SECTOR_SIZE     (SECTOR_SIZE_FLASH)
+#define USER_LOG_FILENAME           "user.log"
+#define NET_LOG_FILENAME            "net.log"
+#define CRASH_LOG_FILENAME          "crash.log"
+#endif /* CONFIG_ENABLE_AMEBA_DLOG */
+
+#if defined(CONFIG_ENABLE_AMEBA_LFS) && (CONFIG_ENABLE_AMEBA_LFS == 1)
+#define CONFIG_USE_FLASHCFG 1
+#define LFS_DEVICE_SIZE             (0x20000)
+#define LFS_FLASH_BASE_ADDR         (DCT_BEGIN_ADDR2 - LFS_DEVICE_SIZE)
+#define LFS_NUM_BLOCKS              (LFS_DEVICE_SIZE / SECTOR_SIZE_FLASH)
+
+// redefine fault message redirection flash address
+#undef FAULT_LOG1
+#undef FAULT_LOG2
+#define FAULT_LOG1                  (LFS_FLASH_BASE_ADDR - 0x1000)
+#define FAULT_LOG2                  (LFS_FLASH_BASE_ADDR - 0x2000)
+#endif /* CONFIG_ENABLE_AMEBA_LFS */
+
 #endif /* CHIP_PROJECT */

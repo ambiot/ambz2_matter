@@ -87,6 +87,8 @@ INCLUDES += -I../../../component/common/file_system/dct
 INCLUDES += -I../../../component/common/file_system/fatfs
 INCLUDES += -I../../../component/common/file_system/fatfs/r0.10c/include
 INCLUDES += -I../../../component/common/file_system/ftl
+INCLUDES += -I../../../component/common/file_system/littlefs
+INCLUDES += -I../../../component/common/file_system/littlefs/r2.9.1
 INCLUDES += -I../../../component/common/utilities
 INCLUDES += -I../../../component/common/mbed/hal
 INCLUDES += -I../../../component/common/mbed/hal_ext
@@ -195,6 +197,7 @@ INCLUDES += -I../../../component/common/application/matter/common/port
 INCLUDES += -I../../../component/common/application/matter/common/mbedtls
 INCLUDES += -I../../../component/common/application/matter/common/protobuf
 INCLUDES += -I../../../component/common/application/matter/common/protobuf/nanopb
+INCLUDES += -I../../../component/common/application/matter/driver
 INCLUDES += -I../../../component/common/application/matter/example
 INCLUDES += -I../../../component/common/bluetooth/realtek/sdk/src/app/hrp/gap
 
@@ -410,6 +413,7 @@ SRC_C += ../../../component/common/utilities/gb2unicode.c
 
 #matter - app
 SRC_C += ../../../component/common/application/matter/common/port/matter_dcts.c
+SRC_C += ../../../component/common/application/matter/common/port/matter_fs.c
 SRC_C += ../../../component/common/application/matter/common/port/matter_ota.c
 SRC_C += ../../../component/common/application/matter/common/port/matter_timers.c
 SRC_C += ../../../component/common/application/matter/common/port/matter_utils.c
@@ -667,6 +671,11 @@ SRC_C += ../../../component/common/file_system/fatfs/r0.10c/src/diskio.c
 SRC_C += ../../../component/common/file_system/fatfs/r0.10c/src/ff.c
 SRC_C += ../../../component/common/file_system/fatfs/r0.10c/src/option/ccsbcs.c
 SRC_C += ../../../component/common/file_system/fatfs/disk_if/src/flash_fatfs.c
+
+#file_system - littlefs
+SRC_C += ../../../component/common/file_system/littlefs/littlefs_adapter.c
+SRC_C += ../../../component/common/file_system/littlefs/r2.9.1/lfs.c
+SRC_C += ../../../component/common/file_system/littlefs/r2.9.1/lfs_util.c
 
 #utilities - example
 #SRC_C += ../../../component/common/example/amazon_awsiot/example_amazon_awsiot.c

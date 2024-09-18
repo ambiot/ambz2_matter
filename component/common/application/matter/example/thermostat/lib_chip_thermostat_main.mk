@@ -10,6 +10,7 @@ OUTPUT_DIR = $(CHIPDIR)/examples/thermostat/ameba/build/chip
 CODEGENDIR = $(OUTPUT_DIR)/codegen
 
 CHIP_ENABLE_OTA_REQUESTOR = $(shell grep 'chip_enable_ota_requestor' $(OUTPUT_DIR)/args.gn | cut -d' ' -f3)
+CHIP_ENABLE_AMEBA_DLOG = $(shell grep "#define CONFIG_ENABLE_AMEBA_DLOG" $(SDKROOTDIR)/project/realtek_amebaz2_v0_example/inc/platform_opts.h | tr -s '[:space:]' | cut -d' ' -f3)
 
 OS := $(shell uname)
 
@@ -61,6 +62,8 @@ INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/dct
 INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/fatfs
 INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/fatfs/r0.10c/include
 INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/ftl
+INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/littlefs
+INCLUDES += -I$(SDKROOTDIR)/component/common/file_system/littlefs/r2.9.1
 INCLUDES += -I$(SDKROOTDIR)/component/common/utilities
 INCLUDES += -I$(SDKROOTDIR)/component/common/mbed/hal
 INCLUDES += -I$(SDKROOTDIR)/component/common/mbed/hal_ext
@@ -225,7 +228,6 @@ SRC_CPP += $(CHIPDIR)/zzz_generated/app-common/app-common/zap-generated/cluster-
 SRC_CPP += $(CHIPDIR)/examples/providers/DeviceInfoProviderImpl.cpp
 
 # Custom thermostat src files with porting layer
-SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_api.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_core.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/core/matter_interaction.cpp
 ifeq ($(CHIP_ENABLE_OTA_REQUESTOR), true)
@@ -235,6 +237,13 @@ SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/thermostat.c
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/thermostat_ui.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/thermostat/example_matter_thermostat.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/example/thermostat/matter_drivers.cpp
+
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_api.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_log_api.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnostic_logs/ameba_diagnosticlogs_provider_delegate_impl.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnostic_logs/ameba_logging_faultlog.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnostic_logs/ameba_logging_redirect_handler.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnostic_logs/ameba_logging_redirect_wrapper.cpp
 
 #lib_version
 VER_C += $(TARGET)_version.c
@@ -289,6 +298,13 @@ CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_SOCKETS=0
 CFLAGS += -DCHIP_SYSTEM_CONFIG_USE_NETWORK_FRAMEWORK=0
 CFLAGS += -DCHIP_SYSTEM_CONFIG_POSIX_LOCKING=0
 CFLAGS += -DINET_CONFIG_ENABLE_IPV4=0
+
+ifeq ($(CHIP_ENABLE_AMEBA_DLOG), 1)
+# For Diagnostic Logs Support
+CFLAGS += -DCHIP_CONFIG_ERROR_SOURCE=1
+CFLAGS += -DCHIP_CONFIG_ERROR_FORMAT_AS_STRING=1
+CFLAGS += -DCHIP_CONFIG_ENABLE_BDX_LOG_TRANSFER=1
+endif
 
 CFLAGS += -DUSE_ZAP_CONFIG
 CFLAGS += -DCHIP_HAVE_CONFIG_H
