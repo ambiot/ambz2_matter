@@ -34,7 +34,7 @@
 #define VARIABLE_VALUE_SIZE2    400 + 4           /* +4 is required, else the max variable size we can store is 396 */
                                                   /*!< max number of variable in module = floor (4024 / (32 + 400)) = 9 */
 
-#define ENABLE_BACKUP           1
+#define ENABLE_BACKUP           0
 #define ENABLE_WEAR_LEVELING    0
 
 #if CONFIG_ENABLE_DCT_ENCRYPTION
@@ -935,6 +935,15 @@ void dct1_update(uint32_t old_address, uint32_t new_address, uint16_t module_num
         goto exit;
     }
 
+    device_mutex_lock(RT_DEV_LOCK_FLASH);
+    flash_stream_read(&flash, new_address, BUFFER_SIZE, read_buf);
+    device_mutex_unlock(RT_DEV_LOCK_FLASH);
+
+    if ((strncmp((const char *)(read_buf), "DCT1", 4) == 0) && (strncmp((const char *)(read_buf + MODULE_NAME_OFFSET), "matter_kvs1_1", 12) == 0))
+    {
+        return;
+    }
+
     read_check = rtw_malloc(BUFFER_SIZE);
     if (!read_check)
     {
@@ -998,7 +1007,6 @@ retry:
                 // If comparision failed, restart the whole process.
                 if (memcmp(read_buf, read_check, BUFFER_SIZE) == 0)
                 {
-                    printf("[DCTDBG] DCT1 mod%d compare successful\n", kvs_num);
                     // If new backup address and old backup address is different, proceed to erase
                     if (new_address+((i+module_num)*BUFFER_SIZE) !=  old_address+((i+module_num)*BUFFER_SIZE))
                     {
@@ -1044,7 +1052,8 @@ exit:
 void dct2_update(uint32_t old_address, uint32_t new_address, uint16_t old_mod_num, uint16_t new_mod_num)
 {
     flash_t flash;
-    int i, kvs_num = 0;
+    int i;
+    uint8_t kvs_num = 0, j = 0;
     uint8_t ret = 0;
     uint8_t *read_buf, *read_check;
     int write_flash = 0;
@@ -1054,6 +1063,15 @@ void dct2_update(uint32_t old_address, uint32_t new_address, uint16_t old_mod_nu
     {
         printf("[DCTDBG] malloc failed\n");
         goto exit;
+    }
+
+    device_mutex_lock(RT_DEV_LOCK_FLASH);
+    flash_stream_read(&flash, new_address+(6*BUFFER_SIZE), BUFFER_SIZE, read_buf);
+    device_mutex_unlock(RT_DEV_LOCK_FLASH);
+
+    if ((strncmp((const char *)(read_buf), "DCT2", 4) == 0) && (strncmp((const char *)(read_buf + MODULE_NAME_OFFSET), "matter_kvs2_7", 13) == 0))
+    {
+        return;
     }
 
     read_check = rtw_malloc(BUFFER_SIZE);
@@ -1067,23 +1085,30 @@ void dct2_update(uint32_t old_address, uint32_t new_address, uint16_t old_mod_nu
     {
 retry1:
         kvs_num=i+1;
+        if (i == 5 || i == 4)
+        {
+            j = 0;
+        } else if (i < 5)
+        {
+            j++;
+        }
 
         device_mutex_lock(RT_DEV_LOCK_FLASH);
         memset(read_buf, 0, BUFFER_SIZE);
         flash_stream_read(&flash, old_address+((i+old_mod_num)*BUFFER_SIZE), BUFFER_SIZE, read_buf);
         memset(read_check, 0, BUFFER_SIZE);
-        flash_stream_read(&flash, new_address+(((new_mod_num*2)-1)*BUFFER_SIZE), sizeof(i), read_check);
+        flash_stream_read(&flash, new_address+(((new_mod_num*2)-1)*BUFFER_SIZE)+j, BUFFER_SIZE, read_check);
         device_mutex_unlock(RT_DEV_LOCK_FLASH);
 
         if (strncmp(read_check, "DCT2", 4) == 0)
         {
-             printf("[DCTDBG] no action required for mod[6] to mod[0]\n");
-             break;
+            //printf("[DCTDBG] no action required for mod[6] to mod[0]\n");
+            break;
         }
 
-        if ((read_check[0] < kvs_num) && (read_check[0] != 0xFF))
+        if ((read_check[0] == kvs_num) && (read_check[0] != 0xFF))
         {
-            printf("[DCTDBG] skip old(0x%x) new(0x%x)\n", old_address+(i*BUFFER_SIZE), new_address+(i*BUFFER_SIZE));
+            //printf("[DCTDBG] skip old(0x%x) new(0x%x)\n", old_address+(i*BUFFER_SIZE), new_address+(i*BUFFER_SIZE));
             continue;
         }
 
@@ -1125,8 +1150,7 @@ retry1:
                 // If comparision is successfully, proceed to erase old address data.
                 // If comparision failed, restart the whole process.
                 if (memcmp(read_buf, read_check, BUFFER_SIZE) == 0)
-                {
-                    printf("[DCTDBG] DCT2 mod%d compare successful 0x%x/0x%x\n", kvs_num, new_address+((i+new_mod_num)*BUFFER_SIZE), old_address+((i+old_mod_num)*BUFFER_SIZE));
+         
                     // If new backup address and old backup address is different, proceed to erase
                     if (new_address+((i+new_mod_num)*BUFFER_SIZE) !=  old_address+((i+old_mod_num)*BUFFER_SIZE))
                     {
@@ -1134,8 +1158,7 @@ retry1:
                     }
 
                     // If new origin address and old origin address is different, proceed to erase
-                    flash_erase_sector(&flash, new_address+(((new_mod_num*2)-1)*BUFFER_SIZE));
-                    flash_stream_write(&flash, new_address+(((new_mod_num*2)-1)*BUFFER_SIZE), sizeof(i), (uint8_t *) &kvs_num);
+                    flash_stream_write(&flash, new_address+(((new_mod_num*2)-1)*BUFFER_SIZE)+((old_mod_num-1)-i), sizeof(kvs_num), (uint8_t *) &kvs_num);
                 }
                 else
                 {
@@ -1162,7 +1185,7 @@ retry1:
 
         // read from old origin address
         memset(read_buf, 0, BUFFER_SIZE);
-        flash_stream_read(&flash, old_address+(i*BUFFER_SIZE), BUFFER_SIZE, read_buf);
+        flash_stream_read(&flash,  old_address+(i*BUFFER_SIZE), BUFFER_SIZE, read_buf);
 
         // read from mod[7] the check value and store into check_point
         memset(read_check, 0, BUFFER_SIZE);
@@ -1181,7 +1204,7 @@ retry1:
         {
             if (check_point < kvs_num)
             {
-                printf("[DCTDBG] DCT2 skip old(0x%x) new(0x%x)\n", old_address+(i*BUFFER_SIZE), new_address+(i*BUFFER_SIZE));
+                //printf("[DCTDBG] DCT2 skip old(0x%x) new(0x%x)\n", old_address+(i*BUFFER_SIZE), new_address+(i*BUFFER_SIZE));
                 continue;
             }
 retry2:
@@ -1213,7 +1236,6 @@ retry2:
 
             if (kvs_num != 7)
             {
-                flash_erase_sector(&flash, new_address+((old_mod_num)*BUFFER_SIZE));
                 flash_stream_write(&flash, new_address+((old_mod_num)*BUFFER_SIZE), sizeof(i), (uint8_t *) &kvs_num);
             }
 
