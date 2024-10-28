@@ -469,7 +469,8 @@
 /* For any upgrades in DCT */
 #define DCT_UPDATE_ENABLE		0
 #if defined(DCT_UPDATE_ENABLE) && DCT_UPDATE_ENABLE
-#define MODULE_NUM2_OLD			6
+#define MODULE_NUM_OLD			13
+#define MODULE_NUM2_OLD			10
 #define DCT_BEGIN_ADDR_OLD		(0x400000 - 0x13000)
 #define DCT_BEGIN_ADDR2_OLD 	(0x400000 - 0x1E000)
 #endif

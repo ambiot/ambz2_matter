@@ -14,6 +14,8 @@
 #include "dct.h"
 #include "chip_porting.h"
 
+uint8_t temp_buf[30];
+
 #if CONFIG_ENABLE_DCT_ENCRYPTION
 #include "mbedtls/aes.h"
 #endif
@@ -23,7 +25,7 @@
    if wear leveling enabled, the total module number is 12 + 2*12 + 3*12 = 36, the size is 288k"
 */
 #define DCT_BEGIN_ADDR_MATTER   DCT_BEGIN_ADDR    /*!< DCT begin address of flash, ex: 0x100000 = 1M */
-#define MODULE_NUM              4                /*!< max number of module */
+#define MODULE_NUM              6                /*!< max number of module */
 #define VARIABLE_NAME_SIZE      32                /*!< max size of the variable name */
 #define VARIABLE_VALUE_SIZE     64 + 4            /*!< max size of the variable value, +4 is required, else the max variable size we can store is 60 */ 
                                                   /*!< max number of variable in module = floor (4024 / (32 + 64)) = 41 */
@@ -34,8 +36,11 @@
 #define VARIABLE_VALUE_SIZE2    400 + 4           /* +4 is required, else the max variable size we can store is 396 */
                                                   /*!< max number of variable in module = floor (4024 / (32 + 400)) = 9 */
 
-#define ENABLE_BACKUP           0
+#define ENABLE_BACKUP           1
 #define ENABLE_WEAR_LEVELING    0
+
+#define DCT_REGION_1 0
+#define DCT_REGION_2 1
 
 #if CONFIG_ENABLE_DCT_ENCRYPTION
 #if defined(MBEDTLS_CIPHER_MODE_CTR)
@@ -43,9 +48,6 @@ mbedtls_aes_context aes;
 
 // key length 32 bytes for 256 bit encrypting, it can be 16 or 24 bytes for 128 and 192 bits encrypting mode
 unsigned char key[] = {0xff, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xff, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
-
-#define DCT_REGION_1 0
-#define DCT_REGION_2 1
 
 int32_t dct_encrypt(unsigned char *input_to_encrypt, int input_len, unsigned char *encrypt_output)
 {
@@ -121,8 +123,9 @@ s32 initPref(void)
     s32 ret;
 
 #if defined(DCT_UPDATE_ENABLE) && DCT_UPDATE_ENABLE
-    dct1_update(DCT_BEGIN_ADDR_OLD, DCT_BEGIN_ADDR_MATTER, MODULE_NUM);
-    dct2_update(DCT_BEGIN_ADDR2_OLD, DCT_BEGIN_ADDR_MATTER2, MODULE_NUM2_OLD, MODULE_NUM2);
+    extern void matter_dct_update(uint8_t region, uint32_t old_address, uint32_t new_address, uint16_t old_mod_num, uint16_t new_mod_num);
+    matter_dct_update(DCT_REGION_1, DCT_BEGIN_ADDR_OLD, DCT_BEGIN_ADDR_MATTER, MODULE_NUM_OLD, MODULE_NUM);
+    matter_dct_update(DCT_REGION_2, DCT_BEGIN_ADDR2_OLD, DCT_BEGIN_ADDR_MATTER2, MODULE_NUM2_OLD, MODULE_NUM2);
 #endif
 
     ret = dct_init(DCT_BEGIN_ADDR_MATTER, MODULE_NUM, VARIABLE_NAME_SIZE, VARIABLE_VALUE_SIZE, ENABLE_BACKUP, ENABLE_WEAR_LEVELING);
@@ -724,7 +727,7 @@ exit:
 #include <device_lock.h>
 
 /**
- * Please change the DCT_BEGIN_ADDR_OLD and DCT_BEGIN_ADDR2_OLD before using dct_update
+ * Please change the DCT_BEGIN_ADDR_OLD, DCT_BEGIN_ADDR2_OLD, MODULE_NUM_OLD and MODULE_NUM2_OLD before using updating DCT.
  */
 
 #define MODULE_NAME_OFFSET      8
@@ -750,92 +753,74 @@ exit:
  * 54 - 71   18      Reserved
  */
 
-static uint8_t dct_value_is_changed(flash_t flash, uint32_t old_address, uint32_t new_address, int loop,
-                                            uint8_t *buf, int *changed)
+static uint8_t dct_value_is_changed(flash_t flash, uint32_t old_address, uint32_t new_address, uint8_t *buf, int *changed)
 {
-    uint8_t *read_buf_new;
+    uint8_t *read_buf_new = NULL;
     uint8_t ret = 0;
 
+    // Allocate memory for reading the new address data
     read_buf_new = rtw_malloc(BUFFER_SIZE);
     if (!read_buf_new)
     {
-        printf("[DCT_DBG] buffer malloc failed\n");
-        ret = -1;
-        goto exit;
+        printf("[MATTER_DCT] buffer malloc failed\n");
+        return (uint8_t)-1;
     }
 
+    // Check if the address has changed
     if (old_address != new_address)
     {
-        // Read DCT data from new flash flash (if any)
+        // Read DCT data from the new address
         device_mutex_lock(RT_DEV_LOCK_FLASH);
-        flash_stream_read(&flash, new_address+(loop*BUFFER_SIZE), BUFFER_SIZE, read_buf_new);
+        flash_stream_read(&flash, new_address, BUFFER_SIZE, read_buf_new);
         device_mutex_unlock(RT_DEV_LOCK_FLASH);
 
-        if(read_buf_new[0] != 0xFF)
+        // If the new data is not empty (not all 0xFF)
+        if (read_buf_new[0] != 0xFF)
         {
-            // compare if there is any difference, return 0 if same
-            if(memcmp(read_buf_new, buf, BUFFER_SIZE) == 1)
+            // Compare the new buffer with the original buffer
+            if (memcmp(read_buf_new, buf, BUFFER_SIZE) != 0)
             {
                 *changed = 1;
             }
             else
             {
-                ret = 1; //return 1 to indicate both address has same data
+                ret = 1; // Indicate that both addresses have the same data
             }
         }
         else
         {
-            *changed = 1;
+            *changed = 1; // New address is empty, mark it as changed
         }
     }
 
-exit:
-    if(read_buf_new)
-    {
-        rtw_free(read_buf_new);
-    }
+    // Free allocated memory
+    rtw_free(read_buf_new);
 
     return ret;
-}
-
-static void dct_check_is_valid(uint8_t *buf, int *changed)
-{
-    uint32_t mod_state = 0xFFFFFFFE;
-    if (memcmp(buf + 4, &mod_state, sizeof(mod_state)) != 0)
-    {
-        memcpy(buf + 4, &mod_state, sizeof(mod_state));
-        *changed = 1;
-    }
 }
 
 static void dct_change_module_name(int loop, uint8_t *buf, int *changed, uint32_t new_address)
 {
     char new_module_name[15]; // for matter v1.1 name change
-    int value = 0, count = 0;
+    int value = loop + 1;
 
-    // For v1.0 Module Name changed. If module name starts with "chip" must change.
+    // Check if the module name starts with "chip" and update if needed
     if (strncmp((const char *)(buf + MODULE_NAME_OFFSET), "chip", 4) == 0)
     {
-        value = loop + 1;
         switch (new_address)
         {
             case DCT_BEGIN_ADDR_MATTER:
-            {
                 snprintf(new_module_name, sizeof(new_module_name), "matter_kvs1_%d", value);
-            }
-            break;
+                break;
             case DCT_BEGIN_ADDR_MATTER2:
-            {
                 snprintf(new_module_name, sizeof(new_module_name), "matter_kvs2_%d", value);
-            }
-            break;
+                break;
         }
 
-        for (count = 0; count < sizeof(new_module_name); count++)
-        {
-            buf[MODULE_NAME_OFFSET+count] = new_module_name[count];
-        }
-        memset(buf+MODULE_NAME_OFFSET+count, 0, MODULE_INFO_SIZE-MODULE_NAME_OFFSET-count);
+        // Copy the new module name and clear the rest
+        memcpy(buf + MODULE_NAME_OFFSET, new_module_name, sizeof(new_module_name));
+        memset(buf + MODULE_NAME_OFFSET + sizeof(new_module_name), 0, MODULE_INFO_SIZE - MODULE_NAME_OFFSET - sizeof(new_module_name));
+
         *changed = 1;
     }
 }
@@ -844,422 +829,348 @@ static void dct_module_num_is_changed(uint8_t *buf, int *changed, uint8_t module
 {
     if (buf[MODULE_NUM_OFFSET] != module_num)
     {
-        memset(buf+MODULE_NUM_OFFSET, module_num, 1);
+        buf[MODULE_NUM_OFFSET] = module_num;
         *changed = 1;
     }
 }
 
 static void dct_backup_is_changed(uint8_t *buf, int *changed)
 {
-    if(buf[DCT_BACKUP_OFFSET] != ENABLE_BACKUP)
+    if (buf[DCT_BACKUP_OFFSET] != ENABLE_BACKUP)
     {
-        memset(buf+DCT_BACKUP_OFFSET, ENABLE_BACKUP, 1);
+        buf[DCT_BACKUP_OFFSET] = ENABLE_BACKUP;
         *changed = 1;
     }
 }
 
-static void dct_manual_init(flash_t flash,  uint8_t *buffer, int loop, uint32_t new_address)
+static void dct_manual_init(uint8_t *buffer, int loop, uint32_t new_address)
 {
     uint8_t init_size = 72;
     uint8_t signature[4];
     uint32_t mod_state = 0xFFFFFFFE;
     char module_name[15]; // for matter v1.1 name change
-    int value = 0, count = 0;
+    int value = loop + 1;
 
     uint32_t variable_crc = 0xFFFFFFFF;
-    uint16_t module_num = 0;
-    uint16_t variable_name_size = 0, variable_value_size = 0, used_variable_num = 0;
+    uint16_t module_num = 0, variable_name_size = 0, variable_value_size = 0, used_variable_num = 0;
 
+    // Initialize the buffer to zeros
     memset(buffer, 0, init_size);
 
-    value = loop + 1;
-
-    switch (new_address)
+    // Set variables based on address
+    if (new_address == DCT_BEGIN_ADDR_MATTER)
     {
-        case DCT_BEGIN_ADDR_MATTER:
-        {
-            module_num = MODULE_NUM;
-            snprintf(module_name, 15, "matter_kvs1_%d", value);
-            memcpy(signature, "DCT1", sizeof(signature));
-            variable_name_size = VARIABLE_NAME_SIZE;
-            variable_value_size = VARIABLE_VALUE_SIZE;
-        }
-        break;
-        case DCT_BEGIN_ADDR_MATTER2:
-        {
-            module_num = MODULE_NUM2;
-            snprintf(module_name, 15, "matter_kvs2_%d", value);
-            memcpy(signature, "DCT2", sizeof(signature));
-            variable_name_size = VARIABLE_NAME_SIZE2;
-            variable_value_size = VARIABLE_VALUE_SIZE2;
-        }
-        break;
+        module_num = MODULE_NUM;
+        snprintf(module_name, sizeof(module_name), "matter_kvs1_%d", value);
+        memcpy(signature, "DCT1", 4);
+        variable_name_size = VARIABLE_NAME_SIZE;
+        variable_value_size = VARIABLE_VALUE_SIZE;
+    }
+    else if (new_address == DCT_BEGIN_ADDR_MATTER2)
+    {
+        module_num = MODULE_NUM2;
+        snprintf(module_name, sizeof(module_name), "matter_kvs2_%d", value);
+        memcpy(signature, "DCT2", 4);
+        variable_name_size = VARIABLE_NAME_SIZE2;
+        variable_value_size = VARIABLE_VALUE_SIZE2;
     }
 
+    // Fill buffer
     memcpy(buffer, signature, sizeof(signature));
     memcpy(buffer + 4, &mod_state, sizeof(mod_state));
-    for (count = 0; count < sizeof(module_name); count++)
-    {
-        buffer[8 + count] = module_name[count];
-    }
+    memcpy(buffer + 8, module_name, sizeof(module_name));
     memcpy(buffer + 40, &variable_crc, sizeof(variable_crc));
     memcpy(buffer + 44, &module_num, sizeof(module_num));
     memcpy(buffer + 46, &variable_name_size, sizeof(variable_name_size));
     memcpy(buffer + 48, &variable_value_size, sizeof(variable_value_size));
     memcpy(buffer + 50, &used_variable_num, sizeof(used_variable_num));
-    memset(buffer + 52, ENABLE_BACKUP, 1);
-    memset(buffer + 53, ENABLE_WEAR_LEVELING, 1);
+
+    // Set flags for backup and wear leveling
+    buffer[52] = ENABLE_BACKUP;
+    buffer[53] = ENABLE_WEAR_LEVELING;
 
     return;
 }
 
-/** Step 1: move DCT1 from old address to new address
- * Step 1.1: move module's backup to new address
- * Step 1.2: move module's original to new address
- * Step 1.3: check flash area first 4 bytes if it is "DCT1" signature from new address
- * Step 1.4: erase module's backup from old address
- * Step 1.5: erase module's original from old address
- */
-void dct1_update(uint32_t old_address, uint32_t new_address, uint16_t module_num)
+// Helper function to check the DCT signature and module name at a given address
+int matter_dct1_check_signature_and_module_name(flash_t *flash, uint32_t address, uint16_t mod_num, const char *expected_name)
 {
-    flash_t flash;
-    int i, kvs_num = 0;
-    uint8_t ret = 0;
-    uint8_t *read_buf, *read_check;
-    int write_flash = 0;
-
-    read_buf = rtw_malloc(BUFFER_SIZE);
-    if (!read_buf)
+    uint8_t *buffer = rtw_malloc(BUFFER_SIZE);
+    if (!buffer)
     {
-        printf("[DCTDBG] malloc failed\n");
-        goto exit;
+        printf("[MATTER_DCT] malloc failed\n");
+        return -1;
+    }
+
+    // Read the buffer from flash memory
+    device_mutex_lock(RT_DEV_LOCK_FLASH);
+    flash_stream_read(flash, address + (mod_num * BUFFER_SIZE), BUFFER_SIZE, buffer);
+    device_mutex_unlock(RT_DEV_LOCK_FLASH);
+
+    // Check DCT signature and module name
+    int result = (strncmp((const char *)buffer, "DCT1", 4) == 0 &&
+                  strncmp((const char *)(buffer + MODULE_NAME_OFFSET), expected_name, strlen(expected_name)) == 0);
+
+    rtw_free(buffer);
+    return result;
+}
+
+// Helper function to check the DCT signature and module name at a given address
+int matter_dct2_check_signature_and_module_name(flash_t *flash, uint32_t address, uint16_t mod_num, const char *expected_name)
+{
+    uint8_t *buffer = rtw_malloc(BUFFER_SIZE);
+    if (!buffer)
+    {
+        printf("[MATTER_DCT] malloc failed\n");
+        return -1;
+    }
+
+    // Read the buffer from flash memory
+    device_mutex_lock(RT_DEV_LOCK_FLASH);
+    flash_stream_read(flash, address + (mod_num * BUFFER_SIZE), BUFFER_SIZE, buffer);
+    device_mutex_unlock(RT_DEV_LOCK_FLASH);
+
+    // Check DCT signature and module name
+    int result = (strncmp((const char *)buffer, "DCT2", 4) == 0 &&
+                  strncmp((const char *)(buffer + MODULE_NAME_OFFSET), expected_name, strlen(expected_name)) == 0);
+
+    rtw_free(buffer);
+    return result;
+}
+
+// Helper function to erase and write data to flash with verification
+int matter_dct_flash_write_with_verification(flash_t *flash, uint32_t address, uint8_t *data, uint32_t size)
+{
+    uint8_t *verify_buf = rtw_malloc(size);
+    if (!verify_buf)
+    {
+        printf("[MATTER_DCT] malloc failed\n");
+        return -1;
     }
 
     device_mutex_lock(RT_DEV_LOCK_FLASH);
-    flash_stream_read(&flash, new_address, BUFFER_SIZE, read_buf);
+    flash_erase_sector(flash, address);
+    flash_stream_write(flash, address, size, data);
+    flash_stream_read(flash, address, size, verify_buf);
     device_mutex_unlock(RT_DEV_LOCK_FLASH);
 
-    if ((strncmp((const char *)(read_buf), "DCT1", 4) == 0) && (strncmp((const char *)(read_buf + MODULE_NAME_OFFSET), "matter_kvs1_1", 12) == 0))
+    int result = (memcmp(data, verify_buf, size) == 0);
+    rtw_free(verify_buf);
+    return result;
+}
+
+// Helper function to read data from flash into a buffer
+int matter_dct_flash_read(flash_t *flash, uint32_t address, uint8_t *buffer, uint32_t size)
+{
+    device_mutex_lock(RT_DEV_LOCK_FLASH);
+    flash_stream_read(flash, address, size, buffer);
+    device_mutex_unlock(RT_DEV_LOCK_FLASH);
+    return 0;
+}
+
+// Function to handle updating new modules
+void matter_dct_handle_new_modules(flash_t *flash, uint32_t old_address, uint32_t new_address, uint16_t
+                              old_mod_num, uint16_t new_mod_num, uint8_t *read_buf, uint8_t *read_check)
+{
+    uint8_t kvs_num = 0, count_val = 0;
+    uint8_t check_point = 0, k = 0;
+    uint32_t new_record;
+
+    for (int i = new_mod_num - 1; i >= old_mod_num; i--)
     {
-        return;
-    }
+        kvs_num = i + 1;
 
-    read_check = rtw_malloc(BUFFER_SIZE);
-    if (!read_check)
-    {
-        printf("[DCTDBG] malloc failed\n");
-        goto exit;
-    }
-
-    for (i = module_num-1; i >= 0; i--)
-    {
-retry:
-        kvs_num=i+1;
-
-        // Read from old address
-        device_mutex_lock(RT_DEV_LOCK_FLASH);
-        flash_stream_read(&flash, old_address+(i*BUFFER_SIZE), BUFFER_SIZE, read_buf);
-        device_mutex_unlock(RT_DEV_LOCK_FLASH);
-
-        // If old address does not contains DCT1 signature, means has already been cleared, skip.
-        if (strncmp((const char *)(read_buf), "DCT1", 4) != 0)
+        if (i == new_mod_num - 1 || i == new_mod_num - 2)
         {
-            printf("[DCTDBG] skip old(0x%x) new(0x%x)\n", old_address+(i*BUFFER_SIZE), new_address+(i*BUFFER_SIZE));
-            continue;
+            count_val = 0;
+        }
+        else
+        {
+            count_val++;
         }
 
-        if (read_buf[0] != 0xFF && i < read_buf[MODULE_NUM_OFFSET])
+        new_record = new_address + (((new_mod_num * 2) - (new_mod_num - old_mod_num)) * BUFFER_SIZE) + count_val;
+        memset(read_check, 0, BUFFER_SIZE);
+        matter_dct_flash_read(flash, new_record, read_check, sizeof(uint8_t));
+        check_point = read_check[0];
+
+        // Read data from old and new backup addresses
+        memset(read_buf, 0, BUFFER_SIZE);
+        matter_dct_flash_read(flash, old_address + (i * BUFFER_SIZE), read_buf, BUFFER_SIZE);
+
+        memset(read_check, 0, BUFFER_SIZE);
+        matter_dct_flash_read(flash, new_address + (i * BUFFER_SIZE), read_check, sizeof(kvs_num));
+
+        // If data is valid, perform updates
+        if (read_buf[0] == 0xFF || read_check[0] == 0xFF)
         {
-            // Check Modify the necessary values in DCT region
-            ret = dct_value_is_changed(flash, old_address, new_address, i, read_buf, &write_flash);
-            if (ret == 1)
+            if (check_point < kvs_num)
             {
                 continue;
             }
-            else if (ret !=0)
+
+            dct_manual_init(read_buf, i, new_address);
+            if (!matter_dct_flash_write_with_verification(flash, new_address + (i  * BUFFER_SIZE), read_buf, BUFFER_SIZE))
             {
-                goto exit;
+                printf("[MATTER_DCT] write failed\n");
+                return;
             }
-            dct_check_is_valid(read_buf, &write_flash);
-            dct_change_module_name(i, read_buf, &write_flash, new_address);
-            dct_backup_is_changed(read_buf, &write_flash);
-            dct_module_num_is_changed(read_buf, &write_flash, module_num);
-
-            if (write_flash)
+            if (!matter_dct_flash_write_with_verification(flash, new_address + ((i + new_mod_num) * BUFFER_SIZE), read_buf, BUFFER_SIZE))
             {
-                device_mutex_lock(RT_DEV_LOCK_FLASH);
+                printf("[MATTER_DCT] write failed\n");
+                return;
+            }
 
-                // Erase and write at new backup address
-                flash_erase_sector(&flash, new_address+((i+module_num)*BUFFER_SIZE));
-                flash_stream_write(&flash, new_address+((i+module_num)*BUFFER_SIZE), BUFFER_SIZE, read_buf);
-
-                // Erase and write at new origin address
-                flash_erase_sector(&flash, new_address+(i*BUFFER_SIZE));
-                flash_stream_write(&flash, new_address+(i*BUFFER_SIZE), BUFFER_SIZE, read_buf);
-
-                // Compare new backup and new origin data
-                memset(read_buf, 0, BUFFER_SIZE);
-                flash_stream_read(&flash, new_address+(i*BUFFER_SIZE), BUFFER_SIZE, read_buf);
-                memset(read_check, 0, BUFFER_SIZE);
-                flash_stream_read(&flash, new_address+((i+module_num)*BUFFER_SIZE), BUFFER_SIZE, read_check);
-
-                // If comparision is successfully, proceed to erase old address data.
-                // If comparision failed, restart the whole process.
-                if (memcmp(read_buf, read_check, BUFFER_SIZE) == 0)
-                {
-                    // If new backup address and old backup address is different, proceed to erase
-                    if (new_address+((i+module_num)*BUFFER_SIZE) !=  old_address+((i+module_num)*BUFFER_SIZE))
-                    {
-                        flash_erase_sector(&flash, old_address+((i+module_num)*BUFFER_SIZE));
-                    }
-
-                    // If new origin address and old origin address is different, proceed to erase
-                    if (new_address+(i*BUFFER_SIZE) !=  old_address+(i*BUFFER_SIZE))
-                    {
-                        flash_erase_sector(&flash, old_address+(i*BUFFER_SIZE));
-                    }
-                }
-                else
-                {
-                    goto retry;
-                }
-
-                device_mutex_unlock(RT_DEV_LOCK_FLASH);
-
-                write_flash = 0;
+            if (i != old_mod_num)
+            {
+                new_record = new_address + (((new_mod_num * 2) - (new_mod_num - old_mod_num)) * BUFFER_SIZE) + k;
+                k++;
+                flash_stream_write(&flash, new_record, sizeof(kvs_num), &kvs_num);
             }
         }
         else
         {
-            printf("[DCTDBG] No changes needed, 0x%x has been cleared\n", old_address+(i*BUFFER_SIZE));
+            return;
         }
     }
-
-exit:
-    if(read_buf)
-    {
-        rtw_free(read_buf);
-    }
-
-    if(read_check)
-    {
-        rtw_free(read_check);
-    }
-
-    return;
 }
 
-void dct2_update(uint32_t old_address, uint32_t new_address, uint16_t old_mod_num, uint16_t new_mod_num)
+// Main DCT update function
+void matter_dct_update(uint8_t region, uint32_t old_address, uint32_t new_address, uint16_t old_mod_num, uint16_t new_mod_num)
 {
     flash_t flash;
-    int i;
-    uint8_t kvs_num = 0, j = 0;
-    uint8_t ret = 0;
-    uint8_t *read_buf, *read_check;
-    int write_flash = 0;
+    uint8_t *read_buf = NULL, *read_check = NULL, kvs_num = 0;
+    uint32_t new_record;
+    int write_flash = 0, count_val = 0, k = 0;
+
+    // Check if the DCT1 signature and module name are already correct at the new address
+    if (region == DCT_REGION_1 &&
+        matter_dct1_check_signature_and_module_name(&flash, new_address, new_mod_num, "matter_kvs1_1"))
+    {
+        goto cleanup; // Skip if valid
+    }
+
+    // Check if the DCT2 signature and module name are already correct at the new address
+    if (region == DCT_REGION_2 &&
+        matter_dct2_check_signature_and_module_name(&flash, new_address, new_mod_num, "matter_kvs2_1"))
+    {
+        goto cleanup; // Skip if valid
+    }
 
     read_buf = rtw_malloc(BUFFER_SIZE);
     if (!read_buf)
     {
-        printf("[DCTDBG] malloc failed\n");
-        goto exit;
-    }
-
-    device_mutex_lock(RT_DEV_LOCK_FLASH);
-    flash_stream_read(&flash, new_address+(6*BUFFER_SIZE), BUFFER_SIZE, read_buf);
-    device_mutex_unlock(RT_DEV_LOCK_FLASH);
-
-    if ((strncmp((const char *)(read_buf), "DCT2", 4) == 0) && (strncmp((const char *)(read_buf + MODULE_NAME_OFFSET), "matter_kvs2_7", 13) == 0))
-    {
+        printf("[MATTER_DCT] malloc failed\n");
         return;
     }
 
     read_check = rtw_malloc(BUFFER_SIZE);
     if (!read_check)
     {
-        printf("[DCTDBG] malloc failed\n");
-        goto exit;
+        printf("[MATTER_DCT] malloc failed\n");
+        goto cleanup;
     }
 
-    for (i = old_mod_num-1; i >= 0; i--)
+    // Loop over original and backup DCTs
+    for (int j = 0; j <= 1; j++)
     {
-retry1:
-        kvs_num=i+1;
-        if (i == 5 || i == 4)
+        for (int i = old_mod_num - 1; i >= 0; i--)
         {
-            j = 0;
-        } else if (i < 5)
-        {
-            j++;
-        }
+            kvs_num = i + 1;
 
-        device_mutex_lock(RT_DEV_LOCK_FLASH);
-        memset(read_buf, 0, BUFFER_SIZE);
-        flash_stream_read(&flash, old_address+((i+old_mod_num)*BUFFER_SIZE), BUFFER_SIZE, read_buf);
-        memset(read_check, 0, BUFFER_SIZE);
-        flash_stream_read(&flash, new_address+(((new_mod_num*2)-1)*BUFFER_SIZE)+j, BUFFER_SIZE, read_check);
-        device_mutex_unlock(RT_DEV_LOCK_FLASH);
+            if (i == old_mod_num - 1 || i == old_mod_num - 2)
+            {
+                count_val = 0;
+            }
+            else
+            {
+                count_val++;
+            }
 
-        if (strncmp(read_check, "DCT2", 4) == 0)
-        {
-            //printf("[DCTDBG] no action required for mod[6] to mod[0]\n");
-            break;
-        }
+            new_record = new_address + (((new_mod_num * 2) - 1) * BUFFER_SIZE) + count_val + (j * new_mod_num);
+            memset(read_check, 0, BUFFER_SIZE);
+            matter_dct_flash_read(&flash, new_record, read_check, sizeof(uint8_t));
 
-        if ((read_check[0] == kvs_num) && (read_check[0] != 0xFF))
-        {
-            //printf("[DCTDBG] skip old(0x%x) new(0x%x)\n", old_address+(i*BUFFER_SIZE), new_address+(i*BUFFER_SIZE));
-            continue;
-        }
-
-        if (read_buf[0] != 0xFF && i < read_buf[MODULE_NUM_OFFSET])
-        {
-            // Check Modify the necessary values in DCT region
-            ret = dct_value_is_changed(flash, old_address, new_address, i, read_buf, &write_flash);
-            if (ret == 1)
+            if ((read_check[0] < kvs_num) && (read_check[0] != 0xFF))
             {
                 continue;
             }
-            else if (ret !=0)
+
+            uint32_t old_offset = old_address + (i + (old_mod_num * j)) * BUFFER_SIZE;
+            uint32_t new_offset = new_address + (i + (new_mod_num * j)) * BUFFER_SIZE;
+
+            // Read old data
+            memset(read_buf, 0, BUFFER_SIZE);
+            matter_dct_flash_read(&flash, old_offset, read_buf, BUFFER_SIZE);
+
+            // Skip if the DCT1 signature is not found
+            if (region == DCT_REGION_1 && strncmp((const char *)read_buf, "DCT1", 4) != 0)
             {
-                goto exit;
+                continue;
             }
-            dct_check_is_valid(read_buf, &write_flash);
+
+            // Skip if the DCT2 signature is not found
+            if (region == DCT_REGION_2 && strncmp((const char *)read_buf, "DCT2", 4) != 0)
+            {
+                continue;
+            }
+
+            // Perform DCT value change checks
+            uint8_t ret = dct_value_is_changed(flash, old_offset, new_offset, read_buf, &write_flash);
+            if (ret == 1)
+            {
+                continue; // No changes
+            }
+
+            // Apply DCT updates
             dct_change_module_name(i, read_buf, &write_flash, new_address);
             dct_backup_is_changed(read_buf, &write_flash);
             dct_module_num_is_changed(read_buf, &write_flash, new_mod_num);
 
+            // Write updated data if changes were made
             if (write_flash)
             {
-                device_mutex_lock(RT_DEV_LOCK_FLASH);
-
-                // Erase and write at new backup address
-                flash_erase_sector(&flash, new_address+((i+new_mod_num)*BUFFER_SIZE));
-                flash_stream_write(&flash, new_address+((i+new_mod_num)*BUFFER_SIZE), BUFFER_SIZE, read_buf);
-
-                // Erase and write at new origin address
-                flash_erase_sector(&flash, new_address+(i*BUFFER_SIZE));
-                flash_stream_write(&flash, new_address+(i*BUFFER_SIZE), BUFFER_SIZE, read_buf);
-
-                // Compare new backup and new origin data
-                memset(read_buf, 0, BUFFER_SIZE);
-                flash_stream_read(&flash, new_address+(i*BUFFER_SIZE), BUFFER_SIZE, read_buf);
-                memset(read_check, 0, BUFFER_SIZE);
-                flash_stream_read(&flash, new_address+((i+new_mod_num)*BUFFER_SIZE), BUFFER_SIZE, read_check);
-
-                // If comparision is successfully, proceed to erase old address data.
-                // If comparision failed, restart the whole process.
-                if (memcmp(read_buf, read_check, BUFFER_SIZE) == 0)
-         
-                    // If new backup address and old backup address is different, proceed to erase
-                    if (new_address+((i+new_mod_num)*BUFFER_SIZE) !=  old_address+((i+old_mod_num)*BUFFER_SIZE))
-                    {
-                        flash_erase_sector(&flash, old_address+((i+old_mod_num)*BUFFER_SIZE));
-                    }
-
-                    // If new origin address and old origin address is different, proceed to erase
-                    flash_stream_write(&flash, new_address+(((new_mod_num*2)-1)*BUFFER_SIZE)+((old_mod_num-1)-i), sizeof(kvs_num), (uint8_t *) &kvs_num);
-                }
-                else
+                if (!matter_dct_flash_write_with_verification(&flash, new_offset, read_buf, BUFFER_SIZE))
                 {
-                    goto retry1;
+                    printf("[MATTER_DCT] Flash write verification failed\n");
+                    goto cleanup;
                 }
 
-                device_mutex_unlock(RT_DEV_LOCK_FLASH);
+                // If the new and old addresses are different, erase the old address
+                if (new_offset != old_offset)
+                {
+                    device_mutex_lock(RT_DEV_LOCK_FLASH);
+                    flash_erase_sector(&flash, old_offset);
+                    device_mutex_unlock(RT_DEV_LOCK_FLASH);
+                }
 
-                write_flash = 0;
+                if (i != 0)
+                {
+                    // Write kvs_num into the new record
+                    new_record = new_address + (((new_mod_num * 2) - 1) * BUFFER_SIZE)  + k + (j * new_mod_num);
+                    k++;
+                    flash_stream_write(&flash, new_record, sizeof(kvs_num), &kvs_num);
+                }
+
+                write_flash = 0; // Reset flag
             }
         }
     }
 
-    /*********************************************************************************************/
+    // Additional logic for handling new modules, similar to the above loop
+    matter_dct_handle_new_modules(&flash, old_address, new_address, old_mod_num, new_mod_num, read_buf, read_check);
 
-    kvs_num = 0;
-    u8 check_point = 0;
-
-    for (i = new_mod_num-1; i >= old_mod_num; i--)
-    {
-        kvs_num=i+1;
-
-        device_mutex_lock(RT_DEV_LOCK_FLASH);
-
-        // read from old origin address
-        memset(read_buf, 0, BUFFER_SIZE);
-        flash_stream_read(&flash,  old_address+(i*BUFFER_SIZE), BUFFER_SIZE, read_buf);
-
-        // read from mod[7] the check value and store into check_point
-        memset(read_check, 0, BUFFER_SIZE);
-        flash_stream_read(&flash, new_address+((old_mod_num)*BUFFER_SIZE), sizeof(i), read_check);
-
-        check_point = read_check[0];
-
-        // read from new backup address
-        memset(read_check, 0, BUFFER_SIZE);
-        flash_stream_read(&flash, new_address+((i+new_mod_num)*BUFFER_SIZE), sizeof(i), read_check);
-
-        device_mutex_unlock(RT_DEV_LOCK_FLASH);
-
-
-        if(read_buf[0] == 0xFF || read_check[0] == 0xFF)
-        {
-            if (check_point < kvs_num)
-            {
-                //printf("[DCTDBG] DCT2 skip old(0x%x) new(0x%x)\n", old_address+(i*BUFFER_SIZE), new_address+(i*BUFFER_SIZE));
-                continue;
-            }
-retry2:
-            memset(read_buf, 0, BUFFER_SIZE);
-            dct_manual_init(flash, read_buf, i, new_address);
-
-            device_mutex_lock(RT_DEV_LOCK_FLASH);
-
-            flash_erase_sector(&flash, new_address+((i+new_mod_num)*BUFFER_SIZE));
-            flash_stream_write(&flash, new_address+((i+new_mod_num)*BUFFER_SIZE), BUFFER_SIZE, read_buf);
-
-            flash_erase_sector(&flash, new_address+(i*BUFFER_SIZE));
-            flash_stream_write(&flash, new_address+(i*BUFFER_SIZE), BUFFER_SIZE, read_buf);
-
-            memset(read_buf, 0, BUFFER_SIZE);
-            flash_stream_read(&flash, new_address+(i*BUFFER_SIZE), BUFFER_SIZE, read_buf);
-            memset(read_check, 0, BUFFER_SIZE);
-            flash_stream_read(&flash, new_address+((i+new_mod_num)*BUFFER_SIZE), BUFFER_SIZE, read_check);
-
-            if (memcmp(read_buf, read_check, BUFFER_SIZE) == 0)
-            {
-                 printf("[DCTDBG] Step %d.4 0x%x compare successful\n", kvs_num, new_address+(i*BUFFER_SIZE));
-            }
-            else
-            {
-                goto retry2;
-            }
-
-
-            if (kvs_num != 7)
-            {
-                flash_stream_write(&flash, new_address+((old_mod_num)*BUFFER_SIZE), sizeof(i), (uint8_t *) &kvs_num);
-            }
-
-            device_mutex_unlock(RT_DEV_LOCK_FLASH);
-        }
-        else
-        {
-             printf("[DCTDBG] DCT2 no actions required for mod[10] to mod[7]\n");
-        }
-    }
-
-exit:
-    if(read_buf)
+cleanup:
+    if (read_buf)
     {
         rtw_free(read_buf);
     }
-
-    if(read_check)
+    if (read_check)
     {
         rtw_free(read_check);
     }
-
-    return;
 }
+
 #endif
 
 #ifdef __cplusplus
