@@ -238,6 +238,7 @@ SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_api.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/api/matter_log_api.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnostic_logs/ameba_diagnosticlogs_provider_delegate_impl.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnostic_logs/ameba_logging_faultlog.cpp
+SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnostic_logs/ameba_logging_insert_logs.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnostic_logs/ameba_logging_redirect_handler.cpp
 SRC_CPP += $(SDKROOTDIR)/component/common/application/matter/driver/diagnostic_logs/ameba_logging_redirect_wrapper.cpp
 

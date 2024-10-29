@@ -253,6 +253,11 @@ int matter_fs_fclear(void* fp)
     return lfs_file_truncate(&lfs, lfs_fp, 0);
 }
 
+int matter_fs_remove(const char *path)
+{
+    return lfs_remove(&lfs, path);
+}
+
 #ifdef __cplusplus
 }
 #endif

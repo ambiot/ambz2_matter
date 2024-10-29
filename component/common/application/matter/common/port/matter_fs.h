@@ -100,6 +100,14 @@ int matter_fs_fsize(void* fp);
  */
 int matter_fs_fclear(void* fp);
 
+/**
+ * @brief Removes a file from the filesystem.
+ *
+ * @param path The path of the file to be removed.
+ * @return int 0 for success; otherwise, a non-zero error code indicating the type of failure.
+ */
+int matter_fs_remove(const char *path);
+
 #ifdef __cplusplus
 }
 #endif

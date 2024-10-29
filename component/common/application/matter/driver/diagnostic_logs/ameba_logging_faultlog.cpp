@@ -15,21 +15,55 @@
 extern "C" {
 #endif
 
+#define MIN_BDX_TRANSFER_LENGTH 1024
+int requires_bdx = 0;
+int restricted_len = 0;
+
 void matter_fault_log(char *msg, int len)
 {
     flash_t fault_flash;
+
+    if (requires_bdx)
+    {
+        if (len > MIN_BDX_TRANSFER_LENGTH)
+        {
+            restricted_len = MIN_BDX_TRANSFER_LENGTH;
+        }
+    }
+    else
+    {
+        restricted_len = len;
+    }
+
     device_mutex_lock(RT_DEV_LOCK_FLASH);
     flash_erase_sector(&fault_flash, FAULT_LOG1);
-    flash_stream_write(&fault_flash, FAULT_LOG1, len, (uint8_t*)msg);
+    flash_stream_write(&fault_flash, FAULT_LOG1, restricted_len, (uint8_t*)msg);
     device_mutex_unlock(RT_DEV_LOCK_FLASH);
 }
 
 void matter_bt_log(char *msg, int len)
 {
     flash_t fault_flash;
+
+    if (requires_bdx)
+    {
+        if (restricted_len + len > MIN_BDX_TRANSFER_LENGTH)
+        {
+            restricted_len = 0;
+        }
+        else
+        {
+            restricted_len = MIN_BDX_TRANSFER_LENGTH - restricted_len;
+        }
+    }
+    else
+    {
+        restricted_len = len;
+    }
+
     device_mutex_lock(RT_DEV_LOCK_FLASH);
     flash_erase_sector(&fault_flash, FAULT_LOG2);
-    flash_stream_write(&fault_flash, FAULT_LOG2, len, (uint8_t*)msg);
+    flash_stream_write(&fault_flash, FAULT_LOG2, restricted_len, (uint8_t*)msg);
     device_mutex_unlock(RT_DEV_LOCK_FLASH);
 }
 

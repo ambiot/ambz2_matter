@@ -163,6 +163,22 @@ CHIP_ERROR AmebaDiagnosticLogsProvider::EndLogCollection(LogSessionHandle sessio
     // WARNING: If the handle is closed, it needs to be reopened or will assert in LFS layer on future calls
     matter_fs_fclear(fp);  // Since the file has been read, it is safe to clear it
 
+    if (fp == &fpUserLog)
+    {
+        ChipLogProgress(DeviceLayer, "Removing Logs for User logs");
+        matter_fs_remove(USER_LOG_FILENAME);
+    }
+    else if (fp == &fpNetdiagLog)
+    {
+        ChipLogProgress(DeviceLayer, "Removing Logs for Network logs");
+        matter_fs_remove(NET_LOG_FILENAME);
+    }
+    else if (fp == &fpCrashLog)
+    {
+        ChipLogProgress(DeviceLayer, "Removing Logs for Crash logs");
+        matter_fs_remove(CRASH_LOG_FILENAME);
+    }
+
     mLogFiles.erase(sessionHandle);  // Remove the session handle from the map
 
     ChipLogProgress(DeviceLayer, "Log Collection Ended");
