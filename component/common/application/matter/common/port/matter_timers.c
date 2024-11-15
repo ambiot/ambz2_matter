@@ -29,8 +29,9 @@ extern int FreeRTOS_errno;
 #define errno FreeRTOS_errno
 
 static gtimer_t matter_rtc_timer;
-static uint64_t current_us = 0;
 static volatile uint32_t rtc_counter = 0;
+static uint64_t last_current_us = 0;
+static uint64_t last_global_us = 0;
 
 BOOL UTILS_ValidateTimespec( const struct timespec * const pxTimespec )
 {
@@ -149,15 +150,34 @@ void matter_rtc_write(long long time)
 
 uint64_t ameba_get_clock_time(void)
 {
+    uint64_t current_us = 0;
     uint64_t global_us = 0;
+
+    // Read current timer value in microseconds
     current_us = gtimer_read_us(&matter_rtc_timer);
-    global_us = ((uint64_t)rtc_counter * US_OVERFLOW_MAX) + (current_us);
+
+    // Check if the timer has wrapped around
+    if (current_us < last_current_us)
+    {
+        // Timer wrapped around, increment global_us and adjust last_global_us
+        global_us = last_global_us + 1;
+    }
+    else
+    {
+        // Calculate global_us based on the rtc_counter and current_us
+        global_us = ((uint64_t)rtc_counter * US_OVERFLOW_MAX) + current_us;
+        last_current_us = current_us;
+    }
+
+    last_global_us = global_us;
+
     return global_us;
 }
 
 static void matter_timer_rtc_callback(void)
 {
     rtc_counter++;
+    last_current_us = 0;
 }
 
 void matter_timer_init(void)
