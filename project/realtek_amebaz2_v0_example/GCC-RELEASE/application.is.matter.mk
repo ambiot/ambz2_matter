@@ -102,11 +102,6 @@ INCLUDES += -I../../../component/common/network
 INCLUDES += -I../../../component/common/network/coap/include
 INCLUDES += -I../../../component/common/network/libcoap/include
 INCLUDES += -I../../../component/common/network/http2/nghttp2-1.31.0/includes
-INCLUDES += -I../../../component/common/network/lwip/$(LWIP_VERSION)/src/include
-INCLUDES += -I../../../component/common/network/lwip/$(LWIP_VERSION)/src/include/lwip
-INCLUDES += -I../../../component/common/network/lwip/$(LWIP_VERSION)/port/realtek
-INCLUDES += -I../../../component/common/network/lwip/$(LWIP_VERSION)/port/realtek/freertos
-INCLUDES += -I../../../component/common/network/lwip/$(LWIP_VERSION)/port/realtek/include
 INCLUDES += -I../../../component/common/network/ssl/ssl_ram_map/rom
 INCLUDES += -I../../../component/common/drivers/wlan/realtek/include
 INCLUDES += -I../../../component/common/drivers/wlan/realtek/src/osdep
@@ -458,63 +453,10 @@ SRC_C += ../../../component/common/network/sntp/sntp.c
 
 #network - lwip
 #network - lwip - api
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/api/api_lib.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/api/api_msg.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/api/err.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/api/netbuf.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/api/netdb.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/api/netifapi.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/api/sockets.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/api/tcpip.c
-
-#network - lwip - core
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/def.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/dns.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/inet_chksum.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/init.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ip.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/mem.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/memp.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/netif.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/pbuf.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/raw.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/stats.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/sys.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/tcp.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/tcp_in.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/tcp_out.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/timeouts.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/udp.c
-
-#network - lwip - core - ipv4
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv4/autoip.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv4/dhcp.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv4/etharp.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv4/icmp.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv4/igmp.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv4/ip4.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv4/ip4_addr.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv4/ip4_frag.c
-
-#network - lwip - core - ipv6
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv6/dhcp6.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv6/ethip6.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv6/icmp6.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv6/inet6.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv6/ip6.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv6/ip6_addr.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv6/ip6_frag.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv6/mld6.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/core/ipv6/nd6.c
-
-#network - lwip - netif
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/src/netif/ethernet.c
+#lwip definition at component/common/application/matter/project/amebaz2/Makefile.include.app.list
 
 #network - lwip - port
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/port/realtek/freertos/ethernetif.c
 SRC_C += ../../../component/common/drivers/wlan/realtek/src/osdep/lwip_intf.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/port/realtek/freertos/sys_arch.c
-SRC_C += ../../../component/common/network/lwip/$(LWIP_VERSION)/port/realtek/hooks/lwip_default_hooks.c
 
 #network - mdns
 SRC_C += ../../../component/common/network/mDNS/mDNSPlatform.c

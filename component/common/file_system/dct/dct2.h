@@ -29,7 +29,8 @@
  * @return     0  : SUCCESS
  * @return     <0 : ERROR
  */
-int32_t dct_format2(uint32_t begin_address, uint16_t module_number, uint16_t variable_name_size, uint16_t variable_value_size, uint8_t enable_backup, uint8_t enable_wear_leveling);
+int32_t dct_format2(uint32_t begin_address, uint16_t module_number, uint16_t variable_name_size, uint16_t variable_value_size, uint8_t enable_backup,
+					uint8_t enable_wear_leveling);
 
 /**
  * @brief      Initialize device configuration table.
@@ -42,7 +43,8 @@ int32_t dct_format2(uint32_t begin_address, uint16_t module_number, uint16_t var
  * @return     0  : SUCCESS
  * @return     <0 : ERROR
  */
-int32_t dct_init2(uint32_t begin_address, uint16_t module_number, uint16_t variable_name_size, uint16_t variable_value_size, uint8_t enable_backup, uint8_t enable_wear_leveling);
+int32_t dct_init2(uint32_t begin_address, uint16_t module_number, uint16_t variable_name_size, uint16_t variable_value_size, uint8_t enable_backup,
+				  uint8_t enable_wear_leveling);
 
 /**
  * @brief      Deinitialize device configuration table.
@@ -55,7 +57,7 @@ void dct_deinit2(void);
  * @return     0  : SUCCESS
  * @return     <0 : ERROR
  */
-int32_t dct_register_module2(char *module_name);
+int32_t dct_register_module2(const char *module_name);
 
 /**
  * @brief      Unregister and delete module in DCT.
@@ -63,7 +65,7 @@ int32_t dct_register_module2(char *module_name);
  * @return     0  : SUCCESS
  * @return     <0 : ERROR
  */
-int32_t dct_unregister_module2(char *module_name);
+int32_t dct_unregister_module2(const char *module_name);
 
 /**
  * @brief      Open module in DCT.
@@ -72,7 +74,7 @@ int32_t dct_unregister_module2(char *module_name);
  * @return     0  : SUCCESS
  * @return     <0 : ERROR
  */
-int32_t dct_open_module2(dct_handle_t *dct_handle, char *module_name);
+int32_t dct_open_module2(dct_handle_t *dct_handle, const char *module_name);
 
 /**
  * @brief      Close module in DCT.
@@ -90,7 +92,7 @@ int32_t dct_close_module2(dct_handle_t *dct_handle);
  * @return     0  : SUCCESS
  * @return     <0 : ERROR
  */
-int32_t dct_set_variable2(dct_handle_t *dct_handle, char *variable_name, char *variable_value);
+int32_t dct_set_variable2(dct_handle_t *dct_handle, const char *variable_name, const char *variable_value);
 
 /**
  * @brief      Write variable name and value in opened module.
@@ -101,7 +103,7 @@ int32_t dct_set_variable2(dct_handle_t *dct_handle, char *variable_name, char *v
  * @return     0  : SUCCESS
  * @return     <0 : ERROR
  */
-int32_t dct_set_variable_new2(dct_handle_t *dct_handle, char *variable_name, char *variable_value, uint16_t variable_value_length);
+int32_t dct_set_variable_new2(dct_handle_t *dct_handle, const char *variable_name, const char *variable_value, uint16_t variable_value_length);
 
 /**
  * @brief      read value of variable name in opened module.
@@ -112,7 +114,7 @@ int32_t dct_set_variable_new2(dct_handle_t *dct_handle, char *variable_name, cha
  * @return     0  : SUCCESS
  * @return     <0 : ERROR
  */
-int32_t dct_get_variable2(dct_handle_t *dct_handle, char *variable_name, char *buffer, uint16_t buffer_size);
+int32_t dct_get_variable2(dct_handle_t *dct_handle, const char *variable_name, const char *buffer, uint16_t buffer_size);
 
 /**
  * @brief         read value of variable name in opened module.
@@ -123,7 +125,7 @@ int32_t dct_get_variable2(dct_handle_t *dct_handle, char *variable_name, char *b
  * @return        0  : SUCCESS
  * @return        <0 : ERROR
  */
-int32_t dct_get_variable_new2(dct_handle_t *dct_handle, char *variable_name, char *buffer, uint16_t *buffer_size);
+int32_t dct_get_variable_new2(dct_handle_t *dct_handle, const char *variable_name, const char *buffer, uint16_t *buffer_size);
 
 /**
  * @brief      delete variable name and value in opened module.
@@ -132,7 +134,7 @@ int32_t dct_get_variable_new2(dct_handle_t *dct_handle, char *variable_name, cha
  * @return     0  : SUCCESS
  * @return     <0 : ERROR
  */
-int32_t dct_delete_variable2(dct_handle_t *dct_handle, char *variable_name);
+int32_t dct_delete_variable2(dct_handle_t *dct_handle, const char *variable_name);
 
 /**
  * @brief      delete variable name and value in opened module.
@@ -141,7 +143,7 @@ int32_t dct_delete_variable2(dct_handle_t *dct_handle, char *variable_name);
  * @return     0  : SUCCESS
  * @return     <0 : ERROR
  */
-int32_t dct_delete_variable_new2(dct_handle_t *dct_handle, char *variable_name);
+int32_t dct_delete_variable_new2(dct_handle_t *dct_handle, const char *variable_name);
 
 /**
  * @brief      Remaining variable amount in opened module.
@@ -151,4 +153,7 @@ int32_t dct_delete_variable_new2(dct_handle_t *dct_handle, char *variable_name);
  */
 int32_t dct_remain_variable2(dct_handle_t *dct_handle);
 
+/*\@}*/
+
 #endif // __RTK_DCT2_H__
+

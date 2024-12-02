@@ -83,28 +83,29 @@ extern uint32_t SystemCoreClock;
 
 /* Constants that build features in or out. */
 #define configUSE_MUTEXES							1
-#define configUSE_APPLICATION_TASK_TAG					0
-#define configUSE_NEWLIB_REENTRANT						0
-#define configUSE_CO_ROUTINES							0
-#define configUSE_COUNTING_SEMAPHORES 			1
-#define configUSE_RECURSIVE_MUTEXES				1
-#define configUSE_QUEUE_SETS                    			1
+#define configUSE_APPLICATION_TASK_TAG				0
+#define configUSE_NEWLIB_REENTRANT					0
+#define configUSE_CO_ROUTINES						0
+#define configUSE_COUNTING_SEMAPHORES				1
+#define configUSE_RECURSIVE_MUTEXES					1
+#define configUSE_QUEUE_SETS						1
 #define configUSE_TASK_NOTIFICATIONS				1
-#define configUSE_TRACE_FACILITY						0
+#define configUSE_TRACE_FACILITY					1
 
 /* Constants that define which hook (callback) functions should be used. */
-#define configUSE_IDLE_HOOK                     				0
-#define configUSE_TICK_HOOK                     				0
+#define configUSE_IDLE_HOOK							0
+#define configUSE_TICK_HOOK							0
 #define configUSE_MALLOC_FAILED_HOOK				1
-#define secureconfigUSE_MALLOC_FAILED_HOOK		1
+#define secureconfigUSE_MALLOC_FAILED_HOOK			1
 
 /* Constants provided for debugging and optimisation assistance. */
-#define configCHECK_FOR_STACK_OVERFLOW			2
+#define configCHECK_FOR_STACK_OVERFLOW				2
+#define configRECORD_STACK_HIGH_ADDRESS				1
 
 /* Software timer definitions. */
 #define configUSE_TIMERS							1
 #define configTIMER_TASK_PRIORITY					( configMAX_PRIORITIES - 1 )
-#define configTIMER_QUEUE_LENGTH					( 10 + 32)
+#define configTIMER_QUEUE_LENGTH					( 10 + 64 )
 #define configTIMER_TASK_STACK_DEPTH				( 512 )
 
 /* Set the following definitions to 1 to include the API function, or zero
@@ -112,20 +113,22 @@ extern uint32_t SystemCoreClock;
  * only necessary if the linker does not automatically remove functions that are
  * not referenced anyway. */
 #define INCLUDE_vTaskPrioritySet					1
-#define INCLUDE_uxTaskPriorityGet				1
-#define INCLUDE_vTaskDelete						1
-#define INCLUDE_vTaskSuspend					1
-#define INCLUDE_vTaskDelayUntil					1
-#define INCLUDE_vTaskDelay						1
-#define INCLUDE_pcTaskGetTaskName       1
-#define INCLUDE_uxTaskGetStackHighWaterMark	0
-#define INCLUDE_xTaskGetIdleTaskHandle			0
-#define INCLUDE_eTaskGetState					1
-#define INCLUDE_xTaskResumeFromISR			0
-#define INCLUDE_xTaskGetCurrentTaskHandle		1
-#define INCLUDE_xTaskGetSchedulerState			1
-#define INCLUDE_xSemaphoreGetMutexHolder				1
-#define INCLUDE_xTimerPendFunctionCall			1
+#define INCLUDE_uxTaskPriorityGet					1
+#define INCLUDE_vTaskDelete							1
+#define INCLUDE_vTaskSuspend						1
+#define INCLUDE_vTaskDelayUntil						1
+#define INCLUDE_vTaskDelay							1
+#define INCLUDE_pcTaskGetTaskName					1
+#define INCLUDE_uxTaskGetStackSize					1
+#define INCLUDE_uxTaskGetFreeStackSize				1
+#define INCLUDE_uxTaskGetStackHighWaterMark			0
+#define INCLUDE_xTaskGetIdleTaskHandle				0
+#define INCLUDE_eTaskGetState						1
+#define INCLUDE_xTaskResumeFromISR					0
+#define INCLUDE_xTaskGetCurrentTaskHandle			1
+#define INCLUDE_xTaskGetSchedulerState				1
+#define INCLUDE_xSemaphoreGetMutexHolder			1
+#define INCLUDE_xTimerPendFunctionCall				1
 
 /* This demo makes use of one or more example stats formatting functions.  These
  * format the raw data provided by the uxTaskGetSystemState() function in to
@@ -295,9 +298,5 @@ warnings. */
 
 #if defined(ENABLE_AMAZON_COMMON)
 #include "FreeRTOSConfig_Amazon.h"
-#endif
-
-#if defined(CONFIG_MATTER) && CONFIG_MATTER
-#include "FreeRTOSConfig_Matter.h"
 #endif
 #endif /* FREERTOS_CONFIG_H */
