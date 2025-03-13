@@ -56,8 +56,10 @@ extern "C"  {
 
 #define MEMBER_OFFSET(struct_type, member)      ((uint32_t)&((struct_type *)0)->member)
 
+#ifndef CONTAINER_OF
 #define CONTAINER_OF(member_ptr, struct_type, member)                       \
         (struct_type *)((char *)member_ptr - MEMBER_OFFSET(struct_type, member))
+#endif
 
 /* avoid gcc compile warning */        
 #ifndef BIT0
@@ -77,7 +79,6 @@ extern "C"  {
 #define BIT13       0x00002000
 #define BIT14       0x00004000
 #define BIT15       0x00008000
-#endif
 #define BIT16       0x00010000
 #define BIT17       0x00020000
 #define BIT18       0x00040000
@@ -94,6 +95,7 @@ extern "C"  {
 #define BIT29       0x20000000
 #define BIT30       0x40000000
 #define BIT31       0x80000000
+#endif
 
 #ifndef BIT
 #define BIT(_n)         (uint32_t)(1U << (_n))

@@ -104,6 +104,14 @@ void plt_srand(uint32_t seed);
 void plt_rand(uint8_t *prand, uint16_t len);
 
 /**
+  * @brief generate the random number between the lower & upper limit
+  * @param[out] range_min: the lower limit
+  * @param[in] range_max: the upper limit
+  * @return the random number
+  */
+uint32_t plt_rand_range(uint32_t range_min, uint32_t range_max);
+
+/**
   * @brief logarithm
   * @param[in] value: exp value
   * @return log value

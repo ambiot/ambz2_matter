@@ -167,8 +167,7 @@ mesh_msg_send_cause_t cfg_model_pub_set(uint16_t dst, uint16_t element_addr, boo
     index += va_flag ? 16 : 2;
     pub_key_info.rfu = 0;
     /* to avoid gcc compile warning */
-    pub_key_info_p temp = &pub_key_info;
-    LE_WORD2EXTRN(pbuffer + index, *(uint16_t *)temp);
+    LE_WORD2EXTRN(pbuffer + index, pub_key_info.value);
     pbuffer[index + 2] = pub_ttl;
     pbuffer[index + 3] = *(uint8_t *)&pub_period;
     pbuffer[index + 4] = *(uint8_t *)&pub_retrans_info;

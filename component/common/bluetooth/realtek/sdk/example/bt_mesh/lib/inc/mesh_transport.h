@@ -288,6 +288,14 @@ typedef void (*pf_pong_cb_t)(uint16_t src, uint16_t dst, uint8_t hops_forward,
   */
 
 ///@cond
+void tsmc_init(void);
+void tsmc_deinit(void);
+void tsmc_clear(void);
+bool tsmc_check(uint32_t iv_index, uint16_t src, uint32_t seq);
+void tsmc_update(uint32_t iv_index, uint16_t src, uint32_t seq);
+///@endcond
+
+///@cond
 void trans_init(void);
 void trans_deinit(void);
 mesh_msg_send_cause_t trans_send(mesh_msg_p pmesh_msg);

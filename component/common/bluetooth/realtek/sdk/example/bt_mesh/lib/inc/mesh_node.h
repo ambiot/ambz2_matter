@@ -466,11 +466,14 @@ typedef struct
     uint8_t trans_rx_ctx_count; //!< the count of seg msgs rx simultaneously, default value @ref MESH_TRANS_RX_CTX_COUNT
     uint8_t trans_retrans_count; //!< the retransmit times of seg msg, default value @ref MESH_TRANS_RETRANSMIT_TIMES
     uint16_t trans_retrans_base; //!< segment transmission timer base, unit is ms, default value 200ms
-    uint16_t trans_retrans_ttl_factor; //!< segment transmission timer ttl factor, uinit is ms, default value 50ms
-    uint16_t trans_retrans_seg_factor; //!< segment transmission timer seg num factor, uiit is ms, default value 30ms
+    uint16_t trans_retrans_ttl_factor; //!< segment transmission timer ttl factor, unit is ms, default value 50ms
+    uint16_t trans_retrans_seg_factor; //!< segment transmission timer seg num factor, unit is ms, default value 30ms
     uint16_t trans_ack_base; //!< segment transmission timer base, unit is ms, default value 150ms
-    uint16_t trans_ack_ttl_factor; //!< segment transmission timer ttl factor, uinit is ms, default value 50ms
-    uint16_t trans_ack_seg_factor; //!< segment transmission timer seg num factor, uiit is ms, default value 30ms
+    uint16_t trans_ack_ttl_factor; //!< segment transmission timer ttl factor, unit is ms, default value 50ms
+    uint16_t trans_ack_seg_factor; //!< segment transmission timer seg num factor, unit is ms, default value 30ms
+    uint16_t trans_seg_ack_delay_min; //!< segment acknowledge send delay minimum time, unit is ms, default value 30ms
+    uint16_t trans_seg_ack_delay_max; //!< segment acknowledge send delay maximum time, unit is ms, default value 30ms
+    uint16_t tsmc_size; //!< trans seg msg cache size default value @ref MESH_TRANS_SEG_MSG_CACHE_SIZE
     /** friendship parameters */
     uint8_t frnd_rx_window; //!< range: 0x01–0xFF ms (default 20ms), set by the fn
     uint8_t frnd_rx_delay; //!< range: 0x0A–0xFF ms (default 10ms), set by the lpn
@@ -708,6 +711,20 @@ void iv_index_timer_stop(void);
 /** @} */
 
 void rpl_clear(void);
+void rpl_clear_per_loop(uint8_t rpl_loop);
+/**
+ * @brief rpl function type definition
+ * @param[in] rpl_loop: loop of rpl list
+ * @return result
+ */
+typedef void (*rpl_cb_t)(uint8_t rpl_loop);
+
+/**
+ * @brief register rpl list full callback
+ * @param[in] cb: callback
+ * @return none
+ */
+void rpl_list_full_cb_reg(rpl_cb_t cb);
 
 /** @brief
   * @{
@@ -787,7 +804,23 @@ void mesh_node_unckeck_group_addr(bool enable);
   */
 void mesh_node_set_reprov(bool enable);
 
+/**
+  * @brief enable to uncheck the cccd value of the mesh service
+  * @param[in] enable: true: on, false: off
+  * @return none
+  */
 void mesh_node_set_cccd_not_check(bool enable);
+
+/**
+  * @brief set transport segmented message acknowledge delay time
+  *
+  * If the maximum value is bigger than the minimum value, the delay will be randomly generated between them.
+  * @param[in] delay_min: minimum delay
+  * @param[in] delay_max: maximum delay
+  * @return none
+  */
+void mesh_node_set_trans_seg_ack_delay(uint16_t delay_min, uint16_t delay_max);
+
 /** @} */
 
 /** @brief

@@ -36,6 +36,7 @@ BEGIN_DECLS
 
 #define HB_TIMER_PUB                        0
 #define HB_TIMER_SUB                        1
+#define HB_IS_PUB_STORABLE(pub)             ((pub.count == HB_COUNT_INDEFINITELY) && pub.period && MESH_NOT_UNASSIGNED_ADDR(pub.dst))
 /** @} */
 
 /** @defgroup HB_Exported_Types Exported Types

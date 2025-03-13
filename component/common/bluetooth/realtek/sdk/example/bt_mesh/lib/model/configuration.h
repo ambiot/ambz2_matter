@@ -256,9 +256,16 @@ typedef struct
 
 typedef struct
 {
-    uint16_t app_key_index: 12; //!< global index
-    uint16_t frnd_flag: 1;
-    uint16_t rfu: 3;
+    union
+    {
+        struct
+        {
+            uint16_t app_key_index: 12; //!< global index
+            uint16_t frnd_flag: 1;
+            uint16_t rfu: 3;
+        };
+        uint16_t value;
+    };
 } _PACKED4_ pub_key_info_t, *pub_key_info_p;
 
 typedef struct

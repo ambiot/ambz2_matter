@@ -113,6 +113,29 @@ typedef struct
   */
 #define mesh_flash_load(pdata, size, offset)            ftl_load(pdata, offset, size)
 
+#if MESH_SUPPORT_FLASH_ACCESS_CB
+/**
+  * @brief handle mesh parameters flash store and restore
+  *
+  * The parameters can be encrypted before store and decrypted after restore.
+  * @param[in] param_type: parameter type
+  * @param[in] param: parameter info pointer
+  * @param[in] store: true: store, false: restore
+  * @param[in out] value: parametet value pointer
+  * @param[in] value_len: parametet value length
+  * @return none
+  */
+typedef void (*mesh_flash_access_cb_t)(flash_params_type_t param_type, void *param, bool store,
+                                       uint8_t *value, uint8_t value_len);
+
+/**
+  * @brief register callback to handle mesh parameters flash store and restore
+  * @param[in] cb: the
+  * @return none
+  */
+void mesh_flash_reg_access_cb(mesh_flash_access_cb_t cb);
+#endif
+
 /**
   * @brief load the node state from the NVM
   *

@@ -122,7 +122,7 @@ static int32_t generic_on_off_trans_step_change(const mesh_model_info_p pmodel_i
                                                 generic_transition_time_t remaining_time)
 {
     /* avoid gcc compile warning */
-    (void)type;
+    UNUSED(type);
     int32_t ret = MODEL_SUCCESS;
     generic_on_off_server_set_t set_data;
     generic_on_off_info_t *ponoff_info = pmodel_info->pargs;
@@ -389,7 +389,7 @@ static bool generic_on_off_server_receive(mesh_msg_p pmesh_msg)
 static int32_t generic_on_off_server_publish(mesh_model_info_p pmodel_info, bool retrans)
 {
     /* avoid gcc compile warning */
-    (void)retrans;
+    UNUSED(retrans);
     generic_transition_time_t trans_time = {0, 0};
     generic_on_off_stat(pmodel_info, 0, 0, get_present_on_off(pmodel_info), FALSE, GENERIC_OFF,
                         trans_time, 0);

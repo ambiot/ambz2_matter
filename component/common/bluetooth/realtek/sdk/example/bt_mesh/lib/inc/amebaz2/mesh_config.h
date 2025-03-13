@@ -36,7 +36,6 @@ BEGIN_DECLS
 #define MESH_CONFIGURATION_MODEL_USE_APP_KEY    1 //!< violate the spec to use app key, shall also set mesh_node.features.cfg_model_use_app_key.
 #define MESH_PROXY_ADV_WITH_BT_ADDR             1 //!< adv
 #define MESH_PARAM_CONFIGURABLE                 0 //!< configurable parameters
-#define MESH_HB_SUB_UNCHECK_SRC                 1 //!< transport layer uncheck the source address of the received heartbeat message
 
 /** !!! For test purpose. If don't know well, please do not modify in case of wrong operation !!! */
 #define MESH_MUTE_MODE                          0 //!< just scan to Receive all mesh data pkts even not sent to me playing a role as a monitor.
@@ -49,6 +48,9 @@ BEGIN_DECLS
 #define MESH_FN                                 1 //!< friend relay
 #define MESH_BEARER_ADV                         1
 #define MESH_BEARER_GATT                        1
+#define MESH_SUPPORT_FLASH_ACCESS_CB            1
+#define MESH_PB_ADV                             1
+#define MESH_HB                                 1
 
 /* mesh profile 1.1 */
 #define MESH_1_1_SUPPORT                        1
@@ -95,7 +97,8 @@ BEGIN_DECLS
 #endif
 
 /** Mesh stored message parameters */
-#define MESH_NET_MSG_CACHE_SIZE                 30 //!< The number of devices to check duplicate packets
+#define MESH_NET_MSG_CACHE_SIZE                 30 //!< The number of devices to check duplicate packets in network layer
+#define MESH_TRANS_SEG_MSG_CACHE_SIZE           20 //!< The number of devices to check duplicate seg packets in transport layer
 #define MESH_INNER_MSG_NUM                      16 //!< The number of mesh inner msg
 
 /** PB-ADV Generic Provisioning Layer */
@@ -121,6 +124,8 @@ BEGIN_DECLS
 #define MESH_TRANS_RETRANSMIT_TIMES             2
 #define MESH_TRANS_TX_QUEUE_SIZE                3
 #define MESH_TRANS_RX_CTX_COUNT                 2
+#define MESH_TRANS_SEG_ACK_DELAY_DV             30 //!< in units of millisecond
+#define MESH_HB_SUB_UNCHECK_SRC                 1 //!< transport layer uncheck the source address of the received heartbeat message
 
 /** FN parameters */
 #define MESH_FRIENDSHIP_SUB_LIST_SIZE           10
