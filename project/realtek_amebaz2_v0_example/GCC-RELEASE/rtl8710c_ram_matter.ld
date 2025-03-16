@@ -190,12 +190,6 @@ SECTIONS
 
 		*ram_start*.o(.text*)
 		*hal_power_mode*.o(.text*)
-		*hal_sys_ctrl*.o(.text*)
-		*rtl8710c_pinmux_patch*.o(.text*)
-		*hal_syson*.o(.text*)
-		*hal_pinmux*.o(.text*)
-		*hal_efuse*.o(.text*)
-		*sys_irq*.o(.text*)
 
 		*(.lpddr.text*)
 		*(.sram.text*)
@@ -217,12 +211,6 @@ SECTIONS
 
 		*ram_start*.o(.rodata*)
 		*hal_power_mode*.o(.rodata*)
-		*hal_sys_ctrl*.o(.rodata*)
-		*rtl8710c_pinmux_patch*.o(.rodata*)
-		*hal_syson*.o(.rodata*)
-		*hal_pinmux*.o(.rodata*)
-		*hal_efuse*.o(.rodata*)
-		*sys_irq*.o(.rodata*)
 
 		. = ALIGN(4);
 		__ram_code_rodata_end__ = .;

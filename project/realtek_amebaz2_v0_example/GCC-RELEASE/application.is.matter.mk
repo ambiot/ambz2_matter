@@ -730,10 +730,10 @@ SRC_C += ../src/main.c
 #SRAM
 # -------------------------------------------------------------------
 #@SRAM
-SRAM_C += ../../../component/common/mbed/targets/hal/rtl8710c/flash_api.c
-SRAM_C += ../../../component/soc/realtek/8710c/misc/driver/flash_api_ext.c
-SRAM_C += ../../../component/soc/realtek/8710c/fwlib/source/ram_ns/hal_flash.c
-SRAM_C += ../../../component/soc/realtek/8710c/fwlib/source/ram_ns/hal_spic.c
+SRC_C += ../../../component/common/mbed/targets/hal/rtl8710c/flash_api.c
+SRC_C += ../../../component/soc/realtek/8710c/misc/driver/flash_api_ext.c
+SRC_C += ../../../component/soc/realtek/8710c/fwlib/source/ram_ns/hal_flash.c
+SRC_C += ../../../component/soc/realtek/8710c/fwlib/source/ram_ns/hal_spic.c
 SRAM_C += ../../../component/common/mbed/targets/hal/rtl8710c/power_mode_api.c
 
 # Generate obj list

@@ -255,7 +255,7 @@
  * already use it.
  */
 #if !defined MEM_LIBC_MALLOC || defined __DOXYGEN__
-#define MEM_LIBC_MALLOC                 0
+#define MEM_LIBC_MALLOC                 1
 #endif
 
 /**
@@ -268,7 +268,7 @@
  * not only for internal pools defined in memp_std.h)!
  */
 #if !defined MEMP_MEM_MALLOC || defined __DOXYGEN__
-#define MEMP_MEM_MALLOC                 0
+#define MEMP_MEM_MALLOC                 1
 #endif
 
 /**
