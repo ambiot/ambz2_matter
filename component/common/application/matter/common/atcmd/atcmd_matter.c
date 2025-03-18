@@ -73,7 +73,9 @@ void fATmattershell(void *arg)
     } 
 }
 
+#if defined(CONFIG_ENABLE_AMEBA_DLOG) && (CONFIG_ENABLE_AMEBA_DLOG == 1)
 #define CONFIG_ENABLE_AMEBA_DLOG_TEST 1
+#endif //CONFIG_ENABLE_AMEBA_DLOG
 #if defined(CONFIG_ENABLE_AMEBA_DLOG_TEST) && (CONFIG_ENABLE_AMEBA_DLOG_TEST == 1)
 extern int requires_bdx;
 void fATcrash(void *arg)

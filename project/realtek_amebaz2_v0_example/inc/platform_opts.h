@@ -476,7 +476,7 @@
  * CONFIG_ENABLE_AMEBA_SHORT_LOGGING==1: file name and line number will NOT be stored,
  * and reduce flash usage. On default this is disabled.
  */
-#define CONFIG_ENABLE_AMEBA_DLOG    1
+#define CONFIG_ENABLE_AMEBA_DLOG    0
 #if defined(CONFIG_ENABLE_AMEBA_DLOG) && (CONFIG_ENABLE_AMEBA_DLOG==1)
 #define CONFIG_ENABLE_AMEBA_LFS     1
 #else
