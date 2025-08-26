@@ -32,7 +32,7 @@
 
 #include <string.h>
 
-#if (CONFIG_EXAMPLE_MATTER) && (CONFIG_ENABLE_MATTER_PRNG)
+#if defined(CHIP_PROJECT) && (CONFIG_ENABLE_MATTER_PRNG)
 #include <crypto_api.h>
 #endif
 
@@ -595,7 +595,7 @@ exit:
 int mbedtls_ctr_drbg_random( void *p_rng, unsigned char *output,
                              size_t output_len )
 {
-#if (CONFIG_EXAMPLE_MATTER) && (CONFIG_ENABLE_MATTER_PRNG)
+#if defined(CHIP_PROJECT) && (CONFIG_ENABLE_MATTER_PRNG)
     int ret = crypto_init();
     if (ret != SUCCESS)
     {
@@ -605,7 +605,7 @@ int mbedtls_ctr_drbg_random( void *p_rng, unsigned char *output,
 
     ret = crypto_random_generate(output, output_len);
     if (ret != 0)
-        ret = 0xac // CHIP_ERROR_INTERNAL
+        ret = 0xac; // CHIP_ERROR_INTERNAL
 
     return ret;
 #else
